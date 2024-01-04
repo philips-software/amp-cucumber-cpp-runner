@@ -256,7 +256,7 @@ namespace cucumber_cpp
         template<class T>
         [[deprecated("Use InsertAt or InsertRefAt")]] void SetShared(std::string_view key, const std::shared_ptr<T>& value)
         {
-            Assign(key, value);
+            storage->Assign(key, value);
         }
 
         template<class T, class... Args>
