@@ -1,0 +1,16 @@
+{
+    "include-component-in-tag": false,
+    "plugins": [
+        "sentence-case"
+    ],
+    "packages": {
+        ".": {
+            "release-type": "simple",
+            "package-name": "amp-cucumber-cpp-runner-poc",
+            "extra-files": [
+                "CMakeLists.txt"
+            ]
+        }
+    },
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

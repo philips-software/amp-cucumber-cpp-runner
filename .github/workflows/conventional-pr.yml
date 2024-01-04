@@ -1,0 +1,19 @@
+---
+name: conventional-pr
+
+on:
+  merge_group:
+  pull_request:
+
+permissions: read-all
+
+jobs:
+  conventional_commit:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: Namchee/conventional-pr@b31518c34a4243c21484e3187abbbee4a44d0ec4 # v0.15.4
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+          body: false
+          issue: false
+          close: false
