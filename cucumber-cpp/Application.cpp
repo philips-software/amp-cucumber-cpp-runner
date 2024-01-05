@@ -61,10 +61,8 @@ namespace cucumber_cpp
 
         for (auto current = view.begin(); current != view.end(); ++current)
         {
-            using std::operator""sv;
-
             const auto arg = *current;
-            if (arg == "--tag"sv)
+            if (arg == "--tag")
             {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
@@ -72,7 +70,7 @@ namespace cucumber_cpp
                     tags.push_back(*current);
                 }
             }
-            else if (arg == "--feature"sv)
+            else if (arg == "--feature")
             {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
@@ -80,7 +78,7 @@ namespace cucumber_cpp
                     features.push_back(*current);
                 }
             }
-            else if (arg == "--report"sv)
+            else if (arg == "--report")
             {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
@@ -88,18 +86,18 @@ namespace cucumber_cpp
                     reports.push_back(*current);
                 }
             }
-            else if (arg.starts_with("--Xapp,"sv))
+            else if (arg.starts_with("--Xapp,"))
             {
-                const auto param = arg.substr("--Xapp,"sv.size());
+                const auto param = arg.substr(std::string_view("--Xapp,").size());
 
-                for (const auto xArg : std::views::split(param, ","sv))
+                for (const auto xArg : std::views::split(param, ","))
                 {
                     forwardArgs.push_back(subrange_to_sv(xArg));
                 }
             }
             else
             {
-                if (!(arg == "--help"sv && arg == "-h"sv))
+                if (!(arg == "--help" && arg == "-h"))
                 {
                     std::cout << "\nUnkown argument: " << std::quoted(arg) << "\n";
                 }
@@ -186,7 +184,7 @@ namespace cucumber_cpp
             app.parse(gherkin::file{ std::string{ feature } }, cbs);
         }
 
-        const auto tagExpression = std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
+        const auto tagExpression = options.tags.empty() ? std::string() : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
         CucumberRunner cucumberRunner{ GetForwardArgs(), hooks, stepRepository, tagExpression, contextStorageFactory };
         cucumberRunner.Run(root);
@@ -199,21 +197,19 @@ namespace cucumber_cpp
 
     void Application::GenerateReports(std::map<std::string_view, report::Report&> additionalReports)
     {
-        using std::operator""sv;
-
-        if (std::ranges::find(options.reports, "json"sv) != options.reports.end())
+        if (std::ranges::find(options.reports, "json") != options.reports.end())
         {
             cucumber_cpp::report::JsonReport report;
             report.GenerateReport(root);
         }
 
-        if (std::ranges::find(options.reports, "console"sv) != options.reports.end())
+        if (std::ranges::find(options.reports, "console") != options.reports.end())
         {
             cucumber_cpp::report::StdOutReport report;
             report.GenerateReport(root);
         }
 
-        if (std::ranges::find(options.reports, "junit-xml"sv) != options.reports.end())
+        if (std::ranges::find(options.reports, "junit-xml") != options.reports.end())
         {
             cucumber_cpp::report::JunitReport junitReport;
             junitReport.GenerateReport(root);

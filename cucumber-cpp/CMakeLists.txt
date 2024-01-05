@@ -42,7 +42,7 @@ target_link_libraries(cucumber-cpp PUBLIC
 )
 
 target_compile_options(cucumber-cpp PRIVATE
-    -Wno-deprecated-declarations
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-deprecated-declarations>
 )
 
 add_subdirectory(report)
