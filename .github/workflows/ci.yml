@@ -3,13 +3,11 @@ name: Build & Test
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
     tags:
       - v**
   merge_group:
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
   workflow_dispatch:
 
 permissions:
