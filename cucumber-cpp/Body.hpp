@@ -28,6 +28,8 @@ namespace cucumber_cpp
 
     struct Body
     {
+        virtual ~Body() = default;
+
         virtual void Execute(const nlohmann::json& parameters = {}) = 0;
 
     protected:

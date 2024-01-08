@@ -3,10 +3,9 @@
 #include "cucumber-cpp/Context.hpp"
 #include "nlohmann/json.hpp"
 #include <algorithm>
-#include <bits/ranges_algo.h>
 #include <iterator>
 #include <ranges>
-#include <regex.h>
+#include <regex>
 #include <stdexcept>
 #include <vector>
 
