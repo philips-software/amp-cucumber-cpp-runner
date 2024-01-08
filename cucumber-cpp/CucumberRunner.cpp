@@ -3,13 +3,13 @@
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
+#include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 
 namespace cucumber_cpp
 {
-    CucumberRunner::CucumberRunner(const std::vector<std::string_view>& args, Hooks& hooks, StepRepository& stepRepository, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+    CucumberRunner::CucumberRunner(const std::vector<std::string_view>& args, Hooks& hooks, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
         : hooks{ hooks }
-        , stepRepository{ stepRepository }
         , tagExpr{ tagExpr }
         , programContext(contextStorageFactory)
     {
@@ -24,7 +24,7 @@ namespace cucumber_cpp
 
         std::ranges::for_each(json["features"], [this, &json, &totalTime](nlohmann::json& featureJson)
             {
-                FeatureRunner featureRunner{ hooks, stepRepository, programContext, tagExpr };
+                FeatureRunner featureRunner{ hooks, programContext, tagExpr };
                 featureRunner.Run(featureJson);
 
                 totalTime += featureJson.value("elapsed", 0.0);

@@ -1,8 +1,8 @@
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/StepRunner.hpp"
-#include "cucumber-cpp/Steps.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
+#include "nlohmann/json.hpp"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <memory>
@@ -28,9 +28,8 @@ namespace cucumber_cpp
         };
     }
 
-    ScenarioRunner::ScenarioRunner(Hooks& hooks, StepRepository& stepRepository, Context& programContext)
+    ScenarioRunner::ScenarioRunner(Hooks& hooks, Context& programContext)
         : hooks{ hooks }
-        , stepRepository{ stepRepository }
         , scenarioContext{ &programContext }
         , runStepStrategy{ std::make_unique<StepRunnerStrategy>() }
     {
@@ -44,7 +43,7 @@ namespace cucumber_cpp
 
         std::ranges::for_each(scenarioJson["steps"], [&scenarioJson, this, &totalTime](nlohmann::json& stepJson)
             {
-                StepRunner stepRunner{ hooks, stepRepository, scenarioContext };
+                StepRunner stepRunner{ hooks, scenarioContext };
                 runStepStrategy->Run(stepRunner, stepJson, scenarioJson["tags"]);
 
                 if (auto result = stepJson["result"]; result != result::success && result != result::skipped)

@@ -16,23 +16,23 @@ GIVEN(R"(a background step)")
 
 GIVEN(R"(a simple data table)")
 {
-    auto fixture = context->Get<NordicBleFixture>();
+    auto fixture = context.Get<NordicBleFixture>();
 }
 
 GIVEN(R"(there are ([0-9]+) cucumbers)", (std::uint32_t num))
 {
-    context->InsertAt("cucumbers_before", num);
+    context.InsertAt("cucumbers_before", num);
 }
 
 STEP(R"(I eat {int} cucumbers)", (std::uint32_t num))
 {
-    context->InsertAt("cucumbers_eaten", num);
+    context.InsertAt("cucumbers_eaten", num);
 }
 
 THEN(R"(^I should have ([0-9]+) cucumbers$)", (std::uint32_t num))
 {
-    const auto& before = context->Get<std::uint32_t>("cucumbers_before");
-    const auto& eaten = context->Get<std::uint32_t>("cucumbers_eaten");
+    const auto& before = context.Get<std::uint32_t>("cucumbers_before");
+    const auto& eaten = context.Get<std::uint32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 
@@ -41,8 +41,8 @@ THEN(R"(^I should have ([0-9]+) cucumbers$)", (std::uint32_t num))
 
 THEN(R"(I should have ([0-9]+) cucumbers left)", (std::uint32_t num))
 {
-    const auto& before = context->Get<std::uint32_t>("cucumbers_before");
-    const auto& eaten = context->Get<std::uint32_t>("cucumbers_eaten");
+    const auto& before = context.Get<std::uint32_t>("cucumbers_before");
+    const auto& eaten = context.Get<std::uint32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 

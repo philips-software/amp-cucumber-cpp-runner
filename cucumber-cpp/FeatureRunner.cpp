@@ -4,15 +4,15 @@
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/TagExpression.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
+#include "nlohmann/json.hpp"
 #include <iomanip>
 #include <ranges>
 
 namespace cucumber_cpp
 {
-    FeatureRunner::FeatureRunner(Hooks& hooks, StepRepository& stepRepository, Context& programContext, const std::string& tagExpr)
+    FeatureRunner::FeatureRunner(Hooks& hooks, Context& programContext, const std::string& tagExpr)
         : hooks{ hooks }
         , tagExpr{ tagExpr }
-        , stepRepository{ stepRepository }
         , featureContext{ &programContext }
     {}
 
@@ -28,7 +28,7 @@ namespace cucumber_cpp
         double totalTime = 0.0;
         std::ranges::for_each(json["scenarios"] | std::views::filter(isTagExprSelected), [this, &json, &totalTime](nlohmann::json& scenarioJson)
             {
-                ScenarioRunner scenarioRunner{ hooks, stepRepository, featureContext };
+                ScenarioRunner scenarioRunner{ hooks, featureContext };
                 scenarioRunner.Run(scenarioJson);
 
                 totalTime += scenarioJson.value("elapsed", 0.0);

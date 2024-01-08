@@ -5,7 +5,6 @@
 #include "cucumber-cpp/Hooks.hpp"
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include "cucumber-cpp/StepRunner.hpp"
-#include "cucumber-cpp/Steps.hpp"
 
 namespace cucumber_cpp
 {
@@ -18,7 +17,7 @@ namespace cucumber_cpp
 
     struct ScenarioRunner : OnTestPartResultEventListener
     {
-        ScenarioRunner(Hooks& hooks, StepRepository& stepRepository, Context& programContext);
+        ScenarioRunner(Hooks& hooks, Context& programContext);
 
         void Run(nlohmann::json& json);
 
@@ -27,7 +26,6 @@ namespace cucumber_cpp
 
     private:
         Hooks& hooks;
-        StepRepository& stepRepository;
         Context scenarioContext;
         std::unique_ptr<RunStepStrategy> runStepStrategy;
     };

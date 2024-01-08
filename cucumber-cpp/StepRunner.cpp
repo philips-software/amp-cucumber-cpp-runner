@@ -2,7 +2,7 @@
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/Rtrim.hpp"
-#include "cucumber-cpp/Steps.hpp"
+#include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "gtest/gtest.h"
@@ -10,6 +10,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -43,9 +44,8 @@ namespace cucumber_cpp
         };
     }
 
-    StepRunner::StepRunner(Hooks& hooks, StepRepository& stepRepository, Context& context)
+    StepRunner::StepRunner(Hooks& hooks, Context& context)
         : hooks{ hooks }
-        , stepRepository{ stepRepository }
         , context{ context }
     {
     }
@@ -61,11 +61,12 @@ namespace cucumber_cpp
             AppendFailureOnTestPartResultEvent appendFailureOnTestPartResultEvent{ json };
 
             const auto stepTypeStr = json["type"].get<std::string>();
-            const auto stepMatch = stepRepository.Get(stepTypeLut.at(stepTypeStr), json["text"]);
+            const auto stepMatches = StepRegistry::Instance().Query(stepTypeLut.at(stepTypeStr), json["text"]);
 
+            if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
             {
                 TraceTime traceTime{ json };
-                stepMatch.step->Run(context, stepMatch.regexMatch->Matches(), json["argument"]["dataTable"]);
+                step.factory(context, json["argument"]["dataTable"])->Execute(step.regexMatch->Matches());
             }
 
             if (json.count("errors") == 0)
@@ -77,7 +78,7 @@ namespace cucumber_cpp
                 json["result"] = result::failed;
             }
         }
-        catch ([[maybe_unused]] const StepNotFoundException& e)
+        catch ([[maybe_unused]] const std::out_of_range& e)
         {
             json["result"] = result::undefined;
         }

@@ -1,6 +1,6 @@
 #include "cucumber-cpp/Application.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/FeatureRunner.hpp"
+#include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/report/JsonReport.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
@@ -186,7 +186,7 @@ namespace cucumber_cpp
 
         const auto tagExpression = options.tags.empty() ? std::string() : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
-        CucumberRunner cucumberRunner{ GetForwardArgs(), hooks, stepRepository, tagExpression, contextStorageFactory };
+        CucumberRunner cucumberRunner{ GetForwardArgs(), hooks, tagExpression, contextStorageFactory };
         cucumberRunner.Run(root);
 
         if (!root.contains("result"))
