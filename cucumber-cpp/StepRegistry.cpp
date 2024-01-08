@@ -1,12 +1,13 @@
-#include "cucumber-cpp/Steps.hpp"
+
+#include "cucumber-cpp/StepRegistry.hpp"
+#include "cucumber-cpp/Context.hpp"
 #include "nlohmann/json.hpp"
+#include <algorithm>
 #include <iterator>
-#include <map>
-#include <memory>
 #include <ranges>
 #include <regex>
-#include <span>
 #include <stdexcept>
+#include <vector>
 
 namespace cucumber_cpp
 {
@@ -58,11 +59,22 @@ namespace cucumber_cpp
 
             return string;
         }
+
+        auto TypeFilter(StepType stepType)
+        {
+            return [stepType](const StepRegistry::Entry& entry) -> bool
+            {
+                return entry.type == stepType || entry.type == StepType::any;
+            };
+        };
     }
 
-    std::map<StepType, StepRepository::StepsVector> StepRepository::stepRepository;
+    StepBase::StepBase(Context& context, const nlohmann::json& table)
+        : context{ context }
+        , table{ table }
+    {}
 
-    RegexMatch::RegexMatch(const std::regex regex, const std::string& expression)
+    RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
     {
         std::smatch smatch;
         matched = std::regex_search(expression, smatch, regex);
@@ -84,9 +96,9 @@ namespace cucumber_cpp
         , regex{ ParseCucumberExpression(string) }
     {}
 
-    std::shared_ptr<RegexMatch> StepRegex::Match(const std::string& expression) const
+    std::unique_ptr<RegexMatch> StepRegex::Match(const std::string& expression) const
     {
-        return std::make_shared<RegexMatch>(regex, expression);
+        return std::make_unique<RegexMatch>(regex, expression);
     }
 
     std::string StepRegex::String() const
@@ -94,86 +106,39 @@ namespace cucumber_cpp
         return string;
     }
 
-    std::size_t StepImplementation::counter;
-
-    StepImplementation::StepImplementation()
-        : id{ counter++ }
-    {}
-
-    std::size_t StepImplementation::Id() const
+    StepRegistry& StepRegistry::Instance()
     {
-        return id;
+        static StepRegistry instance;
+        return instance;
     }
 
-    void StepImplementation::SetRegex(const std::string& str)
+    std::vector<StepMatch> StepRegistryBase::Query(StepType stepType, std::string expression) const
     {
-        regex = std::make_unique<StepRegex>(str);
-    }
+        std::vector<StepMatch> matches;
 
-    StepRegex& StepImplementation::Regex() const
-    {
-        return *regex;
-    }
-
-    StepRepository::StepRepository()
-    {
-        StepPreRegistration::RegisterAll(*this);
-    }
-
-    StepMatch StepRepository::Get(StepType stepType, std::string text) const
-    {
-        try
+        for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
         {
-            return GetByType(stepType, text);
-        }
-        catch (const StepNotFoundException&)
-        {
-            return GetByType(StepType::any, text);
-        }
-    }
-
-    void StepRepository::RegisterStepImplementation(std::shared_ptr<StepImplementation> step)
-    {
-        step->SetRegex(step->GetText());
-
-        stepRepository[step->GetType()].push_back(step);
-    }
-
-    std::size_t StepRepository::Size() const
-    {
-        return Size(StepType::given) + Size(StepType::when) + Size(StepType::then) + Size(StepType::any);
-    }
-
-    std::size_t StepRepository::Size(StepType stepType) const
-    {
-        if (stepRepository.contains(stepType))
-        {
-            return stepRepository.at(stepType).size();
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    StepMatch StepRepository::GetByType(StepType stepType, std::string text) const
-    {
-        try
-        {
-            const auto& searchVector = stepRepository.at(stepType);
-
-            for (const auto& step : searchVector)
+            if (auto match = entry.regex.Match(expression); match->Matched())
             {
-                if (const auto match = step->Regex().Match(text); match->Matched())
-                {
-                    return { step, match };
-                }
+                matches.emplace_back(std::move(match), entry.factory, entry.regex);
             }
         }
-        catch (const std::out_of_range&)
+
+        if (matches.size() == 0)
         {
+            throw std::out_of_range{ "Step: \"" + expression + "\" not found" };
         }
 
-        throw StepNotFoundException{ "Step: \"" + text + "\" not found" };
+        return matches;
+    }
+
+    std::size_t StepRegistryBase::Size() const
+    {
+        return registry.size();
+    }
+
+    std::size_t StepRegistryBase::Size(StepType stepType) const
+    {
+        return std::ranges::count(registry, stepType, &Entry::type);
     }
 }

@@ -1,9 +1,7 @@
 #ifndef CUCUMBER_CPP_APPLICATION_HPP
 #define CUCUMBER_CPP_APPLICATION_HPP
 
-#include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/Hooks.hpp"
-#include "cucumber-cpp/Steps.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "gherkin/app.hpp"
 #include <map>
@@ -37,9 +35,6 @@ namespace cucumber_cpp
 
         Options options;
         nlohmann::json root;
-
-        cucumber_cpp::Hooks hooks;
-        cucumber_cpp::StepRepository stepRepository;
 
         gherkin::app app;
         gherkin::app::callbacks cbs;

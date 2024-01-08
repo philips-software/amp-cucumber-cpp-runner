@@ -1,9 +1,11 @@
 #include "cucumber-cpp/Context.hpp"
+#include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Steps.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace cucumber_cpp
 {
@@ -21,19 +23,19 @@ namespace cucumber_cpp
 
     STEP("This is a step with a ([0-9]+)s delay", (std::uint32_t delay))
     {
-        context->InsertAt("std::uint32_t", delay);
+        context.InsertAt("std::uint32_t", delay);
     }
 
     STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::uint32_t nr))
     {
-        context->InsertAt("float", fl);
-        context->InsertAt("std::string", str);
-        context->InsertAt("std::uint32_t", nr);
+        context.InsertAt("float", fl);
+        context.InsertAt("std::string", str);
+        context.InsertAt("std::uint32_t", nr);
     }
 
     struct TestSteps : testing::Test
     {
-        StepRepository stepRepository;
+        StepRegistry& stepRegistry{ StepRegistry::Instance() };
     };
 
     TEST_F(TestSteps, Construct)
@@ -42,68 +44,71 @@ namespace cucumber_cpp
 
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
-        EXPECT_THAT(stepRepository.Size(), testing::Eq(6));
-        EXPECT_THAT(stepRepository.Size(StepType::given), testing::Eq(1));
-        EXPECT_THAT(stepRepository.Size(StepType::when), testing::Eq(1));
-        EXPECT_THAT(stepRepository.Size(StepType::then), testing::Eq(1));
-        EXPECT_THAT(stepRepository.Size(StepType::any), testing::Eq(3));
+        EXPECT_THAT(stepRegistry.Size(), testing::Eq(6));
+        EXPECT_THAT(stepRegistry.Size(StepType::given), testing::Eq(1));
+        EXPECT_THAT(stepRegistry.Size(StepType::when), testing::Eq(1));
+        EXPECT_THAT(stepRegistry.Size(StepType::then), testing::Eq(1));
+        EXPECT_THAT(stepRegistry.Size(StepType::any), testing::Eq(3));
     }
 
     TEST_F(TestSteps, GetGivenStep)
     {
-        const auto match = stepRepository.Get(StepType::given, "This is a GIVEN step");
+        const auto matches = stepRegistry.Query(StepType::given, "This is a GIVEN step");
 
-        EXPECT_THAT(match.step->GetText(), testing::StrEq("This is a GIVEN step"));
-        EXPECT_THAT(match.step->GetType(), testing::Eq(StepType::given));
+        ASSERT_THAT(matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().stepRegex.String(), testing::StrEq("This is a GIVEN step"));
     }
 
     TEST_F(TestSteps, GetWhenStep)
     {
-        const auto match = stepRepository.Get(StepType::when, "This is a WHEN step");
+        const auto matches = stepRegistry.Query(StepType::when, "This is a WHEN step");
 
-        EXPECT_THAT(match.step->GetText(), testing::StrEq("This is a WHEN step"));
-        EXPECT_THAT(match.step->GetType(), testing::Eq(StepType::when));
+        ASSERT_THAT(matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().stepRegex.String(), testing::StrEq("This is a WHEN step"));
     }
 
     TEST_F(TestSteps, GetThenStep)
     {
-        const auto match = stepRepository.Get(StepType::then, "This is a THEN step");
+        const auto matches = stepRegistry.Query(StepType::then, "This is a THEN step");
 
-        EXPECT_THAT(match.step->GetText(), testing::StrEq("This is a THEN step"));
-        EXPECT_THAT(match.step->GetType(), testing::Eq(StepType::then));
+        ASSERT_THAT(matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().stepRegex.String(), testing::StrEq("This is a THEN step"));
     }
 
     TEST_F(TestSteps, GetAnyStep)
     {
-        const auto match = stepRepository.Get(StepType::given, "This is a STEP step");
+        const auto matches = stepRegistry.Query(StepType::given, "This is a STEP step");
 
-        EXPECT_THAT(match.step->GetText(), testing::StrEq("This is a STEP step"));
-        EXPECT_THAT(match.step->GetType(), testing::Eq(StepType::any));
+        ASSERT_THAT(matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().stepRegex.String(), testing::StrEq("This is a STEP step"));
     }
 
     TEST_F(TestSteps, GetStepWithMatches)
     {
-        const auto match = stepRepository.Get(StepType::when, "This is a step with a 10s delay");
+        const auto matches = stepRegistry.Query(StepType::when, "This is a step with a 10s delay");
 
-        EXPECT_THAT(match.step->GetText(), testing::StrEq("This is a step with a ([0-9]+)s delay"));
-        EXPECT_THAT(match.step->GetType(), testing::Eq(StepType::any));
-        EXPECT_THAT(match.regexMatch->Matches().size(), testing::Eq(1));
-        EXPECT_THAT(match.regexMatch->Matches()[0], testing::StrEq("10"));
+        ASSERT_THAT(matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().stepRegex.String(), testing::StrEq("This is a step with a ([0-9]+)s delay"));
+
+        EXPECT_THAT(matches.front().regexMatch->Matches().size(), testing::Eq(1));
+        EXPECT_THAT(matches.front().regexMatch->Matches()[0], testing::StrEq("10"));
     }
 
     TEST_F(TestSteps, GetInvalidStep)
     {
-        EXPECT_THROW(stepRepository.Get(StepType::when, "This step does not exist"), StepNotFoundException);
+        EXPECT_THROW(stepRegistry.Query(StepType::when, "This step does not exist"), std::out_of_range);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)
     {
-        const auto match = stepRepository.Get(StepType::when, R"(Step with cucumber expression syntax 1.5 """abcdef"" 10)");
+        const auto matches = stepRegistry.Query(StepType::when, R"(Step with cucumber expression syntax 1.5 """abcdef"" 10)");
+
+        ASSERT_THAT(matches.size(), testing::Eq(1));
 
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
 
-        match.step->Run(context, match.regexMatch->Matches(), {});
+        matches.front().factory(context, {})->Execute(matches.front().regexMatch->Matches());
 
         EXPECT_THAT(context.Contains("float"), testing::IsTrue());
         EXPECT_THAT(context.Contains("std::string"), testing::IsTrue());

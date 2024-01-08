@@ -1,16 +1,16 @@
 #include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/FeatureRunner.hpp"
+#include "cucumber-cpp/HookScopes.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
+#include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 
 namespace cucumber_cpp
 {
-    CucumberRunner::CucumberRunner(const std::vector<std::string_view>& args, Hooks& hooks, StepRepository& stepRepository, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : hooks{ hooks }
-        , stepRepository{ stepRepository }
-        , tagExpr{ tagExpr }
+    CucumberRunner::CucumberRunner(const std::vector<std::string_view>& args, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+        : tagExpr{ tagExpr }
         , programContext(contextStorageFactory)
     {
         programContext.InsertAt("args", args);
@@ -18,13 +18,13 @@ namespace cucumber_cpp
 
     void CucumberRunner::Run(nlohmann::json& json)
     {
-        BeforeAfterAllScope programHookeScope{ hooks, programContext };
+        BeforeAfterAllScope programHookeScope{ programContext };
 
         double totalTime = 0.0;
 
         std::ranges::for_each(json["features"], [this, &json, &totalTime](nlohmann::json& featureJson)
             {
-                FeatureRunner featureRunner{ hooks, stepRepository, programContext, tagExpr };
+                FeatureRunner featureRunner{ programContext, tagExpr };
                 featureRunner.Run(featureJson);
 
                 totalTime += featureJson.value("elapsed", 0.0);

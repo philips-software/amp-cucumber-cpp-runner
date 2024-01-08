@@ -5,23 +5,31 @@ add_library(cucumber-cpp STATIC ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber-cpp PRIVATE
     Application.cpp
     Application.hpp
+    BodyMacro.hpp
+    Body.hpp
     Context.hpp
     CucumberRunner.cpp
     CucumberRunner.hpp
     FeatureRunner.cpp
     FeatureRunner.hpp
-    Hooks.cpp
+    HookRegistry.cpp
+    HookRegistry.hpp
     Hooks.hpp
+    HookScopes.cpp
+    HookScopes.hpp
+    JsonTagToSet.cpp
+    JsonTagToSet.hpp
     OnTestPartResultEventListener.cpp
     OnTestPartResultEventListener.hpp
     Rtrim.cpp
     Rtrim.hpp
     ScenarioRunner.cpp
     ScenarioRunner.hpp
+    Steps.hpp
+    StepRegistry.cpp
+    StepRegistry.hpp
     StepRunner.cpp
     StepRunner.hpp
-    Steps.cpp
-    Steps.hpp
     TagExpression.cpp
     TagExpression.hpp
     TraceTime.cpp

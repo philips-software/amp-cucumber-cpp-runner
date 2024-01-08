@@ -12,6 +12,7 @@ target_link_libraries(cucumber-cpp.test
 
 target_sources(cucumber-cpp.test PRIVATE
     TestContext.cpp
+    TestHooks.cpp
     TestTagExpression.cpp
     TestSteps.cpp
 )
