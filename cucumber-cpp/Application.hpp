@@ -36,8 +36,6 @@ namespace cucumber_cpp
         Options options;
         nlohmann::json root;
 
-        cucumber_cpp::Hooks hooks;
-
         gherkin::app app;
         gherkin::app::callbacks cbs;
     };

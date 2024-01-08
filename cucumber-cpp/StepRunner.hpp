@@ -8,12 +8,11 @@ namespace cucumber_cpp
 {
     struct StepRunner
     {
-        StepRunner(Hooks& hooks, Context& context);
+        StepRunner(Context& context);
 
         void Run(nlohmann::json& json, nlohmann::json& scenarioTags);
 
     private:
-        Hooks& hooks;
         Context& context;
     };
 }

@@ -12,8 +12,13 @@ target_sources(cucumber-cpp PRIVATE
     CucumberRunner.hpp
     FeatureRunner.cpp
     FeatureRunner.hpp
-    Hooks.cpp
+    HookRegistry.cpp
+    HookRegistry.hpp
     Hooks.hpp
+    HookScopes.cpp
+    HookScopes.hpp
+    JsonTagToSet.cpp
+    JsonTagToSet.hpp
     OnTestPartResultEventListener.cpp
     OnTestPartResultEventListener.hpp
     Rtrim.cpp

@@ -8,13 +8,11 @@ namespace cucumber_cpp
 {
     struct FeatureRunner
     {
-        FeatureRunner(Hooks& hooks, Context& programContext, const std::string& tagExpr);
+        FeatureRunner(Context& programContext, const std::string& tagExpr);
 
         void Run(nlohmann::json& json);
 
     private:
-        Hooks& hooks;
-
         std::string tagExpr;
         Context featureContext;
     };

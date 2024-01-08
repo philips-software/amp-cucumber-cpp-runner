@@ -1,5 +1,6 @@
 #include "cucumber-cpp/FeatureRunner.hpp"
-#include "cucumber-cpp/Hooks.hpp"
+#include "cucumber-cpp/HookScopes.hpp"
+#include "cucumber-cpp/JsonTagToSet.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/TagExpression.hpp"
@@ -10,15 +11,14 @@
 
 namespace cucumber_cpp
 {
-    FeatureRunner::FeatureRunner(Hooks& hooks, Context& programContext, const std::string& tagExpr)
-        : hooks{ hooks }
-        , tagExpr{ tagExpr }
+    FeatureRunner::FeatureRunner(Context& programContext, const std::string& tagExpr)
+        : tagExpr{ tagExpr }
         , featureContext{ &programContext }
     {}
 
     void FeatureRunner::Run(nlohmann::json& json)
     {
-        BeforeAfterFeatureHookScope featureHookScope{ hooks, featureContext, json };
+        BeforeAfterFeatureHookScope featureHookScope{ featureContext, JsonTagsToSet(json["ast"]["feature"]["tags"]) };
 
         const auto isTagExprSelected = [this](const auto& json)
         {
@@ -28,7 +28,7 @@ namespace cucumber_cpp
         double totalTime = 0.0;
         std::ranges::for_each(json["scenarios"] | std::views::filter(isTagExprSelected), [this, &json, &totalTime](nlohmann::json& scenarioJson)
             {
-                ScenarioRunner scenarioRunner{ hooks, featureContext };
+                ScenarioRunner scenarioRunner{ featureContext };
                 scenarioRunner.Run(scenarioJson);
 
                 totalTime += scenarioJson.value("elapsed", 0.0);

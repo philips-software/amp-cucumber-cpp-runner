@@ -11,12 +11,11 @@ namespace cucumber_cpp
 {
     struct CucumberRunner
     {
-        CucumberRunner(const std::vector<std::string_view>& args, Hooks& hooks, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory);
+        CucumberRunner(const std::vector<std::string_view>& args, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
         void Run(nlohmann::json& json);
 
     private:
-        Hooks& hooks;
         std::string tagExpr;
         Context programContext;
     };

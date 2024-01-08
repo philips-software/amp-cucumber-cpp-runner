@@ -1,4 +1,6 @@
 #include "cucumber-cpp/StepRunner.hpp"
+#include "cucumber-cpp/HookScopes.hpp"
+#include "cucumber-cpp/JsonTagToSet.hpp"
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/Rtrim.hpp"
@@ -44,15 +46,14 @@ namespace cucumber_cpp
         };
     }
 
-    StepRunner::StepRunner(Hooks& hooks, Context& context)
-        : hooks{ hooks }
-        , context{ context }
+    StepRunner::StepRunner(Context& context)
+        : context{ context }
     {
     }
 
     void StepRunner::Run(nlohmann::json& json, nlohmann::json& scenarioTags)
     {
-        BeforeAfterStepHookScope stepHookScope{ hooks, context, scenarioTags };
+        BeforeAfterStepHookScope stepHookScope{ context, JsonTagsToSet(scenarioTags) };
         testing::internal::CaptureStdout();
         testing::internal::CaptureStderr();
 

@@ -1,4 +1,6 @@
 #include "cucumber-cpp/ScenarioRunner.hpp"
+#include "cucumber-cpp/HookScopes.hpp"
+#include "cucumber-cpp/JsonTagToSet.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/StepRunner.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
@@ -28,22 +30,20 @@ namespace cucumber_cpp
         };
     }
 
-    ScenarioRunner::ScenarioRunner(Hooks& hooks, Context& programContext)
-        : hooks{ hooks }
-        , scenarioContext{ &programContext }
+    ScenarioRunner::ScenarioRunner(Context& programContext)
+        : scenarioContext{ &programContext }
         , runStepStrategy{ std::make_unique<StepRunnerStrategy>() }
     {
     }
 
     void ScenarioRunner::Run(nlohmann::json& scenarioJson)
     {
-
-        BeforeAfterHookScope scenarioHookScope{ hooks, scenarioContext, scenarioJson["tags"] };
+        BeforeAfterHookScope scenarioHookScope{ scenarioContext, JsonTagsToSet(scenarioJson["tags"]) };
         double totalTime = 0.0;
 
         std::ranges::for_each(scenarioJson["steps"], [&scenarioJson, this, &totalTime](nlohmann::json& stepJson)
             {
-                StepRunner stepRunner{ hooks, scenarioContext };
+                StepRunner stepRunner{ scenarioContext };
                 runStepStrategy->Run(stepRunner, stepJson, scenarioJson["tags"]);
 
                 if (auto result = stepJson["result"]; result != result::success && result != result::skipped)

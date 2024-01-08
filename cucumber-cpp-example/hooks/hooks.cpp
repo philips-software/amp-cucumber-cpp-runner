@@ -24,11 +24,11 @@ HOOK_BEFORE_ALL()
     // spawn eventdispatcher
 }
 
-HOOK_BEFORE()
+HOOK_BEFORE_SCENARIO()
 {
 }
 
-HOOK_BEFORE_COND("@dingus")
+HOOK_BEFORE_SCENARIO("@dingus")
 {
     std::cout << "running only for dingus tests\n";
 }
@@ -41,7 +41,7 @@ HOOK_AFTER_STEP()
 {
 }
 
-HOOK_AFTER()
+HOOK_AFTER_SCENARIO()
 {
 }
 

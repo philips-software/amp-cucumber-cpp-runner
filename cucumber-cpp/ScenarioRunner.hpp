@@ -17,7 +17,7 @@ namespace cucumber_cpp
 
     struct ScenarioRunner : OnTestPartResultEventListener
     {
-        ScenarioRunner(Hooks& hooks, Context& programContext);
+        ScenarioRunner(Context& programContext);
 
         void Run(nlohmann::json& json);
 
@@ -25,7 +25,6 @@ namespace cucumber_cpp
         void OnTestPartResult(const testing::TestPartResult& testPartResult) override;
 
     private:
-        Hooks& hooks;
         Context scenarioContext;
         std::unique_ptr<RunStepStrategy> runStepStrategy;
     };

@@ -12,19 +12,22 @@
 #define BODY_STRUCT CONCAT(BodyImpl, __LINE__)
 
 #define BODY(matcher, type, args, registration, base)                                     \
-    struct BODY_STRUCT : cucumber_cpp::Body                                               \
-        , cucumber_cpp::base                                                              \
+    namespace                                                                             \
     {                                                                                     \
-        using cucumber_cpp::base::base;                                                   \
-        void Execute(const nlohmann::json& parameters = {}) override                      \
+        struct BODY_STRUCT : cucumber_cpp::Body                                           \
+            , cucumber_cpp::base                                                          \
         {                                                                                 \
-            InvokeWithArg(this, parameters, &BODY_STRUCT::ExecuteWithArgs);               \
-        }                                                                                 \
+            using cucumber_cpp::base::base;                                               \
+            void Execute(const nlohmann::json& parameters = {}) override                  \
+            {                                                                             \
+                InvokeWithArg(this, parameters, &BODY_STRUCT::ExecuteWithArgs);           \
+            }                                                                             \
                                                                                           \
-    private:                                                                              \
-        void ExecuteWithArgs args;                                                        \
-        static std::size_t ID;                                                            \
-    };                                                                                    \
+        private:                                                                          \
+            void ExecuteWithArgs args;                                                    \
+            static std::size_t ID;                                                        \
+        };                                                                                \
+    }                                                                                     \
     std::size_t BODY_STRUCT::ID = cucumber_cpp::registration<BODY_STRUCT>(matcher, type); \
     void BODY_STRUCT::ExecuteWithArgs args
 

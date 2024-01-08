@@ -6,6 +6,7 @@
 #include <bits/ranges_algo.h>
 #include <iterator>
 #include <ranges>
+#include <regex.h>
 #include <stdexcept>
 #include <vector>
 
@@ -134,7 +135,7 @@ namespace cucumber_cpp
 
     std::size_t StepRegistryBase::Size() const
     {
-        return Size(StepType::given) + Size(StepType::when) + Size(StepType::then) + Size(StepType::any);
+        return registry.size();
     }
 
     std::size_t StepRegistryBase::Size(StepType stepType) const
