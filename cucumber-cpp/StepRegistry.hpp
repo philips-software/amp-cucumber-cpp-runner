@@ -21,9 +21,9 @@ namespace cucumber_cpp
         any
     };
 
-    struct StepBase
+    struct Step
     {
-        StepBase(Context& context, const nlohmann::json& table);
+        Step(Context& context, const nlohmann::json& table);
 
     protected:
         void Given(const std::string& step);
