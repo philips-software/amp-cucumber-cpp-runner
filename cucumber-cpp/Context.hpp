@@ -314,12 +314,12 @@ namespace cucumber_cpp
         }
 
         template<class T>
-        [[nodiscard]] bool Contains()
+        [[nodiscard]] bool Contains() const
         {
             return Contains(typeid(T).name());
         }
 
-        [[nodiscard]] bool Contains(std::string_view key)
+        [[nodiscard]] bool Contains(std::string_view key) const
         {
             return storage->Contains(key);
         }
