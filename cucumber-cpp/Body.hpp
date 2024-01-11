@@ -3,6 +3,7 @@
 
 #include "nlohmann/json.hpp"
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 namespace cucumber_cpp
@@ -36,7 +37,7 @@ namespace cucumber_cpp
         template<class T, class... Args, std::size_t... I>
         void InvokeWithArgImpl(T* t, const nlohmann::json& json, void (T::*ptr)(Args...), std::index_sequence<I...>)
         {
-            (t->*ptr)(StringTo<Args>(json[I])...);
+            (t->*ptr)(StringTo<std::remove_cvref_t<Args>>(json[I])...);
         }
 
         template<class T, class... Args>
