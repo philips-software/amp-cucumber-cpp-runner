@@ -26,4 +26,4 @@ jobs:
         id: release
         with:
           command: manifest
-          token: ${{ secrets.RELEASE_PLEASE_WORKFLOW_ACCESS }}
+          token: ${{ secrets.RELEASE_PLEASE_WORKFLOW_ACCESS }} # expires 2024-12-31, requires workflow scope
