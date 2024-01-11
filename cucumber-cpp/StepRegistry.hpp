@@ -26,6 +26,14 @@ namespace cucumber_cpp
         Step(Context& context, const nlohmann::json& table);
 
     protected:
+        void Given(const std::string& step);
+        void When(const std::string& step);
+        void Then(const std::string& step);
+
+    private:
+        void Any(StepType type, const std::string& step);
+
+    protected:
         Context& context;
         const nlohmann::json& table;
     };

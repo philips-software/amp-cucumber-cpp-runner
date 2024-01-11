@@ -74,6 +74,29 @@ namespace cucumber_cpp
         , table{ table }
     {}
 
+    void Step::Given(const std::string& step)
+    {
+        Any(StepType::given, step);
+    }
+
+    void Step::When(const std::string& step)
+    {
+        Any(StepType::when, step);
+    }
+
+    void Step::Then(const std::string& step)
+    {
+        Any(StepType::then, step);
+    }
+
+    void Step::Any(StepType type, const std::string& step)
+    {
+        const auto stepMatches = StepRegistry::Instance().Query(type, step);
+
+        if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
+            step.factory(context, {})->Execute(step.regexMatch->Matches());
+    }
+
     RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
     {
         std::smatch smatch;
