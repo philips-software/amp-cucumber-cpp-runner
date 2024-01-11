@@ -90,7 +90,7 @@ namespace cucumber_cpp
             {
                 const auto param = arg.substr(std::string_view("--Xapp,").size());
 
-                for (const auto xArg : std::views::split(param, ","))
+                for (const auto xArg : std::views::split(param, ','))
                 {
                     forwardArgs.push_back(subrange_to_sv(xArg));
                 }
