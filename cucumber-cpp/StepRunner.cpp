@@ -53,7 +53,6 @@ namespace cucumber_cpp
 
     void StepRunner::Run(nlohmann::json& json, nlohmann::json& scenarioTags)
     {
-        BeforeAfterStepHookScope stepHookScope{ context, JsonTagsToSet(scenarioTags) };
         testing::internal::CaptureStdout();
         testing::internal::CaptureStderr();
 
@@ -67,6 +66,9 @@ namespace cucumber_cpp
             if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
             {
                 TraceTime traceTime{ json };
+
+                BeforeAfterStepHookScope stepHookScope{ context, JsonTagsToSet(scenarioTags) };
+
                 step.factory(context, json["argument"]["dataTable"])->Execute(step.regexMatch->Matches());
             }
 
@@ -79,7 +81,7 @@ namespace cucumber_cpp
                 json["result"] = result::failed;
             }
         }
-        catch ([[maybe_unused]] const std::out_of_range& e)
+        catch ([[maybe_unused]] const StepRegistry::StepNotFound& e)
         {
             json["result"] = result::undefined;
         }
