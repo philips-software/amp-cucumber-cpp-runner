@@ -4,30 +4,23 @@
 #include "cucumber-cpp/BodyMacro.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
 
-#define STEP_(matcher, type, args) BODY(matcher, type, args, StepRegistry::Register, StepBase)
+#define STEP_(matcher, type, args, fixture) BODY(matcher, type, args, StepRegistry::Register, fixture)
 
-#define GIVEN(...)                     \
-    STEP_(                             \
-        BODY_MATCHER(__VA_ARGS__, ""), \
-        cucumber_cpp::StepType::given, \
-        BODY_ARGS(__VA_ARGS__, (), ()))
+#define STEP_TYPE_(fixture, type, ...)  \
+    STEP_(                              \
+        BODY_MATCHER(__VA_ARGS__, ""),  \
+        type,                           \
+        BODY_ARGS(__VA_ARGS__, (), ()), \
+        fixture)
 
-#define WHEN(...)                      \
-    STEP_(                             \
-        BODY_MATCHER(__VA_ARGS__, ""), \
-        cucumber_cpp::StepType::when,  \
-        BODY_ARGS(__VA_ARGS__, (), ()))
+#define GIVEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::StepType::given, __VA_ARGS__)
+#define WHEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::StepType::when, __VA_ARGS__)
+#define THEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::StepType::then, __VA_ARGS__)
+#define STEP_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::StepType::any, __VA_ARGS__)
 
-#define THEN(...)                      \
-    STEP_(                             \
-        BODY_MATCHER(__VA_ARGS__, ""), \
-        cucumber_cpp::StepType::then,  \
-        BODY_ARGS(__VA_ARGS__, (), ()))
-
-#define STEP(...)                      \
-    STEP_(                             \
-        BODY_MATCHER(__VA_ARGS__, ""), \
-        cucumber_cpp::StepType::any,   \
-        BODY_ARGS(__VA_ARGS__, (), ()))
+#define GIVEN(...) GIVEN_F(cucumber_cpp::Step, __VA_ARGS__)
+#define WHEN(...) WHEN_F(cucumber_cpp::Step, __VA_ARGS__)
+#define THEN(...) THEN_F(cucumber_cpp::Step, __VA_ARGS__)
+#define STEP(...) STEP_F(cucumber_cpp::Step, __VA_ARGS__)
 
 #endif

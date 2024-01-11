@@ -69,7 +69,7 @@ namespace cucumber_cpp
         };
     }
 
-    StepBase::StepBase(Context& context, const nlohmann::json& table)
+    Step::Step(Context& context, const nlohmann::json& table)
         : context{ context }
         , table{ table }
     {}
@@ -126,7 +126,7 @@ namespace cucumber_cpp
 
         if (matches.size() == 0)
         {
-            throw std::out_of_range{ "Step: \"" + expression + "\" not found" };
+            throw StepNotFound{ "Step: \"" + expression + "\" not found" };
         }
 
         return matches;
