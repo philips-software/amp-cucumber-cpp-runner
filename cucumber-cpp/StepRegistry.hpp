@@ -26,6 +26,14 @@ namespace cucumber_cpp
         StepBase(Context& context, const nlohmann::json& table);
 
     protected:
+        void Given(const std::string& step);
+        void When(const std::string& step);
+        void Then(const std::string& step);
+
+    private:
+        void Any(StepType type, const std::string& step);
+
+    protected:
         Context& context;
         const nlohmann::json& table;
     };
@@ -63,6 +71,11 @@ namespace cucumber_cpp
 
     struct StepRegistryBase
     {
+        struct StepNotFound : std::out_of_range
+        {
+            using std::out_of_range::out_of_range;
+        };
+
         struct Entry
         {
             StepType type;
