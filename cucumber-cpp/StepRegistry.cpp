@@ -94,9 +94,7 @@ namespace cucumber_cpp
         const auto stepMatches = StepRegistry::Instance().Query(type, step);
 
         if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
-        {
             step.factory(context, {})->Execute(step.regexMatch->Matches());
-        }
     }
 
     RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
