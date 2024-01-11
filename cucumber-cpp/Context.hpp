@@ -18,6 +18,11 @@ namespace cucumber_cpp
     {
         struct ContextStorage
         {
+            struct KeyNotFound : std::out_of_range
+            {
+                using std::out_of_range::out_of_range;
+            };
+
             struct Entry
             {
                 Entry(std::string_view key,
@@ -79,7 +84,7 @@ namespace cucumber_cpp
                 else
                 {
                     std::cerr << "key not found: \"" << key << "\"" << std::endl;
-                    throw std::out_of_range{ std::string{ key } };
+                    throw KeyNotFound{ std::string{ key } };
                 }
             }
 
