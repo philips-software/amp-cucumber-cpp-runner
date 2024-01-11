@@ -5,6 +5,10 @@
         "context": "..",
         "dockerfile": "Dockerfile"
     },
+    "runArgs": [
+        "--add-host=host.docker.internal:host-gateway",
+        "--privileged"
+    ],
     // Add the IDs of extensions you want installed when the container is created.
     "customizations": {
         "vscode": {
