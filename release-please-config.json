@@ -6,7 +6,7 @@
     "packages": {
         ".": {
             "release-type": "simple",
-            "package-name": "amp-cucumber-cpp-runner-poc",
+            "package-name": "amp-cucumber-cpp-runner",
             "extra-files": [
                 "CMakeLists.txt"
             ]
