@@ -53,6 +53,10 @@ target_compile_options(cucumber-cpp PRIVATE
     $<$<CXX_COMPILER_ID:GNU>:-Wno-deprecated-declarations>
 )
 
+target_compile_options(cucumber-cpp PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
+)
+
 add_subdirectory(report)
 
 if (CCR_BUILD_TESTS)
