@@ -42,7 +42,7 @@ target_include_directories(cucumber-cpp PUBLIC
 
 target_link_libraries(cucumber-cpp PUBLIC
     gtest
-    gherkin-cpp
+    cucumber_gherkin_lib
     nlohmann_json::nlohmann_json
 
     PRIVATE

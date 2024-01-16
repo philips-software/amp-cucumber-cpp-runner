@@ -1,6 +1,6 @@
 FetchContent_Declare(cucumber_gherkin
-    GIT_REPOSITORY https://github.com/daantimmer/gherkin.git
-    GIT_TAG "fix-compilation-issues-with-clang"
+    GIT_REPOSITORY https://github.com/cucumber/gherkin.git
+    GIT_TAG "main"
 )
 
 FetchContent_MakeAvailable(cucumber_gherkin)

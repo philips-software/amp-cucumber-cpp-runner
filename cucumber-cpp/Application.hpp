@@ -3,7 +3,7 @@
 
 #include "cucumber-cpp/Hooks.hpp"
 #include "cucumber-cpp/report/Report.hpp"
-#include "gherkin/app.hpp"
+#include "cucumber/gherkin/app.hpp"
 #include <map>
 #include <span>
 #include <string_view>
@@ -36,8 +36,8 @@ namespace cucumber_cpp
         Options options;
         nlohmann::json root;
 
-        gherkin::app app;
-        gherkin::app::callbacks cbs;
+        cucumber::gherkin::app app;
+        cucumber::gherkin::app::callbacks cbs;
     };
 }
 
