@@ -5,7 +5,7 @@
 #include "cucumber-cpp/report/JsonReport.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
 #include "cucumber-cpp/report/StdOutReport.hpp"
-#include "gherkin/file.hpp"
+#include "cucumber/gherkin/file.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
@@ -144,7 +144,7 @@ namespace cucumber_cpp
     Application::Application(std::span<const char*> args)
         : options{ args }
         , cbs{
-            .ast = [&](const gherkin::app::parser_result& ast)
+            .ast = [&](const cucumber::gherkin::app::parser_result& ast)
             {
                 nlohmann::json astJson;
 
@@ -181,7 +181,7 @@ namespace cucumber_cpp
     {
         for (const auto feature : options.features)
         {
-            app.parse(gherkin::file{ std::string{ feature } }, cbs);
+            app.parse(cucumber::gherkin::file{ std::string{ feature } }, cbs);
         }
 
         const auto tagExpression = options.tags.empty() ? std::string() : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
