@@ -34,3 +34,10 @@ teardown() {
     assert_failure
     assert_output --partial "Error: no features have been executed"
 }
+
+@test "All features in a folder" {
+    run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example --feature cucumber-cpp-example/features/subfolder --report console --Xapp,--st
+    assert_success
+    assert_output --partial "Given there are 10 cucumbers"
+    assert_output --partial "Given there are 20 cucumbers"
+}

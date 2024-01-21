@@ -31,12 +31,23 @@ namespace cucumber_cpp
 
         std::string_view subrange_to_sv(const auto& subrange)
         {
+
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
-        std::string JoinStringWithSpace(std::string a, std::string_view b)
+        std::string JoinStringWithSpace(const std::string& a, std::string_view b)
         {
             return a + " " + std::string{ b };
+        }
+
+        std::filesystem::path to_fs_path(const std::string_view& sv)
+        {
+            return { sv };
+        }
+
+        bool is_feature_file(const std::filesystem::directory_entry& entry)
+        {
+            return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
         void ExitWithHelp(std::string_view name)
@@ -114,7 +125,7 @@ namespace cucumber_cpp
 
         const auto validateReports = [&, this](auto validate)
         {
-            if (reports.size() == 0)
+            if (reports.empty())
             {
                 std::cout << "\nno report generators";
                 invalid();
@@ -127,7 +138,7 @@ namespace cucumber_cpp
 
         const auto validateArguments = [&, this]()
         {
-            if (features.size() == 0)
+            if (features.empty())
             {
                 std::cout << "\nno feature files or folders";
                 validateReports(invalid);
@@ -179,14 +190,12 @@ namespace cucumber_cpp
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
-        for (const auto feature : options.features)
-        {
-            app.parse(cucumber::gherkin::file{ std::string{ feature } }, cbs);
-        }
+        for (const auto& featurePath : GetFeatureFiles())
+            app.parse(cucumber::gherkin::file{ featurePath }, cbs);
 
-        const auto tagExpression = options.tags.empty() ? std::string() : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
+        const auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
-        CucumberRunner cucumberRunner{ GetForwardArgs(), tagExpression, contextStorageFactory };
+        CucumberRunner cucumberRunner{ GetForwardArgs(), tagExpression, std::move(contextStorageFactory) };
         cucumberRunner.Run(root);
 
         if (!root.contains("result"))
@@ -195,7 +204,7 @@ namespace cucumber_cpp
         }
     }
 
-    void Application::GenerateReports(std::map<std::string_view, report::Report&> additionalReports)
+    void Application::GenerateReports(const std::map<std::string_view, report::Report&>& /*unused*/)
     {
         if (std::ranges::find(options.reports, "json") != options.reports.end())
         {
@@ -223,5 +232,21 @@ namespace cucumber_cpp
             return 0;
         }
         return 1;
+    }
+
+    std::vector<std::filesystem::path> Application::GetFeatureFiles() const
+    {
+        std::vector<std::filesystem::path> files;
+
+        for (const auto feature : options.features | std::views::transform(to_fs_path))
+            if (std::filesystem::is_directory(feature))
+            {
+                for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
+                    files.push_back(entry.path());
+            }
+            else
+                files.emplace_back(feature);
+
+        return files;
     }
 }

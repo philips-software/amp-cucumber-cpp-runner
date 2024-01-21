@@ -19,7 +19,7 @@ GIVEN(R"(a simple data table)")
     auto fixture = context.Get<NordicBleFixture>();
 }
 
-GIVEN(R"(there are ([0-9]+) cucumbers)", (std::uint32_t num))
+GIVEN(R"(there are {int} cucumbers)", (std::uint32_t num))
 {
     context.InsertAt("cucumbers_before", num);
 }

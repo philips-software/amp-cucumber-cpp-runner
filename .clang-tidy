@@ -1,5 +1,26 @@
 ---
-Checks: '-*,modernize-use-override'
+Checks:          '
+    clang-analyzer-*,
+    cppcoreguidelines*,
+    -cppcoreguidelines-pro-bounds-constant-array-index,
+    -cppcoreguidelines-avoid-const-or-ref-data-members,
+    -cppcoreguidelines-non-private-member-variables-in-classes,
+    -cppcoreguidelines-pro-type-cstyle-cast
+    -cppcoreguidelines-special-member-functions
+    misc-*,
+    -misc-no-recursion,
+    -misc-non-private-member-variables-in-classes,
+    modernize*,
+    -modernize-use-trailing-return-type,
+    performance*,
+    -performance-no-int-to-ptr,
+    readability*,
+    -readability-else-after-return,
+    -readability-identifier-length,
+    -readability-braces-around-statements'
 WarningsAsErrors: ''
+AnalyzeTemporaryDtors: false
 HeaderFilterRegex: '.*'
 FormatStyle: file
+CheckOptions:
+    AllowSoleDefaultDtor: true
