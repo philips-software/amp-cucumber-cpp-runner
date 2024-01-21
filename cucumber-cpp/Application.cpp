@@ -191,7 +191,7 @@ namespace cucumber_cpp
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
         for (const auto& featurePath : GetFeatureFiles())
-            app.parse(cucumber::gherkin::file{ featurePath }, cbs);
+            app.parse(cucumber::gherkin::file{ featurePath.string() }, cbs);
 
         const auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
