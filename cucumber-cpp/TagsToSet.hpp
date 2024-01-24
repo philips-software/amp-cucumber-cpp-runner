@@ -10,8 +10,7 @@ namespace cucumber_cpp
 {
     std::set<std::string, std::less<>> TagsToSet(const auto& tags)
     {
-        decltype(TagsToSet(tags)) result;
-        // std::set<std::string, std::less<>> result;
+        std::set<std::string, std::less<>> result;
 
         for (const auto& entry : tags)
             result.insert(entry.name);

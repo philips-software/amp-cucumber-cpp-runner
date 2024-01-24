@@ -30,7 +30,14 @@ namespace cucumber_cpp
 
     FeatureRunnerV2::~FeatureRunnerV2()
     {
-        stopFeatureOnDestruction();
+        try
+        {
+            stopFeatureOnDestruction();
+        }
+        catch (...)
+        {
+            std::cout << "\nexception caught during FeatureRunner dtor";
+        }
     }
 
     const FeatureSource& FeatureRunnerV2::Source() const
