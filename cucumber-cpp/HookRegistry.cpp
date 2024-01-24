@@ -21,7 +21,7 @@ namespace cucumber_cpp
         : context{ context }
     {}
 
-    TagExpressionMatch::TagExpressionMatch(const std::string& tagExpression, const std::set<std::string>& tags)
+    TagExpressionMatch::TagExpressionMatch(const std::string& tagExpression, const std::set<std::string, std::less<>>& tags)
         : matched{ IsTagExprSelected(tagExpression, tags) }
     {}
 
@@ -34,7 +34,7 @@ namespace cucumber_cpp
         : tagExpression{ std::move(tagExpression) }
     {}
 
-    std::unique_ptr<TagExpressionMatch> HookTagExpression::Match(const std::set<std::string>& tags) const
+    std::unique_ptr<TagExpressionMatch> HookTagExpression::Match(const std::set<std::string, std::less<>>& tags) const
     {
         return std::make_unique<TagExpressionMatch>(tagExpression, tags);
     }
@@ -44,7 +44,7 @@ namespace cucumber_cpp
         return tagExpression;
     }
 
-    std::vector<HookMatch> HookRegistryBase::Query(HookType hookType, const std::set<std::string>& tags) const
+    std::vector<HookMatch> HookRegistryBase::Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const
     {
         std::vector<HookMatch> matches;
 

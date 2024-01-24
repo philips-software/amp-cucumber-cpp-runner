@@ -19,7 +19,7 @@ namespace cucumber_cpp
         }
     }
 
-    bool IsTagExprSelected(const std::string& tagExpr, const std::set<std::string>& tags)
+    bool IsTagExprSelected(const std::string& tagExpr, const std::set<std::string, std::less<>>& tags)
     {
         if (tagExpr.empty())
         {

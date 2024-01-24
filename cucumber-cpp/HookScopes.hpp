@@ -11,20 +11,20 @@ namespace cucumber_cpp
 
     struct BeforeAfterScopeExecuter
     {
-        BeforeAfterScopeExecuter(Context& context, const std::set<std::string>& tags);
+        BeforeAfterScopeExecuter(Context& context, const std::set<std::string, std::less<>>& tags);
 
         void ExecuteAll(HookType hook);
 
     private:
         Context& context;
-        std::set<std::string> tags;
+        std::set<std::string, std::less<>> tags;
     };
 
     template<HookType BeforeHook, HookType AfterHook>
     struct BeforeAfterScope : BeforeAfterScopeExecuter
     {
     public:
-        BeforeAfterScope(Context& context, const std::set<std::string>& tags = {});
+        BeforeAfterScope(Context& context, const std::set<std::string, std::less<>>& tags = {});
 
     protected:
         ~BeforeAfterScope();
@@ -55,7 +55,7 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<HookType BeforeHook, HookType AfterHook>
-    BeforeAfterScope<BeforeHook, AfterHook>::BeforeAfterScope(Context& context, const std::set<std::string>& tags)
+    BeforeAfterScope<BeforeHook, AfterHook>::BeforeAfterScope(Context& context, const std::set<std::string, std::less<>>& tags)
         : BeforeAfterScopeExecuter{ context, tags }
     {
         BeforeAfterScopeExecuter::ExecuteAll(BeforeHook);

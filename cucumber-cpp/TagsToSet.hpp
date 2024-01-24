@@ -4,12 +4,14 @@
 #include <ranges>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace cucumber_cpp
 {
-    std::set<std::string> TagsToSet(const auto& tags)
+    std::set<std::string, std::less<>> TagsToSet(const auto& tags)
     {
-        std::set<std::string> result;
+        decltype(TagsToSet(tags)) result;
+        // std::set<std::string, std::less<>> result;
 
         for (const auto& entry : tags)
             result.insert(entry.name);

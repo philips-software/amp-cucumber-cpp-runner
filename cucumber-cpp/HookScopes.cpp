@@ -6,7 +6,7 @@
 
 namespace cucumber_cpp
 {
-    BeforeAfterScopeExecuter::BeforeAfterScopeExecuter(Context& context, const std::set<std::string>& tags)
+    BeforeAfterScopeExecuter::BeforeAfterScopeExecuter(Context& context, const std::set<std::string, std::less<>>& tags)
         : context{ context }
         , tags{ tags }
     {

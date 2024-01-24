@@ -6,8 +6,8 @@ namespace cucumber_cpp
 {
     struct TestTagExpression : testing::Test
     {
-        std::set<std::string> inputTags = { "@abc", "@def", "@efg" };
-        std::set<std::string> noTags = {};
+        std::set<std::string, std::less<>> inputTags = { "@abc", "@def", "@efg" };
+        std::set<std::string, std::less<>> noTags = {};
     };
 
     TEST_F(TestTagExpression, EmptyTagExpression)

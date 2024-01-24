@@ -65,7 +65,7 @@ namespace cucumber_cpp
         return scenarioContext;
     }
 
-    const std::set<std::string>& ScenarioRunnerV2::GetScenarioTags() const
+    const std::set<std::string, std::less<>>& ScenarioRunnerV2::GetScenarioTags() const
     {
         return scenarioTags;
     }

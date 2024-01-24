@@ -38,7 +38,7 @@ namespace cucumber_cpp
 
         [[nodiscard]] report::ReportHandler& ReportHandler();
         [[nodiscard]] Context& GetContext();
-        [[nodiscard]] const std::set<std::string>& GetScenarioTags() const;
+        [[nodiscard]] const std::set<std::string, std::less<>>& GetScenarioTags() const;
 
         [[nodiscard]] const cucumber::messages::feature& Ast() const;
 
@@ -51,7 +51,7 @@ namespace cucumber_cpp
         FeatureRunnerV2& featureRunner;
         const cucumber::messages::pickle& pickle;
 
-        std::set<std::string> scenarioTags;
+        std::set<std::string, std::less<>> scenarioTags;
 
         report::ReportHandler::Result result{ report::ReportHandler::Result::undefined };
         TraceTime::Duration duration{ 0 };
