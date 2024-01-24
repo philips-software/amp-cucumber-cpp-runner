@@ -26,6 +26,12 @@ namespace cucumber_cpp
         context.InsertAt("std::uint32_t", delay);
     }
 
+    THEN("an ambiguous step")
+    {}
+
+    STEP("an ambiguous step")
+    {}
+
     STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::uint32_t nr))
     {
         context.InsertAt("float", fl);
@@ -44,11 +50,11 @@ namespace cucumber_cpp
 
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
-        EXPECT_THAT(stepRegistry.Size(), testing::Eq(6));
+        EXPECT_THAT(stepRegistry.Size(), testing::Eq(8));
         EXPECT_THAT(stepRegistry.Size(StepType::given), testing::Eq(1));
         EXPECT_THAT(stepRegistry.Size(StepType::when), testing::Eq(1));
-        EXPECT_THAT(stepRegistry.Size(StepType::then), testing::Eq(1));
-        EXPECT_THAT(stepRegistry.Size(StepType::any), testing::Eq(3));
+        EXPECT_THAT(stepRegistry.Size(StepType::then), testing::Eq(2));
+        EXPECT_THAT(stepRegistry.Size(StepType::any), testing::Eq(4));
     }
 
     TEST_F(TestSteps, GetGivenStep)
@@ -92,6 +98,14 @@ namespace cucumber_cpp
     TEST_F(TestSteps, GetInvalidStep)
     {
         EXPECT_THROW((void)stepRegistry.Query(StepType::when, "This step does not exist"), StepRegistryBase::StepNotFoundError);
+    }
+
+    TEST_F(TestSteps, GetAmbiguousStep)
+    {
+        EXPECT_NO_THROW((void)stepRegistry.Query(StepType::given, "an ambiguous step"));
+        EXPECT_NO_THROW((void)stepRegistry.Query(StepType::when, "an ambiguous step"));
+
+        EXPECT_THROW((void)stepRegistry.Query(StepType::then, "an ambiguous step"), StepRegistryBase::AmbiguousStepError);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)
