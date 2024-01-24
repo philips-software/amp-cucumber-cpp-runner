@@ -38,13 +38,13 @@ namespace cucumber_cpp
 
     protected:
         template<class T, class... Args, std::size_t... I>
-        void InvokeWithArgImpl(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...), std::index_sequence<I...>)
+        void InvokeWithArgImpl(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...), std::index_sequence<I...>) const
         {
             (t->*ptr)(StringTo<std::remove_cvref_t<Args>>(args[I])...);
         }
 
         template<class T, class... Args>
-        void InvokeWithArg(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...))
+        void InvokeWithArg(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...)) const
         {
             InvokeWithArgImpl(t, args, ptr, std::make_index_sequence<sizeof...(Args)>{});
         }

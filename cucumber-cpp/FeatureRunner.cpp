@@ -90,7 +90,7 @@ namespace cucumber_cpp
         };
     }
 
-    void FeatureRunnerV2::StopFeatureOnDestruction()
+    void FeatureRunnerV2::StopFeatureOnDestruction() noexcept
     {
         ReportHandler().FeatureEnd(Source(), report::ReportHandler::Result::undefined, Duration());
     }

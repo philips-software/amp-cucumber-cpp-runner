@@ -186,6 +186,8 @@ namespace cucumber_cpp
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
+        using Result = report::ReportHandler::Result;
+
         auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
         CucumberRunnerV2 cucumberRunner{ GetForwardArgs(), std::move(tagExpression), reporters, std::move(contextStorageFactory) };
@@ -195,11 +197,11 @@ namespace cucumber_cpp
         {
             auto featureResult = gherkinParser.RunFeatureFile(featurePath);
 
-            if (result == decltype(result)::undefined || result == decltype(result)::success)
+            if (result == Result::undefined || result == Result::success)
                 result = featureResult;
         }
 
-        if (result == decltype(result)::undefined)
+        if (result == Result::undefined)
             std::cout << "\nError: no features have been executed";
     }
 

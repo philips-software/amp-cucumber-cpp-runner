@@ -46,7 +46,7 @@ namespace cucumber_cpp
 
     private:
         void StartFeatureOnce();
-        void StopFeatureOnDestruction();
+        void StopFeatureOnDestruction() noexcept;
 
         CucumberRunnerV2& cucumberRunner;
         const cucumber::gherkin::app::parser_result& ast;
