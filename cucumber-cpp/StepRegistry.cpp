@@ -87,7 +87,7 @@ namespace cucumber_cpp
         stepMatch.factory(context, {})->Execute(stepMatch.regexMatch->Matches());
     }
 
-    void Step::Pending(const std::string& message, std::source_location current)
+    void Step::Pending(const std::string& message, std::source_location current) const noexcept(false)
     {
         throw StepPending{ message, current };
     }

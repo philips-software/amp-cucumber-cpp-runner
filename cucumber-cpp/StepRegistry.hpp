@@ -53,7 +53,7 @@ namespace cucumber_cpp
         void When(const std::string& step);
         void Then(const std::string& step);
 
-        void Pending(const std::string& message, std::source_location current = std::source_location::current());
+        [[noreturn]] void Pending(const std::string& message, std::source_location current = std::source_location::current()) const noexcept(false);
 
     private:
         void Any(StepType type, const std::string& step);
