@@ -73,10 +73,13 @@ namespace cucumber_cpp::report
 
     void StdOutReportV2::FeatureStart(const FeatureSource& featureSource)
     {
+        /* do nothing */
     }
 
     void StdOutReportV2::FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration)
-    {}
+    {
+        /* do nothing */
+    }
 
     void StdOutReportV2::ScenarioStart(const ScenarioSource& scenarioSource)
     {
@@ -129,5 +132,7 @@ namespace cucumber_cpp::report
     }
 
     void StdOutReportV2::Trace(const std::string& trace)
-    {}
+    {
+        /* do nothing */
+    }
 }

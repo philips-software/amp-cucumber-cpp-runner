@@ -16,6 +16,9 @@ namespace cucumber_cpp
             explicit Scoped(TraceTime& traceTime);
             ~Scoped();
 
+            Scoped(const Scoped&) = delete;
+            Scoped& operator=(const Scoped&) = delete;
+
         private:
             TraceTime& traceTime;
         };

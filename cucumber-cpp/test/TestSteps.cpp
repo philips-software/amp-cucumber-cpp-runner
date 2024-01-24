@@ -10,16 +10,24 @@
 namespace cucumber_cpp
 {
     GIVEN("This is a GIVEN step")
-    {}
+    {
+        /* do nothing */
+    }
 
     WHEN("This is a WHEN step")
-    {}
+    {
+        /* do nothing */
+    }
 
     THEN("This is a THEN step")
-    {}
+    {
+        /* do nothing */
+    }
 
     STEP("This is a STEP step")
-    {}
+    {
+        /* do nothing */
+    }
 
     STEP("This is a step with a ([0-9]+)s delay", (std::uint32_t delay))
     {
@@ -27,10 +35,14 @@ namespace cucumber_cpp
     }
 
     THEN("an ambiguous step")
-    {}
+    {
+        /* do nothing */
+    }
 
     STEP("an ambiguous step")
-    {}
+    {
+        /* do nothing */
+    }
 
     STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::uint32_t nr))
     {

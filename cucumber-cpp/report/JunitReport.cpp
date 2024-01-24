@@ -27,9 +27,9 @@ namespace cucumber_cpp::report
             { report::ReportHandler::Result::undefined, "undefined" },
         };
 
-        std::string RoundTo(double value, double precision)
+        std::string RoundTo(double value, double roundToPrecision)
         {
-            const auto d = std::round(value / precision) * precision;
+            const auto d = std::round(value / roundToPrecision) * roundToPrecision;
 
             std::ostringstream out;
             out << std::fixed << d;
@@ -146,10 +146,12 @@ namespace cucumber_cpp::report
 
     void JunitReportV2::StepStart(const StepSource& stepSource)
     {
+        /* do nothing */
     }
 
     void JunitReportV2::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
     {
+        /* do nothing */
     }
 
     void JunitReportV2::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
@@ -196,5 +198,6 @@ namespace cucumber_cpp::report
 
     void JunitReportV2::Trace(const std::string& trace)
     {
+        /* do nothing */
     }
 }

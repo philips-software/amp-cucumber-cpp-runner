@@ -12,7 +12,7 @@ namespace cucumber_cpp::report
     struct JunitReportV2 : ReportHandler
     {
         JunitReportV2();
-        ~JunitReportV2();
+        ~JunitReportV2() override;
 
         void FeatureStart(const FeatureSource& featureSource) override;
         void FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration) override;
@@ -44,13 +44,6 @@ namespace cucumber_cpp::report
         std::size_t scenarioFailures{ 0 };
         std::size_t scenarioErrors{ 0 };
         std::size_t scenarioSkipped{ 0 };
-
-        //                 testsuite.append_attribute("tests").set_value(featureStatistics.tests);
-        //                 testsuite.append_attribute("failures").set_value(featureStatistics.failures);
-        //                 testsuite.append_attribute("errors").set_value(featureStatistics.errors);
-        //                 testsuite.append_attribute("skipped").set_value(featureStatistics.skipped);
-
-        // testsuites = doc.append_child("testsuites");
     };
 }
 
