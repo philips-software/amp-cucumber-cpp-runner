@@ -103,7 +103,7 @@ namespace cucumber_cpp
 
         struct AmbiguousStepError : std::exception
         {
-            AmbiguousStepError(std::vector<StepMatch>&& matches)
+            explicit AmbiguousStepError(std::vector<StepMatch>&& matches)
                 : matches{ std::move(matches) }
             {}
 
