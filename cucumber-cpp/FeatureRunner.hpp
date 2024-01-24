@@ -52,7 +52,7 @@ namespace cucumber_cpp
         const cucumber::gherkin::app::parser_result& ast;
 
         std::once_flag startFeatureOnceFlag;
-        std::function<void()> stopFeatureOnDestruction{ [] {} };
+        std::function<void()> stopFeatureOnDestruction{ [] { /* do nothing */ } };
 
         FeatureSource featureSource;
 
