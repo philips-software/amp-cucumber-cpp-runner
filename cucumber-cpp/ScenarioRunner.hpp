@@ -10,6 +10,7 @@
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/scenario.hpp"
 #include <memory>
+#include <stdexcept>
 
 namespace cucumber_cpp
 {

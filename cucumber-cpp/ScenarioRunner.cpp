@@ -20,7 +20,12 @@ namespace cucumber_cpp
                 else if (child.scenario && child.scenario->id == id)
                     return ScenarioSource::FromAst(featureSource, *child.scenario);
 
-            throw std::runtime_error{ "ScenarioSource not found" };
+            struct ScenarioSourceNotFoundError : std::out_of_range
+            {
+                using std::out_of_range::out_of_range;
+            };
+
+            throw ScenarioSourceNotFoundError{ "ScenarioSource not found" };
         }
     }
 
@@ -95,8 +100,8 @@ namespace cucumber_cpp
 
                 duration += stepRunner.Duration();
 
-                if (const auto result = stepRunner.Result(); result != decltype(result)::success || result != decltype(result)::skipped)
-                    this->result = result;
+                if (const auto stepResult = stepRunner.Result(); stepResult != decltype(stepResult)::success || stepResult != decltype(stepResult)::skipped)
+                    result = stepResult;
             }
             else
                 SkipStepRunnerV2{ *this, step };
