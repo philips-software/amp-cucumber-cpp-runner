@@ -3,11 +3,12 @@
 
 #include "cucumber-cpp/Body.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include <exception>
 #include <functional>
 #include <memory>
 #include <ranges>
 #include <regex>
+#include <source_location>
 #include <stdexcept>
 #include <vector>
 
@@ -21,29 +22,53 @@ namespace cucumber_cpp
         any
     };
 
+    struct TableValue
+    {
+        template<class T>
+        T As();
+
+        std::string value;
+    };
+
+    using Table = std::vector<std::vector<TableValue>>;
+
     struct Step
     {
-        Step(Context& context, const nlohmann::json& table);
+        struct StepPending : std::exception
+        {
+            StepPending(std::string message, std::source_location sourceLocation)
+                : message{ std::move(message) }
+                , sourceLocation{ sourceLocation }
+            {
+            }
+
+            std::string message;
+            std::source_location sourceLocation;
+        };
+
+        Step(Context& context, const Table& table);
 
     protected:
         void Given(const std::string& step);
         void When(const std::string& step);
         void Then(const std::string& step);
 
+        void Pending(const std::string& message, std::source_location current = std::source_location::current());
+
     private:
         void Any(StepType type, const std::string& step);
 
     protected:
         Context& context;
-        const nlohmann::json& table;
+        const Table& table;
     };
 
     struct RegexMatch
     {
         RegexMatch(const std::regex& regex, const std::string& expression);
 
-        bool Matched() const;
-        std::vector<std::string> Matches() const;
+        [[nodiscard]] bool Matched() const;
+        [[nodiscard]] std::vector<std::string> Matches() const;
 
     private:
         bool matched;
@@ -54,8 +79,8 @@ namespace cucumber_cpp
     {
         explicit StepRegex(const std::string& string);
 
-        std::unique_ptr<RegexMatch> Match(const std::string& expression) const;
-        std::string String() const;
+        [[nodiscard]] std::unique_ptr<RegexMatch> Match(const std::string& expression) const;
+        [[nodiscard]] std::string String() const;
 
     private:
         std::string string;
@@ -65,28 +90,40 @@ namespace cucumber_cpp
     struct StepMatch
     {
         std::unique_ptr<RegexMatch> regexMatch;
-        std::unique_ptr<Body> (&factory)(Context& context, const nlohmann::json& table);
+        std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
         const StepRegex& stepRegex;
     };
 
     struct StepRegistryBase
     {
-        struct StepNotFound : std::out_of_range
+        struct StepNotFoundError : std::exception
         {
-            using std::out_of_range::out_of_range;
+            using std::exception::exception;
+        };
+
+        struct AmbiguousStepError : std::exception
+        {
+            AmbiguousStepError(std::vector<StepMatch>&& matches)
+                : matches{ std::move(matches) }
+            {}
+
+            AmbiguousStepError(const AmbiguousStepError&) = delete;
+            AmbiguousStepError& operator=(const AmbiguousStepError&) = delete;
+
+            const std::vector<StepMatch> matches;
         };
 
         struct Entry
         {
-            StepType type;
+            StepType type{};
             StepRegex regex;
-            std::unique_ptr<Body> (&factory)(Context& context, const nlohmann::json& table);
+            std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
         };
 
-        std::vector<StepMatch> Query(StepType stepType, std::string expression) const;
+        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression) const;
 
-        std::size_t Size() const;
-        std::size_t Size(StepType stepType) const;
+        [[nodiscard]] std::size_t Size() const;
+        [[nodiscard]] std::size_t Size(StepType stepType) const;
 
     protected:
         template<class T>
@@ -94,7 +131,7 @@ namespace cucumber_cpp
 
     private:
         template<class T>
-        static std::unique_ptr<Body> Construct(Context& context, const nlohmann::json& table);
+        static std::unique_ptr<Body> Construct(Context& context, const Table& table);
 
         std::vector<Entry> registry;
     };
@@ -116,6 +153,12 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<class T>
+    T TableValue::As()
+    {
+        return StringTo<T>(value);
+    }
+
+    template<class T>
     std::size_t StepRegistryBase::Register(const std::string& matcher, StepType stepType)
     {
         registry.emplace_back(stepType, StepRegex{ matcher }, Construct<T>);
@@ -123,7 +166,7 @@ namespace cucumber_cpp
     }
 
     template<class T>
-    std::unique_ptr<Body> StepRegistryBase::Construct(Context& context, const nlohmann::json& table)
+    std::unique_ptr<Body> StepRegistryBase::Construct(Context& context, const Table& table)
     {
         return std::make_unique<T>(context, table);
     }

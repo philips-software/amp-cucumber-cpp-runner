@@ -41,7 +41,7 @@ namespace cucumber_cpp
 
     struct HookTagExpression
     {
-        explicit HookTagExpression(const std::string& tagExpression);
+        explicit HookTagExpression(std::string tagExpression);
 
         std::unique_ptr<TagExpressionMatch> Match(const std::set<std::string>& tags) const;
         std::string TagExpression() const;

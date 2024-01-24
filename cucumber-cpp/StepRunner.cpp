@@ -1,17 +1,20 @@
 #include "cucumber-cpp/StepRunner.hpp"
 #include "cucumber-cpp/HookScopes.hpp"
-#include "cucumber-cpp/JsonTagToSet.hpp"
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/Rtrim.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "cucumber-cpp/report/Report.hpp"
+#include "cucumber/messages/pickle_step_type.hpp"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <optional>
+#include <source_location>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -19,97 +22,242 @@
 
 namespace cucumber_cpp
 {
+
     namespace
     {
-        struct AppendFailureOnTestPartResultEvent : OnTestPartResultEventListener
+        struct AppendFailureOnTestPartResultEvent
+            : OnTestPartResultEventListener
         {
-            explicit AppendFailureOnTestPartResultEvent(nlohmann::json& json)
-                : json{ json }
+            explicit AppendFailureOnTestPartResultEvent(report::ReportHandler& reportHandler)
+                : reportHandler{ reportHandler }
             {
+            }
+
+            ~AppendFailureOnTestPartResultEvent()
+            {
+                for (const auto& error : errors)
+                    reportHandler.Failure(error.message(), error.file_name(), error.line_number(), 0);
             }
 
             void OnTestPartResult(const testing::TestPartResult& testPartResult) override
             {
-                json["errors"].push_back({ { "file", testPartResult.file_name() },
-                    { "line", testPartResult.line_number() },
-                    { "message", testPartResult.message() } });
+                errors.emplace_back(testPartResult);
+            }
+
+            [[nodiscard]] bool HasFailures() const
+            {
+                return !errors.empty();
             }
 
         private:
-            nlohmann::json& json;
+            report::ReportHandler& reportHandler;
+            std::vector<testing::TestPartResult> errors;
         };
 
-        const std::map<std::string_view, StepType> stepTypeLut{
-            { "Context", StepType::given },
-            { "Action", StepType::when },
-            { "Outcome", StepType::then },
-        };
-    }
-
-    StepRunner::StepRunner(Context& context)
-        : context{ context }
-    {
-    }
-
-    void StepRunner::Run(nlohmann::json& json, nlohmann::json& scenarioTags)
-    {
-        testing::internal::CaptureStdout();
-        testing::internal::CaptureStderr();
-
-        try
+        struct CaptureAndTraceStdOut
         {
-            AppendFailureOnTestPartResultEvent appendFailureOnTestPartResultEvent{ json };
-
-            const auto stepTypeStr = json["type"].get<std::string>();
-            const auto stepMatches = StepRegistry::Instance().Query(stepTypeLut.at(stepTypeStr), json["text"]);
-
-            if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
+            CaptureAndTraceStdOut(report::ReportHandler& reportHandler)
+                : reportHandler{ reportHandler }
             {
-                TraceTime traceTime{ json };
-
-                BeforeAfterStepHookScope stepHookScope{ context, JsonTagsToSet(scenarioTags) };
-
-                step.factory(context, json["argument"]["dataTable"])->Execute(step.regexMatch->Matches());
+                testing::internal::CaptureStdout();
+                testing::internal::CaptureStderr();
             }
 
-            if (json.count("errors") == 0)
+            ~CaptureAndTraceStdOut()
             {
-                json["result"] = result::success;
+                if (auto str = testing::internal::GetCapturedStdout(); !str.empty())
+                {
+                    Rtrim(str);
+                    reportHandler.Trace(str);
+                }
+
+                if (auto str = testing::internal::GetCapturedStderr(); !str.empty())
+                {
+                    Rtrim(str);
+                    reportHandler.Trace(str);
+                }
             }
-            else
+
+        private:
+            report::ReportHandler& reportHandler;
+        };
+
+        const std::map<cucumber::messages::pickle_step_type, StepType> stepTypeLut{
+            { cucumber::messages::pickle_step_type::CONTEXT, StepType::given },
+            { cucumber::messages::pickle_step_type::ACTION, StepType::when },
+            { cucumber::messages::pickle_step_type::OUTCOME, StepType::then },
+        };
+
+        const std::map<cucumber::messages::pickle_step_type, std::string> stepTypeToString{
+            { cucumber::messages::pickle_step_type::CONTEXT, "Given" },
+            { cucumber::messages::pickle_step_type::ACTION, "When" },
+            { cucumber::messages::pickle_step_type::OUTCOME, "Then" },
+        };
+
+        std::vector<std::vector<TableValue>> PickleArgumentToTable(const std::optional<cucumber::messages::pickle_step_argument>& optionalPickleStepArgument)
+        {
+            try
             {
-                json["result"] = result::failed;
+                const auto& pickleStepArgument = optionalPickleStepArgument.value();
+                const auto& optionalDataTable = pickleStepArgument.data_table;
+                const auto& dataTable = optionalDataTable.value();
+
+                std::vector<std::vector<TableValue>> table;
+
+                for (const auto& row : dataTable.rows)
+                {
+                    table.emplace_back();
+
+                    for (const auto& cols : row.cells)
+                        table.back().emplace_back(cols.value);
+                }
+                return table;
+            }
+            catch (const std::bad_optional_access&)
+            {
+                return {};
             }
         }
-        catch ([[maybe_unused]] const StepRegistry::StepNotFound& e)
+
+        [[nodiscard]] StepSource LookupStepSource(const ScenarioSource& scenarioSource, const cucumber::messages::feature& feature, const cucumber::messages::pickle_step& pickleStep, const std::string& id)
         {
-            json["result"] = result::undefined;
+            for (const auto& child : feature.children)
+                if (child.background)
+                {
+                    const auto iter = std::ranges::find(child.background->steps, id, &cucumber::messages::step::id);
+                    if (iter != child.background->steps.end())
+                        return StepSource::FromAst(scenarioSource, *iter, pickleStep);
+                }
+                else if (child.scenario)
+                {
+                    const auto iter = std::ranges::find(child.scenario->steps, id, &cucumber::messages::step::id);
+                    if (iter != child.scenario->steps.end())
+                        return StepSource::FromAst(scenarioSource, *iter, pickleStep);
+                }
+
+            throw std::runtime_error{ "StepSource not found" };
+        }
+    }
+
+    StepSource StepSource::FromAst(const ScenarioSource& scenarioSource, const cucumber::messages::pickle_step& pickleStep)
+    {
+        return { scenarioSource, pickleStep.text, stepTypeToString.at(pickleStep.type.value()), 0, 0 };
+    }
+
+    StepSource StepSource::FromAst(const ScenarioSource& scenarioSource, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep)
+    {
+        return { scenarioSource, pickleStep.text, stepTypeToString.at(pickleStep.type.value()), step.location.line, step.location.column.value_or(0) };
+    }
+
+    SkipStepRunnerV2::SkipStepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+        : scenarioRunner{ scenarioRunner }
+        , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }
+    {
+        scenarioRunner.ReportHandler().StepStart(stepSource);
+    }
+
+    SkipStepRunnerV2::~SkipStepRunnerV2()
+    {
+        scenarioRunner.ReportHandler().StepEnd(stepSource, Result(), Duration());
+    }
+
+    report::ReportHandler::Result SkipStepRunnerV2::Result() const
+    {
+        return report::ReportHandler::Result::skipped;
+    }
+
+    TraceTime::Duration SkipStepRunnerV2::Duration() const
+    {
+        return TraceTime::Duration{ 0 };
+    }
+
+    StepRunnerV2::StepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+        : scenarioRunner{ scenarioRunner }
+        , pickleStep{ pickleStep }
+        , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }
+    {
+        ReportHandler().StepStart(Source());
+    }
+
+    StepRunnerV2::~StepRunnerV2()
+    {
+        ReportHandler().StepEnd(Source(), Result(), Duration());
+    }
+
+    const StepSource& StepRunnerV2::Source() const
+    {
+        return stepSource;
+    }
+
+    report::ReportHandler& StepRunnerV2::ReportHandler()
+    {
+        return scenarioRunner.ReportHandler();
+    }
+
+    report::ReportHandler::Result StepRunnerV2::Result() const
+    {
+        return result;
+    }
+
+    TraceTime::Duration StepRunnerV2::Duration() const
+    {
+        return traceTime.Delta();
+    }
+
+    void StepRunnerV2::Run()
+    {
+        try
+        {
+            const auto stepMatch = StepRegistry::Instance().Query(stepTypeLut.at(*pickleStep.type), pickleStep.text);
+
+            AppendFailureOnTestPartResultEvent appendFailureOnTestPartResultEvent{ ReportHandler() };
+            CaptureAndTraceStdOut captureAndTraceStdOut{ ReportHandler() };
+            TraceTime::Scoped scopedTime{ traceTime };
+
+            BeforeAfterStepHookScope stepHookScope{ scenarioRunner.GetContext(), scenarioRunner.GetScenarioTags() };
+
+            stepMatch.factory(scenarioRunner.GetContext(), PickleArgumentToTable(pickleStep.argument))->Execute(stepMatch.regexMatch->Matches());
+
+            if (appendFailureOnTestPartResultEvent.HasFailures())
+                result = decltype(result)::failed;
+            else
+                result = decltype(result)::success;
+        }
+        catch (const StepRegistryBase::StepNotFoundError& e)
+        {
+            result = decltype(result)::error;
+            ReportHandler().Error("Step \"" + stepSource.type + " " + stepSource.name + "\" not found");
+        }
+        catch (const StepRegistryBase::AmbiguousStepError& e)
+        {
+            std::ostringstream out;
+            out << "Ambiguous step: " << pickleStep.text << "\nMatches:";
+
+            for (const auto& step : e.matches)
+                out << "\n\t" << step.stepRegex.String();
+
+            result = decltype(result)::ambiguous;
+            ReportHandler().Error(out.str());
+        }
+        catch (const Step::StepPending& e)
+        {
+            result = decltype(result)::pending;
+            ReportHandler().Error(e.message, e.sourceLocation.file_name(), e.sourceLocation.line(), e.sourceLocation.column());
+        }
+        catch (const std::source_location& loc)
+        {
+            result = decltype(result)::error;
+            ReportHandler().Error("Unknown error", loc.file_name(), loc.line(), loc.column());
         }
         catch (const std::exception& e)
         {
-            json["error"].push_back({ { "file", "unknown" },
-                { "line", 0 },
-                { "message", std::string{ "Exception thrown: " } + e.what() } });
-            json["result"] = result::error;
+            result = decltype(result)::error;
+            ReportHandler().Error(std::string{ "Exception thrown: " } + e.what());
         }
         catch (...)
         {
-            json["error"].push_back({ { "file", "unknown" },
-                { "line", 0 },
-                { "message", "Unknown exception thrown" } });
-            json["result"] = result::error;
-        }
-
-        if (auto str = testing::internal::GetCapturedStdout(); !str.empty())
-        {
-            Rtrim(str);
-            json["stdout"] = str;
-        }
-
-        if (auto str = testing::internal::GetCapturedStderr(); !str.empty())
-        {
-            Rtrim(str);
-            json["stderr"] = str;
+            result = decltype(result)::error;
+            ReportHandler().Error("Unknown exception thrown");
         }
     }
 }

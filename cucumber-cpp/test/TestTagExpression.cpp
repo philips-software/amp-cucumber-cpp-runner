@@ -1,5 +1,4 @@
 #include "cucumber-cpp/TagExpression.hpp"
-#include "nlohmann/json.hpp"
 #include "gmock/gmock.h"
 #include <iomanip>
 
@@ -7,11 +6,8 @@ namespace cucumber_cpp
 {
     struct TestTagExpression : testing::Test
     {
-        nlohmann::json inputTags = { { { "name", "@abc" } },
-            { { "name", "@def" } },
-            { { "name", "@efg" } } };
-
-        nlohmann::json noTags = nlohmann::json::value_t::array;
+        std::set<std::string> inputTags = { "@abc", "@def", "@efg" };
+        std::set<std::string> noTags = {};
     };
 
     TEST_F(TestTagExpression, EmptyTagExpression)

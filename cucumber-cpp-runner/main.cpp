@@ -8,7 +8,6 @@ int main(int argc, char** argv)
     auto args = application.GetForwardArgs();
 
     application.RunFeatures();
-    application.GenerateReports();
 
     return application.GetExitCode();
 }

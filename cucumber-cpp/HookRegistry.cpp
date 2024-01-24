@@ -2,6 +2,7 @@
 #include "cucumber-cpp/HookRegistry.hpp"
 #include "cucumber-cpp/TagExpression.hpp"
 #include <memory>
+#include <ranges>
 
 namespace cucumber_cpp
 {
@@ -9,7 +10,7 @@ namespace cucumber_cpp
     {
         auto TypeFilter(HookType hookType)
         {
-            return [hookType](const HookRegistry::Entry& entry) -> bool
+            return [hookType](const HookRegistry::Entry& entry)
             {
                 return entry.type == hookType;
             };
@@ -29,8 +30,8 @@ namespace cucumber_cpp
         return matched;
     }
 
-    HookTagExpression::HookTagExpression(const std::string& tagExpression)
-        : tagExpression{ tagExpression }
+    HookTagExpression::HookTagExpression(std::string tagExpression)
+        : tagExpression{ std::move(tagExpression) }
     {}
 
     std::unique_ptr<TagExpressionMatch> HookTagExpression::Match(const std::set<std::string>& tags) const
@@ -48,12 +49,8 @@ namespace cucumber_cpp
         std::vector<HookMatch> matches;
 
         for (const Entry& entry : registry | std::views::filter(TypeFilter(hookType)))
-        {
             if (auto match = entry.hookTagExpression.Match(tags); match->Matched())
-            {
                 matches.emplace_back(std::move(match), entry.factory, entry.hookTagExpression);
-            }
-        }
 
         return matches;
     }

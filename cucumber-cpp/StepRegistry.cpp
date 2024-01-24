@@ -1,11 +1,12 @@
 
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "nlohmann/json.hpp"
+#include "cucumber-cpp/StepRunner.hpp"
 #include <algorithm>
 #include <iterator>
 #include <ranges>
 #include <regex>
+#include <source_location>
 #include <stdexcept>
 #include <vector>
 
@@ -16,15 +17,6 @@ namespace cucumber_cpp
         std::string ToString(std::string toString)
         {
             return toString;
-        }
-
-        void SetStepParameters(nlohmann::json& json, const std::smatch& matchResults)
-        {
-            std::ranges::copy(matchResults
-                                  // the first element is the whole matched string,
-                                  // we are only interested in the actual matches
-                                  | std::views::drop(1) | std::views::transform(ToString),
-                std::back_inserter(json["parameters"]));
         }
 
         std::vector<std::string> ToVector(const std::smatch& matchResults)
@@ -62,14 +54,14 @@ namespace cucumber_cpp
 
         auto TypeFilter(StepType stepType)
         {
-            return [stepType](const StepRegistry::Entry& entry) -> bool
+            return [stepType](const StepRegistry::Entry& entry)
             {
                 return entry.type == stepType || entry.type == StepType::any;
             };
         };
     }
 
-    Step::Step(Context& context, const nlohmann::json& table)
+    Step::Step(Context& context, const Table& table)
         : context{ context }
         , table{ table }
     {}
@@ -91,10 +83,13 @@ namespace cucumber_cpp
 
     void Step::Any(StepType type, const std::string& step)
     {
-        const auto stepMatches = StepRegistry::Instance().Query(type, step);
+        const auto stepMatch = StepRegistry::Instance().Query(type, step);
+        stepMatch.factory(context, {})->Execute(stepMatch.regexMatch->Matches());
+    }
 
-        if (const auto& step = stepMatches.front(); stepMatches.size() == 1)
-            step.factory(context, {})->Execute(step.regexMatch->Matches());
+    void Step::Pending(const std::string& message, std::source_location current)
+    {
+        throw StepPending{ message, current };
     }
 
     RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
@@ -135,24 +130,21 @@ namespace cucumber_cpp
         return instance;
     }
 
-    std::vector<StepMatch> StepRegistryBase::Query(StepType stepType, std::string expression) const
+    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression) const
     {
         std::vector<StepMatch> matches;
 
         for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
-        {
             if (auto match = entry.regex.Match(expression); match->Matched())
-            {
                 matches.emplace_back(std::move(match), entry.factory, entry.regex);
-            }
-        }
 
-        if (matches.size() == 0)
-        {
-            throw StepNotFound{ "Step: \"" + expression + "\" not found" };
-        }
+        if (matches.empty())
+            throw StepNotFoundError{};
 
-        return matches;
+        if (matches.size() > 1)
+            throw AmbiguousStepError{ std::move(matches) };
+
+        return std::move(matches.front());
     }
 
     std::size_t StepRegistryBase::Size() const

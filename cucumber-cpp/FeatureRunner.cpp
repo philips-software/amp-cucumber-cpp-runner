@@ -1,62 +1,97 @@
+
 #include "cucumber-cpp/FeatureRunner.hpp"
-#include "cucumber-cpp/HookScopes.hpp"
-#include "cucumber-cpp/JsonTagToSet.hpp"
-#include "cucumber-cpp/ResultStates.hpp"
+#include "cucumber-cpp/Context.hpp"
+#include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/ScenarioRunner.hpp"
 #include "cucumber-cpp/TagExpression.hpp"
-#include "cucumber-cpp/TraceTime.hpp"
-#include "nlohmann/json.hpp"
-#include <iomanip>
-#include <ranges>
+#include "cucumber-cpp/TagsToSet.hpp"
+#include "cucumber/gherkin/app.hpp"
+#include "cucumber/messages/feature.hpp"
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <type_traits>
 
 namespace cucumber_cpp
 {
-    FeatureRunner::FeatureRunner(Context& programContext, const std::string& tagExpr)
-        : tagExpr{ tagExpr }
-        , featureContext{ &programContext }
-    {}
-
-    void FeatureRunner::Run(nlohmann::json& json)
+    FeatureSource FeatureSource::FromAst(const cucumber::gherkin::app::parser_result& ast)
     {
-        BeforeAfterFeatureHookScope featureHookScope{ featureContext, JsonTagsToSet(json["ast"]["feature"]["tags"]) };
+        return { ast.feature->name, ast.uri.value_or("unknown"), ast.feature->location.line, ast.feature->location.column.value_or(0) };
+    }
 
-        const auto isTagExprSelected = [this](const auto& json)
+    FeatureRunnerV2::FeatureRunnerV2(CucumberRunnerV2& cucumberRunner, const cucumber::gherkin::app::parser_result& ast)
+        : cucumberRunner{ cucumberRunner }
+        , ast{ ast }
+        , featureSource{ FeatureSource::FromAst(ast) }
+        , featureContext{ &cucumberRunner.GetContext() }
+        , featureHookScope{ featureContext, TagsToSet(ast.feature->tags) }
+    {
+    }
+
+    FeatureRunnerV2::~FeatureRunnerV2()
+    {
+        stopFeatureOnDestruction();
+    }
+
+    const FeatureSource& FeatureRunnerV2::Source() const
+    {
+        return featureSource;
+    }
+
+    report::ReportHandler& FeatureRunnerV2::ReportHandler()
+    {
+        return cucumberRunner.ReportHandler();
+    }
+
+    Context& FeatureRunnerV2::GetContext()
+    {
+        return featureContext;
+    }
+
+    const cucumber::messages::feature& FeatureRunnerV2::Feature() const
+    {
+        return ast.feature.value();
+    }
+
+    void FeatureRunnerV2::StartScenario(const cucumber::messages::pickle& pickle)
+    {
+        if (ast.feature && IsTagExprSelected(cucumberRunner.TagExpression(), TagsToSet(pickle.tags)))
         {
-            return IsTagExprSelected(tagExpr, json["tags"]);
+            std::call_once(startFeatureOnceFlag, &FeatureRunnerV2::StartFeatureOnce, *this);
+
+            ScenarioRunnerV2 scenarioRunner{ *this, pickle };
+
+            scenarioRunner.Run();
+
+            duration += scenarioRunner.Duration();
+
+            if (result == decltype(result)::undefined || result == decltype(result)::success)
+                result = scenarioRunner.Result();
+        }
+    }
+
+    report::ReportHandler::Result FeatureRunnerV2::Result() const
+    {
+        return result;
+    }
+
+    TraceTime::Duration FeatureRunnerV2::Duration() const
+    {
+        return duration;
+    }
+
+    void FeatureRunnerV2::StartFeatureOnce()
+    {
+        ReportHandler().FeatureStart(Source());
+
+        stopFeatureOnDestruction = [this]
+        {
+            StopFeatureOnDestruction();
         };
+    }
 
-        double totalTime = 0.0;
-        std::ranges::for_each(json["scenarios"] | std::views::filter(isTagExprSelected), [this, &json, &totalTime](nlohmann::json& scenarioJson)
-            {
-                ScenarioRunner scenarioRunner{ featureContext };
-                scenarioRunner.Run(scenarioJson);
-
-                totalTime += scenarioJson.value("elapsed", 0.0);
-            });
-
-        json["elapsed"] = totalTime;
-
-        const auto containsResult = [](const auto& json)
-        {
-            return json.contains("result");
-        };
-
-        auto onlyScenariosWithResult = json["scenarios"] | std::views::filter(containsResult);
-
-        if (onlyScenariosWithResult.empty())
-        {
-            // don't set result
-        }
-        else if (std::ranges::all_of(onlyScenariosWithResult, [](const nlohmann::json& scenarioJson)
-                     {
-                         return scenarioJson["result"] == result::success;
-                     }))
-        {
-            json["result"] = result::success;
-        }
-        else
-        {
-            json["result"] = result::failed;
-        }
+    void FeatureRunnerV2::StopFeatureOnDestruction()
+    {
+        ReportHandler().FeatureEnd(Source(), report::ReportHandler::Result::undefined, Duration());
     }
 }

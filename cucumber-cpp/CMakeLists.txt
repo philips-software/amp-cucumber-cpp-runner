@@ -17,8 +17,6 @@ target_sources(cucumber-cpp PRIVATE
     Hooks.hpp
     HookScopes.cpp
     HookScopes.hpp
-    JsonTagToSet.cpp
-    JsonTagToSet.hpp
     OnTestPartResultEventListener.cpp
     OnTestPartResultEventListener.hpp
     Rtrim.cpp
@@ -32,6 +30,7 @@ target_sources(cucumber-cpp PRIVATE
     StepRunner.hpp
     TagExpression.cpp
     TagExpression.hpp
+    TagsToSet.hpp
     TraceTime.cpp
     TraceTime.hpp
 )
@@ -43,7 +42,6 @@ target_include_directories(cucumber-cpp PUBLIC
 target_link_libraries(cucumber-cpp PUBLIC
     gtest
     cucumber_gherkin_lib
-    nlohmann_json::nlohmann_json
 
     PRIVATE
     cucumber-cpp.report
