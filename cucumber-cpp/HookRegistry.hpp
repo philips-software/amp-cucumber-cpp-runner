@@ -31,7 +31,7 @@ namespace cucumber_cpp
 
     struct TagExpressionMatch
     {
-        TagExpressionMatch(const std::string& tagExpression, const std::set<std::string>& tags);
+        TagExpressionMatch(const std::string& tagExpression, const std::set<std::string, std::less<>>& tags);
 
         bool Matched() const;
 
@@ -41,9 +41,9 @@ namespace cucumber_cpp
 
     struct HookTagExpression
     {
-        explicit HookTagExpression(const std::string& tagExpression);
+        explicit HookTagExpression(std::string tagExpression);
 
-        std::unique_ptr<TagExpressionMatch> Match(const std::set<std::string>& tags) const;
+        std::unique_ptr<TagExpressionMatch> Match(const std::set<std::string, std::less<>>& tags) const;
         std::string TagExpression() const;
 
     private:
@@ -66,7 +66,7 @@ namespace cucumber_cpp
             std::unique_ptr<Body> (&factory)(Context& context);
         };
 
-        std::vector<HookMatch> Query(HookType hookType, const std::set<std::string>& tags) const;
+        std::vector<HookMatch> Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const;
 
         std::size_t Size() const;
         std::size_t Size(HookType hookType) const;

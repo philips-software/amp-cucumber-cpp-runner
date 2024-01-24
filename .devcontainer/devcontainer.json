@@ -21,7 +21,8 @@
                 "twxs.cmake",
                 "ms-vscode.cpptools",
                 "akiramiyakoda.cppincludeguard",
-                "alexkrechik.cucumberautocomplete"
+                "alexkrechik.cucumberautocomplete",
+                "SonarSource.sonarlint-vscode"
             ]
         }
     }

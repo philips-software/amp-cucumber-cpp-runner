@@ -3,7 +3,6 @@
 
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/HookRegistry.hpp"
-#include "nlohmann/json_fwd.hpp"
 #include <set>
 #include <string>
 
@@ -12,21 +11,23 @@ namespace cucumber_cpp
 
     struct BeforeAfterScopeExecuter
     {
-        void ExecuteAll(const std::vector<HookMatch>& matches, Context& context);
+        BeforeAfterScopeExecuter(Context& context, const std::set<std::string, std::less<>>& tags);
+
+        void ExecuteAll(HookType hook);
+
+    private:
+        Context& context;
+        std::set<std::string, std::less<>> tags;
     };
 
     template<HookType BeforeHook, HookType AfterHook>
     struct BeforeAfterScope : BeforeAfterScopeExecuter
     {
     public:
-        BeforeAfterScope(Context& context, const std::set<std::string>& tags = {});
+        BeforeAfterScope(Context& context, const std::set<std::string, std::less<>>& tags = {});
 
     protected:
         ~BeforeAfterScope();
-
-    private:
-        Context& context;
-        std::set<std::string> tags;
     };
 
     struct BeforeAfterAllScope : BeforeAfterScope<HookType::beforeAll, HookType::afterAll>
@@ -54,17 +55,16 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<HookType BeforeHook, HookType AfterHook>
-    BeforeAfterScope<BeforeHook, AfterHook>::BeforeAfterScope(Context& context, const std::set<std::string>& tags)
-        : context{ context }
-        , tags{ tags }
+    BeforeAfterScope<BeforeHook, AfterHook>::BeforeAfterScope(Context& context, const std::set<std::string, std::less<>>& tags)
+        : BeforeAfterScopeExecuter{ context, tags }
     {
-        ExecuteAll(HookRegistry::Instance().Query(BeforeHook, tags), context);
+        BeforeAfterScopeExecuter::ExecuteAll(BeforeHook);
     }
 
     template<HookType BeforeHook, HookType AfterHook>
     BeforeAfterScope<BeforeHook, AfterHook>::~BeforeAfterScope()
     {
-        ExecuteAll(HookRegistry::Instance().Query(AfterHook, tags), context);
+        BeforeAfterScopeExecuter::ExecuteAll(AfterHook);
     }
 }
 

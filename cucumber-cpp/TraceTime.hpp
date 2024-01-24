@@ -1,7 +1,6 @@
 #ifndef CUCUMBER_CPP_TRACETIME_HPP
 #define CUCUMBER_CPP_TRACETIME_HPP
 
-#include "nlohmann/json_fwd.hpp"
 #include <chrono>
 #include <ratio>
 
@@ -9,12 +8,29 @@ namespace cucumber_cpp
 {
     struct TraceTime
     {
-        TraceTime(nlohmann::json& json);
-        ~TraceTime();
+        using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+        using Duration = TimePoint::duration;
+
+        struct Scoped
+        {
+            explicit Scoped(TraceTime& traceTime);
+            ~Scoped();
+
+            Scoped(const Scoped&) = delete;
+            Scoped& operator=(const Scoped&) = delete;
+
+        private:
+            TraceTime& traceTime;
+        };
+
+        void Start();
+        void Stop();
+
+        [[nodiscard]] Duration Delta() const;
 
     private:
-        nlohmann::json& json;
-        std::chrono::time_point<std::chrono::high_resolution_clock> timeStart;
+        TimePoint timeStart;
+        TimePoint timeStop;
     };
 }
 

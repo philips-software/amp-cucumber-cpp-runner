@@ -1,56 +1,46 @@
 #include "cucumber-cpp/CucumberRunner.hpp"
+#include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/FeatureRunner.hpp"
 #include "cucumber-cpp/HookScopes.hpp"
-#include "cucumber-cpp/ResultStates.hpp"
-#include "cucumber-cpp/ScenarioRunner.hpp"
-#include "cucumber-cpp/TraceTime.hpp"
-#include "nlohmann/json.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "cucumber/gherkin/app.hpp"
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace cucumber_cpp
 {
-    CucumberRunner::CucumberRunner(const std::vector<std::string_view>& args, const std::string& tagExpr, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : tagExpr{ tagExpr }
-        , programContext(contextStorageFactory)
+    CucumberRunnerV2::InsertArgsToContext::InsertArgsToContext(Context& context, const std::vector<std::string_view>& args)
     {
-        programContext.InsertAt("args", args);
+
+        context.InsertAt("args", args);
     }
 
-    void CucumberRunner::Run(nlohmann::json& json)
+    CucumberRunnerV2::CucumberRunnerV2(const std::vector<std::string_view>& args, std::string tagExpression, report::ReportHandler& reportHandler, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+        : tagExpression{ std::move(tagExpression) }
+        , reportHandler{ reportHandler }
+        , programContext{ std::move(contextStorageFactory) }
+        , insertArgsToContext{ programContext, args }
+        , programHookeScope{ programContext }
     {
-        BeforeAfterAllScope programHookeScope{ programContext };
+    }
 
-        double totalTime = 0.0;
+    std::string CucumberRunnerV2::TagExpression() const
+    {
+        return tagExpression;
+    }
 
-        std::ranges::for_each(json["features"], [this, &json, &totalTime](nlohmann::json& featureJson)
-            {
-                FeatureRunner featureRunner{ programContext, tagExpr };
-                featureRunner.Run(featureJson);
+    report::ReportHandler& CucumberRunnerV2::ReportHandler()
+    {
+        return reportHandler;
+    }
 
-                totalTime += featureJson.value("elapsed", 0.0);
-            });
+    Context& CucumberRunnerV2::GetContext()
+    {
+        return programContext;
+    }
 
-        json["elapsed"] = totalTime;
-
-        auto onlyFeaturesWithResult = json["features"] | std::views::filter([](const auto& json)
-                                                             {
-                                                                 return json.contains("result");
-                                                             });
-
-        if (onlyFeaturesWithResult.empty())
-        {
-            // don't set result
-        }
-        else if (std::ranges::all_of(onlyFeaturesWithResult, [](const auto& featureJson)
-                     {
-                         return featureJson["result"] == result::success;
-                     }))
-        {
-            json["result"] = result::success;
-        }
-        else
-        {
-            json["result"] = result::failed;
-        }
+    std::unique_ptr<FeatureRunnerV2> CucumberRunnerV2::StartFeature(const cucumber::gherkin::app::parser_result& ast)
+    {
+        return std::make_unique<FeatureRunnerV2>(*this, ast);
     }
 }

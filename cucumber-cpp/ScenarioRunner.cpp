@@ -1,78 +1,109 @@
 #include "cucumber-cpp/ScenarioRunner.hpp"
+#include "cucumber-cpp/FeatureRunner.hpp"
 #include "cucumber-cpp/HookScopes.hpp"
-#include "cucumber-cpp/JsonTagToSet.hpp"
-#include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/StepRunner.hpp"
-#include "cucumber-cpp/TraceTime.hpp"
-#include "nlohmann/json.hpp"
-#include "gtest/gtest.h"
+#include "cucumber-cpp/TagsToSet.hpp"
+#include "cucumber-cpp/report/Report.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 
 namespace cucumber_cpp
 {
     namespace
     {
-        struct StepRunnerStrategy : RunStepStrategy
+        [[nodiscard]] ScenarioSource LookupScenarioSource(const FeatureSource& featureSource, const cucumber::messages::feature& feature, const std::string& id)
         {
-            void Run(StepRunner& stepRunner, nlohmann::json& json, nlohmann::json& scenarioTags) override
+            for (const auto& child : feature.children)
+                if (child.background && child.background->id == id)
+                    return ScenarioSource::FromAst(featureSource, *child.background);
+                else if (child.scenario && child.scenario->id == id)
+                    return ScenarioSource::FromAst(featureSource, *child.scenario);
+
+            struct ScenarioSourceNotFoundError : std::out_of_range
             {
-                stepRunner.Run(json, scenarioTags);
-            }
-        };
+                using std::out_of_range::out_of_range;
+            };
 
-        struct SkipStepStrategy : RunStepStrategy
-        {
-            void Run([[maybe_unused]] StepRunner& stepRunner, nlohmann::json& json, nlohmann::json& scenarioTags) override
-            {
-                json["result"] = result::skipped;
-            }
-        };
-    }
-
-    ScenarioRunner::ScenarioRunner(Context& programContext)
-        : scenarioContext{ &programContext }
-        , runStepStrategy{ std::make_unique<StepRunnerStrategy>() }
-    {
-    }
-
-    void ScenarioRunner::Run(nlohmann::json& scenarioJson)
-    {
-        BeforeAfterHookScope scenarioHookScope{ scenarioContext, JsonTagsToSet(scenarioJson["tags"]) };
-        double totalTime = 0.0;
-
-        std::ranges::for_each(scenarioJson["steps"], [&scenarioJson, this, &totalTime](nlohmann::json& stepJson)
-            {
-                StepRunner stepRunner{ scenarioContext };
-                runStepStrategy->Run(stepRunner, stepJson, scenarioJson["tags"]);
-
-                if (auto result = stepJson["result"]; result != result::success && result != result::skipped)
-                {
-                    runStepStrategy = std::make_unique<SkipStepStrategy>();
-                }
-
-                totalTime += stepJson.value("elapsed", 0.0);
-            });
-
-        scenarioJson["elapsed"] = totalTime;
-
-        auto iter = std::ranges::find_if_not(scenarioJson["steps"], [](auto stepJson)
-            {
-                return stepJson["result"] == result::success;
-            });
-
-        if (iter == scenarioJson["steps"].end())
-        {
-            scenarioJson["result"] = result::success;
-        }
-        else
-        {
-            scenarioJson["result"] = (*iter)["result"];
+            throw ScenarioSourceNotFoundError{ "ScenarioSource not found" };
         }
     }
 
-    void ScenarioRunner::OnTestPartResult(const testing::TestPartResult& testPartResult)
+    ScenarioSource ScenarioSource::FromAst(const FeatureSource& featureSource, const cucumber::messages::scenario& scenario)
     {
-        runStepStrategy = std::make_unique<SkipStepStrategy>();
+        return { featureSource, scenario.name, scenario.location.line, scenario.location.column.value_or(0) };
+    }
+
+    ScenarioSource ScenarioSource::FromAst(const FeatureSource& featureSource, const cucumber::messages::background& background)
+    {
+        return { featureSource, background.name, background.location.line, background.location.column.value_or(0) };
+    }
+
+    ScenarioRunnerV2::ScenarioRunnerV2(FeatureRunnerV2& featureRunner, const cucumber::messages::pickle& scenarioPickle)
+        : featureRunner{ featureRunner }
+        , pickle{ scenarioPickle }
+        , scenarioTags{ TagsToSet(scenarioPickle.tags) }
+        , scenarioSource{ LookupScenarioSource(featureRunner.Source(), Ast(), pickle.ast_node_ids[0]) }
+        , scenarioContext{ &featureRunner.GetContext() }
+        , scenarioHookScope{ scenarioContext, scenarioTags }
+    {
+        ReportHandler().ScenarioStart(scenarioSource);
+    }
+
+    ScenarioRunnerV2::~ScenarioRunnerV2()
+    {
+        ReportHandler().ScenarioEnd(scenarioSource, Result(), Duration());
+    }
+
+    const ScenarioSource& ScenarioRunnerV2::Source() const
+    {
+        return scenarioSource;
+    }
+
+    report::ReportHandler& ScenarioRunnerV2::ReportHandler()
+    {
+        return featureRunner.ReportHandler();
+    }
+
+    Context& ScenarioRunnerV2::GetContext()
+    {
+        return scenarioContext;
+    }
+
+    const std::set<std::string, std::less<>>& ScenarioRunnerV2::GetScenarioTags() const
+    {
+        return scenarioTags;
+    }
+
+    const cucumber::messages::feature& ScenarioRunnerV2::Ast() const
+    {
+        return featureRunner.Feature();
+    }
+
+    report::ReportHandler::Result ScenarioRunnerV2::Result() const
+    {
+        return result;
+    }
+
+    TraceTime::Duration ScenarioRunnerV2::Duration() const
+    {
+        return duration;
+    }
+
+    void ScenarioRunnerV2::Run()
+    {
+        for (const auto& step : pickle.steps)
+            if (result == decltype(result)::success || result == decltype(result)::undefined)
+            {
+                StepRunnerV2 stepRunner{ *this, step };
+                stepRunner.Run();
+
+                duration += stepRunner.Duration();
+
+                if (const auto stepResult = stepRunner.Result(); stepResult != decltype(stepResult)::success || stepResult != decltype(stepResult)::skipped)
+                    result = stepResult;
+            }
+            else
+                SkipStepRunnerV2{ *this, step };
     }
 }

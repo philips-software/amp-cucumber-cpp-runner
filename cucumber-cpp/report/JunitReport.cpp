@@ -1,9 +1,13 @@
+
 #include "cucumber-cpp/report/JunitReport.hpp"
-#include "cucumber-cpp/Rtrim.hpp"
-#include "nlohmann/json.hpp"
-#include "pugixml.hpp"
+#include "cucumber-cpp/FeatureRunner.hpp"
+#include "cucumber-cpp/ScenarioRunner.hpp"
+#include "cucumber-cpp/StepRunner.hpp"
+#include "cucumber-cpp/report/Report.hpp"
+#include <algorithm>
+#include <cmath>
 #include <iostream>
-#include <numeric>
+#include <map>
 #include <ranges>
 #include <sstream>
 
@@ -11,170 +15,189 @@ namespace cucumber_cpp::report
 {
     namespace
     {
-        auto ViewAllCapturedStdStream(const nlohmann::json& json, std::string what)
+        constexpr double precision = 0.0000001;
+
+        const std::map<report::ReportHandler::Result, std::string> successLut{
+            { report::ReportHandler::Result::success, "done" },
+            { report::ReportHandler::Result::skipped, "skipped" },
+            { report::ReportHandler::Result::failed, "failed" },
+            { report::ReportHandler::Result::error, "error" },
+            { report::ReportHandler::Result::pending, "pending" },
+            { report::ReportHandler::Result::ambiguous, "ambiguous" },
+            { report::ReportHandler::Result::undefined, "undefined" },
+        };
+
+        std::string RoundTo(double value, double roundToPrecision)
         {
-            return json["steps"] | std::views::filter([what](const nlohmann::json& step)
-                                       {
-                                           return step.contains(what);
-                                       }) |
-                   std::views::transform([what](const nlohmann::json& step)
-                       {
-                           return step[what].get<std::string>();
-                       });
-        }
+            const auto d = std::round(value / roundToPrecision) * roundToPrecision;
 
-        void AppendStdStreamOutput(auto& parent, std::string element, auto view)
-        {
-            if (!view.empty())
-            {
-
-                auto elem = parent.append_child(element.c_str());
-                auto str = std::accumulate(std::next(view.begin()), view.end(), view.front());
-                Rtrim(str);
-                elem.text() = str.c_str();
-            }
-        }
-
-        std::string AllErrors(const nlohmann::json& json)
-        {
-            auto stepsWithErrors = json["steps"] | std::views::filter([](const nlohmann::json& step)
-                                                       {
-                                                           return step.contains("errors");
-                                                       });
-            auto allMessages = stepsWithErrors | std::views::transform([](const nlohmann::json& step)
-                                                     {
-                                                         auto messages = step["errors"] | std::views::transform([](const nlohmann::json& json)
-                                                                                              {
-                                                                                                  return json["message"].get<std::string>();
-                                                                                              });
-                                                         return std::accumulate(messages.begin(), messages.end(), std::string{});
-                                                     });
-
-            return std::accumulate(allMessages.begin(), allMessages.end(), std::string{});
+            std::ostringstream out;
+            out << std::fixed << d;
+            return out.str();
         }
     }
 
-    void JunitReport::GenerateReport(const nlohmann::json& json)
+    JunitReportV2::JunitReportV2()
     {
-        struct Statistics
-        {
-            std::uint32_t tests = 0;
-            std::uint32_t failures = 0;
-            std::uint32_t errors = 0;
-            std::uint32_t skipped = 0;
-
-            Statistics& operator+=(Statistics& rhs)
-            {
-                tests += rhs.tests;
-                failures += rhs.failures;
-                errors += rhs.errors;
-                skipped += rhs.skipped;
-
-                return *this;
-            }
-        };
-
-        pugi::xml_document doc;
-
-        auto testsuites = doc.append_child("testsuites");
-
-        Statistics allStats;
-
+        testsuites = doc.append_child("testsuites");
         testsuites.append_attribute("name").set_value("Test run");
-        testsuites.append_attribute("time").set_value(json.value("elapsed", 0.0));
+        testsuites.append_attribute("time").set_value(0.0);
+    }
 
-        for (const auto& feature : json["features"])
+    JunitReportV2::~JunitReportV2()
+    {
+        testsuites.append_attribute("tests").set_value(totalTests);
+        testsuites.append_attribute("failures").set_value(totalFailures);
+        testsuites.append_attribute("errors").set_value(totalErrors);
+        testsuites.append_attribute("skipped").set_value(totalSkipped);
+
+        const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(totalTime).count();
+        testsuites.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
+
+        doc.save_file("out.xml");
+    }
+
+    void JunitReportV2::FeatureStart(const FeatureSource& featureSource)
+    {
+        testsuite = testsuites.append_child("testsuite");
+        testsuite.append_attribute("name").set_value(featureSource.name.c_str());
+        testsuite.append_attribute("file").set_value(featureSource.path.string().c_str());
+
+        scenarioTests = 0;
+        scenarioFailures = 0;
+        scenarioErrors = 0;
+        scenarioSkipped = 0;
+    }
+
+    void JunitReportV2::FeatureEnd(const FeatureSource& /*featureSource*/, Result /*result*/, TraceTime::Duration duration)
+    {
+        const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
+        testsuite.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
+
+        totalTests += scenarioTests;
+        totalFailures += scenarioFailures;
+        totalErrors += scenarioErrors;
+        totalSkipped += scenarioSkipped;
+
+        testsuite.append_attribute("tests").set_value(scenarioTests);
+        testsuite.append_attribute("failures").set_value(scenarioFailures);
+        testsuite.append_attribute("errors").set_value(scenarioErrors);
+        testsuite.append_attribute("skipped").set_value(scenarioSkipped);
+    }
+
+    void JunitReportV2::ScenarioStart(const ScenarioSource& scenarioSource)
+    {
+        testcase = testsuite.append_child("testcase");
+
+        testcase.append_attribute("name").set_value(scenarioSource.name.c_str());
+
+        ++scenarioTests;
+    }
+
+    void JunitReportV2::ScenarioEnd(const ScenarioSource& /*scenarioSource*/, Result result, TraceTime::Duration duration)
+    {
+        const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
+        testcase.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
+
+        switch (result)
         {
-            auto testsuite = testsuites.append_child("testsuite");
-            Statistics featureStatistics;
-
-            auto featureName = feature["ast"]["feature"]["name"].get<std::string>();
-            testsuite.append_attribute("name").set_value(featureName.c_str());
-            testsuite.append_attribute("time").set_value(feature.value("elapsed", 0.0));
-
-            for (const auto& scenario : feature["scenarios"])
+            case ReportHandler::Result::skipped:
+            case ReportHandler::Result::pending:
+            case ReportHandler::Result::ambiguous:
+            case ReportHandler::Result::undefined:
             {
-                if (!scenario.contains("result"))
+                ++scenarioSkipped;
+                auto skipped = testcase.append_child("skipped");
+
+                if (result == ReportHandler::Result::skipped)
                 {
-                    continue;
+                    skipped.append_attribute("message").set_value("Test is skipped due to previous errors.");
                 }
-
-                auto testcase = testsuite.append_child("testcase");
-
-                auto scenarioName = scenario["name"].get<std::string>();
-                testcase.append_attribute("name").set_value(scenarioName.c_str());
-                testcase.append_attribute("time").set_value(scenario.value("elapsed", 0.0));
-
-                ++featureStatistics.tests;
-
-                if (const auto result = scenario["result"]; result == "success")
+                else if (result == ReportHandler::Result::undefined)
                 {
+                    skipped.append_attribute("message").set_value("Test is undefined.");
                 }
-                else if (result == "failed")
+                else if (result == ReportHandler::Result::pending)
                 {
-                    ++featureStatistics.failures;
-
-                    auto failure = testcase.append_child("failure");
-                    failure.append_attribute("message").set_value(AllErrors(scenario).c_str());
-                }
-                else if (result == "error")
-                {
-                    ++featureStatistics.errors;
-
-                    auto error = testcase.append_child("error");
-                    error.append_attribute("message").set_value(AllErrors(scenario).c_str());
+                    skipped.append_attribute("message").set_value("Test is pending.");
                 }
                 else
                 {
-                    ++featureStatistics.skipped;
-
-                    auto skipped = testcase.append_child("skipped");
-
-                    if (result == "skipped")
-                    {
-                        skipped.append_attribute("message").set_value("Test is skipped due to previous errors.");
-                    }
-                    else if (result == "undefined")
-                    {
-                        skipped.append_attribute("message").set_value("Test is undefined.");
-                    }
-                    else if (result == "pending")
-                    {
-                        skipped.append_attribute("message").set_value("Test is pending.");
-                    }
-                    else
-                    {
-                        skipped.append_attribute("message").set_value("Test result unkown.");
-                    }
+                    skipped.append_attribute("message").set_value("Test result unkown.");
                 }
-
-                auto stepsWithStdout = ViewAllCapturedStdStream(scenario, "stdout");
-                AppendStdStreamOutput(testcase, "system-out", stepsWithStdout);
-
-                auto stepsWithStderr = ViewAllCapturedStdStream(scenario, "stderr");
-                AppendStdStreamOutput(testcase, "system-err", stepsWithStderr);
             }
 
-            if (featureStatistics.tests == 0)
-            {
-                testsuites.remove_child(testsuite);
-            }
-            else
-            {
-                testsuite.append_attribute("tests").set_value(featureStatistics.tests);
-                testsuite.append_attribute("failures").set_value(featureStatistics.failures);
-                testsuite.append_attribute("errors").set_value(featureStatistics.errors);
-                testsuite.append_attribute("skipped").set_value(featureStatistics.skipped);
+            break;
 
-                allStats += featureStatistics;
-            }
+            case ReportHandler::Result::failed:
+                ++scenarioFailures;
+                break;
+
+            case ReportHandler::Result::error:
+                ++scenarioErrors;
+                break;
+
+            default:
+                break;
         }
 
-        testsuites.append_attribute("tests").set_value(allStats.tests);
-        testsuites.append_attribute("failures").set_value(allStats.failures);
-        testsuites.append_attribute("errors").set_value(allStats.errors);
-        testsuites.append_attribute("skipped").set_value(allStats.skipped);
+        totalTime += duration;
+    }
 
-        doc.save_file("out.xml");
+    void JunitReportV2::StepStart(const StepSource& stepSource)
+    {
+        /* do nothing */
+    }
+
+    void JunitReportV2::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
+    {
+        /* do nothing */
+    }
+
+    void JunitReportV2::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    {
+        auto failure = testcase.append_child("failure");
+
+        failure.append_attribute("message").set_value(error.c_str());
+
+        std::ostringstream out;
+
+        if (path && line && column)
+            out
+                << "\n"
+                << path.value().string() << ":" << line.value() << ":" << column.value() << ": Failure\n"
+                << error;
+        else
+            out
+                << "\n"
+                << error;
+
+        failure.text() = out.str().c_str();
+    }
+
+    void JunitReportV2::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    {
+        auto errorNode = testcase.append_child("error");
+
+        errorNode.append_attribute("message").set_value(error.c_str());
+
+        std::ostringstream out;
+
+        if (path && line && column)
+            out
+                << "\n"
+                << path.value().string() << ":" << line.value() << ":" << column.value() << ": Error\n"
+                << error;
+        else
+            out
+                << "\n"
+                << error;
+
+        errorNode.text() = out.str().c_str();
+    }
+
+    void JunitReportV2::Trace(const std::string& trace)
+    {
+        /* do nothing */
     }
 }

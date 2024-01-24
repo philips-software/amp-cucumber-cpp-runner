@@ -1,14 +1,12 @@
 #ifndef CUCUMBER_CPP_TAGEXPRESSION_CPP
 #define CUCUMBER_CPP_TAGEXPRESSION_CPP
 #include "cucumber-cpp/TagExpression.hpp"
-#include "nlohmann/json.hpp"
 #include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <ostream>
 #include <ranges>
 #include <regex>
-#include <stddef.h>
 #include <stdexcept>
 
 namespace cucumber_cpp
@@ -21,7 +19,7 @@ namespace cucumber_cpp
         }
     }
 
-    bool IsTagExprSelected(const std::string& tagExpr, const std::set<std::string>& tags)
+    bool IsTagExprSelected(const std::string& tagExpr, const std::set<std::string, std::less<>>& tags)
     {
         if (tagExpr.empty())
         {
@@ -37,7 +35,7 @@ namespace cucumber_cpp
 
         for (std::smatch matches; std::regex_search(eval, matches, std::regex(R"((@[^ \)]+))"));)
         {
-            Replace(eval, matches[1], tags.count(matches[1]) ? "1" : "0");
+            Replace(eval, matches[1], tags.contains(matches[1]) ? "1" : "0");
         }
 
         Replace(eval, "not", "!");
@@ -80,19 +78,6 @@ namespace cucumber_cpp
         }
 
         return eval == std::string("1");
-    }
-
-    bool IsTagExprSelected(const std::string& tagExpr, const nlohmann::json& json)
-    {
-        static const auto getName = [](const nlohmann::json& json)
-        {
-            return json["name"];
-        };
-
-        std::set<std::string> tagSet;
-        std::ranges::copy(json | std::views::transform(getName), std::inserter(tagSet, tagSet.end()));
-
-        return IsTagExprSelected(tagExpr, tagSet);
     }
 }
 

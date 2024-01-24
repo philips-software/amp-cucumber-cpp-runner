@@ -1,11 +1,11 @@
 #include "cucumber-cpp/Application.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/CucumberRunner.hpp"
-#include "cucumber-cpp/ResultStates.hpp"
-#include "cucumber-cpp/report/JsonReport.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
+#include "cucumber-cpp/report/Report.hpp"
 #include "cucumber-cpp/report/StdOutReport.hpp"
 #include "cucumber/gherkin/file.hpp"
+#include "cucumber/gherkin/parse_error.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
@@ -74,44 +74,34 @@ namespace cucumber_cpp
         {
             const auto arg = *current;
             if (arg == "--tag")
-            {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
                     current = std::next(current);
                     tags.push_back(*current);
                 }
-            }
             else if (arg == "--feature")
-            {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
                     current = std::next(current);
                     features.push_back(*current);
                 }
-            }
             else if (arg == "--report")
-            {
                 while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
                 {
                     current = std::next(current);
                     reports.push_back(*current);
                 }
-            }
             else if (arg.starts_with("--Xapp,"))
             {
                 const auto param = arg.substr(std::string_view("--Xapp,").size());
 
                 for (const auto xArg : std::views::split(param, ','))
-                {
                     forwardArgs.push_back(subrange_to_sv(xArg));
-                }
             }
             else
             {
                 if (!(arg == "--help" && arg == "-h"))
-                {
                     std::cout << "\nUnkown argument: " << std::quoted(arg) << "\n";
-                }
 
                 ExitWithHelp(name);
             }
@@ -152,35 +142,41 @@ namespace cucumber_cpp
         validateArguments();
     }
 
-    Application::Application(std::span<const char*> args)
-        : options{ args }
+    GherkinParser::GherkinParser(CucumberRunnerV2& cucumberRunner)
+        : cucumberRunner{ cucumberRunner }
         , cbs{
             .ast = [&](const cucumber::gherkin::app::parser_result& ast)
             {
-                nlohmann::json astJson;
-
-                ast.to_json(astJson);
-
-                root["features"].push_back({ { "ast", astJson } });
+                featureRunner = cucumberRunner.StartFeature(ast);
             },
             .pickle = [&](const cucumber::messages::pickle& pickle)
             {
-                nlohmann::json scenarioJson;
-
-                pickle.to_json(scenarioJson);
-
-                root["features"].back()["scenarios"].push_back(scenarioJson);
+                featureRunner->StartScenario(pickle);
             },
-            .error = [&](const auto& m)
-            {
-                std::cout << m.to_json() << std::endl;
-            }
+            .error = [&](const cucumber::gherkin::parse_error& m) {}
         }
     {
-        root["tagexpression"] = options.tags;
         app.include_source(false);
         app.include_ast(true);
         app.include_pickles(true);
+    }
+
+    report::ReportHandler::Result GherkinParser::RunFeatureFile(const std::filesystem::path& path)
+    {
+        app.parse(cucumber::gherkin::file{ path.string() }, cbs);
+        auto result = featureRunner->Result();
+        featureRunner = nullptr;
+        return result;
+    }
+
+    Application::Application(std::span<const char*> args)
+        : options{ args }
+    {
+        if (std::ranges::find(options.reports, "console") != options.reports.end())
+            reporters.Add(std::make_unique<report::StdOutReportV2>());
+
+        if (std::ranges::find(options.reports, "junit-xml") != options.reports.end())
+            reporters.Add(std::make_unique<report::JunitReportV2>());
     }
 
     const std::vector<std::string_view>& Application::GetForwardArgs() const
@@ -190,48 +186,36 @@ namespace cucumber_cpp
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
+        using Result = report::ReportHandler::Result;
+
+        auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
+
+        CucumberRunnerV2 cucumberRunner{ GetForwardArgs(), std::move(tagExpression), reporters, std::move(contextStorageFactory) };
+        GherkinParser gherkinParser{ cucumberRunner };
+
         for (const auto& featurePath : GetFeatureFiles())
-            app.parse(cucumber::gherkin::file{ featurePath.string() }, cbs);
-
-        const auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
-
-        CucumberRunner cucumberRunner{ GetForwardArgs(), tagExpression, std::move(contextStorageFactory) };
-        cucumberRunner.Run(root);
-
-        if (!root.contains("result"))
         {
+            auto featureResult = gherkinParser.RunFeatureFile(featurePath);
+
+            if (result == Result::undefined || result == Result::success)
+                result = featureResult;
+        }
+
+        if (result == Result::undefined)
             std::cout << "\nError: no features have been executed";
-        }
-    }
-
-    void Application::GenerateReports(const std::map<std::string_view, report::Report&>& /*unused*/)
-    {
-        if (std::ranges::find(options.reports, "json") != options.reports.end())
-        {
-            cucumber_cpp::report::JsonReport report;
-            report.GenerateReport(root);
-        }
-
-        if (std::ranges::find(options.reports, "console") != options.reports.end())
-        {
-            cucumber_cpp::report::StdOutReport report;
-            report.GenerateReport(root);
-        }
-
-        if (std::ranges::find(options.reports, "junit-xml") != options.reports.end())
-        {
-            cucumber_cpp::report::JunitReport junitReport;
-            junitReport.GenerateReport(root);
-        }
     }
 
     int Application::GetExitCode() const
     {
-        if (root.contains("result") && root["result"] == result::success)
-        {
+        if (result == decltype(result)::success)
             return 0;
-        }
-        return 1;
+        else
+            return 1;
+    }
+
+    [[nodiscard]] report::Reporters& Application::Reporters()
+    {
+        return reporters;
     }
 
     std::vector<std::filesystem::path> Application::GetFeatureFiles() const
