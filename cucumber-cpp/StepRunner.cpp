@@ -1,7 +1,6 @@
 #include "cucumber-cpp/StepRunner.hpp"
 #include "cucumber-cpp/HookScopes.hpp"
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
-#include "cucumber-cpp/ResultStates.hpp"
 #include "cucumber-cpp/Rtrim.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
@@ -33,11 +32,14 @@ namespace cucumber_cpp
             {
             }
 
-            ~AppendFailureOnTestPartResultEvent()
+            ~AppendFailureOnTestPartResultEvent() override
             {
                 for (const auto& error : errors)
                     reportHandler.Failure(error.message(), error.file_name(), error.line_number(), 0);
             }
+
+            AppendFailureOnTestPartResultEvent(const AppendFailureOnTestPartResultEvent&) = delete;
+            AppendFailureOnTestPartResultEvent& operator=(const AppendFailureOnTestPartResultEvent&) = delete;
 
             void OnTestPartResult(const testing::TestPartResult& testPartResult) override
             {
@@ -56,7 +58,7 @@ namespace cucumber_cpp
 
         struct CaptureAndTraceStdOut
         {
-            CaptureAndTraceStdOut(report::ReportHandler& reportHandler)
+            explicit CaptureAndTraceStdOut(report::ReportHandler& reportHandler)
                 : reportHandler{ reportHandler }
             {
                 testing::internal::CaptureStdout();
@@ -77,6 +79,9 @@ namespace cucumber_cpp
                     reportHandler.Trace(str);
                 }
             }
+
+            CaptureAndTraceStdOut(const CaptureAndTraceStdOut&) = delete;
+            CaptureAndTraceStdOut& operator=(const CaptureAndTraceStdOut&) = delete;
 
         private:
             report::ReportHandler& reportHandler;
@@ -135,7 +140,12 @@ namespace cucumber_cpp
                         return StepSource::FromAst(scenarioSource, *iter, pickleStep);
                 }
 
-            throw std::runtime_error{ "StepSource not found" };
+            struct StepSourceNotFoundError : std::out_of_range
+            {
+                using std::out_of_range::out_of_range;
+            };
+
+            throw StepSourceNotFoundError{ "StepSource not found" };
         }
     }
 
@@ -223,7 +233,7 @@ namespace cucumber_cpp
             else
                 result = decltype(result)::success;
         }
-        catch (const StepRegistryBase::StepNotFoundError& e)
+        catch (const StepRegistryBase::StepNotFoundError& /* e */)
         {
             result = decltype(result)::error;
             ReportHandler().Error("Step \"" + stepSource.type + " " + stepSource.name + "\" not found");
