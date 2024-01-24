@@ -32,7 +32,7 @@ namespace cucumber_cpp
     {
     public:
         ScenarioRunnerV2(FeatureRunnerV2& featureRunner, const cucumber::messages::pickle& pickle);
-        virtual ~ScenarioRunnerV2();
+        ~ScenarioRunnerV2();
 
         [[nodiscard]] const ScenarioSource& Source() const;
 
@@ -45,7 +45,7 @@ namespace cucumber_cpp
         [[nodiscard]] report::ReportHandler::Result Result() const;
         [[nodiscard]] TraceTime::Duration Duration() const;
 
-        virtual void Run();
+        void Run();
 
     private:
         FeatureRunnerV2& featureRunner;

@@ -16,13 +16,13 @@ namespace cucumber_cpp
     {
     public:
         CucumberRunnerV2(const std::vector<std::string_view>& args, std::string tagExpression, report::ReportHandler& reportHandler, std::shared_ptr<ContextStorageFactory> contextStorageFactory);
-        virtual ~CucumberRunnerV2() = default;
+        ~CucumberRunnerV2() = default;
 
         [[nodiscard]] std::string TagExpression() const;
         [[nodiscard]] report::ReportHandler& ReportHandler();
         [[nodiscard]] Context& GetContext();
 
-        virtual std::unique_ptr<FeatureRunnerV2> StartFeature(const cucumber::gherkin::app::parser_result& ast);
+        std::unique_ptr<FeatureRunnerV2> StartFeature(const cucumber::gherkin::app::parser_result& ast);
 
     private:
         struct InsertArgsToContext

@@ -30,7 +30,7 @@ namespace cucumber_cpp
     {
     public:
         FeatureRunnerV2(CucumberRunnerV2& cucumberRunner, const cucumber::gherkin::app::parser_result& ast);
-        virtual ~FeatureRunnerV2();
+        ~FeatureRunnerV2();
 
         [[nodiscard]] const FeatureSource& Source() const;
 
@@ -42,7 +42,7 @@ namespace cucumber_cpp
         [[nodiscard]] report::ReportHandler::Result Result() const;
         [[nodiscard]] TraceTime::Duration Duration() const;
 
-        virtual void StartScenario(const cucumber::messages::pickle& pickle);
+        void StartScenario(const cucumber::messages::pickle& pickle);
 
     private:
         void StartFeatureOnce();
