@@ -91,7 +91,7 @@ namespace cucumber_cpp
 
     TEST_F(TestSteps, GetInvalidStep)
     {
-        EXPECT_THROW((void)stepRegistry.Query(StepType::when, "This step does not exist"), std::out_of_range);
+        EXPECT_THROW((void)stepRegistry.Query(StepType::when, "This step does not exist"), StepRegistryBase::StepNotFoundError);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)
