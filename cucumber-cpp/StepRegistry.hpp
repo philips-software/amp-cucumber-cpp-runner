@@ -25,7 +25,7 @@ namespace cucumber_cpp
     struct TableValue
     {
         template<class T>
-        T As();
+        T As() const;
 
         std::string value;
     };
@@ -153,7 +153,7 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<class T>
-    T TableValue::As()
+    T TableValue::As() const
     {
         return StringTo<T>(value);
     }
