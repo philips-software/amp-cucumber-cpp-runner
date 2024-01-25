@@ -1,7 +1,9 @@
 #ifndef CUCUMBER_CPP_BODY_HPP
 #define CUCUMBER_CPP_BODY_HPP
 
+#include "cucumber-cpp/InternalError.hpp"
 #include <cstddef>
+#include <source_location>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -12,20 +14,18 @@
 namespace cucumber_cpp
 {
     template<class To>
-    inline To StringTo(const std::string& s)
+    inline To StringTo(const std::string& s, std::source_location sourceLocation = std::source_location::current())
     {
         std::istringstream stream{ s };
         To to;
         stream >> to;
         if (stream.fail())
-        {
-            throw std::invalid_argument("Cannot convert parameter");
-        }
+            throw InternalError{ "Cannnot convert parameter \"" + s + "\"", sourceLocation };
         return to;
     }
 
     template<>
-    inline std::string StringTo<std::string>(const std::string& s)
+    inline std::string StringTo<std::string>(const std::string& s, std::source_location /*sourceLocation*/)
     {
         return s;
     }

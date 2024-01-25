@@ -25,7 +25,7 @@ namespace cucumber_cpp
     struct TableValue
     {
         template<class T>
-        T As() const;
+        T As(std::source_location sourceLocation = std::source_location::current()) const;
 
         std::string value;
     };
@@ -153,9 +153,9 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<class T>
-    T TableValue::As() const
+    T TableValue::As(std::source_location sourceLocation) const
     {
-        return StringTo<T>(value);
+        return StringTo<T>(value, sourceLocation);
     }
 
     template<class T>
