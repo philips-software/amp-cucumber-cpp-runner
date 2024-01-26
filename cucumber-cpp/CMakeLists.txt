@@ -17,6 +17,7 @@ target_sources(cucumber-cpp PRIVATE
     Hooks.hpp
     HookScopes.cpp
     HookScopes.hpp
+    InternalError.hpp
     OnTestPartResultEventListener.cpp
     OnTestPartResultEventListener.hpp
     Rtrim.cpp

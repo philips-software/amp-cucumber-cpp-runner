@@ -1,5 +1,6 @@
 #include "cucumber-cpp/StepRunner.hpp"
 #include "cucumber-cpp/HookScopes.hpp"
+#include "cucumber-cpp/InternalError.hpp"
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include "cucumber-cpp/Rtrim.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
@@ -253,6 +254,11 @@ namespace cucumber_cpp
         {
             result = decltype(result)::pending;
             ReportHandler().Error(e.message, e.sourceLocation.file_name(), e.sourceLocation.line(), e.sourceLocation.column());
+        }
+        catch (const InternalError& e)
+        {
+            result = decltype(result)::error;
+            ReportHandler().Error(e.what(), e.sourceLocation.file_name(), e.sourceLocation.line(), e.sourceLocation.column());
         }
         catch (const std::source_location& loc)
         {
