@@ -133,6 +133,6 @@ namespace cucumber_cpp::report
 
     void StdOutReportV2::Trace(const std::string& trace)
     {
-        /* do nothing */
+        std::cout << trace;
     }
 }
