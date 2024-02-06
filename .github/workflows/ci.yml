@@ -75,7 +75,7 @@ jobs:
           cmake --preset=Host
           cmake --build --preset=Host-Debug
           bats --formatter junit test/test.bats | tee test-report.xml
-      - uses: EnricoMi/publish-unit-test-result-action@e780361cd1fc1b1a170624547b3ffda64787d365 # v2.12.0
+      - uses: EnricoMi/publish-unit-test-result-action@8885e273a4343cd7b48eaa72428dea0c3067ea98 # v2.14.0
         if: always()
         with:
           files: test-report.xml
