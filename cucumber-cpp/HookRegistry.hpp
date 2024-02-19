@@ -25,6 +25,18 @@ namespace cucumber_cpp
     {
         explicit HookBase(Context& context);
 
+        virtual ~HookBase() = default;
+
+        virtual void SetUp()
+        {
+            /* nothing to do */
+        }
+
+        virtual void TearDown()
+        {
+            /* nothing to do */
+        }
+
     protected:
         Context& context;
     };

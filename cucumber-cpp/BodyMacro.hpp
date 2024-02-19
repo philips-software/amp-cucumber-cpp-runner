@@ -21,7 +21,17 @@
             using myBase::myBase;                                                               \
             void Execute(const std::vector<std::string>& args) override                         \
             {                                                                                   \
-                InvokeWithArg(this, args, &BODY_STRUCT::ExecuteWithArgs);                       \
+                SetUp();                                                                        \
+                try                                                                             \
+                {                                                                               \
+                    InvokeWithArg(this, args, &BODY_STRUCT::ExecuteWithArgs);                   \
+                }                                                                               \
+                catch (...)                                                                     \
+                {                                                                               \
+                    TearDown();                                                                 \
+                    throw;                                                                      \
+                }                                                                               \
+                TearDown();                                                                     \
             }                                                                                   \
                                                                                                 \
         private:                                                                                \

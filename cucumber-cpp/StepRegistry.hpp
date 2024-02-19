@@ -47,6 +47,17 @@ namespace cucumber_cpp
         };
 
         Step(Context& context, const Table& table);
+        virtual ~Step() = default;
+
+        virtual void SetUp()
+        {
+            /* nothing to do */
+        }
+
+        virtual void TearDown()
+        {
+            /* nothing to do */
+        }
 
     protected:
         void Given(const std::string& step);
