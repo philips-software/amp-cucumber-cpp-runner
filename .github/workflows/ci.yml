@@ -34,7 +34,7 @@ jobs:
           key: cache-winsdk
       - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@2a51777f6f64b7b7bea213601acba8f5f4fdbe03 #v1.2.11
+      - uses: hendrikmuhs/ccache-action@faf867a11c028c0b483fb2ae72b6fc8f7d842714 #v1.2.12
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -48,7 +48,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
-      - uses: hendrikmuhs/ccache-action@2a51777f6f64b7b7bea213601acba8f5f4fdbe03 #v1.2.11
+      - uses: hendrikmuhs/ccache-action@faf867a11c028c0b483fb2ae72b6fc8f7d842714 #v1.2.12
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -67,7 +67,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
-      - uses: hendrikmuhs/ccache-action@2a51777f6f64b7b7bea213601acba8f5f4fdbe03 #v1.2.11
+      - uses: hendrikmuhs/ccache-action@faf867a11c028c0b483fb2ae72b6fc8f7d842714 #v1.2.12
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -75,7 +75,7 @@ jobs:
           cmake --preset=Host
           cmake --build --preset=Host-Debug
           bats --formatter junit test/test.bats | tee test-report.xml
-      - uses: EnricoMi/publish-unit-test-result-action@e780361cd1fc1b1a170624547b3ffda64787d365 # v2.12.0
+      - uses: EnricoMi/publish-unit-test-result-action@8885e273a4343cd7b48eaa72428dea0c3067ea98 # v2.14.0
         if: always()
         with:
           files: test-report.xml
