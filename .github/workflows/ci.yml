@@ -27,7 +27,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
-      - uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id: cache-winsdk
         with:
           path: /winsdk
