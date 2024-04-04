@@ -5,8 +5,11 @@ updates:
     directory: /
     schedule:
       interval: daily
-    commit-message:
-      prefix: "build(deps)"
+    groups:
+      github-action-updates:
+        update-types:
+          - patch
+          - minor
   - package-ecosystem: docker
     directory: .devcontainer
     schedule:
