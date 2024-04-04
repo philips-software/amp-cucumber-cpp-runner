@@ -4,26 +4,5 @@
     "build": {
         "context": "..",
         "dockerfile": "Dockerfile"
-    },
-    "runArgs": [
-        "--add-host=host.docker.internal:host-gateway",
-        "--privileged"
-    ],
-    // Add the IDs of extensions you want installed when the container is created.
-    "customizations": {
-        "vscode": {
-            "settings": {},
-            "extensions": [
-                "mcu-debug.debug-tracker-vscode",
-                "matepek.vscode-catch2-test-adapter",
-                "ms-vscode.cmake-tools",
-                "llvm-vs-code-extensions.vscode-clangd",
-                "twxs.cmake",
-                "ms-vscode.cpptools",
-                "akiramiyakoda.cppincludeguard",
-                "alexkrechik.cucumberautocomplete",
-                "SonarSource.sonarlint-vscode"
-            ]
-        }
     }
 }

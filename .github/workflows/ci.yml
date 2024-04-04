@@ -24,7 +24,7 @@ jobs:
   build-windows:
     name: Windows Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
+    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
       - uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
@@ -45,7 +45,7 @@ jobs:
   build-linux:
     name: Linux Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
+    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
       - uses: hendrikmuhs/ccache-action@faf867a11c028c0b483fb2ae72b6fc8f7d842714 #v1.2.12
@@ -64,7 +64,7 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
-    container: ghcr.io/philips-software/amp-devcontainer@sha256:2d052e0bcb3840ea45aaa21ea6904f6d84b0e310c97e5690a6d48da522ec384e #v4.0.2
+    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
       - uses: hendrikmuhs/ccache-action@faf867a11c028c0b483fb2ae72b6fc8f7d842714 #v1.2.12
