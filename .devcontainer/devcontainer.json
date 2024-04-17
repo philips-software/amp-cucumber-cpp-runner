@@ -4,5 +4,13 @@
     "build": {
         "context": "..",
         "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "alexkrechik.cucumberautocomplete",
+                "akiramiyakoda.cppincludeguard"
+            ]
+        }
     }
 }

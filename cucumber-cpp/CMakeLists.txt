@@ -43,10 +43,9 @@ target_include_directories(cucumber-cpp PUBLIC
 target_link_libraries(cucumber-cpp PUBLIC
     gtest
     cucumber_gherkin_lib
-
-    PRIVATE
     cucumber-cpp.report
     args
+    CLI11
 )
 
 target_compile_options(cucumber-cpp PRIVATE

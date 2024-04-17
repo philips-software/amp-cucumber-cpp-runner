@@ -1,4 +1,5 @@
 #include "cucumber-cpp/Application.hpp"
+#include "CLI/CLI.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
@@ -49,102 +50,11 @@ namespace cucumber_cpp
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
-
-        void ExitWithHelp(std::string_view name)
-        {
-            std::cout << "\n"
-                      << name << " [--tag <tag>] --feature <file/folder> [--feature <file/folder>...] --report <reportname> [--report <reportname>...] [--Xapp,<forwardingargs>...]";
-            std::cout << "\n";
-            std::cout << "\n --tag <tag>              : cucumber tag expression";
-            std::cout << "\n --feature <file/folder>  : feature file or folder with feature files";
-            std::cout << "\n --report <reportname>    : name of the report generator";
-            std::cout << "\n                            junit-xml, console...";
-            std::cout << "\n --Xapp,<forwardingargs>  : arguments forwarded to application. Multiple arguments can be provided, separated by a comma";
-
-            std::exit(1);
-        }
-    }
-
-    Application::Options::Options(std::span<const char*> args)
-    {
-        // const auto name = std::filesystem::path(const_char_to_sv(args[0])).filename().string();
-        // const auto view = args | std::views::drop(1) | std::views::transform(const_char_to_sv);
-
-        // for (auto current = view.begin(); current != view.end(); ++current)
-        // {
-        //     const auto arg = *current;
-        //     if (arg == "--tag")
-        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-        //         {
-        //             current = std::next(current);
-        //             tags.push_back(*current);
-        //         }
-        //     else if (arg == "--feature")
-        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-        //         {
-        //             current = std::next(current);
-        //             features.push_back(*current);
-        //         }
-        //     else if (arg == "--report")
-        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-        //         {
-        //             current = std::next(current);
-        //             reports.push_back(*current);
-        //         }
-        //     else if (arg.starts_with("--Xapp,"))
-        //     {
-        //         const auto param = arg.substr(std::string_view("--Xapp,").size());
-
-        //         for (const auto xArg : std::views::split(param, ','))
-        //             forwardArgs.push_back(subrange_to_sv(xArg));
-        //     }
-        //     else
-        //     {
-        //         if (!(arg == "--help" && arg == "-h"))
-        //             std::cout << "\nUnkown argument: " << std::quoted(arg) << "\n";
-
-        //         ExitWithHelp(name);
-        //     }
-        // }
-
-        // const auto valid = [] {};
-        // const auto invalid = [&name]
-        // {
-        //     ExitWithHelp(name);
-        // };
-
-        // const auto validateReports = [&, this](auto validate)
-        // {
-        //     if (reports.empty())
-        //     {
-        //         std::cout << "\nno report generators";
-        //         invalid();
-        //     }
-        //     else
-        //     {
-        //         validate();
-        //     }
-        // };
-
-        // const auto validateArguments = [&, this]()
-        // {
-        //     if (features.empty())
-        //     {
-        //         std::cout << "\nno feature files or folders";
-        //         validateReports(invalid);
-        //     }
-        //     else
-        //     {
-        //         validateReports(valid);
-        //     }
-        // };
-
-        // validateArguments();
     }
 
     GherkinParser::GherkinParser(CucumberRunnerV2& cucumberRunner)
         : cucumberRunner{ cucumberRunner }
-        , cbs{
+        , callbacks{
             .ast = [&](const cucumber::gherkin::app::parser_result& ast)
             {
                 featureRunner = cucumberRunner.StartFeature(ast);
@@ -156,58 +66,75 @@ namespace cucumber_cpp
             .error = [&](const cucumber::gherkin::parse_error& m) {}
         }
     {
-        app.include_source(false);
-        app.include_ast(true);
-        app.include_pickles(true);
+        gherkin.include_source(false);
+        gherkin.include_ast(true);
+        gherkin.include_pickles(true);
     }
 
     report::ReportHandler::Result GherkinParser::RunFeatureFile(const std::filesystem::path& path)
     {
-        app.parse(cucumber::gherkin::file{ path.string() }, cbs);
+        gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
         auto result = featureRunner->Result();
         featureRunner = nullptr;
         return result;
     }
 
-    Application::Application(std::span<const char*> args)
-        : options{ args }
+    Application::Application()
     {
-        parser.ParseCLI(args.size(), args.data());
+        cli.add_option("-t,--tag", options.tags, "Cucumber tag expression")->expected(0, -1);
+        cli.add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required();
+        cli.add_option("-r,--report", options.reporters, "Name of the report generator: ")->required();
 
-        // if (std::ranges::find(options->reports, "console") != options->reports.end())
-        //     reporters.Add(std::make_unique<report::StdOutReportV2>());
-
-        // if (std::ranges::find(options->reports, "junit-xml") != options->reports.end())
-        //     reporters.Add(std::make_unique<report::JunitReportV2>());
+        reporters.Add("console", std::make_unique<report::StdOutReportV2>());
+        reporters.Add("junit-xml", std::make_unique<report::JunitReportV2>());
     }
 
-    Application::Application(int argc, const char* const* argv)
+    int Application::Run(int argc, const char* const* argv)
     {
-        parser.ParseCLI(argc, argv);
+        return Run(argc, argv, std::make_shared<ContextStorageFactoryImpl>());
     }
 
-    Application::Application(int argc, const char* const* argv, args::Group& argsGroup)
+    int Application::Run(int argc, const char* const* argv, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
-        parser.ParseCLI(argc, argv);
+        try
+        {
+            const auto reportDescription = cli.get_option("--report")->get_description();
+            const auto availableReporters = reporters.AvailableReporters();
+
+            const auto joinedReporters = std::accumulate(availableReporters.begin() + 1, availableReporters.end(), reportDescription + availableReporters.front(), [](const std::string& lhs, const std::string& rhs)
+                {
+                    return lhs + ", " + rhs;
+                });
+
+            cli.get_option("--report")->description(joinedReporters);
+            cli.parse(argc, argv);
+            RunFeatures(std::move(contextStorageFactory));
+        }
+        catch (const CLI::ParseError& e)
+        {
+            return cli.exit(e);
+        }
+
+        return GetExitCode();
     }
 
-    Application::Application(int argc, const char* const* argv, std::vector<args::Group*> argsGroup)
+    CLI::App& Application::CliParser()
     {
-        parser.ParseCLI(argc, argv);
+        return cli;
     }
 
-    const std::vector<std::string_view>& Application::GetForwardArgs() const
+    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter)
     {
-        return options->forwardArgs;
+        reporters.Add(name, std::move(reporter));
     }
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
         using Result = report::ReportHandler::Result;
 
-        auto tagExpression = options->tags.empty() ? std::string{} : std::accumulate(std::next(options->tags.begin()), options->tags.end(), std::string(options->tags.front()), JoinStringWithSpace);
+        auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
-        CucumberRunnerV2 cucumberRunner{ GetForwardArgs(), std::move(tagExpression), reporters, std::move(contextStorageFactory) };
+        CucumberRunnerV2 cucumberRunner{ {}, std::move(tagExpression), reporters, std::move(contextStorageFactory) };
         GherkinParser gherkinParser{ cucumberRunner };
 
         for (const auto& featurePath : GetFeatureFiles())
@@ -230,16 +157,11 @@ namespace cucumber_cpp
             return 1;
     }
 
-    [[nodiscard]] report::Reporters& Application::Reporters()
-    {
-        return reporters;
-    }
-
     std::vector<std::filesystem::path> Application::GetFeatureFiles() const
     {
         std::vector<std::filesystem::path> files;
 
-        for (const auto feature : options->features | std::views::transform(to_fs_path))
+        for (const auto feature : options.features | std::views::transform(to_fs_path))
             if (std::filesystem::is_directory(feature))
             {
                 for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))

@@ -4,6 +4,8 @@
 #include "cucumber-cpp/TraceTime.hpp"
 #include <cstddef>
 #include <filesystem>
+#include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -51,12 +53,17 @@ namespace cucumber_cpp::report
 
     struct Reporters
     {
+        void Add(const std::string& name, std::unique_ptr<ReportHandler>&& reporter);
+        void Use(const std::string& name);
         void Add(std::unique_ptr<ReportHandler>&& report);
+
+        std::vector<std::string> AvailableReporters() const;
 
     protected:
         std::vector<std::unique_ptr<ReportHandler>>& Storage();
 
     private:
+        std::map<std::string, std::unique_ptr<ReportHandler>, std::less<>> availableReporters;
         std::vector<std::unique_ptr<ReportHandler>> reporters;
     };
 
