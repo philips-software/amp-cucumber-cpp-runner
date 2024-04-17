@@ -9,17 +9,10 @@
 
 namespace cucumber_cpp
 {
-    CucumberRunnerV2::InsertArgsToContext::InsertArgsToContext(Context& context, const std::vector<std::string_view>& args)
-    {
-
-        context.InsertAt("args", args);
-    }
-
-    CucumberRunnerV2::CucumberRunnerV2(const std::vector<std::string_view>& args, std::string tagExpression, report::ReportHandler& reportHandler, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+    CucumberRunnerV2::CucumberRunnerV2(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler)
         : tagExpression{ std::move(tagExpression) }
         , reportHandler{ reportHandler }
-        , programContext{ std::move(contextStorageFactory) }
-        , insertArgsToContext{ programContext, args }
+        , programContext{ programContext }
         , programHookeScope{ programContext }
     {
     }

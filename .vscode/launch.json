@@ -11,15 +11,14 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "--tag",
-                "@smoke",
+                "@smoke2",
                 "--feature",
                 "cucumber-cpp-example/features/1very_long.feature",
                 "cucumber-cpp-example/features/2simple.feature",
                 "--report",
-                "json",
                 "console",
-                "junit-xml",
-                "--Xapp,--st"
+                "--com",
+                "--std"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

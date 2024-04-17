@@ -1,14 +1,12 @@
 #ifndef CUCUMBER_CPP_APPLICATION_HPP
 #define CUCUMBER_CPP_APPLICATION_HPP
 
-#include "CLI/CLI.hpp"
-#include "args.hxx"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/FeatureRunner.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "cucumber/gherkin/app.hpp"
-#include <CLI/App.hpp>
+#include <CLI/CLI.hpp>
 #include <filesystem>
 #include <limits>
 #include <map>
@@ -21,20 +19,6 @@
 
 namespace cucumber_cpp
 {
-    struct GherkinParser
-    {
-        explicit GherkinParser(CucumberRunnerV2& cucumberRunner);
-
-        [[nodiscard]] report::ReportHandler::Result RunFeatureFile(const std::filesystem::path& path);
-
-    private:
-        CucumberRunnerV2& cucumberRunner;
-        std::unique_ptr<FeatureRunnerV2> featureRunner;
-
-        cucumber::gherkin::app gherkin;
-        cucumber::gherkin::app::callbacks callbacks;
-    };
-
     struct ResultStatus
     {
         using Result = cucumber_cpp::report::ReportHandler::Result;
@@ -50,32 +34,36 @@ namespace cucumber_cpp
 
     struct Application
     {
-        Application();
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
 
         int Run(int argc, const char* const* argv);
-        int Run(int argc, const char* const* argv, std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
         CLI::App& CliParser();
+        Context& ProgramContext();
 
         void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter);
 
     private:
         [[nodiscard]] int GetExitCode() const;
         [[nodiscard]] std::vector<std::filesystem::path> GetFeatureFiles() const;
-        void RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
+        void RunFeatures();
+        [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path);
 
         struct Options
         {
-            std::vector<std::string_view> tags{};
-            std::vector<std::string_view> features{};
-            std::vector<std::string_view> reporters{};
+            std::vector<std::string> tags{};
+            std::vector<std::string> features{};
+            std::vector<std::string> reporters{};
         };
 
         Options options{};
-        CLI::App cli{ "name" };
+        CLI::App cli{};
 
         report::ReportForwarder reporters;
 
+        Context programContext;
+
+        cucumber::gherkin::app gherkin;
         ResultStatus resultStatus;
     };
 }

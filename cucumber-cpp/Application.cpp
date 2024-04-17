@@ -1,5 +1,4 @@
 #include "cucumber-cpp/Application.hpp"
-#include "CLI/CLI.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/CucumberRunner.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
@@ -35,9 +34,9 @@ namespace cucumber_cpp
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
-        std::string JoinStringWithSpace(const std::string& a, std::string_view b)
+        std::string JoinStringWithSpace(const std::string& a, const std::string& b)
         {
-            return a + " " + std::string{ b };
+            return a + ' ' + b;
         }
 
         std::filesystem::path to_fs_path(const std::string_view& sv)
@@ -49,36 +48,6 @@ namespace cucumber_cpp
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
-    }
-
-    GherkinParser::GherkinParser(CucumberRunnerV2& cucumberRunner)
-        : cucumberRunner{ cucumberRunner }
-        , callbacks{
-            .ast = [this](const cucumber::gherkin::app::parser_result& ast)
-            {
-                featureRunner = this->cucumberRunner.StartFeature(ast);
-            },
-            .pickle = [this](const cucumber::messages::pickle& pickle)
-            {
-                featureRunner->StartScenario(pickle);
-            },
-            .error = [](const cucumber::gherkin::parse_error& /* _ */)
-            {
-                /* not handled yet */
-            }
-        }
-    {
-        gherkin.include_source(false);
-        gherkin.include_ast(true);
-        gherkin.include_pickles(true);
-    }
-
-    report::ReportHandler::Result GherkinParser::RunFeatureFile(const std::filesystem::path& path)
-    {
-        gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
-        auto result = featureRunner->Result();
-        featureRunner = nullptr;
-        return result;
     }
 
     ResultStatus& ResultStatus::operator=(Result result)
@@ -99,9 +68,13 @@ namespace cucumber_cpp
         return resultStatus == Result::success;
     }
 
-
-    Application::Application()
+    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+        : programContext{ std::move(contextStorageFactory) }
     {
+        gherkin.include_source(false);
+        gherkin.include_ast(true);
+        gherkin.include_pickles(true);
+
         cli.add_option("-t,--tag", options.tags, "Cucumber tag expression")->expected(0, -1);
         cli.add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required();
         cli.add_option("-r,--report", options.reporters, "Name of the report generator: ")->required();
@@ -111,11 +84,6 @@ namespace cucumber_cpp
     }
 
     int Application::Run(int argc, const char* const* argv)
-    {
-        return Run(argc, argv, std::make_shared<ContextStorageFactoryImpl>());
-    }
-
-    int Application::Run(int argc, const char* const* argv, std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
         try
         {
@@ -129,7 +97,11 @@ namespace cucumber_cpp
 
             cli.get_option("--report")->description(joinedReporters);
             cli.parse(argc, argv);
-            RunFeatures(std::move(contextStorageFactory));
+
+            for (const auto& selectedReporter : options.reporters)
+                reporters.Use(selectedReporter);
+
+            RunFeatures();
         }
         catch (const CLI::ParseError& e)
         {
@@ -144,25 +116,51 @@ namespace cucumber_cpp
         return cli;
     }
 
+    Context& Application::ProgramContext()
+    {
+        return programContext;
+    }
+
     void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter)
     {
         reporters.Add(name, std::move(reporter));
     }
 
-    void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+    void Application::RunFeatures()
     {
         auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
-        CucumberRunnerV2 cucumberRunner{ {}, std::move(tagExpression), reporters, std::move(contextStorageFactory) };
-        GherkinParser gherkinParser{ cucumberRunner };
+        CucumberRunnerV2 cucumberRunner{ programContext, std::move(tagExpression), reporters };
 
         for (const auto& featurePath : GetFeatureFiles())
-        {
-            resultStatus = gherkinParser.RunFeatureFile(featurePath);
-        }
+            resultStatus = RunFeature(cucumberRunner, featurePath);
 
         if (static_cast<ResultStatus::Result>(resultStatus) == ResultStatus::Result::undefined)
             std::cout << "\nError: no features have been executed";
+    }
+
+    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path)
+    {
+        std::unique_ptr<FeatureRunnerV2> featureRunner;
+
+        cucumber::gherkin::app::callbacks callbacks{
+            .ast = [&featureRunner, &cucumberRunner](const cucumber::gherkin::app::parser_result& ast)
+            {
+                featureRunner = cucumberRunner.StartFeature(ast);
+            },
+            .pickle = [&featureRunner](const cucumber::messages::pickle& pickle)
+            {
+                featureRunner->StartScenario(pickle);
+            },
+            .error = [](const cucumber::gherkin::parse_error& /* _ */)
+            {
+                /* not handled yet */
+            }
+        };
+
+        gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
+
+        return featureRunner->Result();
     }
 
     int Application::GetExitCode() const
@@ -180,7 +178,7 @@ namespace cucumber_cpp
         for (const auto feature : options.features | std::views::transform(to_fs_path))
             if (std::filesystem::is_directory(feature))
                 for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
-                    files.push_back(entry.path());
+                    files.emplace_back(entry.path());
             else
                 files.emplace_back(feature);
 
