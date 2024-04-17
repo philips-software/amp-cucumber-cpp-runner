@@ -4,4 +4,5 @@ add_subdirectory(nlohmann) # before cucumber
 
 add_subdirectory(cucumber)
 add_subdirectory(googletest)
+add_subdirectory(taywee)
 add_subdirectory(zeux)

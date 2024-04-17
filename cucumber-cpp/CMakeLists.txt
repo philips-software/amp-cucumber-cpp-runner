@@ -46,6 +46,7 @@ target_link_libraries(cucumber-cpp PUBLIC
 
     PRIVATE
     cucumber-cpp.report
+    args
 )
 
 target_compile_options(cucumber-cpp PRIVATE

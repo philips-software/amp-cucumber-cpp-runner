@@ -67,79 +67,79 @@ namespace cucumber_cpp
 
     Application::Options::Options(std::span<const char*> args)
     {
-        const auto name = std::filesystem::path(const_char_to_sv(args[0])).filename().string();
-        const auto view = args | std::views::drop(1) | std::views::transform(const_char_to_sv);
+        // const auto name = std::filesystem::path(const_char_to_sv(args[0])).filename().string();
+        // const auto view = args | std::views::drop(1) | std::views::transform(const_char_to_sv);
 
-        for (auto current = view.begin(); current != view.end(); ++current)
-        {
-            const auto arg = *current;
-            if (arg == "--tag")
-                while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-                {
-                    current = std::next(current);
-                    tags.push_back(*current);
-                }
-            else if (arg == "--feature")
-                while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-                {
-                    current = std::next(current);
-                    features.push_back(*current);
-                }
-            else if (arg == "--report")
-                while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
-                {
-                    current = std::next(current);
-                    reports.push_back(*current);
-                }
-            else if (arg.starts_with("--Xapp,"))
-            {
-                const auto param = arg.substr(std::string_view("--Xapp,").size());
+        // for (auto current = view.begin(); current != view.end(); ++current)
+        // {
+        //     const auto arg = *current;
+        //     if (arg == "--tag")
+        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
+        //         {
+        //             current = std::next(current);
+        //             tags.push_back(*current);
+        //         }
+        //     else if (arg == "--feature")
+        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
+        //         {
+        //             current = std::next(current);
+        //             features.push_back(*current);
+        //         }
+        //     else if (arg == "--report")
+        //         while (std::next(current) != view.end() && (!(*std::next(current)).starts_with("-")))
+        //         {
+        //             current = std::next(current);
+        //             reports.push_back(*current);
+        //         }
+        //     else if (arg.starts_with("--Xapp,"))
+        //     {
+        //         const auto param = arg.substr(std::string_view("--Xapp,").size());
 
-                for (const auto xArg : std::views::split(param, ','))
-                    forwardArgs.push_back(subrange_to_sv(xArg));
-            }
-            else
-            {
-                if (!(arg == "--help" && arg == "-h"))
-                    std::cout << "\nUnkown argument: " << std::quoted(arg) << "\n";
+        //         for (const auto xArg : std::views::split(param, ','))
+        //             forwardArgs.push_back(subrange_to_sv(xArg));
+        //     }
+        //     else
+        //     {
+        //         if (!(arg == "--help" && arg == "-h"))
+        //             std::cout << "\nUnkown argument: " << std::quoted(arg) << "\n";
 
-                ExitWithHelp(name);
-            }
-        }
+        //         ExitWithHelp(name);
+        //     }
+        // }
 
-        const auto valid = [] {};
-        const auto invalid = [&name]
-        {
-            ExitWithHelp(name);
-        };
+        // const auto valid = [] {};
+        // const auto invalid = [&name]
+        // {
+        //     ExitWithHelp(name);
+        // };
 
-        const auto validateReports = [&, this](auto validate)
-        {
-            if (reports.empty())
-            {
-                std::cout << "\nno report generators";
-                invalid();
-            }
-            else
-            {
-                validate();
-            }
-        };
+        // const auto validateReports = [&, this](auto validate)
+        // {
+        //     if (reports.empty())
+        //     {
+        //         std::cout << "\nno report generators";
+        //         invalid();
+        //     }
+        //     else
+        //     {
+        //         validate();
+        //     }
+        // };
 
-        const auto validateArguments = [&, this]()
-        {
-            if (features.empty())
-            {
-                std::cout << "\nno feature files or folders";
-                validateReports(invalid);
-            }
-            else
-            {
-                validateReports(valid);
-            }
-        };
+        // const auto validateArguments = [&, this]()
+        // {
+        //     if (features.empty())
+        //     {
+        //         std::cout << "\nno feature files or folders";
+        //         validateReports(invalid);
+        //     }
+        //     else
+        //     {
+        //         validateReports(valid);
+        //     }
+        // };
 
-        validateArguments();
+        // validateArguments();
     }
 
     GherkinParser::GherkinParser(CucumberRunnerV2& cucumberRunner)
@@ -172,23 +172,40 @@ namespace cucumber_cpp
     Application::Application(std::span<const char*> args)
         : options{ args }
     {
-        if (std::ranges::find(options.reports, "console") != options.reports.end())
-            reporters.Add(std::make_unique<report::StdOutReportV2>());
+        parser.ParseCLI(args.size(), args.data());
 
-        if (std::ranges::find(options.reports, "junit-xml") != options.reports.end())
-            reporters.Add(std::make_unique<report::JunitReportV2>());
+        // if (std::ranges::find(options->reports, "console") != options->reports.end())
+        //     reporters.Add(std::make_unique<report::StdOutReportV2>());
+
+        // if (std::ranges::find(options->reports, "junit-xml") != options->reports.end())
+        //     reporters.Add(std::make_unique<report::JunitReportV2>());
+    }
+
+    Application::Application(int argc, const char* const* argv)
+    {
+        parser.ParseCLI(argc, argv);
+    }
+
+    Application::Application(int argc, const char* const* argv, args::Group& argsGroup)
+    {
+        parser.ParseCLI(argc, argv);
+    }
+
+    Application::Application(int argc, const char* const* argv, std::vector<args::Group*> argsGroup)
+    {
+        parser.ParseCLI(argc, argv);
     }
 
     const std::vector<std::string_view>& Application::GetForwardArgs() const
     {
-        return options.forwardArgs;
+        return options->forwardArgs;
     }
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
         using Result = report::ReportHandler::Result;
 
-        auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
+        auto tagExpression = options->tags.empty() ? std::string{} : std::accumulate(std::next(options->tags.begin()), options->tags.end(), std::string(options->tags.front()), JoinStringWithSpace);
 
         CucumberRunnerV2 cucumberRunner{ GetForwardArgs(), std::move(tagExpression), reporters, std::move(contextStorageFactory) };
         GherkinParser gherkinParser{ cucumberRunner };
@@ -222,7 +239,7 @@ namespace cucumber_cpp
     {
         std::vector<std::filesystem::path> files;
 
-        for (const auto feature : options.features | std::views::transform(to_fs_path))
+        for (const auto feature : options->features | std::views::transform(to_fs_path))
             if (std::filesystem::is_directory(feature))
             {
                 for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))

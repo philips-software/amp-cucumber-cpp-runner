@@ -11,5 +11,5 @@ target_link_libraries(cucumber-cpp-runner PUBLIC
     cucumber-cpp.report
     gtest
     gmock
-
+    args
 )
