@@ -31,7 +31,6 @@ namespace cucumber_cpp
 
         std::string_view subrange_to_sv(const auto& subrange)
         {
-
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
@@ -50,7 +49,7 @@ namespace cucumber_cpp
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        void ExitWithHelp(std::string_view name)
+        [[noreturn]] void ExitWithHelp(std::string_view name)
         {
             std::cout << "\n"
                       << name << " [--tag <tag>] --feature <file/folder> [--feature <file/folder>...] --report <reportname> [--report <reportname>...] [--Xapp,<forwardingargs>...]";
@@ -145,15 +144,18 @@ namespace cucumber_cpp
     GherkinParser::GherkinParser(CucumberRunnerV2& cucumberRunner)
         : cucumberRunner{ cucumberRunner }
         , cbs{
-            .ast = [&](const cucumber::gherkin::app::parser_result& ast)
+            .ast = [this](const cucumber::gherkin::app::parser_result& ast)
             {
-                featureRunner = cucumberRunner.StartFeature(ast);
+                featureRunner = this->cucumberRunner.StartFeature(ast);
             },
-            .pickle = [&](const cucumber::messages::pickle& pickle)
+            .pickle = [this](const cucumber::messages::pickle& pickle)
             {
                 featureRunner->StartScenario(pickle);
             },
-            .error = [&](const cucumber::gherkin::parse_error& m) {}
+            .error = [](const cucumber::gherkin::parse_error& /* _ */)
+            {
+                /* not handled yet */
+            }
         }
     {
         app.include_source(false);
@@ -167,6 +169,24 @@ namespace cucumber_cpp
         auto result = featureRunner->Result();
         featureRunner = nullptr;
         return result;
+    }
+
+    ResultStatus& ResultStatus::operator=(Result result)
+    {
+        if ((resultStatus == Result::undefined || resultStatus == Result::success) && result != Result::undefined)
+            resultStatus = result;
+
+        return *this;
+    }
+
+    ResultStatus::operator Result() const
+    {
+        return resultStatus;
+    }
+
+    bool ResultStatus::IsSuccess() const
+    {
+        return resultStatus == Result::success;
     }
 
     Application::Application(std::span<const char*> args)
@@ -186,8 +206,6 @@ namespace cucumber_cpp
 
     void Application::RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
-        using Result = report::ReportHandler::Result;
-
         auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
 
         CucumberRunnerV2 cucumberRunner{ GetForwardArgs(), std::move(tagExpression), reporters, std::move(contextStorageFactory) };
@@ -195,19 +213,16 @@ namespace cucumber_cpp
 
         for (const auto& featurePath : GetFeatureFiles())
         {
-            auto featureResult = gherkinParser.RunFeatureFile(featurePath);
-
-            if (result == Result::undefined || result == Result::success)
-                result = featureResult;
+            resultStatus = gherkinParser.RunFeatureFile(featurePath);
         }
 
-        if (result == Result::undefined)
+        if (static_cast<ResultStatus::Result>(resultStatus) == ResultStatus::Result::undefined)
             std::cout << "\nError: no features have been executed";
     }
 
     int Application::GetExitCode() const
     {
-        if (result == decltype(result)::success)
+        if (resultStatus.IsSuccess())
             return 0;
         else
             return 1;
@@ -224,10 +239,8 @@ namespace cucumber_cpp
 
         for (const auto feature : options.features | std::views::transform(to_fs_path))
             if (std::filesystem::is_directory(feature))
-            {
                 for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
                     files.push_back(entry.path());
-            }
             else
                 files.emplace_back(feature);
 

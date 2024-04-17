@@ -31,6 +31,19 @@ namespace cucumber_cpp
         cucumber::gherkin::app::callbacks cbs;
     };
 
+    struct ResultStatus
+    {
+        using Result = cucumber_cpp::report::ReportHandler::Result;
+
+        ResultStatus& operator=(Result result);
+        explicit operator Result() const;
+
+        [[nodiscard]] bool IsSuccess() const;
+
+    private:
+        Result resultStatus{ Result::undefined };
+    };
+
     struct Application
     {
         Application(std::span<const char*> args);
@@ -59,7 +72,8 @@ namespace cucumber_cpp
         Options options;
 
         report::ReportForwarder reporters;
-        report::ReportHandler::Result result{ report::ReportHandler::Result::undefined };
+
+        ResultStatus resultStatus;
     };
 }
 
