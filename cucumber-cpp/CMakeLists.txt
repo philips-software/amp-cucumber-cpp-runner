@@ -42,17 +42,17 @@ target_include_directories(cucumber-cpp PUBLIC
 
 target_link_libraries(cucumber-cpp PUBLIC
     gtest
+    gmock
     cucumber_gherkin_lib
     cucumber-cpp.report
-    args
     CLI11
 )
 
-target_compile_options(cucumber-cpp PRIVATE
+target_compile_options(cucumber-cpp
+    PRIVATE
     $<$<CXX_COMPILER_ID:GNU>:-Wno-deprecated-declarations>
-)
 
-target_compile_options(cucumber-cpp PUBLIC
+    PUBLIC
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
