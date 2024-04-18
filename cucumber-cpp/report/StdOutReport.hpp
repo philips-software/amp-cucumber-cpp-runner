@@ -7,7 +7,7 @@
 
 namespace cucumber_cpp::report
 {
-    struct StdOutReportV2 : ReportHandler
+    struct StdOutReport : ReportHandler
     {
         void FeatureStart(const FeatureSource& featureSource) override;
         void FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration) override;

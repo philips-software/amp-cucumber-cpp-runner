@@ -118,7 +118,7 @@ namespace cucumber_cpp
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
 
-        reporters.Add("console", std::make_unique<report::StdOutReportV2>());
+        reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
 
         programContext.InsertRef(options);

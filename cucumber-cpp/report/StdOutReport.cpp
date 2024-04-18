@@ -71,33 +71,33 @@ namespace cucumber_cpp::report
         }
     }
 
-    void StdOutReportV2::FeatureStart(const FeatureSource& featureSource)
+    void StdOutReport::FeatureStart(const FeatureSource& featureSource)
     {
         /* do nothing */
     }
 
-    void StdOutReportV2::FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration)
+    void StdOutReport::FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration)
     {
         /* do nothing */
     }
 
-    void StdOutReportV2::ScenarioStart(const ScenarioSource& scenarioSource)
+    void StdOutReport::ScenarioStart(const ScenarioSource& scenarioSource)
     {
         std::cout << "\n"
                   << scenarioSource.name;
     }
 
-    void StdOutReportV2::ScenarioEnd(const ScenarioSource& scenarioSource, Result result, TraceTime::Duration duration)
+    void StdOutReport::ScenarioEnd(const ScenarioSource& scenarioSource, Result result, TraceTime::Duration duration)
     {
         std::cout << "\n";
     }
 
-    void StdOutReportV2::StepStart(const StepSource& stepSource)
+    void StdOutReport::StepStart(const StepSource& stepSource)
     {
         std::cout << "\n  " << stepSource.type + " " + stepSource.name;
     }
 
-    void StdOutReportV2::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
+    void StdOutReport::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
     {
         if (result == decltype(result)::success || result == decltype(result)::skipped)
             std::cout << "\n  -> " << successLut.at(result) << " (" << ScaledDuration(duration) << ")";
@@ -105,7 +105,7 @@ namespace cucumber_cpp::report
             std::cout << "\n  -> " << stepSource.scenarioSource.featureSource.path << ":" << stepSource.line << ":" << stepSource.column << ": " << successLut.at(result) << " (" << ScaledDuration(duration) << ")";
     }
 
-    void StdOutReportV2::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    void StdOutReport::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         if (path && line && column)
             std::cout
@@ -118,7 +118,7 @@ namespace cucumber_cpp::report
                 << error;
     }
 
-    void StdOutReportV2::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    void StdOutReport::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         if (path && line && column)
             std::cout
@@ -131,7 +131,7 @@ namespace cucumber_cpp::report
                 << error;
     }
 
-    void StdOutReportV2::Trace(const std::string& trace)
+    void StdOutReport::Trace(const std::string& trace)
     {
         std::cout << trace;
     }
