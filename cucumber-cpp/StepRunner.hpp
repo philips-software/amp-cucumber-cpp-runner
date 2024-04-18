@@ -22,24 +22,24 @@ namespace cucumber_cpp
         static StepSource FromAst(const ScenarioSource& scenarioSource, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep);
     };
 
-    struct SkipStepRunnerV2
+    struct SkipStepRunner
     {
-        SkipStepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
-        virtual ~SkipStepRunnerV2();
+        SkipStepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        virtual ~SkipStepRunner();
 
         [[nodiscard]] report::ReportHandler::Result Result() const;
         [[nodiscard]] TraceTime::Duration Duration() const;
 
     private:
-        ScenarioRunnerV2& scenarioRunner;
+        ScenarioRunner& scenarioRunner;
         StepSource stepSource;
     };
 
-    struct StepRunnerV2
+    struct StepRunner
     {
     public:
-        StepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
-        ~StepRunnerV2();
+        StepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        ~StepRunner();
 
         [[nodiscard]] const StepSource& Source() const;
 
@@ -51,7 +51,7 @@ namespace cucumber_cpp
         void Run();
 
     private:
-        ScenarioRunnerV2& scenarioRunner;
+        ScenarioRunner& scenarioRunner;
         const cucumber::messages::pickle_step& pickleStep;
 
         TraceTime traceTime;

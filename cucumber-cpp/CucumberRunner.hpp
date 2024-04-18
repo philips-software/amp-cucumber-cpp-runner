@@ -10,19 +10,19 @@
 
 namespace cucumber_cpp
 {
-    struct FeatureRunnerV2;
+    struct FeatureRunner;
 
-    struct CucumberRunnerV2
+    struct CucumberRunner
     {
     public:
-        CucumberRunnerV2(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler);
-        ~CucumberRunnerV2() = default;
+        CucumberRunner(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler);
+        ~CucumberRunner() = default;
 
         [[nodiscard]] std::string TagExpression() const;
         [[nodiscard]] report::ReportHandler& ReportHandler();
         [[nodiscard]] Context& GetContext();
 
-        std::unique_ptr<FeatureRunnerV2> StartFeature(const cucumber::gherkin::app::parser_result& ast);
+        std::unique_ptr<FeatureRunner> StartFeature(const cucumber::gherkin::app::parser_result& ast);
 
     private:
         const std::string tagExpression;

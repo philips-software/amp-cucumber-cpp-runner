@@ -160,29 +160,29 @@ namespace cucumber_cpp
         return { scenarioSource, pickleStep.text, stepTypeToString.at(pickleStep.type.value()), step.location.line, step.location.column.value_or(0) };
     }
 
-    SkipStepRunnerV2::SkipStepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+    SkipStepRunner::SkipStepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
         : scenarioRunner{ scenarioRunner }
         , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }
     {
         scenarioRunner.ReportHandler().StepStart(stepSource);
     }
 
-    SkipStepRunnerV2::~SkipStepRunnerV2()
+    SkipStepRunner::~SkipStepRunner()
     {
         scenarioRunner.ReportHandler().StepEnd(stepSource, Result(), Duration());
     }
 
-    report::ReportHandler::Result SkipStepRunnerV2::Result() const
+    report::ReportHandler::Result SkipStepRunner::Result() const
     {
         return report::ReportHandler::Result::skipped;
     }
 
-    TraceTime::Duration SkipStepRunnerV2::Duration() const
+    TraceTime::Duration SkipStepRunner::Duration() const
     {
         return TraceTime::Duration{ 0 };
     }
 
-    StepRunnerV2::StepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+    StepRunner::StepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
         : scenarioRunner{ scenarioRunner }
         , pickleStep{ pickleStep }
         , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }
@@ -190,32 +190,32 @@ namespace cucumber_cpp
         ReportHandler().StepStart(Source());
     }
 
-    StepRunnerV2::~StepRunnerV2()
+    StepRunner::~StepRunner()
     {
         ReportHandler().StepEnd(Source(), Result(), Duration());
     }
 
-    const StepSource& StepRunnerV2::Source() const
+    const StepSource& StepRunner::Source() const
     {
         return stepSource;
     }
 
-    report::ReportHandler& StepRunnerV2::ReportHandler()
+    report::ReportHandler& StepRunner::ReportHandler()
     {
         return scenarioRunner.ReportHandler();
     }
 
-    report::ReportHandler::Result StepRunnerV2::Result() const
+    report::ReportHandler::Result StepRunner::Result() const
     {
         return result;
     }
 
-    TraceTime::Duration StepRunnerV2::Duration() const
+    TraceTime::Duration StepRunner::Duration() const
     {
         return traceTime.Delta();
     }
 
-    void StepRunnerV2::Run()
+    void StepRunner::Run()
     {
         try
         {

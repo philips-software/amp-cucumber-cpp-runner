@@ -9,7 +9,7 @@
 
 namespace cucumber_cpp
 {
-    CucumberRunnerV2::CucumberRunnerV2(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler)
+    CucumberRunner::CucumberRunner(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler)
         : tagExpression{ std::move(tagExpression) }
         , reportHandler{ reportHandler }
         , programContext{ programContext }
@@ -17,23 +17,23 @@ namespace cucumber_cpp
     {
     }
 
-    std::string CucumberRunnerV2::TagExpression() const
+    std::string CucumberRunner::TagExpression() const
     {
         return tagExpression;
     }
 
-    report::ReportHandler& CucumberRunnerV2::ReportHandler()
+    report::ReportHandler& CucumberRunner::ReportHandler()
     {
         return reportHandler;
     }
 
-    Context& CucumberRunnerV2::GetContext()
+    Context& CucumberRunner::GetContext()
     {
         return programContext;
     }
 
-    std::unique_ptr<FeatureRunnerV2> CucumberRunnerV2::StartFeature(const cucumber::gherkin::app::parser_result& ast)
+    std::unique_ptr<FeatureRunner> CucumberRunner::StartFeature(const cucumber::gherkin::app::parser_result& ast)
     {
-        return std::make_unique<FeatureRunnerV2>(*this, ast);
+        return std::make_unique<FeatureRunner>(*this, ast);
     }
 }

@@ -39,7 +39,7 @@ namespace cucumber_cpp
         return { featureSource, background.name, background.location.line, background.location.column.value_or(0) };
     }
 
-    ScenarioRunnerV2::ScenarioRunnerV2(FeatureRunnerV2& featureRunner, const cucumber::messages::pickle& scenarioPickle)
+    ScenarioRunner::ScenarioRunner(FeatureRunner& featureRunner, const cucumber::messages::pickle& scenarioPickle)
         : featureRunner{ featureRunner }
         , pickle{ scenarioPickle }
         , scenarioTags{ TagsToSet(scenarioPickle.tags) }
@@ -50,52 +50,52 @@ namespace cucumber_cpp
         ReportHandler().ScenarioStart(scenarioSource);
     }
 
-    ScenarioRunnerV2::~ScenarioRunnerV2()
+    ScenarioRunner::~ScenarioRunner()
     {
         ReportHandler().ScenarioEnd(scenarioSource, Result(), Duration());
     }
 
-    const ScenarioSource& ScenarioRunnerV2::Source() const
+    const ScenarioSource& ScenarioRunner::Source() const
     {
         return scenarioSource;
     }
 
-    report::ReportHandler& ScenarioRunnerV2::ReportHandler()
+    report::ReportHandler& ScenarioRunner::ReportHandler()
     {
         return featureRunner.ReportHandler();
     }
 
-    Context& ScenarioRunnerV2::GetContext()
+    Context& ScenarioRunner::GetContext()
     {
         return scenarioContext;
     }
 
-    const std::set<std::string, std::less<>>& ScenarioRunnerV2::GetScenarioTags() const
+    const std::set<std::string, std::less<>>& ScenarioRunner::GetScenarioTags() const
     {
         return scenarioTags;
     }
 
-    const cucumber::messages::feature& ScenarioRunnerV2::Ast() const
+    const cucumber::messages::feature& ScenarioRunner::Ast() const
     {
         return featureRunner.Feature();
     }
 
-    report::ReportHandler::Result ScenarioRunnerV2::Result() const
+    report::ReportHandler::Result ScenarioRunner::Result() const
     {
         return result;
     }
 
-    TraceTime::Duration ScenarioRunnerV2::Duration() const
+    TraceTime::Duration ScenarioRunner::Duration() const
     {
         return duration;
     }
 
-    void ScenarioRunnerV2::Run()
+    void ScenarioRunner::Run()
     {
         for (const auto& step : pickle.steps)
             if (result == decltype(result)::success || result == decltype(result)::undefined)
             {
-                StepRunnerV2 stepRunner{ *this, step };
+                StepRunner stepRunner{ *this, step };
                 stepRunner.Run();
 
                 duration += stepRunner.Duration();
@@ -104,6 +104,6 @@ namespace cucumber_cpp
                     result = stepResult;
             }
             else
-                SkipStepRunnerV2{ *this, step };
+                SkipStepRunner{ *this, step };
     }
 }

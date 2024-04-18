@@ -9,10 +9,10 @@
 
 namespace cucumber_cpp::report
 {
-    struct JunitReportV2 : ReportHandler
+    struct JunitReport : ReportHandler
     {
-        JunitReportV2(const std::string& outputfolder, const std::string& reportfile);
-        ~JunitReportV2() override;
+        JunitReport(const std::string& outputfolder, const std::string& reportfile);
+        ~JunitReport() override;
 
         void FeatureStart(const FeatureSource& featureSource) override;
         void FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration) override;

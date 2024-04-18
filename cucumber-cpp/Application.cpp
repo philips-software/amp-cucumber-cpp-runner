@@ -118,8 +118,8 @@ namespace cucumber_cpp
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
 
-        reporters.Add("console", std::make_unique<report::StdOutReportV2>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReportV2>(options.outputfolder, options.reportfile));
+        reporters.Add("console", std::make_unique<report::StdOutReport>());
+        reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
 
         programContext.InsertRef(options);
     }
@@ -167,7 +167,7 @@ namespace cucumber_cpp
         for (const auto& selectedReporter : options.reporters)
             reporters.Use(selectedReporter);
 
-        CucumberRunnerV2 cucumberRunner{ programContext, Join(options.tags, " "), reporters };
+        CucumberRunner cucumberRunner{ programContext, Join(options.tags, " "), reporters };
 
         for (const auto& featurePath : GetFeatureFiles())
             resultStatus = RunFeature(cucumberRunner, featurePath);
@@ -176,9 +176,9 @@ namespace cucumber_cpp
             std::cout << "\nError: no features have been executed";
     }
 
-    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path)
+    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
     {
-        std::unique_ptr<FeatureRunnerV2> featureRunner;
+        std::unique_ptr<FeatureRunner> featureRunner;
 
         cucumber::gherkin::app::callbacks callbacks{
             .ast = [&featureRunner, &cucumberRunner](const cucumber::gherkin::app::parser_result& ast)

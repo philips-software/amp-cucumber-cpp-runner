@@ -14,7 +14,7 @@
 
 namespace cucumber_cpp
 {
-    struct CucumberRunnerV2;
+    struct CucumberRunner;
 
     struct FeatureSource
     {
@@ -26,11 +26,11 @@ namespace cucumber_cpp
         static FeatureSource FromAst(const cucumber::gherkin::app::parser_result& ast);
     };
 
-    struct FeatureRunnerV2
+    struct FeatureRunner
     {
     public:
-        FeatureRunnerV2(CucumberRunnerV2& cucumberRunner, const cucumber::gherkin::app::parser_result& ast);
-        ~FeatureRunnerV2();
+        FeatureRunner(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast);
+        ~FeatureRunner();
 
         [[nodiscard]] const FeatureSource& Source() const;
 
@@ -48,7 +48,7 @@ namespace cucumber_cpp
         void StartFeatureOnce();
         void StopFeatureOnDestruction() noexcept;
 
-        CucumberRunnerV2& cucumberRunner;
+        CucumberRunner& cucumberRunner;
         const cucumber::gherkin::app::parser_result& ast;
 
         std::once_flag startFeatureOnceFlag;
