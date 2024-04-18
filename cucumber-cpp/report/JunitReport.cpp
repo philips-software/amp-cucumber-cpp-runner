@@ -38,7 +38,7 @@ namespace cucumber_cpp::report
         }
     }
 
-    JunitReportV2::JunitReportV2(const std::string& outputfolder, const std::string& reportfile)
+    JunitReport::JunitReport(const std::string& outputfolder, const std::string& reportfile)
         : outputfolder{ outputfolder }
         , reportfile{ reportfile }
     {
@@ -47,7 +47,7 @@ namespace cucumber_cpp::report
         testsuites.append_attribute("time").set_value(0.0);
     }
 
-    JunitReportV2::~JunitReportV2()
+    JunitReport::~JunitReport()
     {
         testsuites.append_attribute("tests").set_value(totalTests);
         testsuites.append_attribute("failures").set_value(totalFailures);
@@ -63,7 +63,7 @@ namespace cucumber_cpp::report
         doc.save_file(outputfile.c_str());
     }
 
-    void JunitReportV2::FeatureStart(const FeatureSource& featureSource)
+    void JunitReport::FeatureStart(const FeatureSource& featureSource)
     {
         testsuite = testsuites.append_child("testsuite");
         testsuite.append_attribute("name").set_value(featureSource.name.c_str());
@@ -75,7 +75,7 @@ namespace cucumber_cpp::report
         scenarioSkipped = 0;
     }
 
-    void JunitReportV2::FeatureEnd(const FeatureSource& /*featureSource*/, Result /*result*/, TraceTime::Duration duration)
+    void JunitReport::FeatureEnd(const FeatureSource& /*featureSource*/, Result /*result*/, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testsuite.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
@@ -91,7 +91,7 @@ namespace cucumber_cpp::report
         testsuite.append_attribute("skipped").set_value(scenarioSkipped);
     }
 
-    void JunitReportV2::ScenarioStart(const ScenarioSource& scenarioSource)
+    void JunitReport::ScenarioStart(const ScenarioSource& scenarioSource)
     {
         testcase = testsuite.append_child("testcase");
 
@@ -100,7 +100,7 @@ namespace cucumber_cpp::report
         ++scenarioTests;
     }
 
-    void JunitReportV2::ScenarioEnd(const ScenarioSource& /*scenarioSource*/, Result result, TraceTime::Duration duration)
+    void JunitReport::ScenarioEnd(const ScenarioSource& /*scenarioSource*/, Result result, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testcase.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
@@ -150,17 +150,17 @@ namespace cucumber_cpp::report
         totalTime += duration;
     }
 
-    void JunitReportV2::StepStart(const StepSource& stepSource)
+    void JunitReport::StepStart(const StepSource& stepSource)
     {
         /* do nothing */
     }
 
-    void JunitReportV2::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
+    void JunitReport::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
     {
         /* do nothing */
     }
 
-    void JunitReportV2::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    void JunitReport::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         auto failure = testcase.append_child("failure");
 
@@ -181,7 +181,7 @@ namespace cucumber_cpp::report
         failure.text() = out.str().c_str();
     }
 
-    void JunitReportV2::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    void JunitReport::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         auto errorNode = testcase.append_child("error");
 
@@ -202,7 +202,7 @@ namespace cucumber_cpp::report
         errorNode.text() = out.str().c_str();
     }
 
-    void JunitReportV2::Trace(const std::string& trace)
+    void JunitReport::Trace(const std::string& trace)
     {
         /* do nothing */
     }
