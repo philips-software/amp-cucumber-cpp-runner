@@ -8,13 +8,9 @@ HOOK_BEFORE_ALL()
 {
 
     if (context.Contains("--st") && context.Get<bool>("--st"))
-    {
         context.Emplace<StBleFixture>(context.Get<std::string>("--com"));
-    }
     else if (context.Contains("--nordic") && context.Get<bool>("--nordic"))
-    {
         context.Emplace<NordicBleFixture>();
-    }
 }
 
 HOOK_BEFORE_SCENARIO()
