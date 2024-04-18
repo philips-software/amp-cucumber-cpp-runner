@@ -65,7 +65,7 @@ namespace cucumber_cpp
     }
 
     ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
-        : CLI::Validator("ReportHandler", [this, &reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
+        : CLI::Validator("ReportHandler", [&reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
               {
                   if (!cachedAvailableReporters)
                       cachedAvailableReporters = reporters.AvailableReporters();
