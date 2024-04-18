@@ -19,6 +19,11 @@
 
 namespace cucumber_cpp
 {
+    struct ReportHandlerValidator : public CLI::Validator
+    {
+        explicit ReportHandlerValidator(const report::Reporters& reporters);
+    };
+
     struct ResultStatus
     {
         using Result = cucumber_cpp::report::ReportHandler::Result;
@@ -34,12 +39,23 @@ namespace cucumber_cpp
 
     struct Application
     {
+        struct Options
+        {
+            std::vector<std::string> tags{};
+            std::vector<std::string> features{};
+            std::vector<std::string> reporters{};
+
+            std::string outputfolder{ "./out" };
+            std::string reportfile{ "TestReport" };
+        };
+
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
 
         int Run(int argc, const char* const* argv);
 
         CLI::App& CliParser();
         Context& ProgramContext();
+        const Options& CliOptions() const;
 
         void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter);
 
@@ -49,19 +65,14 @@ namespace cucumber_cpp
         void RunFeatures();
         [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path);
 
-        struct Options
-        {
-            std::vector<std::string> tags{};
-            std::vector<std::string> features{};
-            std::vector<std::string> reporters{};
-        };
-
-        Options options{};
-        CLI::App cli{};
-
-        report::ReportForwarder reporters;
+        Options options;
+        CLI::App cli;
+        CLI::App* runCommand;
 
         Context programContext;
+
+        report::ReportForwarder reporters;
+        ReportHandlerValidator reportHandlerValidator;
 
         cucumber::gherkin::app gherkin;
         ResultStatus resultStatus;

@@ -6,6 +6,7 @@
 #include "cucumber-cpp/report/Report.hpp"
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <ranges>
@@ -37,7 +38,9 @@ namespace cucumber_cpp::report
         }
     }
 
-    JunitReportV2::JunitReportV2()
+    JunitReportV2::JunitReportV2(const std::string& outputfolder, const std::string& reportfile)
+        : outputfolder{ outputfolder }
+        , reportfile{ reportfile }
     {
         testsuites = doc.append_child("testsuites");
         testsuites.append_attribute("name").set_value("Test run");
@@ -54,7 +57,10 @@ namespace cucumber_cpp::report
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(totalTime).count();
         testsuites.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
 
-        doc.save_file("out.xml");
+        if (!std::filesystem::exists(outputfolder))
+            std::filesystem::create_directories(outputfolder);
+        const auto outputfile = std::filesystem::path{ outputfolder }.append(reportfile + ".xml");
+        doc.save_file(outputfile.c_str());
     }
 
     void JunitReportV2::FeatureStart(const FeatureSource& featureSource)

@@ -55,11 +55,11 @@ namespace cucumber_cpp::report
     {
         void Add(const std::string& name, std::unique_ptr<ReportHandler>&& reporter);
         void Use(const std::string& name);
-        void Add(std::unique_ptr<ReportHandler>&& report);
 
-        std::vector<std::string> AvailableReporters() const;
+        [[nodiscard]] std::vector<std::string> AvailableReporters() const;
 
     protected:
+        void Add(std::unique_ptr<ReportHandler>&& report);
         std::vector<std::unique_ptr<ReportHandler>>& Storage();
 
     private:
