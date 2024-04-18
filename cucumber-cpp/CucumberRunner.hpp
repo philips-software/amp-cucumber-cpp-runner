@@ -12,11 +12,11 @@ namespace cucumber_cpp
 {
     struct FeatureRunnerV2;
 
-    struct CucumberRunnerV2
+    struct CucumberRunner
     {
     public:
-        CucumberRunnerV2(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler);
-        ~CucumberRunnerV2() = default;
+        CucumberRunner(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler);
+        ~CucumberRunner() = default;
 
         [[nodiscard]] std::string TagExpression() const;
         [[nodiscard]] report::ReportHandler& ReportHandler();

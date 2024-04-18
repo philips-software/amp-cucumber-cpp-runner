@@ -63,7 +63,7 @@ namespace cucumber_cpp
         [[nodiscard]] int GetExitCode() const;
         [[nodiscard]] std::vector<std::filesystem::path> GetFeatureFiles() const;
         void RunFeatures();
-        [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path);
+        [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path);
 
         Options options;
         CLI::App cli;

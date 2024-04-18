@@ -19,7 +19,7 @@ namespace cucumber_cpp
         return { ast.feature->name, ast.uri.value_or("unknown"), ast.feature->location.line, ast.feature->location.column.value_or(0) };
     }
 
-    FeatureRunnerV2::FeatureRunnerV2(CucumberRunnerV2& cucumberRunner, const cucumber::gherkin::app::parser_result& ast)
+    FeatureRunnerV2::FeatureRunnerV2(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast)
         : cucumberRunner{ cucumberRunner }
         , ast{ ast }
         , featureSource{ FeatureSource::FromAst(ast) }

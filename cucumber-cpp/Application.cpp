@@ -167,7 +167,7 @@ namespace cucumber_cpp
         for (const auto& selectedReporter : options.reporters)
             reporters.Use(selectedReporter);
 
-        CucumberRunnerV2 cucumberRunner{ programContext, Join(options.tags, " "), reporters };
+        CucumberRunner cucumberRunner{ programContext, Join(options.tags, " "), reporters };
 
         for (const auto& featurePath : GetFeatureFiles())
             resultStatus = RunFeature(cucumberRunner, featurePath);
@@ -176,7 +176,7 @@ namespace cucumber_cpp
             std::cout << "\nError: no features have been executed";
     }
 
-    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path)
+    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
     {
         std::unique_ptr<FeatureRunnerV2> featureRunner;
 
