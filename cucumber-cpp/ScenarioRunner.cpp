@@ -104,6 +104,6 @@ namespace cucumber_cpp
                     result = stepResult;
             }
             else
-                SkipStepRunnerV2{ *this, step };
+                SkipStepRunner{ *this, step };
     }
 }

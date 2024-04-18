@@ -22,10 +22,10 @@ namespace cucumber_cpp
         static StepSource FromAst(const ScenarioSource& scenarioSource, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep);
     };
 
-    struct SkipStepRunnerV2
+    struct SkipStepRunner
     {
-        SkipStepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
-        virtual ~SkipStepRunnerV2();
+        SkipStepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        virtual ~SkipStepRunner();
 
         [[nodiscard]] report::ReportHandler::Result Result() const;
         [[nodiscard]] TraceTime::Duration Duration() const;
