@@ -24,21 +24,21 @@ namespace cucumber_cpp
 
     struct SkipStepRunnerV2
     {
-        SkipStepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        SkipStepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
         virtual ~SkipStepRunnerV2();
 
         [[nodiscard]] report::ReportHandler::Result Result() const;
         [[nodiscard]] TraceTime::Duration Duration() const;
 
     private:
-        ScenarioRunnerV2& scenarioRunner;
+        ScenarioRunner& scenarioRunner;
         StepSource stepSource;
     };
 
     struct StepRunnerV2
     {
     public:
-        StepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        StepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
         ~StepRunnerV2();
 
         [[nodiscard]] const StepSource& Source() const;
@@ -51,7 +51,7 @@ namespace cucumber_cpp
         void Run();
 
     private:
-        ScenarioRunnerV2& scenarioRunner;
+        ScenarioRunner& scenarioRunner;
         const cucumber::messages::pickle_step& pickleStep;
 
         TraceTime traceTime;

@@ -66,7 +66,7 @@ namespace cucumber_cpp
         {
             std::call_once(startFeatureOnceFlag, &FeatureRunner::StartFeatureOnce, *this);
 
-            ScenarioRunnerV2 scenarioRunner{ *this, pickle };
+            ScenarioRunner scenarioRunner{ *this, pickle };
 
             scenarioRunner.Run();
 

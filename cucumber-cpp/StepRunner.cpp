@@ -160,7 +160,7 @@ namespace cucumber_cpp
         return { scenarioSource, pickleStep.text, stepTypeToString.at(pickleStep.type.value()), step.location.line, step.location.column.value_or(0) };
     }
 
-    SkipStepRunnerV2::SkipStepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+    SkipStepRunnerV2::SkipStepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
         : scenarioRunner{ scenarioRunner }
         , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }
     {
@@ -182,7 +182,7 @@ namespace cucumber_cpp
         return TraceTime::Duration{ 0 };
     }
 
-    StepRunnerV2::StepRunnerV2(ScenarioRunnerV2& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
+    StepRunnerV2::StepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep)
         : scenarioRunner{ scenarioRunner }
         , pickleStep{ pickleStep }
         , stepSource{ LookupStepSource(scenarioRunner.Source(), scenarioRunner.Ast(), pickleStep, pickleStep.ast_node_ids[0]) }

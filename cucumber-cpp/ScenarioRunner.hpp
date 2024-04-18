@@ -29,11 +29,11 @@ namespace cucumber_cpp
 
     struct FeatureRunner;
 
-    struct ScenarioRunnerV2
+    struct ScenarioRunner
     {
     public:
-        ScenarioRunnerV2(FeatureRunner& featureRunner, const cucumber::messages::pickle& pickle);
-        ~ScenarioRunnerV2();
+        ScenarioRunner(FeatureRunner& featureRunner, const cucumber::messages::pickle& pickle);
+        ~ScenarioRunner();
 
         [[nodiscard]] const ScenarioSource& Source() const;
 
