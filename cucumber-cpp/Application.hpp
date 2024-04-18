@@ -65,8 +65,8 @@ namespace cucumber_cpp
         void RunFeatures();
         [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path);
 
-        Options options{};
-        CLI::App cli{};
+        Options options;
+        CLI::App cli;
         CLI::App* runCommand;
 
         Context programContext;
