@@ -6,6 +6,7 @@
 #include "cucumber-cpp/report/StdOutReport.hpp"
 #include "cucumber/gherkin/file.hpp"
 #include "cucumber/gherkin/parse_error.hpp"
+#include <CLI/Validators.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
@@ -15,6 +16,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -34,6 +36,18 @@ namespace cucumber_cpp
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
+        template<class Trange, class Delim>
+        std::string Join(const Trange& range, const Delim& delim)
+        {
+            if (range.empty())
+                return "";
+
+            return std::accumulate(std::next(range.begin()), range.end(), range.front(), [&delim](const auto& lhs, const auto& rhs)
+                {
+                    return lhs + delim + rhs;
+                });
+        }
+
         std::string JoinStringWithSpace(const std::string& a, const std::string& b)
         {
             return a + ' ' + b;
@@ -48,6 +62,20 @@ namespace cucumber_cpp
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
+    }
+
+    ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
+        : CLI::Validator("ReportHandler", [this, &reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
+              {
+                  if (!cachedAvailableReporters)
+                      cachedAvailableReporters = reporters.AvailableReporters();
+
+                  if (std::ranges::find(*cachedAvailableReporters, str) == cachedAvailableReporters->end())
+                      return std::string{ "'" + str + "' is not a reporter" };
+                  else
+                      return std::string{};
+              })
+    {
     }
 
     ResultStatus& ResultStatus::operator=(Result result)
@@ -70,38 +98,41 @@ namespace cucumber_cpp
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
         : programContext{ std::move(contextStorageFactory) }
+        , reportHandlerValidator{ reporters }
     {
         gherkin.include_source(false);
         gherkin.include_ast(true);
         gherkin.include_pickles(true);
 
-        cli.add_option("-t,--tag", options.tags, "Cucumber tag expression")->expected(0, -1);
-        cli.add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required();
-        cli.add_option("-r,--report", options.reporters, "Name of the report generator: ")->required();
+        cli.require_subcommand(1);
+
+        runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
+            {
+                RunFeatures();
+            });
+
+        runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
+        runCommand->add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required()->check(CLI::ExistingPath);
+
+        runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation")->check(reportHandlerValidator);
+        runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
+        runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
 
         reporters.Add("console", std::make_unique<report::StdOutReportV2>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReportV2>());
+        reporters.Add("junit-xml", std::make_unique<report::JunitReportV2>(options.outputfolder, options.reportfile));
+
+        programContext.InsertRef(options);
     }
 
     int Application::Run(int argc, const char* const* argv)
     {
         try
         {
-            const auto reportDescription = cli.get_option("--report")->get_description();
-            const auto availableReporters = reporters.AvailableReporters();
+            const auto reportDescription = runCommand->get_option("--report")->get_description();
+            const auto joinedReporters = reportDescription + Join(reporters.AvailableReporters(), ", ");
 
-            const auto joinedReporters = std::accumulate(availableReporters.begin() + 1, availableReporters.end(), reportDescription + availableReporters.front(), [](const std::string& lhs, const std::string& rhs)
-                {
-                    return lhs + ", " + rhs;
-                });
-
-            cli.get_option("--report")->description(joinedReporters);
+            runCommand->get_option("--report")->description(joinedReporters);
             cli.parse(argc, argv);
-
-            for (const auto& selectedReporter : options.reporters)
-                reporters.Use(selectedReporter);
-
-            RunFeatures();
         }
         catch (const CLI::ParseError& e)
         {
@@ -113,12 +144,17 @@ namespace cucumber_cpp
 
     CLI::App& Application::CliParser()
     {
-        return cli;
+        return *runCommand;
     }
 
     Context& Application::ProgramContext()
     {
         return programContext;
+    }
+
+    const Application::Options& Application::CliOptions() const
+    {
+        return options;
     }
 
     void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter)
@@ -128,9 +164,10 @@ namespace cucumber_cpp
 
     void Application::RunFeatures()
     {
-        auto tagExpression = options.tags.empty() ? std::string{} : std::accumulate(std::next(options.tags.begin()), options.tags.end(), std::string(options.tags.front()), JoinStringWithSpace);
+        for (const auto& selectedReporter : options.reporters)
+            reporters.Use(selectedReporter);
 
-        CucumberRunnerV2 cucumberRunner{ programContext, std::move(tagExpression), reporters };
+        CucumberRunnerV2 cucumberRunner{ programContext, Join(options.tags, " "), reporters };
 
         for (const auto& featurePath : GetFeatureFiles())
             resultStatus = RunFeature(cucumberRunner, featurePath);

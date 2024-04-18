@@ -11,7 +11,7 @@ namespace cucumber_cpp::report
 {
     struct JunitReportV2 : ReportHandler
     {
-        JunitReportV2();
+        JunitReportV2(const std::string& outputfolder, const std::string& reportfile);
         ~JunitReportV2() override;
 
         void FeatureStart(const FeatureSource& featureSource) override;
@@ -29,6 +29,9 @@ namespace cucumber_cpp::report
         void Trace(const std::string& trace) override;
 
     private:
+        const std::string& outputfolder;
+        const std::string& reportfile;
+
         pugi::xml_document doc;
         pugi::xml_node testsuites;
         pugi::xml_node testsuite;

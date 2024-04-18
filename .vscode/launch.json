@@ -10,15 +10,15 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
-                "--tag",
-                "@smoke",
+                "run",
                 "--feature",
                 "cucumber-cpp-example/features/1very_long.feature",
                 "cucumber-cpp-example/features/2simple.feature",
                 "--report",
                 "console",
                 "--com",
-                "--st"
+                "COMx",
+                "--nordic"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

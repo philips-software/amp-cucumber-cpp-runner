@@ -12,7 +12,5 @@ int main(int argc, char** argv)
     stOpt->excludes(nordicOpt);
     nordicOpt->excludes(stOpt);
 
-    auto retval = application.Run(argc, argv);
-
-    return retval;
+    return application.Run(argc, argv);
 }
