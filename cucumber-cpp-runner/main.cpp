@@ -3,11 +3,7 @@
 
 int main(int argc, char** argv)
 {
-    cucumber_cpp::Application application{ std::span(const_cast<const char**>(argv), argc) };
+    cucumber_cpp::Application application{};
 
-    auto args = application.GetForwardArgs();
-
-    application.RunFeatures();
-
-    return application.GetExitCode();
+    return application.Run(argc, argv);
 }

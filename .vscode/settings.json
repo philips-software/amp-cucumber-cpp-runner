@@ -1,6 +1,5 @@
 {
     "cmake.useCMakePresets": "always",
-    "cmake.copyCompileCommands": "${workspaceFolder}/.build/compile_commands.json",
     "cucumberautocomplete.steps": [
         "cucumber-cpp-example/steps/*.cpp"
     ],
@@ -20,6 +19,5 @@
     "C/C++ Include Guard.Remove Extension": false,
     "C/C++ Include Guard.Comment Style": "None",
     "C/C++ Include Guard.Path Skip": 0,
-    "testMate.cpp.test.executables": "${workspaceFolder}/.build/**/*{test,Test,TEST}*",
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/.build/compile_commands.json",
+    "testMate.cpp.test.executables": "${workspaceFolder}/.build/**/*{test,Test,TEST}*"
 }

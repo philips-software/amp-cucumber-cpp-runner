@@ -15,7 +15,5 @@ target_include_directories(cucumber-cpp.report PUBLIC
 
 target_link_libraries(cucumber-cpp.report PUBLIC
     pugixml
-
-    PRIVATE
     cucumber-cpp
 )

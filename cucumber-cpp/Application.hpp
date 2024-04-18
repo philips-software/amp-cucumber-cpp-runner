@@ -6,7 +6,9 @@
 #include "cucumber-cpp/FeatureRunner.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "cucumber/gherkin/app.hpp"
+#include <CLI/CLI.hpp>
 #include <filesystem>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -17,20 +19,6 @@
 
 namespace cucumber_cpp
 {
-    struct GherkinParser
-    {
-        explicit GherkinParser(CucumberRunnerV2& cucumberRunner);
-
-        [[nodiscard]] report::ReportHandler::Result RunFeatureFile(const std::filesystem::path& path);
-
-    private:
-        CucumberRunnerV2& cucumberRunner;
-        std::unique_ptr<FeatureRunnerV2> featureRunner;
-
-        cucumber::gherkin::app app;
-        cucumber::gherkin::app::callbacks cbs;
-    };
-
     struct ResultStatus
     {
         using Result = cucumber_cpp::report::ReportHandler::Result;
@@ -46,33 +34,36 @@ namespace cucumber_cpp
 
     struct Application
     {
-        Application(std::span<const char*> args);
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
 
-        [[nodiscard]] const std::vector<std::string_view>& GetForwardArgs() const;
+        int Run(int argc, const char* const* argv);
 
-        void RunFeatures(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
+        CLI::App& CliParser();
+        Context& ProgramContext();
 
-        [[nodiscard]] int GetExitCode() const;
-
-        [[nodiscard]] report::Reporters& Reporters();
+        void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter);
 
     private:
+        [[nodiscard]] int GetExitCode() const;
         [[nodiscard]] std::vector<std::filesystem::path> GetFeatureFiles() const;
+        void RunFeatures();
+        [[nodiscard]] report::ReportHandler::Result RunFeature(CucumberRunnerV2& cucumberRunner, const std::filesystem::path& path);
 
         struct Options
         {
-            explicit Options(std::span<const char*> args);
-
-            std::vector<std::string_view> tags{};
-            std::vector<std::string_view> features{};
-            std::vector<std::string_view> reports{};
-            std::vector<std::string_view> forwardArgs{};
+            std::vector<std::string> tags{};
+            std::vector<std::string> features{};
+            std::vector<std::string> reporters{};
         };
 
-        Options options;
+        Options options{};
+        CLI::App cli{};
 
         report::ReportForwarder reporters;
 
+        Context programContext;
+
+        cucumber::gherkin::app gherkin;
         ResultStatus resultStatus;
     };
 }

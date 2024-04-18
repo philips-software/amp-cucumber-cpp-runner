@@ -15,7 +15,7 @@ namespace cucumber_cpp
     struct CucumberRunnerV2
     {
     public:
-        CucumberRunnerV2(const std::vector<std::string_view>& args, std::string tagExpression, report::ReportHandler& reportHandler, std::shared_ptr<ContextStorageFactory> contextStorageFactory);
+        CucumberRunnerV2(Context& programContext, std::string tagExpression, report::ReportHandler& reportHandler);
         ~CucumberRunnerV2() = default;
 
         [[nodiscard]] std::string TagExpression() const;
@@ -25,16 +25,10 @@ namespace cucumber_cpp
         std::unique_ptr<FeatureRunnerV2> StartFeature(const cucumber::gherkin::app::parser_result& ast);
 
     private:
-        struct InsertArgsToContext
-        {
-            InsertArgsToContext(Context& context, const std::vector<std::string_view>& args);
-        };
-
         const std::string tagExpression;
         report::ReportHandler& reportHandler;
 
-        Context programContext;
-        InsertArgsToContext insertArgsToContext;
+        Context& programContext;
         BeforeAfterAllScope programHookeScope;
     };
 }

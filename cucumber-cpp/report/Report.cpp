@@ -24,9 +24,26 @@ namespace cucumber_cpp::report
         }
     }
 
+    void Reporters::Add(const std::string& name, std::unique_ptr<ReportHandler>&& reporter)
+    {
+        availableReporters[name] = std::move(reporter);
+    }
+
+    void Reporters::Use(const std::string& name)
+    {
+        if (availableReporters[name])
+            Add(std::move(availableReporters[name]));
+    }
+
     void Reporters::Add(std::unique_ptr<ReportHandler>&& report)
     {
         reporters.push_back(std::move(report));
+    }
+
+    std::vector<std::string> Reporters::AvailableReporters() const
+    {
+        auto range = std::views::keys(availableReporters);
+        return { range.begin(), range.end() };
     }
 
     std::vector<std::unique_ptr<ReportHandler>>& Reporters::Storage()

@@ -11,7 +11,12 @@
 
 GIVEN(R"(a background step)")
 {
-    std::cout << "this is a background step\n";
+    std::cout << "\nthis is a background step\n";
+}
+
+GIVEN("a step")
+{
+    /* keep empty */
 }
 
 GIVEN(R"(a simple data table)")

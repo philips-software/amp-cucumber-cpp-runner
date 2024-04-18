@@ -6,22 +6,11 @@
 
 HOOK_BEFORE_ALL()
 {
-    const auto& args = context.Get<std::vector<std::string_view>>("args");
 
-    if (std::ranges::find(args, "--st") != args.end())
-    {
-        context.Emplace<StBleFixture>();
-    }
-    else if (std::ranges::find(args, "--nordic") != args.end())
-    {
+    if (context.Contains("--st") && context.Get<bool>("--st"))
+        context.Emplace<StBleFixture>(context.Get<std::string>("--com"));
+    else if (context.Contains("--nordic") && context.Get<bool>("--nordic"))
         context.Emplace<NordicBleFixture>();
-    }
-    else
-    {
-        throw "error";
-    }
-
-    // spawn eventdispatcher
 }
 
 HOOK_BEFORE_SCENARIO()

@@ -16,10 +16,9 @@
                 "cucumber-cpp-example/features/1very_long.feature",
                 "cucumber-cpp-example/features/2simple.feature",
                 "--report",
-                "json",
                 "console",
-                "junit-xml",
-                "--Xapp,--st"
+                "--com",
+                "--st"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
