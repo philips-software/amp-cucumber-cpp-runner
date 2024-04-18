@@ -15,8 +15,6 @@ HOOK_BEFORE_ALL()
     {
         context.Emplace<NordicBleFixture>();
     }
-
-    // spawn eventdispatcher
 }
 
 HOOK_BEFORE_SCENARIO()

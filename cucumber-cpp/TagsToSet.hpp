@@ -8,7 +8,7 @@
 
 namespace cucumber_cpp
 {
-    std::set<std::string, std::less<>> TagsToSet(const auto& tags)
+    auto TagsToSet(const auto& tags)
     {
         std::set<std::string, std::less<>> result;
 
