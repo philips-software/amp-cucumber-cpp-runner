@@ -26,11 +26,11 @@ namespace cucumber_cpp
         static FeatureSource FromAst(const cucumber::gherkin::app::parser_result& ast);
     };
 
-    struct FeatureRunnerV2
+    struct FeatureRunner
     {
     public:
-        FeatureRunnerV2(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast);
-        ~FeatureRunnerV2();
+        FeatureRunner(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast);
+        ~FeatureRunner();
 
         [[nodiscard]] const FeatureSource& Source() const;
 

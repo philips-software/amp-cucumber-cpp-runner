@@ -27,12 +27,12 @@ namespace cucumber_cpp
         static ScenarioSource FromAst(const FeatureSource& featureSource, const cucumber::messages::background& background);
     };
 
-    struct FeatureRunnerV2;
+    struct FeatureRunner;
 
     struct ScenarioRunnerV2
     {
     public:
-        ScenarioRunnerV2(FeatureRunnerV2& featureRunner, const cucumber::messages::pickle& pickle);
+        ScenarioRunnerV2(FeatureRunner& featureRunner, const cucumber::messages::pickle& pickle);
         ~ScenarioRunnerV2();
 
         [[nodiscard]] const ScenarioSource& Source() const;
@@ -49,7 +49,7 @@ namespace cucumber_cpp
         void Run();
 
     private:
-        FeatureRunnerV2& featureRunner;
+        FeatureRunner& featureRunner;
         const cucumber::messages::pickle& pickle;
 
         std::set<std::string, std::less<>> scenarioTags;

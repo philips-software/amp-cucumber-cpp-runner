@@ -19,7 +19,7 @@ namespace cucumber_cpp
         return { ast.feature->name, ast.uri.value_or("unknown"), ast.feature->location.line, ast.feature->location.column.value_or(0) };
     }
 
-    FeatureRunnerV2::FeatureRunnerV2(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast)
+    FeatureRunner::FeatureRunner(CucumberRunner& cucumberRunner, const cucumber::gherkin::app::parser_result& ast)
         : cucumberRunner{ cucumberRunner }
         , ast{ ast }
         , featureSource{ FeatureSource::FromAst(ast) }
@@ -28,7 +28,7 @@ namespace cucumber_cpp
     {
     }
 
-    FeatureRunnerV2::~FeatureRunnerV2()
+    FeatureRunner::~FeatureRunner()
     {
         try
         {
@@ -40,31 +40,31 @@ namespace cucumber_cpp
         }
     }
 
-    const FeatureSource& FeatureRunnerV2::Source() const
+    const FeatureSource& FeatureRunner::Source() const
     {
         return featureSource;
     }
 
-    report::ReportHandler& FeatureRunnerV2::ReportHandler()
+    report::ReportHandler& FeatureRunner::ReportHandler()
     {
         return cucumberRunner.ReportHandler();
     }
 
-    Context& FeatureRunnerV2::GetContext()
+    Context& FeatureRunner::GetContext()
     {
         return featureContext;
     }
 
-    const cucumber::messages::feature& FeatureRunnerV2::Feature() const
+    const cucumber::messages::feature& FeatureRunner::Feature() const
     {
         return ast.feature.value();
     }
 
-    void FeatureRunnerV2::StartScenario(const cucumber::messages::pickle& pickle)
+    void FeatureRunner::StartScenario(const cucumber::messages::pickle& pickle)
     {
         if (ast.feature && IsTagExprSelected(cucumberRunner.TagExpression(), TagsToSet(pickle.tags)))
         {
-            std::call_once(startFeatureOnceFlag, &FeatureRunnerV2::StartFeatureOnce, *this);
+            std::call_once(startFeatureOnceFlag, &FeatureRunner::StartFeatureOnce, *this);
 
             ScenarioRunnerV2 scenarioRunner{ *this, pickle };
 
@@ -77,17 +77,17 @@ namespace cucumber_cpp
         }
     }
 
-    report::ReportHandler::Result FeatureRunnerV2::Result() const
+    report::ReportHandler::Result FeatureRunner::Result() const
     {
         return result;
     }
 
-    TraceTime::Duration FeatureRunnerV2::Duration() const
+    TraceTime::Duration FeatureRunner::Duration() const
     {
         return duration;
     }
 
-    void FeatureRunnerV2::StartFeatureOnce()
+    void FeatureRunner::StartFeatureOnce()
     {
         ReportHandler().FeatureStart(Source());
 
@@ -97,7 +97,7 @@ namespace cucumber_cpp
         };
     }
 
-    void FeatureRunnerV2::StopFeatureOnDestruction() noexcept
+    void FeatureRunner::StopFeatureOnDestruction() noexcept
     {
         ReportHandler().FeatureEnd(Source(), report::ReportHandler::Result::undefined, Duration());
     }

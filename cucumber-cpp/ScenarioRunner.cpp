@@ -39,7 +39,7 @@ namespace cucumber_cpp
         return { featureSource, background.name, background.location.line, background.location.column.value_or(0) };
     }
 
-    ScenarioRunnerV2::ScenarioRunnerV2(FeatureRunnerV2& featureRunner, const cucumber::messages::pickle& scenarioPickle)
+    ScenarioRunnerV2::ScenarioRunnerV2(FeatureRunner& featureRunner, const cucumber::messages::pickle& scenarioPickle)
         : featureRunner{ featureRunner }
         , pickle{ scenarioPickle }
         , scenarioTags{ TagsToSet(scenarioPickle.tags) }

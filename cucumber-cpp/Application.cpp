@@ -178,7 +178,7 @@ namespace cucumber_cpp
 
     [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
     {
-        std::unique_ptr<FeatureRunnerV2> featureRunner;
+        std::unique_ptr<FeatureRunner> featureRunner;
 
         cucumber::gherkin::app::callbacks callbacks{
             .ast = [&featureRunner, &cucumberRunner](const cucumber::gherkin::app::parser_result& ast)

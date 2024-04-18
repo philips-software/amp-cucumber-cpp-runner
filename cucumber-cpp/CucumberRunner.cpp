@@ -32,8 +32,8 @@ namespace cucumber_cpp
         return programContext;
     }
 
-    std::unique_ptr<FeatureRunnerV2> CucumberRunner::StartFeature(const cucumber::gherkin::app::parser_result& ast)
+    std::unique_ptr<FeatureRunner> CucumberRunner::StartFeature(const cucumber::gherkin::app::parser_result& ast)
     {
-        return std::make_unique<FeatureRunnerV2>(*this, ast);
+        return std::make_unique<FeatureRunner>(*this, ast);
     }
 }
