@@ -35,11 +35,11 @@ namespace cucumber_cpp
         StepSource stepSource;
     };
 
-    struct StepRunnerV2
+    struct StepRunner
     {
     public:
-        StepRunnerV2(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
-        ~StepRunnerV2();
+        StepRunner(ScenarioRunner& scenarioRunner, const cucumber::messages::pickle_step& pickleStep);
+        ~StepRunner();
 
         [[nodiscard]] const StepSource& Source() const;
 

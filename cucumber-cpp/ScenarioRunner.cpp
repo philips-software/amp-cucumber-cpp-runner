@@ -95,7 +95,7 @@ namespace cucumber_cpp
         for (const auto& step : pickle.steps)
             if (result == decltype(result)::success || result == decltype(result)::undefined)
             {
-                StepRunnerV2 stepRunner{ *this, step };
+                StepRunner stepRunner{ *this, step };
                 stepRunner.Run();
 
                 duration += stepRunner.Duration();
