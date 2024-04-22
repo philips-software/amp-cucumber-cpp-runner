@@ -140,6 +140,22 @@ namespace cucumber_cpp
                     if (iter != child.scenario->steps.end())
                         return StepSource::FromAst(scenarioSource, *iter, pickleStep);
                 }
+                else if (child.rule)
+                {
+                    for (const auto& ruleChild : child.rule->children)
+                        if (ruleChild.background)
+                        {
+                            const auto iter = std::ranges::find(ruleChild.background->steps, id, &cucumber::messages::step::id);
+                            if (iter != ruleChild.background->steps.end())
+                                return StepSource::FromAst(scenarioSource, *iter, pickleStep);
+                        }
+                        else if (ruleChild.scenario)
+                        {
+                            const auto iter = std::ranges::find(ruleChild.scenario->steps, id, &cucumber::messages::step::id);
+                            if (iter != ruleChild.scenario->steps.end())
+                                return StepSource::FromAst(scenarioSource, *iter, pickleStep);
+                        }
+                }
 
             struct StepSourceNotFoundError : std::out_of_range
             {
