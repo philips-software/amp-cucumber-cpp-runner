@@ -100,9 +100,12 @@ namespace cucumber_cpp
 
     struct StepMatch
     {
-        std::unique_ptr<RegexMatch> regexMatch;
+        // std::unique_ptr<RegexMatch> regexMatch;
         std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
-        const StepRegex& stepRegex;
+        // const StepRegex& stepRegex;
+
+        const std::vector<std::string> matches{};
+        const std::string stepRegexStr{};
     };
 
     struct StepRegistryBase

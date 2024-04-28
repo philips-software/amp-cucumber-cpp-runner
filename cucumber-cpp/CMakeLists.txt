@@ -45,6 +45,7 @@ target_link_libraries(cucumber-cpp PUBLIC
     gmock
     cucumber_gherkin_lib
     cucumber-cpp.report
+    cucumber-cpp.engine
     CLI11
 )
 
@@ -56,6 +57,7 @@ target_compile_options(cucumber-cpp
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
+add_subdirectory(engine)
 add_subdirectory(report)
 
 if (CCR_BUILD_TESTS)

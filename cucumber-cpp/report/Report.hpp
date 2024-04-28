@@ -2,6 +2,10 @@
 #define REPORT_REPORT_HPP
 
 #include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/StepInfoBase.hpp"
+#include "cucumber-cpp/engine/TestRunner.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -21,6 +25,27 @@ namespace cucumber_cpp
 
 namespace cucumber_cpp::report
 {
+    struct ReportHandlerV2
+    {
+    protected:
+        ~ReportHandlerV2() = default;
+
+    public:
+        virtual void FeatureStart(engine::Result result, const engine::FeatureInfo& featureInfo) = 0;
+        virtual void FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration) = 0;
+
+        virtual void ScenarioStart(engine::Result result, const engine::ScenarioInfo& scenarioInfo) = 0;
+        virtual void ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration) = 0;
+
+        virtual void StepStart(engine::Result result, const engine::StepInfo& stepInfo) = 0;
+        virtual void StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration) = 0;
+
+        virtual void Failure(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
+        virtual void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
+
+        virtual void Trace(const std::string& trace) = 0;
+    };
+
     struct ReportHandler
     {
         enum struct Result

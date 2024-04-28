@@ -227,7 +227,7 @@ namespace cucumber_cpp
 
             BeforeAfterStepHookScope stepHookScope{ scenarioRunner.GetContext(), scenarioRunner.GetScenarioTags() };
 
-            stepMatch.factory(scenarioRunner.GetContext(), PickleArgumentToTable(pickleStep.argument))->Execute(stepMatch.regexMatch->Matches());
+            stepMatch.factory(scenarioRunner.GetContext(), PickleArgumentToTable(pickleStep.argument))->Execute(stepMatch.matches);
 
             if (appendFailureOnTestPartResultEvent.HasFailures())
                 result = decltype(result)::failed;
@@ -245,7 +245,7 @@ namespace cucumber_cpp
             out << "Ambiguous step: " << pickleStep.text << "\nMatches:";
 
             for (const auto& step : e.matches)
-                out << "\n\t" << step.stepRegex.String();
+                out << "\n\t" << step.stepRegexStr;
 
             result = decltype(result)::ambiguous;
             ReportHandler().Error(out.str());

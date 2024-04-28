@@ -84,7 +84,7 @@ namespace cucumber_cpp
     void Step::Any(StepType type, const std::string& step)
     {
         const auto stepMatch = StepRegistry::Instance().Query(type, step);
-        stepMatch.factory(context, {})->Execute(stepMatch.regexMatch->Matches());
+        stepMatch.factory(context, {})->Execute(stepMatch.matches);
     }
 
     void Step::Pending(const std::string& message, std::source_location current) const noexcept(false)
@@ -136,7 +136,7 @@ namespace cucumber_cpp
 
         for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
             if (auto match = entry.regex.Match(expression); match->Matched())
-                matches.emplace_back(std::move(match), entry.factory, entry.regex);
+                matches.emplace_back(/*std::move(match),*/ entry.factory, /* entry.regex,*/ match->Matches(), entry.regex.String());
 
         if (matches.empty())
             throw StepNotFoundError{};

@@ -9,7 +9,7 @@ namespace cucumber_cpp
     struct InternalError : std::runtime_error
     {
         InternalError(std::string str, std::source_location sourceLocation = std::source_location::current())
-            : std::runtime_error{ std::move(str) }
+            : std::runtime_error{ str }
             , sourceLocation{ sourceLocation }
         {}
 

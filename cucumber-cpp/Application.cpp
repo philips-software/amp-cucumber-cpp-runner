@@ -1,6 +1,7 @@
 #include "cucumber-cpp/Application.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/CucumberRunner.hpp"
+#include "cucumber-cpp/engine/FeatureFactory.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "cucumber-cpp/report/StdOutReport.hpp"
@@ -178,6 +179,10 @@ namespace cucumber_cpp
 
     [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
     {
+        static engine::FeatureTreeFactory featureTreeFactory{};
+
+        featureTreeFactory.Create(path);
+
         std::unique_ptr<FeatureRunner> featureRunner;
 
         cucumber::gherkin::app::callbacks callbacks{
