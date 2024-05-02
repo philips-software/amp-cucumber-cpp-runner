@@ -26,11 +26,6 @@ namespace cucumber_cpp
             return true;
         }
 
-        if (tags.empty())
-        {
-            return false;
-        }
-
         std::string eval = tagExpr;
 
         for (std::smatch matches; std::regex_search(eval, matches, std::regex(R"((@[^ \)]+))"));)
