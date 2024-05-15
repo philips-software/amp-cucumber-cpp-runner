@@ -1,7 +1,6 @@
 
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/StepRunner.hpp"
 #include <algorithm>
 #include <iterator>
 #include <ranges>

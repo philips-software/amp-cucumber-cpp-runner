@@ -2,16 +2,17 @@
 
 namespace cucumber_cpp::engine
 {
-    FeatureInfo::FeatureInfo(std::vector<std::string> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column)
+    FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column)
         : tags{ std::move(tags) }
         , title{ std::move(title) }
         , description{ std::move(description) }
         , path{ std::move(path) }
         , line{ line }
         , column{ column }
-    {}
+    {
+    }
 
-    const std::vector<std::string>& FeatureInfo::Tags() const
+    const std::set<std::string, std::less<>>& FeatureInfo::Tags() const
     {
         return tags;
     }
@@ -41,14 +42,24 @@ namespace cucumber_cpp::engine
         return column;
     }
 
-    std::vector<ScenarioInfo>& FeatureInfo::Children()
+    std::vector<std::unique_ptr<RuleInfo>>& FeatureInfo::Rules()
     {
-        return children;
+        return rules;
     }
 
-    const std::vector<ScenarioInfo>& FeatureInfo::Children() const
+    const std::vector<std::unique_ptr<RuleInfo>>& FeatureInfo::Rules() const
     {
-        return children;
+        return rules;
+    }
+
+    std::vector<std::unique_ptr<ScenarioInfo>>& FeatureInfo::Scenarios()
+    {
+        return scenarios;
+    }
+
+    const std::vector<std::unique_ptr<ScenarioInfo>>& FeatureInfo::Scenarios() const
+    {
+        return scenarios;
     }
 
 }

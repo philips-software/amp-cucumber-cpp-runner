@@ -29,8 +29,8 @@ namespace cucumber_cpp
         [[nodiscard]] Duration Delta() const;
 
     private:
-        TimePoint timeStart;
-        TimePoint timeStop;
+        TimePoint timeStart{};
+        TimePoint timeStop{};
     };
 }
 

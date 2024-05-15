@@ -1,9 +1,6 @@
 
 #include "cucumber-cpp/report/JunitReport.hpp"
-#include "cucumber-cpp/FeatureRunner.hpp"
-#include "cucumber-cpp/ScenarioRunner.hpp"
-#include "cucumber-cpp/StepRunner.hpp"
-#include "cucumber-cpp/report/Report.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -18,14 +15,13 @@ namespace cucumber_cpp::report
     {
         constexpr double precision = 0.0000001;
 
-        const std::map<report::ReportHandler::Result, std::string> successLut{
-            { report::ReportHandler::Result::success, "done" },
-            { report::ReportHandler::Result::skipped, "skipped" },
-            { report::ReportHandler::Result::failed, "failed" },
-            { report::ReportHandler::Result::error, "error" },
-            { report::ReportHandler::Result::pending, "pending" },
-            { report::ReportHandler::Result::ambiguous, "ambiguous" },
-            { report::ReportHandler::Result::undefined, "undefined" },
+        const std::map<engine::Result, std::string> successLut{
+            { engine::Result::passed, "done" },
+            { engine::Result::skipped, "skipped" },
+            { engine::Result::failed, "failed" },
+            { engine::Result::pending, "pending" },
+            { engine::Result::ambiguous, "ambiguous" },
+            { engine::Result::undefined, "undefined" },
         };
 
         std::string RoundTo(double value, double roundToPrecision)
@@ -51,7 +47,6 @@ namespace cucumber_cpp::report
     {
         testsuites.append_attribute("tests").set_value(totalTests);
         testsuites.append_attribute("failures").set_value(totalFailures);
-        testsuites.append_attribute("errors").set_value(totalErrors);
         testsuites.append_attribute("skipped").set_value(totalSkipped);
 
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(totalTime).count();
@@ -63,67 +58,77 @@ namespace cucumber_cpp::report
         doc.save_file(outputfile.c_str());
     }
 
-    void JunitReport::FeatureStart(const FeatureSource& featureSource)
+    void JunitReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
         testsuite = testsuites.append_child("testsuite");
-        testsuite.append_attribute("name").set_value(featureSource.name.c_str());
-        testsuite.append_attribute("file").set_value(featureSource.path.string().c_str());
+        testsuite.append_attribute("name").set_value(featureInfo.Title().c_str());
+        testsuite.append_attribute("file").set_value(featureInfo.Path().string().c_str());
 
         scenarioTests = 0;
         scenarioFailures = 0;
-        scenarioErrors = 0;
         scenarioSkipped = 0;
     }
 
-    void JunitReport::FeatureEnd(const FeatureSource& /*featureSource*/, Result /*result*/, TraceTime::Duration duration)
+    void JunitReport::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testsuite.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
 
         totalTests += scenarioTests;
         totalFailures += scenarioFailures;
-        totalErrors += scenarioErrors;
         totalSkipped += scenarioSkipped;
 
         testsuite.append_attribute("tests").set_value(scenarioTests);
         testsuite.append_attribute("failures").set_value(scenarioFailures);
-        testsuite.append_attribute("errors").set_value(scenarioErrors);
         testsuite.append_attribute("skipped").set_value(scenarioSkipped);
     }
 
-    void JunitReport::ScenarioStart(const ScenarioSource& scenarioSource)
+    void JunitReport::RuleStart(const engine::RuleInfo& ruleInfo)
+    {
+        /* do nothing */
+    }
+
+    void JunitReport::RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration)
+    {
+        /* do nothing */
+    }
+
+    void JunitReport::ScenarioStart(const engine::ScenarioInfo& scenarioInfo)
     {
         testcase = testsuite.append_child("testcase");
 
-        testcase.append_attribute("name").set_value(scenarioSource.name.c_str());
+        testcase.append_attribute("name").set_value(scenarioInfo.Title().c_str());
 
         ++scenarioTests;
     }
 
-    void JunitReport::ScenarioEnd(const ScenarioSource& /*scenarioSource*/, Result result, TraceTime::Duration duration)
+    void JunitReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testcase.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
 
         switch (result)
         {
-            case ReportHandler::Result::skipped:
-            case ReportHandler::Result::pending:
-            case ReportHandler::Result::ambiguous:
-            case ReportHandler::Result::undefined:
+            case engine::Result::passed:
+                break;
+
+            case engine::Result::skipped:
+            case engine::Result::pending:
+            case engine::Result::ambiguous:
+            case engine::Result::undefined:
             {
                 ++scenarioSkipped;
                 auto skipped = testcase.append_child("skipped");
 
-                if (result == ReportHandler::Result::skipped)
+                if (result == engine::Result::skipped)
                 {
                     skipped.append_attribute("message").set_value("Test is skipped due to previous errors.");
                 }
-                else if (result == ReportHandler::Result::undefined)
+                else if (result == engine::Result::undefined)
                 {
                     skipped.append_attribute("message").set_value("Test is undefined.");
                 }
-                else if (result == ReportHandler::Result::pending)
+                else if (result == engine::Result::pending)
                 {
                     skipped.append_attribute("message").set_value("Test is pending.");
                 }
@@ -135,27 +140,25 @@ namespace cucumber_cpp::report
 
             break;
 
-            case ReportHandler::Result::failed:
+            case engine::Result::failed:
                 ++scenarioFailures;
-                break;
-
-            case ReportHandler::Result::error:
-                ++scenarioErrors;
-                break;
-
-            default:
                 break;
         }
 
         totalTime += duration;
     }
 
-    void JunitReport::StepStart(const StepSource& stepSource)
+    void JunitReport::StepSkipped(const engine::StepInfo& stepInfo)
     {
         /* do nothing */
     }
 
-    void JunitReport::StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration)
+    void JunitReport::StepStart(const engine::StepInfo& stepInfo)
+    {
+        /* do nothing */
+    }
+
+    void JunitReport::StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration)
     {
         /* do nothing */
     }

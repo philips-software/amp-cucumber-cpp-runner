@@ -2,21 +2,44 @@
 #define ENGINE_STEPINFO_HPP
 
 #include "cucumber-cpp/StepRegistry.hpp"
-#include "cucumber-cpp/engine/StepInfoBase.hpp"
 #include <cstddef>
-#include <memory>
 #include <string>
+#include <variant>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {
-    struct StepInfo : StepInfoBase
-    {
-        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, StepMatch stepMatch);
+    struct ScenarioInfo;
 
-        [[nodiscard]] const struct StepMatch& StepMatch() const;
+    struct StepInfo
+    {
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, StepMatch);
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::vector<StepMatch>);
+
+        [[nodiscard]] const struct ScenarioInfo& ScenarioInfo() const;
+
+        [[nodiscard]] const std::string& Text() const;
+        [[nodiscard]] StepType Type() const;
+
+        [[nodiscard]] std::size_t
+        Line() const;
+        [[nodiscard]] std::size_t Column() const;
+
+        [[nodiscard]] const std::vector<std::vector<TableValue>>& Table() const;
+        [[nodiscard]] const std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>>& StepMatch() const;
 
     private:
-        struct StepMatch stepMatch;
+        const struct ScenarioInfo& scenarioInfo;
+
+        std::string text;
+        StepType type;
+
+        std::size_t line;
+        std::size_t column;
+
+        std::vector<std::vector<TableValue>> table;
+        std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>> stepMatch;
     };
 }
 

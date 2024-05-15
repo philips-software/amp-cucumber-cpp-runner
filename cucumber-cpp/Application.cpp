@@ -1,17 +1,19 @@
 #include "cucumber-cpp/Application.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/CucumberRunner.hpp"
+#include "cucumber-cpp/engine/ContextManager.hpp"
 #include "cucumber-cpp/engine/FeatureFactory.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/TestRunner.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "cucumber-cpp/report/StdOutReport.hpp"
-#include "cucumber/gherkin/file.hpp"
-#include "cucumber/gherkin/parse_error.hpp"
 #include <CLI/Validators.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -98,7 +100,7 @@ namespace cucumber_cpp
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : programContext{ std::move(contextStorageFactory) }
+        : contextManager{ std::move(contextStorageFactory) }
         , reportHandlerValidator{ reporters }
     {
         gherkin.include_source(false);
@@ -122,7 +124,7 @@ namespace cucumber_cpp
         reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
 
-        programContext.InsertRef(options);
+        ProgramContext().InsertRef(options);
     }
 
     int Application::Run(int argc, const char* const* argv)
@@ -150,7 +152,7 @@ namespace cucumber_cpp
 
     Context& Application::ProgramContext()
     {
-        return programContext;
+        return contextManager.ProgramContext();
     }
 
     const Application::Options& Application::CliOptions() const
@@ -158,7 +160,7 @@ namespace cucumber_cpp
         return options;
     }
 
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter)
+    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
     {
         reporters.Add(name, std::move(reporter));
     }
@@ -168,46 +170,28 @@ namespace cucumber_cpp
         for (const auto& selectedReporter : options.reporters)
             reporters.Use(selectedReporter);
 
-        CucumberRunner cucumberRunner{ programContext, Join(options.tags, " "), reporters };
+        auto tagExpression = Join(options.tags, " ");
 
-        for (const auto& featurePath : GetFeatureFiles())
-            resultStatus = RunFeature(cucumberRunner, featurePath);
-
-        if (static_cast<ResultStatus::Result>(resultStatus) == ResultStatus::Result::undefined)
-            std::cout << "\nError: no features have been executed";
+        engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters);
     }
 
-    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
+    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)
     {
-        static engine::FeatureTreeFactory featureTreeFactory{};
+        auto featureFiles = GetFeatureFiles();
+        std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
+        vec.reserve(featureFiles.size());
 
-        featureTreeFactory.Create(path);
+        for (const auto& featurePath : featureFiles)
+            vec.push_back(featureTreeFactory.Create(featurePath, tagExpression));
 
-        std::unique_ptr<FeatureRunner> featureRunner;
+        vec.shrink_to_fit();
 
-        cucumber::gherkin::app::callbacks callbacks{
-            .ast = [&featureRunner, &cucumberRunner](const cucumber::gherkin::app::parser_result& ast)
-            {
-                featureRunner = cucumberRunner.StartFeature(ast);
-            },
-            .pickle = [&featureRunner](const cucumber::messages::pickle& pickle)
-            {
-                featureRunner->StartScenario(pickle);
-            },
-            .error = [](const cucumber::gherkin::parse_error& /* _ */)
-            {
-                /* not handled yet */
-            }
-        };
-
-        gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
-
-        return featureRunner->Result();
+        return vec;
     }
 
     int Application::GetExitCode() const
     {
-        if (resultStatus.IsSuccess())
+        if (contextManager.ProgramContext().ExecutionStatus() == engine::Result::passed)
             return 0;
         else
             return 1;

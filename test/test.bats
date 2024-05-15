@@ -31,8 +31,7 @@ teardown() {
 
 @test "No tests" {
     run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --tag "@invalidtag" --feature test/features/test_scenarios.feature --report console --com COMx
-    assert_failure
-    assert_output --partial "Error: no features have been executed"
+    assert_success
 }
 
 @test "All features in a folder" {
@@ -69,4 +68,37 @@ teardown() {
     run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --feature test/features --report doesnotexist
     assert_failure
     assert_output --partial "--report: 'doesnotexist' is not a reporter"
+}
+
+@test "Run Scenario hooks" {
+    run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --feature test/features --tag @bats and @scenariohook and not @stephook --report console --com COMx
+    assert_success
+
+    assert_output --partial "HOOK_BEFORE_SCENARIO"
+    assert_output --partial "HOOK_AFTER_SCENARIO"
+
+    refute_output --partial "HOOK_BEFORE_STEP"
+    refute_output --partial "HOOK_AFTER_STEP"
+}
+
+@test "Run Step hooks" {
+    run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --feature test/features --tag @bats and @stephook and not @scenariohook --report console --com COMx
+    assert_success
+
+    refute_output --partial "HOOK_BEFORE_SCENARIO"
+    refute_output --partial "HOOK_AFTER_SCENARIO"
+
+    assert_output --partial "HOOK_BEFORE_STEP"
+    assert_output --partial "HOOK_AFTER_STEP"
+}
+
+@test "Run Scenario and Step hooks" {
+    run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --feature test/features --tag "@bats and (@scenariohook or @stephook)" --report console --com COMx
+    assert_success
+
+    assert_output --partial "HOOK_BEFORE_SCENARIO"
+    assert_output --partial "HOOK_AFTER_SCENARIO"
+
+    assert_output --partial "HOOK_BEFORE_STEP"
+    assert_output --partial "HOOK_AFTER_STEP"
 }

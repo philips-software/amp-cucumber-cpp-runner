@@ -1,18 +1,20 @@
 #ifndef ENGINE_FEATUREINFO_HPP
 #define ENGINE_FEATUREINFO_HPP
 
+#include "cucumber-cpp/engine/RuleInfo.hpp"
 #include "cucumber-cpp/engine/ScenarioInfo.hpp"
 #include <cstddef>
 #include <filesystem>
+#include <set>
 #include <vector>
 
 namespace cucumber_cpp::engine
 {
     struct FeatureInfo
     {
-        FeatureInfo(std::vector<std::string> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column);
+        FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column);
 
-        [[nodiscard]] const std::vector<std::string>& Tags() const;
+        [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
         [[nodiscard]] const std::string& Title() const;
         [[nodiscard]] const std::string& Description() const;
 
@@ -21,11 +23,14 @@ namespace cucumber_cpp::engine
         [[nodiscard]] std::size_t Line() const;
         [[nodiscard]] std::size_t Column() const;
 
-        [[nodiscard]] std::vector<ScenarioInfo>& Children();
-        [[nodiscard]] const std::vector<ScenarioInfo>& Children() const;
+        [[nodiscard]] std::vector<std::unique_ptr<RuleInfo>>& Rules();
+        [[nodiscard]] const std::vector<std::unique_ptr<RuleInfo>>& Rules() const;
+
+        [[nodiscard]] std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios();
+        [[nodiscard]] const std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios() const;
 
     private:
-        std::vector<std::string> tags;
+        std::set<std::string, std::less<>> tags;
         std::string title;
         std::string description;
 
@@ -34,7 +39,8 @@ namespace cucumber_cpp::engine
         std::size_t line;
         std::size_t column;
 
-        std::vector<ScenarioInfo> children;
+        std::vector<std::unique_ptr<RuleInfo>> rules;
+        std::vector<std::unique_ptr<ScenarioInfo>> scenarios;
     };
 }
 

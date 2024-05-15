@@ -6,7 +6,8 @@
         {
             "label": "bats",
             "type": "shell",
-            "command": "bats --formatter junit test/test.bats | tee test-report.xml"
+            "command": "bats --formatter junit test/test.bats | tee test-report.xml",
+            "problemMatcher": []
         }
     ]
 }

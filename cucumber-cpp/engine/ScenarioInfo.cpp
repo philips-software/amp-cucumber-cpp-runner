@@ -1,10 +1,22 @@
 #include "cucumber-cpp/engine/ScenarioInfo.hpp"
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include <optional>
+#include <variant>
 
 namespace cucumber_cpp::engine
 {
-    ScenarioInfo::ScenarioInfo(const struct FeatureInfo& featureInfo, std::vector<std::string> tags, std::string title, std::string description, std::size_t line, std::size_t column)
-        : featureInfo{ featureInfo }
+    ScenarioInfo::ScenarioInfo(const struct RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column)
+        : parentInfo{ &ruleInfo }
+        , tags{ std::move(tags) }
+        , title{ std::move(title) }
+        , description{ std::move(description) }
+        , line{ line }
+        , column{ column }
+    {}
+
+    ScenarioInfo::ScenarioInfo(const struct FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column)
+        : parentInfo{ &featureInfo }
         , tags{ std::move(tags) }
         , title{ std::move(title) }
         , description{ std::move(description) }
@@ -15,10 +27,29 @@ namespace cucumber_cpp::engine
 
     const FeatureInfo& ScenarioInfo::FeatureInfo() const
     {
-        return featureInfo;
+        if (std::holds_alternative<const struct FeatureInfo*>(parentInfo))
+            return *std::get<const struct FeatureInfo*>(parentInfo);
+
+        if (std::holds_alternative<const struct RuleInfo*>(parentInfo))
+            return std::get<const struct RuleInfo*>(parentInfo)->FeatureInfo();
+
+        std::abort();
     }
 
-    const std::vector<std::string>& ScenarioInfo::Tags() const
+    std::optional<std::reference_wrapper<const struct RuleInfo>> ScenarioInfo::RuleInfo() const
+    {
+        if (std::holds_alternative<const struct RuleInfo*>(parentInfo))
+            return *std::get<const struct RuleInfo*>(parentInfo);
+
+        return std::nullopt;
+    }
+
+    // std::variant<std::reference_wrapper<const struct FeatureInfo>, std::reference_wrapper<const struct RuleInfo>> ScenarioInfo::ParentInfo() const
+    // {
+    //     return parentInfo;
+    // }
+
+    const std::set<std::string, std::less<>>& ScenarioInfo::Tags() const
     {
         return tags;
     }
@@ -43,33 +74,13 @@ namespace cucumber_cpp::engine
         return column;
     }
 
-    std::vector<StepInfo>& ScenarioInfo::Children()
+    std::vector<std::unique_ptr<StepInfo>>& ScenarioInfo::Children()
     {
         return children;
     }
 
-    const std::vector<StepInfo>& ScenarioInfo::Children() const
+    const std::vector<std::unique_ptr<StepInfo>>& ScenarioInfo::Children() const
     {
         return children;
-    }
-
-    std::vector<MissingStepInfo>& ScenarioInfo::MissingChildren()
-    {
-        return missingChildren;
-    }
-
-    const std::vector<MissingStepInfo>& ScenarioInfo::MissingChildren() const
-    {
-        return missingChildren;
-    }
-
-    std::vector<AmbiguousStepInfo>& ScenarioInfo::AmbiguousChildren()
-    {
-        return ambiguousChildren;
-    }
-
-    const std::vector<AmbiguousStepInfo>& ScenarioInfo::AmbiguousChildren() const
-    {
-        return ambiguousChildren;
     }
 }

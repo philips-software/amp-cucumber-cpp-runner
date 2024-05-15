@@ -1,10 +1,11 @@
 #ifndef ENGINE_SCENARIOINFO_HPP
 #define ENGINE_SCENARIOINFO_HPP
 
-#include "cucumber-cpp/engine/AmbiguousStepInfo.hpp"
-#include "cucumber-cpp/engine/MissingStepInfo.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <cstddef>
+#include <functional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -14,39 +15,34 @@ namespace cucumber_cpp::engine
 
     struct ScenarioInfo
     {
-        ScenarioInfo(const FeatureInfo& featureInfo, std::vector<std::string> tags, std::string title, std::string description, std::size_t line, std::size_t column);
+        ScenarioInfo(const RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column);
+        ScenarioInfo(const FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column);
 
         [[nodiscard]] const struct FeatureInfo& FeatureInfo() const;
+        [[nodiscard]] std::optional<std::reference_wrapper<const struct RuleInfo>> RuleInfo() const;
+        // [[nodiscard]] std::variant<std::reference_wrapper<const struct FeatureInfo>, std::reference_wrapper<const struct RuleInfo>> ParentInfo() const;
 
-        [[nodiscard]] const std::vector<std::string>& Tags() const;
+        [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
         [[nodiscard]] const std::string& Title() const;
         [[nodiscard]] const std::string& Description() const;
 
         [[nodiscard]] std::size_t Line() const;
         [[nodiscard]] std::size_t Column() const;
 
-        [[nodiscard]] std::vector<StepInfo>& Children();
-        [[nodiscard]] const std::vector<StepInfo>& Children() const;
-
-        [[nodiscard]] std::vector<MissingStepInfo>& MissingChildren();
-        [[nodiscard]] const std::vector<MissingStepInfo>& MissingChildren() const;
-
-        [[nodiscard]] std::vector<AmbiguousStepInfo>& AmbiguousChildren();
-        [[nodiscard]] const std::vector<AmbiguousStepInfo>& AmbiguousChildren() const;
+        [[nodiscard]] std::vector<std::unique_ptr<StepInfo>>& Children();
+        [[nodiscard]] const std::vector<std::unique_ptr<StepInfo>>& Children() const;
 
     private:
-        const struct FeatureInfo& featureInfo;
+        std::variant<const struct FeatureInfo*, const struct RuleInfo*> parentInfo;
 
-        std::vector<std::string> tags;
+        std::set<std::string, std::less<>> tags;
         std::string title;
         std::string description;
 
         std::size_t line;
         std::size_t column;
 
-        std::vector<StepInfo> children;
-        std::vector<MissingStepInfo> missingChildren;
-        std::vector<AmbiguousStepInfo> ambiguousChildren;
+        std::vector<std::unique_ptr<StepInfo>> children;
     };
 }
 

@@ -12,13 +12,14 @@
             "args": [
                 "run",
                 "--feature",
-                "cucumber-cpp-example/features/1very_long.feature",
-                "cucumber-cpp-example/features/2simple.feature",
+                "cucumber-cpp-example/features",
                 "--report",
                 "console",
                 "--com",
                 "COMx",
-                "--nordic"
+                "--nordic",
+                "--tag",
+                "@rule1 or @smoke"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -27,6 +27,9 @@ namespace cucumber_cpp
 
     TraceTime::Duration TraceTime::Delta() const
     {
-        return timeStop - timeStart;
+        if (timeStop != TimePoint{})
+            return timeStop - timeStart;
+
+        return std::chrono::high_resolution_clock::now() - timeStart;
     }
 }

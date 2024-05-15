@@ -8,7 +8,7 @@ namespace cucumber_cpp::engine
 {
     struct FeatureTreeFactory
     {
-        FeatureInfo Create(const std::filesystem::path& path);
+        std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression);
 
     private:
         cucumber::gherkin::app gherkin;

@@ -1,16 +1,89 @@
 #include "cucumber-cpp/engine/FeatureFactory.hpp"
+#include "cucumber-cpp/TagExpression.hpp"
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
 #include "cucumber/messages/background.hpp"
+#include "cucumber/messages/gherkin_document.hpp"
+#include "cucumber/messages/rule.hpp"
 #include "cucumber/messages/step.hpp"
 #include "cucumber/messages/tag.hpp"
+#include <bits/ranges_util.h>
 #include <functional>
+#include <memory>
 #include <ranges>
+#include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::engine
 {
     namespace
     {
+        struct ScenarioWithRule
+        {
+            const cucumber::messages::rule* rule;
+            const cucumber::messages::scenario* scenario;
+        };
+
+        using AllTypes = std::variant<
+            const cucumber::messages::background*,
+            const cucumber::messages::scenario*,
+            const cucumber::messages::step*,
+            ScenarioWithRule>;
+
+        using FlatAst = std::map<std::string, AllTypes, std::less<>>;
+
+        void FlattenBackgroundAst(FlatAst& flatAst, const cucumber::messages::background& background)
+        {
+            flatAst[background.id] = &background;
+            for (const auto& step : background.steps)
+                flatAst[step.id] = &step;
+        }
+
+        void FlattenScenarioAst(FlatAst& flatAst, const cucumber::messages::scenario& scenario)
+        {
+            flatAst[scenario.id] = &scenario;
+            for (const auto& step : scenario.steps)
+                flatAst[step.id] = &step;
+        }
+
+        void FlattenRuleAst(FlatAst& flatAst, const cucumber::messages::rule& rule)
+        {
+            for (const auto& ruleChild : rule.children)
+            {
+                if (ruleChild.background)
+                {
+                    flatAst[ruleChild.background->id] = &*ruleChild.background;
+                    for (const auto& step : ruleChild.background->steps)
+                        flatAst[step.id] = &step;
+                }
+                else if (ruleChild.scenario)
+                {
+                    flatAst[ruleChild.scenario->id] = ScenarioWithRule{ &rule, &*ruleChild.scenario };
+                    for (const auto& step : ruleChild.scenario->steps)
+                        flatAst[step.id] = &step;
+                }
+            }
+        }
+
+        FlatAst FlattenAst(const cucumber::messages::feature& feature)
+        {
+            FlatAst flatAst;
+
+            for (const auto& child : feature.children)
+            {
+                if (child.background)
+                    FlattenBackgroundAst(flatAst, *child.background);
+                else if (child.rule)
+                    FlattenRuleAst(flatAst, *child.rule);
+                else if (child.scenario)
+                    FlattenScenarioAst(flatAst, *child.scenario);
+            }
+
+            return flatAst;
+        }
+
         const std::map<cucumber::messages::pickle_step_type, StepType> stepTypeLut{
             { cucumber::messages::pickle_step_type::CONTEXT, StepType::given },
             { cucumber::messages::pickle_step_type::ACTION, StepType::when },
@@ -40,13 +113,13 @@ namespace cucumber_cpp::engine
             return table;
         }
 
-        std::vector<std::string> TagsFactory(const std::vector<cucumber::messages::tag>& tags)
+        std::set<std::string, std::less<>> TagsFactory(const std::vector<cucumber::messages::tag>& tags)
         {
             const auto range = tags | std::views::transform(&cucumber::messages::tag::name);
             return { range.begin(), range.end() };
         }
 
-        std::vector<std::string> TagsFactory(const std::vector<cucumber::messages::pickle_tag>& tags)
+        std::set<std::string, std::less<>> TagsFactory(const std::vector<cucumber::messages::pickle_tag>& tags)
         {
             const auto range = tags | std::views::transform(&cucumber::messages::pickle_tag::name);
             return { range.begin(), range.end() };
@@ -54,108 +127,160 @@ namespace cucumber_cpp::engine
 
         void ConstructStep(ScenarioInfo& scenarioInfo, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep)
         {
-            std::cout << "\nConstructStep:" << pickleStep.text;
             auto table = TableFactory(pickleStep.argument);
 
             try
             {
                 auto stepMatch = StepRegistry::Instance().Query(stepTypeLut.at(*pickleStep.type), pickleStep.text);
-
-                scenarioInfo.Children().emplace_back(scenarioInfo, pickleStep.text, step.location.line, step.location.column.value_or(0), std::move(table), std::move(stepMatch));
+                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table), std::move(stepMatch)));
             }
             catch (const StepRegistry::StepNotFoundError&)
             {
-                scenarioInfo.MissingChildren().emplace_back(scenarioInfo, pickleStep.text, step.location.line, step.location.column.value_or(0), std::move(table));
+                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table)));
             }
-            catch (const StepRegistry::AmbiguousStepError& ase)
+            catch (StepRegistry::AmbiguousStepError& ase)
             {
-                scenarioInfo.AmbiguousChildren().emplace_back(scenarioInfo, pickleStep.text, step.location.line, step.location.column.value_or(0), std::move(table), ase.matches);
+                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table), std::move(ase.matches)));
             }
         }
 
-        void ConstructSteps(ScenarioInfo& scenarioInfo, const std::vector<cucumber::messages::step>& steps, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
+        void ConstructSteps(ScenarioInfo& scenarioInfo, const FlatAst& flatAst, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
         {
-            std::cout << "\nConstructSteps";
-
             for (const auto& pickleStep : pickleSteps)
-                for (const auto& step : steps)
-                    if (step.id == pickleStep.ast_node_ids[0])
-                    {
-                        ConstructStep(scenarioInfo, step, pickleStep);
-                        break;
-                    }
+            {
+                const auto* astStep = std::get<const cucumber::messages::step*>(flatAst.at(pickleStep.ast_node_ids.front()));
+
+                ConstructStep(scenarioInfo, *astStep, pickleStep);
+            }
         }
 
-        void ConstructScenario(FeatureInfo& featureInfo, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle)
+        void ConstructScenario(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
         {
-            std::cout << "\nConstructScenario.scenario:" << pickle.name;
+            auto tags = TagsFactory(pickle.tags);
 
-            ScenarioInfo& scenarioInfo = featureInfo.Children().emplace_back(
+            if (!IsTagExprSelected(tagExpression, tags))
+                return;
+
+            featureInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
                 featureInfo,
-                TagsFactory(pickle.tags),
+                std::move(tags),
                 pickle.name,
                 scenario.description,
                 scenario.location.line,
-                scenario.location.column.value_or(0));
+                scenario.location.column.value_or(0)));
 
-            ConstructSteps(scenarioInfo, scenario.steps, pickle.steps);
+            ConstructSteps(*featureInfo.Scenarios().back(), flatAst, pickle.steps);
         }
 
-        void ConstructScenario(FeatureInfo& featureInfo, const cucumber::messages::background& background, const cucumber::messages::pickle& pickle)
+        void ConstructScenario(RuleInfo& ruleInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::set<std::string, std::less<>> tags)
         {
-            std::cout << "\nConstructScenario.background:" << pickle.name;
-
-            ScenarioInfo& scenarioInfo = featureInfo.Children().emplace_back(
-                featureInfo,
-                TagsFactory(pickle.tags),
+            ruleInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
+                ruleInfo,
+                std::move(tags),
                 pickle.name,
-                background.description,
-                background.location.line,
-                background.location.column.value_or(0));
+                scenario.description,
+                scenario.location.line,
+                scenario.location.column.value_or(0)));
 
-            ConstructSteps(scenarioInfo, background.steps, pickle.steps);
+            ConstructSteps(*ruleInfo.Scenarios().back(), flatAst, pickle.steps);
         }
 
-        void ConstructScenario(FeatureInfo& featureInfo, const cucumber::messages::feature& feature, const cucumber::messages::pickle& pickle)
+        RuleInfo& GetOrConstructRule(FeatureInfo& featureInfo, const cucumber::messages::rule& rule)
         {
-            std::cout << "\nConstructScenario";
+            if (auto iter = std::ranges::find_if(
+                    featureInfo.Rules(), [&rule](const auto& ptr)
+                    {
+                        return ptr->Title() == rule.name;
+                    });
+                iter != featureInfo.Rules().end())
+                return **iter;
 
-            for (const auto& child : feature.children)
-                if (child.scenario && child.scenario->id == pickle.ast_node_ids[0])
-                    ConstructScenario(featureInfo, *child.scenario, pickle);
-                else if (child.background && child.background->id == pickle.ast_node_ids[0])
-                    ConstructScenario(featureInfo, *child.background, pickle);
+            featureInfo.Rules().push_back(
+                std::make_unique<RuleInfo>(featureInfo,
+                    rule.name,
+                    rule.description,
+                    rule.location.line,
+                    rule.location.column.value_or(0)));
+
+            return *featureInfo.Rules().back();
         }
 
-        FeatureInfo FeatureFactory(std::filesystem::path path, const cucumber::gherkin::app::parser_result& ast)
+        void ConstructScenarioWithRule(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::rule& rule, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
         {
-            std::cout << "\nFeatureFactory:" << ast.feature->name;
+            auto tags = TagsFactory(pickle.tags);
 
-            return FeatureInfo{
+            if (!IsTagExprSelected(tagExpression, tags))
+                return;
+
+            auto& ruleInfo = GetOrConstructRule(featureInfo, rule);
+
+            ConstructScenario(ruleInfo, flatAst, scenario, pickle, std::move(tags));
+        }
+
+        struct ConstructScenarioVisitor
+        {
+            ConstructScenarioVisitor(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+                : featureInfo{ featureInfo }
+                , flatAst{ flatAst }
+                , pickle{ pickle }
+                , tagExpression{ tagExpression }
+            {}
+
+            void operator()(const cucumber::messages::scenario* scenario) const
+            {
+                ConstructScenario(featureInfo, flatAst, *scenario, pickle, tagExpression);
+            }
+
+            void operator()(ScenarioWithRule ruleWithScenario) const
+            {
+                ConstructScenarioWithRule(featureInfo, flatAst, *ruleWithScenario.rule, *ruleWithScenario.scenario, pickle, tagExpression);
+            }
+
+            void operator()(auto /* ignore */) const
+            {
+                /* ignore */
+            }
+
+        private:
+            FeatureInfo& featureInfo;
+            const FlatAst& flatAst;
+            const cucumber::messages::pickle& pickle;
+            std::string_view tagExpression;
+        };
+
+        void ConstructScenario(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+        {
+            ConstructScenarioVisitor visitor{ featureInfo, flatAst, pickle, tagExpression };
+
+            std::visit(visitor, flatAst.at(pickle.ast_node_ids.front()));
+        }
+
+        std::unique_ptr<FeatureInfo> FeatureFactory(std::filesystem::path path, const cucumber::gherkin::app::parser_result& ast)
+        {
+            return std::make_unique<FeatureInfo>(
                 TagsFactory(ast.feature->tags),
                 ast.feature->name,
                 ast.feature->description,
                 std::move(path),
                 ast.feature->location.line,
-                ast.feature->location.column.value_or(0)
-            };
+                ast.feature->location.column.value_or(0));
         }
     }
 
-    FeatureInfo FeatureTreeFactory::Create(const std::filesystem::path& path)
+    std::unique_ptr<FeatureInfo> FeatureTreeFactory::Create(const std::filesystem::path& path, std::string_view tagExpression)
     {
-        std::optional<FeatureInfo> featureInfo;
-        std::optional<std::reference_wrapper<const cucumber::gherkin::app::parser_result>> parserResult;
+        std::unique_ptr<FeatureInfo> featureInfo;
+        std::optional<FlatAst> flatAst;
 
         cucumber::gherkin::app::callbacks callbacks{
-            .ast = [&path, &parserResult, &featureInfo](const cucumber::gherkin::app::parser_result& ast)
+            .ast = [&path, &flatAst, &featureInfo](const cucumber::gherkin::app::parser_result& ast)
             {
-                parserResult = ast;
                 featureInfo = FeatureFactory(path, ast);
+                flatAst = FlattenAst(*ast.feature);
             },
-            .pickle = [&featureInfo, &parserResult](const cucumber::messages::pickle& pickle)
+            .pickle = [&featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle)
             {
-                ConstructScenario(*featureInfo, *(*parserResult).get().feature, pickle);
+                ConstructScenario(*featureInfo, *flatAst, pickle, tagExpression);
             },
             .error = [](const cucumber::gherkin::parse_error& /* _ */)
             {
@@ -165,6 +290,6 @@ namespace cucumber_cpp::engine
 
         gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
 
-        return std::move(*featureInfo);
+        return featureInfo;
     }
 }

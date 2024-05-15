@@ -8,10 +8,6 @@ target_sources(cucumber-cpp PRIVATE
     BodyMacro.hpp
     Body.hpp
     Context.hpp
-    CucumberRunner.cpp
-    CucumberRunner.hpp
-    FeatureRunner.cpp
-    FeatureRunner.hpp
     HookRegistry.cpp
     HookRegistry.hpp
     Hooks.hpp
@@ -22,13 +18,9 @@ target_sources(cucumber-cpp PRIVATE
     OnTestPartResultEventListener.hpp
     Rtrim.cpp
     Rtrim.hpp
-    ScenarioRunner.cpp
-    ScenarioRunner.hpp
     Steps.hpp
     StepRegistry.cpp
     StepRegistry.hpp
-    StepRunner.cpp
-    StepRunner.hpp
     TagExpression.cpp
     TagExpression.hpp
     TagsToSet.hpp
