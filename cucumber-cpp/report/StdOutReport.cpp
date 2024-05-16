@@ -1,13 +1,28 @@
 #include "cucumber-cpp/report/StdOutReport.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
 #include "cucumber-cpp/engine/Result.hpp"
-#include <algorithm>
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
 #include <chrono>
+#include <cstddef>
+#include <filesystem>
 #include <iostream>
-#include <ranges>
-#include <ratio>
+#include <map>
+#include <optional>
 #include <sstream>
+#include <string>
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#include <consoleapi2.h>
+#include <minwindef.h>
+#include <processenv.h>
+#include <winbase.h>
+
+#endif
 
 namespace cucumber_cpp::report
 {
@@ -50,20 +65,20 @@ namespace cucumber_cpp::report
             return o;
         }
 #else
-        static WORD GetDefaultConsoleValue()
+        WORD GetDefaultConsoleValue()
         {
             CONSOLE_SCREEN_BUFFER_INFO info;
             GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
             return info.wAttributes;
         }
 
-        static WORD GetDefaultConsole()
+        WORD GetDefaultConsole()
         {
             static WORD defaultValue = GetDefaultConsoleValue();
             return defaultValue;
         }
 
-        static void SetColorConsole(WORD color)
+        void SetColorConsole(WORD color)
         {
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color | (GetDefaultConsole() & ~(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)));
         }
@@ -167,7 +182,7 @@ namespace cucumber_cpp::report
                   << scenarioInfo.Title();
     }
 
-    void StdOutReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
+    void StdOutReport::ScenarioEnd(engine::Result /*result*/, const engine::ScenarioInfo& /*scenarioInfo*/, TraceTime::Duration /*duration*/)
     {
         std::cout << "\n";
     }
