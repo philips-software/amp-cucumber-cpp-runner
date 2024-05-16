@@ -1,13 +1,13 @@
 #ifndef CUCUMBER_CPP_TAGEXPRESSION_CPP
 #define CUCUMBER_CPP_TAGEXPRESSION_CPP
+
 #include "cucumber-cpp/TagExpression.hpp"
-#include <algorithm>
-#include <iostream>
-#include <iterator>
-#include <ostream>
-#include <ranges>
+#include <functional>
 #include <regex>
+#include <set>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace cucumber_cpp
 {
@@ -24,11 +24,6 @@ namespace cucumber_cpp
         if (tagExpr.empty())
         {
             return true;
-        }
-
-        if (tags.empty())
-        {
-            return false;
         }
 
         std::string eval{ tagExpr };
