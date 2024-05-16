@@ -53,11 +53,6 @@ namespace cucumber_cpp::engine
         return std::nullopt;
     }
 
-    // std::variant<std::reference_wrapper<const struct FeatureInfo>, std::reference_wrapper<const struct RuleInfo>> ScenarioInfo::ParentInfo() const
-    // {
-    //     return parentInfo;
-    // }
-
     const std::set<std::string, std::less<>>& ScenarioInfo::Tags() const
     {
         return tags;

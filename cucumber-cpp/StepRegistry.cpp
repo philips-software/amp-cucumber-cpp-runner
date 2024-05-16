@@ -137,7 +137,7 @@ namespace cucumber_cpp
 
         for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
             if (auto match = entry.regex.Match(expression); match->Matched())
-                matches.emplace_back(/*std::move(match),*/ entry.factory, /* entry.regex,*/ match->Matches(), entry.regex.String());
+                matches.emplace_back(entry.factory, match->Matches(), entry.regex.String());
 
         if (matches.empty())
             throw StepNotFoundError{};

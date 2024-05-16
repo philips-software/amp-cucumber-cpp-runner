@@ -174,6 +174,7 @@ namespace cucumber_cpp::report
 
     void StdOutReport::RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration)
     {
+        /* do nothing */
     }
 
     void StdOutReport::ScenarioStart(const engine::ScenarioInfo& scenarioInfo)

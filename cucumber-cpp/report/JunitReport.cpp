@@ -1,13 +1,21 @@
 
 #include "cucumber-cpp/report/JunitReport.hpp"
+#include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
 #include "cucumber-cpp/engine/Result.hpp"
-#include <algorithm>
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
+#include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <filesystem>
 #include <iostream>
 #include <map>
-#include <ranges>
+#include <optional>
+#include <ratio>
 #include <sstream>
+#include <string>
 
 namespace cucumber_cpp::report
 {
@@ -69,7 +77,7 @@ namespace cucumber_cpp::report
         scenarioSkipped = 0;
     }
 
-    void JunitReport::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)
+    void JunitReport::FeatureEnd(engine::Result /*result*/, const engine::FeatureInfo& /*featureInfo*/, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testsuite.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
@@ -102,7 +110,7 @@ namespace cucumber_cpp::report
         ++scenarioTests;
     }
 
-    void JunitReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
+    void JunitReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& /*scenarioInfo*/, TraceTime::Duration duration)
     {
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(duration).count();
         testcase.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());

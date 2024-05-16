@@ -101,8 +101,8 @@ namespace cucumber_cpp
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : contextManager{ std::move(contextStorageFactory) }
-        , reportHandlerValidator{ reporters }
+        : reportHandlerValidator{ reporters }
+        , contextManager{ std::move(contextStorageFactory) }
     {
         gherkin.include_source(false);
         gherkin.include_ast(true);

@@ -1,35 +1,28 @@
 #ifndef ENGINE_TESTRUNNER_HPP
 #define ENGINE_TESTRUNNER_HPP
 
-#include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/TraceTime.hpp"
 #include "cucumber-cpp/engine/ContextManager.hpp"
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
-#include "cucumber-cpp/engine/Result.hpp"
-#include <functional>
-#include <set>
-#include <string>
+#include <memory>
+#include <vector>
 
 namespace cucumber_cpp::report
 {
     struct ReportHandlerV2;
 }
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::engine::TestRunner
 {
-    namespace TestRunner
-    {
-        struct PendingException
-        {};
+    struct PendingException
+    {};
 
-        struct StepNotFoundException
-        {};
+    struct StepNotFoundException
+    {};
 
-        struct AmbiguousStepException
-        {};
+    struct AmbiguousStepException
+    {};
 
-        void Run(ContextManager& contextManager, std::vector<std::unique_ptr<FeatureInfo>> feature, report::ReportHandlerV2& reportHandler);
-    }
+    void Run(ContextManager& contextManager, const std::vector<std::unique_ptr<FeatureInfo>>& feature, report::ReportHandlerV2& reportHandler);
 }
 
 #endif
