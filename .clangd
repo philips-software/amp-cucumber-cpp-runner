@@ -3,6 +3,7 @@ CompileFlags:
   CompilationDatabase: .build/
 Diagnostics:
   UnusedIncludes: Strict
+  MissingIncludes: Strict
   ClangTidy:
     Add: []
     Remove: []

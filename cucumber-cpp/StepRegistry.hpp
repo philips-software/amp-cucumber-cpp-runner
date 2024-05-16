@@ -3,13 +3,13 @@
 
 #include "cucumber-cpp/Body.hpp"
 #include "cucumber-cpp/Context.hpp"
+#include <cstddef>
 #include <exception>
-#include <functional>
 #include <memory>
-#include <ranges>
 #include <regex>
 #include <source_location>
-#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp

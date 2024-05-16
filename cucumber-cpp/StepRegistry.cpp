@@ -2,11 +2,13 @@
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include <algorithm>
-#include <iterator>
+#include <cstddef>
+#include <memory>
 #include <ranges>
 #include <regex>
 #include <source_location>
-#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp
