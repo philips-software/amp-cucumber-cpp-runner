@@ -9,7 +9,8 @@
         "vscode": {
             "extensions": [
                 "alexkrechik.cucumberautocomplete",
-                "akiramiyakoda.cppincludeguard"
+                "akiramiyakoda.cppincludeguard",
+                "github.vscode-github-actions"
             ]
         }
     }
