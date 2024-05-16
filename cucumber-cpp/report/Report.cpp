@@ -1,11 +1,19 @@
 #include "cucumber-cpp/report/Report.hpp"
+#include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
 #include <algorithm>
-#include <iostream>
+#include <cstddef>
+#include <filesystem>
 #include <memory>
-#include <source_location>
-#include <type_traits>
-#include <typeinfo>
+#include <optional>
+#include <ranges>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace cucumber_cpp::report
 {

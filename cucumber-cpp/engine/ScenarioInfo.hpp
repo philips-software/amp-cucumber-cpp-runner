@@ -5,8 +5,11 @@
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <cstddef>
 #include <functional>
+#include <memory>
+#include <optional>
 #include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::engine
@@ -20,7 +23,6 @@ namespace cucumber_cpp::engine
 
         [[nodiscard]] const struct FeatureInfo& FeatureInfo() const;
         [[nodiscard]] std::optional<std::reference_wrapper<const struct RuleInfo>> RuleInfo() const;
-        // [[nodiscard]] std::variant<std::reference_wrapper<const struct FeatureInfo>, std::reference_wrapper<const struct RuleInfo>> ParentInfo() const;
 
         [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
         [[nodiscard]] const std::string& Title() const;

@@ -1,8 +1,17 @@
 #include "cucumber-cpp/engine/ScenarioInfo.hpp"
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
 #include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
+#include <cstddef>
+#include <ext/string_conversions.h>
+#include <functional>
+#include <memory>
 #include <optional>
+#include <set>
+#include <string>
+#include <utility>
 #include <variant>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {
