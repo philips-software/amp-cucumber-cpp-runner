@@ -121,6 +121,7 @@ namespace cucumber_cpp
         runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation")->check(reportHandlerValidator);
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
+        runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
 
         reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
@@ -173,7 +174,10 @@ namespace cucumber_cpp
 
         auto tagExpression = Join(options.tags, " ");
 
-        engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters);
+        if (options.dryrun)
+            engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::dryRun);
+        else
+            engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::runTest);
     }
 
     std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)

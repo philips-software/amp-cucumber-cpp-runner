@@ -6,12 +6,18 @@ Feature: Test scenario and step hook bindings
 
   @scenariohook @stephook
   Scenario: Run Scenario and Step hooks
-    Given a step
+    Given a given step
+    When a when step
+    Then a then step
 
   @scenariohook
   Scenario: Run only Scenario hooks
-    Given a step
+    Given a given step
+    When a when step
+    Then a then step
 
   @stephook
   Scenario: Run only Step hooks
-    Given a step
+    Given a given step
+    When a when step
+    Then a then step
