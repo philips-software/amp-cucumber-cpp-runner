@@ -41,6 +41,9 @@ namespace cucumber_cpp::engine::TestRunner
             AppendFailureOnTestPartResultEvent(const AppendFailureOnTestPartResultEvent&) = delete;
             AppendFailureOnTestPartResultEvent& operator=(const AppendFailureOnTestPartResultEvent&) = delete;
 
+            AppendFailureOnTestPartResultEvent(AppendFailureOnTestPartResultEvent&&) = delete;
+            AppendFailureOnTestPartResultEvent& operator=(AppendFailureOnTestPartResultEvent&&) = delete;
+
             void OnTestPartResult(const testing::TestPartResult& testPartResult) override
             {
                 errors.emplace_back(testPartResult);
@@ -82,6 +85,9 @@ namespace cucumber_cpp::engine::TestRunner
 
             CaptureAndTraceStdOut(const CaptureAndTraceStdOut&) = delete;
             CaptureAndTraceStdOut& operator=(const CaptureAndTraceStdOut&) = delete;
+
+            CaptureAndTraceStdOut(CaptureAndTraceStdOut&&) = delete;
+            CaptureAndTraceStdOut& operator=(CaptureAndTraceStdOut&&) = delete;
 
         private:
             report::ReportHandlerV2& reportHandler;
