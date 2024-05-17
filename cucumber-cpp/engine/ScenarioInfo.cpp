@@ -4,6 +4,7 @@
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <cstddef>
 #include <cstdlib>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -66,6 +67,11 @@ namespace cucumber_cpp::engine
     const std::string& ScenarioInfo::Description() const
     {
         return description;
+    }
+
+    const std::filesystem::path& ScenarioInfo::Path() const
+    {
+        return FeatureInfo().Path();
     }
 
     std::size_t ScenarioInfo::Line() const

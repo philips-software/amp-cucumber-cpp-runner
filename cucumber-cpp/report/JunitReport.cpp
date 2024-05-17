@@ -231,4 +231,8 @@ namespace cucumber_cpp::report
     {
         /* do nothing */
     }
+
+    void JunitReport::Summary(TraceTime::Duration duration)
+    {
+        /* do nothing */}
 }

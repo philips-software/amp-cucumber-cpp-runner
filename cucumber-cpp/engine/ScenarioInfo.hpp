@@ -4,6 +4,7 @@
 #include "cucumber-cpp/engine/RuleInfo.hpp"
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <cstddef>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -27,6 +28,8 @@ namespace cucumber_cpp::engine
         [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
         [[nodiscard]] const std::string& Title() const;
         [[nodiscard]] const std::string& Description() const;
+
+        [[nodiscard]] const std::filesystem::path& Path() const;
 
         [[nodiscard]] std::size_t Line() const;
         [[nodiscard]] std::size_t Column() const;

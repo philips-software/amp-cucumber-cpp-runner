@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -134,12 +135,12 @@ namespace cucumber_cpp::report
 
     void StdOutReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
-        /* do nothing */
+        // not required
     }
 
     void StdOutReport::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)
     {
-        /* do nothing */
+        // not required
     }
 
     void StdOutReport::RuleStart(const engine::RuleInfo& ruleInfo)
@@ -150,18 +151,24 @@ namespace cucumber_cpp::report
 
     void StdOutReport::RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration)
     {
-        /* do nothing */
+        // not required
     }
 
     void StdOutReport::ScenarioStart(const engine::ScenarioInfo& scenarioInfo)
     {
+        ++nrOfScenarios;
         std::cout << "\n"
                   << scenarioInfo.Title();
     }
 
-    void StdOutReport::ScenarioEnd(engine::Result /*result*/, const engine::ScenarioInfo& /*scenarioInfo*/, TraceTime::Duration /*duration*/)
+    void StdOutReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration /*duration*/)
     {
         std::cout << "\n";
+
+        if (result != engine::Result::passed)
+        {
+            failedScenarios.emplace_back(&scenarioInfo);
+        }
     }
 
     void StdOutReport::StepSkipped(const engine::StepInfo& stepInfo)
@@ -229,5 +236,21 @@ namespace cucumber_cpp::report
     void StdOutReport::Trace(const std::string& trace)
     {
         std::cout << trace;
+    }
+
+    void StdOutReport::Summary(TraceTime::Duration duration)
+    {
+        std::cout << "\n====================summary====================";
+        std::cout << "\nduration: " << ScaledDuration(duration);
+        std::cout << "\ntests   : " << (nrOfScenarios - failedScenarios.size()) << "/" << nrOfScenarios << " passed";
+
+        if (!failedScenarios.empty())
+        {
+            std::cout << "\n\nfailed tests:";
+
+            for (const auto* scenarioInfo : failedScenarios)
+                std::cout << "\n"
+                          << scenarioInfo->Path() << ":" << scenarioInfo->Line() << ":" << scenarioInfo->Column() << " : " << std::quoted(scenarioInfo->Title());
+        }
     }
 }

@@ -1,11 +1,18 @@
 #ifndef REPORT_JUNITREPORT_HPP
 #define REPORT_JUNITREPORT_HPP
 
+#include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "pugixml.hpp"
+#include <cstddef>
+#include <filesystem>
 #include <optional>
-#include <tuple>
-#include <vector>
+#include <string>
 
 namespace cucumber_cpp::report
 {
@@ -31,6 +38,8 @@ namespace cucumber_cpp::report
         void Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column) override;
 
         void Trace(const std::string& trace) override;
+
+        void Summary(TraceTime::Duration duration) override;
 
     private:
         const std::string& outputfolder;

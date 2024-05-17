@@ -16,10 +16,12 @@
 #include <algorithm>
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ostream>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -178,6 +180,9 @@ namespace cucumber_cpp
             engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::dryRun);
         else
             engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::runTest);
+
+        std::cout << '\n'
+                  << std::flush;
     }
 
     std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)

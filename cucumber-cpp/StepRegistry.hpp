@@ -4,6 +4,7 @@
 #include "cucumber-cpp/Body.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <exception>
 #include <memory>
 #include <regex>
@@ -129,16 +130,27 @@ namespace cucumber_cpp
             StepType type{};
             StepRegex regex;
             std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
+
+            std::uint32_t used{ 0 };
         };
 
-        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression) const;
+        struct EntryView
+        {
+            const StepRegex& stepRegex;
+            const std::uint32_t& used;
+        };
+
+        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression);
 
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(StepType stepType) const;
 
+        std::vector<EntryView> List() const;
+
     protected:
         template<class T>
-        std::size_t Register(const std::string& matcher, StepType stepType);
+        std::size_t
+        Register(const std::string& matcher, StepType stepType);
 
     private:
         template<class T>

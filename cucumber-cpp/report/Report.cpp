@@ -116,4 +116,9 @@ namespace cucumber_cpp::report
     {
         ForwardCall(Storage(), &ReportHandlerV2::Trace, trace);
     }
+
+    void ReportForwarder::Summary(TraceTime::Duration duration)
+    {
+        ForwardCall(Storage(), &ReportHandlerV2::Summary, duration);
+    }
 }

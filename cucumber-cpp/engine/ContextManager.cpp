@@ -4,7 +4,9 @@ namespace cucumber_cpp::engine
 {
     CurrentContext::CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
         : Context{ contextStorageFactory }
-    {}
+    {
+        Start();
+    }
 
     CurrentContext::CurrentContext(CurrentContext* parent)
         : Context{ parent }

@@ -131,13 +131,16 @@ namespace cucumber_cpp
         return instance;
     }
 
-    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression) const
+    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
-        for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
+        for (Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
             if (auto match = entry.regex.Match(expression); match->Matched())
+            {
                 matches.emplace_back(entry.factory, match->Matches(), entry.regex.String());
+                ++entry.used;
+            }
 
         if (matches.empty())
             throw StepNotFoundError{};
@@ -156,5 +159,17 @@ namespace cucumber_cpp
     std::size_t StepRegistryBase::Size(StepType stepType) const
     {
         return std::ranges::count(registry, stepType, &Entry::type);
+    }
+
+    std::vector<StepRegistryBase::EntryView> StepRegistryBase::List() const
+    {
+        std::vector<StepRegistryBase::EntryView> list;
+
+        list.reserve(registry.size());
+
+        for (const Entry& entry : registry)
+            list.emplace_back(entry.regex, entry.used);
+
+        return list;
     }
 }

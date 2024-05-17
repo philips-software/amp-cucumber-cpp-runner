@@ -9,9 +9,11 @@
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace cucumber_cpp::report
 {
@@ -34,6 +36,12 @@ namespace cucumber_cpp::report
         void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) override;
 
         void Trace(const std::string& trace) override;
+
+        void Summary(TraceTime::Duration duration) override;
+
+    private:
+        std::uint32_t nrOfScenarios{ 0 };
+        std::vector<const engine::ScenarioInfo*> failedScenarios;
     };
 }
 

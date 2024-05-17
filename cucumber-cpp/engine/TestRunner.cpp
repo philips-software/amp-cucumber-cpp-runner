@@ -309,6 +309,8 @@ namespace cucumber_cpp::engine
                     RunFeature(contextManager, *featurePtr, reportHandler, runPolicy);
 
             runPolicy.ExecuteHook(contextManager, HookType::afterAll, {});
+
+            reportHandler.Summary(contextManager.ProgramContext().Duration());
         }
     }
 }

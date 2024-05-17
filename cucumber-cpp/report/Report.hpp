@@ -8,6 +8,7 @@
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include "cucumber-cpp/engine/TestRunner.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -46,6 +47,8 @@ namespace cucumber_cpp::report
         virtual void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
 
         virtual void Trace(const std::string& trace) = 0;
+
+        virtual void Summary(TraceTime::Duration duration) = 0;
     };
 
     struct ReportHandler
@@ -115,6 +118,8 @@ namespace cucumber_cpp::report
         void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) override;
 
         void Trace(const std::string& trace) override;
+
+        void Summary(TraceTime::Duration duration) override;
     };
 }
 
