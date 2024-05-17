@@ -29,12 +29,6 @@ namespace cucumber_cpp::report
     namespace
     {
 #ifndef _MSC_VER
-        inline std::ostream& TcBlue(std::ostream& o)
-        {
-            o << "\033[1m\033[34m";
-            return o;
-        }
-
         inline std::ostream& TcRed(std::ostream& o)
         {
             o << "\033[1m\033[31m";
@@ -44,12 +38,6 @@ namespace cucumber_cpp::report
         inline std::ostream& TcGreen(std::ostream& o)
         {
             o << "\033[1m\033[32m";
-            return o;
-        }
-
-        inline std::ostream& TcYellow(std::ostream& o)
-        {
-            o << "\033[1m\033[33m";
             return o;
         }
 
@@ -83,12 +71,6 @@ namespace cucumber_cpp::report
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color | (GetDefaultConsole() & ~(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)));
         }
 
-        inline std::ostream& TcBlue(std::ostream& o)
-        {
-            SetColorConsole(FOREGROUND_INTENSITY | FOREGROUND_BLUE);
-            return o;
-        }
-
         inline std::ostream& TcRed(std::ostream& o)
         {
             SetColorConsole(FOREGROUND_INTENSITY | FOREGROUND_RED);
@@ -98,12 +80,6 @@ namespace cucumber_cpp::report
         inline std::ostream& TcGreen(std::ostream& o)
         {
             SetColorConsole(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
-            return o;
-        }
-
-        inline std::ostream& TcYellow(std::ostream& o)
-        {
-            SetColorConsole(FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_RED);
             return o;
         }
 
@@ -204,15 +180,19 @@ namespace cucumber_cpp::report
 
     void StdOutReport::StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration)
     {
-        if (result == engine::Result::passed)
+        using enum engine::Result;
+
+        if (result == passed)
             std::cout << TcGreen;
         else
             std::cout << TcRed;
 
-        if (result == decltype(result)::passed || result == decltype(result)::skipped)
-            std::cout << "\n -> " << successLut.at(result) << " (" << ScaledDuration(duration) << ")";
-        else
-            std::cout << "\n -> " << stepInfo.ScenarioInfo().FeatureInfo().Path() << ":" << stepInfo.Line() << ":" << stepInfo.Column() << ": " << successLut.at(result) << " (" << ScaledDuration(duration) << ")";
+        std::cout << "\n -> " << successLut.at(result);
+
+        if (result != passed)
+            std::cout << " " << stepInfo.ScenarioInfo().FeatureInfo().Path() << ":" << stepInfo.Line() << ":" << stepInfo.Column();
+
+        std::cout << " (" << ScaledDuration(duration) << ")";
 
         std::cout << TcDefault;
     }
@@ -220,29 +200,30 @@ namespace cucumber_cpp::report
     void StdOutReport::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         std::cout << TcRed;
+
         if (path && line && column)
-            std::cout
-                << "\n"
-                << path.value().string() << ":" << line.value() << ":" << column.value() << ": Failure\n"
-                << error;
-        else
-            std::cout
-                << "\n"
-                << error;
+            std::cout << "\n"
+                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Failure";
+
+        std::cout << "\n"
+                  << error;
+
         std::cout << TcDefault;
     }
 
     void StdOutReport::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
+        std::cout << TcRed;
+
         if (path && line && column)
-            std::cout
-                << "\n"
-                << path.value().string() << ":" << line.value() << ":" << column.value() << ": Error\n"
-                << error;
-        else
-            std::cout
-                << "\n"
-                << error;
+            std::cout << "\n"
+                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Error";
+
+        std::cout
+            << "\n"
+            << error;
+
+        std::cout << TcDefault;
     }
 
     void StdOutReport::Trace(const std::string& trace)

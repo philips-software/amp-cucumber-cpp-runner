@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <map>
@@ -60,10 +61,23 @@ namespace cucumber_cpp::report
         const auto doubleTime = std::chrono::duration<double, std::ratio<1>>(totalTime).count();
         testsuites.append_attribute("time").set_value(RoundTo(doubleTime, precision).c_str());
 
-        if (!std::filesystem::exists(outputfolder))
-            std::filesystem::create_directories(outputfolder);
-        const auto outputfile = std::filesystem::path{ outputfolder }.append(reportfile + ".xml");
-        doc.save_file(outputfile.c_str());
+        try
+        {
+            if (!std::filesystem::exists(outputfolder))
+                std::filesystem::create_directories(outputfolder);
+
+            const auto outputfile = std::filesystem::path{ outputfolder }.append(reportfile + ".xml");
+            doc.save_file(outputfile.c_str());
+        }
+        catch (const std::filesystem::filesystem_error& ex)
+        {
+            std::cout << "\nwhat():  " << ex.what() << '\n'
+                      << "path1(): " << ex.path1() << '\n'
+                      << "path2(): " << ex.path2() << '\n'
+                      << "code().value():    " << ex.code().value() << '\n'
+                      << "code().message():  " << ex.code().message() << '\n'
+                      << "code().category(): " << ex.code().category().name() << '\n';
+        }
     }
 
     void JunitReport::FeatureStart(const engine::FeatureInfo& featureInfo)

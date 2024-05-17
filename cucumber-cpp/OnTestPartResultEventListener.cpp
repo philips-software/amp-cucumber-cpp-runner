@@ -1,22 +1,21 @@
 
 #include "cucumber-cpp/OnTestPartResultEventListener.hpp"
 #include <gtest/gtest.h>
+#include <memory>
 
 namespace cucumber_cpp
 {
     OnTestPartResultEventListener::OnTestPartResultEventListener()
     {
-        auto* defaultprinter = testing::UnitTest::GetInstance()->listeners().default_result_printer();
+        if (auto* defaultPrinter = listeners.default_result_printer(); defaultPrinter != nullptr)
+            std::unique_ptr<TestEventListener>{ listeners.Release(defaultPrinter) };
 
-        if (defaultprinter != nullptr)
-            delete testing::UnitTest::GetInstance()->listeners().Release(defaultprinter);
-
-        testing::UnitTest::GetInstance()->listeners().Append(this);
+        listeners.Append(this);
     }
 
     OnTestPartResultEventListener::~OnTestPartResultEventListener()
     {
-        testing::UnitTest::GetInstance()->listeners().Release(this);
+        listeners.Release(this);
     }
 
     void OnTestPartResultEventListener::OnTestProgramStart(const testing::UnitTest& unit_test)
@@ -24,8 +23,7 @@ namespace cucumber_cpp
         // no implementation
     }
 
-    void OnTestPartResultEventListener::OnTestIterationStart(const testing::UnitTest& unit_test,
-        int iteration)
+    void OnTestPartResultEventListener::OnTestIterationStart(const testing::UnitTest& unit_test, int iteration)
     {
         // no implementation
     }
