@@ -13,10 +13,6 @@ HOOK_BEFORE_ALL()
         context.Emplace<NordicBleFixture>();
 }
 
-HOOK_BEFORE_SCENARIO()
-{
-}
-
 HOOK_BEFORE_SCENARIO("@dingus")
 {
     std::cout << "running only for dingus tests\n";

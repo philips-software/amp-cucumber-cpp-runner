@@ -35,6 +35,9 @@ namespace cucumber_cpp
         void OnEnvironmentsTearDownEnd(const testing::UnitTest& unit_test) override;
         void OnTestIterationEnd(const testing::UnitTest& unit_test, int iteration) override;
         void OnTestProgramEnd(const testing::UnitTest& unit_test) override;
+
+    private:
+        testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
     };
 }
 

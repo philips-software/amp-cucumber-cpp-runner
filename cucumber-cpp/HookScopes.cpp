@@ -2,7 +2,9 @@
 #include "cucumber-cpp/HookScopes.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/HookRegistry.hpp"
+#include <functional>
 #include <set>
+#include <string>
 
 namespace cucumber_cpp
 {

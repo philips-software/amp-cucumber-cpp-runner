@@ -73,38 +73,38 @@ namespace cucumber_cpp
     {
         const auto matches = stepRegistry.Query(StepType::given, "This is a GIVEN step");
 
-        EXPECT_THAT(matches.stepRegex.String(), testing::StrEq("This is a GIVEN step"));
+        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("This is a GIVEN step"));
     }
 
     TEST_F(TestSteps, GetWhenStep)
     {
         const auto matches = stepRegistry.Query(StepType::when, "This is a WHEN step");
 
-        EXPECT_THAT(matches.stepRegex.String(), testing::StrEq("This is a WHEN step"));
+        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("This is a WHEN step"));
     }
 
     TEST_F(TestSteps, GetThenStep)
     {
         const auto matches = stepRegistry.Query(StepType::then, "This is a THEN step");
 
-        EXPECT_THAT(matches.stepRegex.String(), testing::StrEq("This is a THEN step"));
+        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("This is a THEN step"));
     }
 
     TEST_F(TestSteps, GetAnyStep)
     {
         const auto matches = stepRegistry.Query(StepType::given, "This is a STEP step");
 
-        EXPECT_THAT(matches.stepRegex.String(), testing::StrEq("This is a STEP step"));
+        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("This is a STEP step"));
     }
 
     TEST_F(TestSteps, GetStepWithMatches)
     {
         const auto matches = stepRegistry.Query(StepType::when, "This is a step with a 10s delay");
 
-        EXPECT_THAT(matches.stepRegex.String(), testing::StrEq("This is a step with a ([0-9]+)s delay"));
+        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("This is a step with a ([0-9]+)s delay"));
 
-        EXPECT_THAT(matches.regexMatch->Matches().size(), testing::Eq(1));
-        EXPECT_THAT(matches.regexMatch->Matches()[0], testing::StrEq("10"));
+        EXPECT_THAT(matches.matches.size(), testing::Eq(1));
+        EXPECT_THAT(matches.matches[0], testing::StrEq("10"));
     }
 
     TEST_F(TestSteps, GetInvalidStep)
@@ -127,7 +127,7 @@ namespace cucumber_cpp
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
 
-        matches.factory(context, {})->Execute(matches.regexMatch->Matches());
+        matches.factory(context, {})->Execute(matches.matches);
 
         EXPECT_THAT(context.Contains("float"), testing::IsTrue());
         EXPECT_THAT(context.Contains("std::string"), testing::IsTrue());
