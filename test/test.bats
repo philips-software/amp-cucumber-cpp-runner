@@ -70,3 +70,8 @@ teardown() {
     assert_failure
     assert_output --partial "--report: 'doesnotexist' is not a reporter"
 }
+
+@test "Test rules" {
+    run .build/Host/cucumber-cpp-example/Debug/cucumber-cpp-example run --feature test/features/test_rules.feature --report console --com COMx
+    assert_success
+}

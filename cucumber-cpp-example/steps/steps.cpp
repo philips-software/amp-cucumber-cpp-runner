@@ -14,14 +14,39 @@ GIVEN(R"(a background step)")
     std::cout << "\nthis is a background step\n";
 }
 
+GIVEN("another background step")
+{
+    /* keep empty */
+}
+
 GIVEN("a step")
+{
+    /* keep empty */
+}
+
+GIVEN("a given step")
+{
+    /* keep empty */
+}
+
+WHEN("a when step")
+{
+    /* keep empty */
+}
+
+THEN("a then step")
+{
+    /* keep empty */
+}
+
+STEP("a step step")
 {
     /* keep empty */
 }
 
 GIVEN(R"(a simple data table)")
 {
-    auto fixture = context.Get<NordicBleFixture>();
+    [[maybe_unused]] auto fixture = context.Get<NordicBleFixture>();
 }
 
 GIVEN(R"(there are {int} cucumbers)", (std::uint32_t num))

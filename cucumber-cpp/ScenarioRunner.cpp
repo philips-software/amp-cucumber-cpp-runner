@@ -19,6 +19,12 @@ namespace cucumber_cpp
                     return ScenarioSource::FromAst(featureSource, *child.background);
                 else if (child.scenario && child.scenario->id == id)
                     return ScenarioSource::FromAst(featureSource, *child.scenario);
+                else if (child.rule && !child.rule->children.empty())
+                    for (const auto& ruleChild : child.rule->children)
+                        if (ruleChild.background && ruleChild.background->id == id)
+                            return ScenarioSource::FromAst(featureSource, *ruleChild.background);
+                        else if (ruleChild.scenario && ruleChild.scenario->id == id)
+                            return ScenarioSource::FromAst(featureSource, *ruleChild.scenario);
 
             struct ScenarioSourceNotFoundError : std::out_of_range
             {
