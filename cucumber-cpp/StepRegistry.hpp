@@ -121,7 +121,7 @@ namespace cucumber_cpp
             AmbiguousStepError(const AmbiguousStepError&) = delete;
             AmbiguousStepError& operator=(const AmbiguousStepError&) = delete;
 
-            const std::vector<StepMatch> matches;
+            std::vector<StepMatch> matches;
         };
 
         struct Entry
