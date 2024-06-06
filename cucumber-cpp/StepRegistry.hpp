@@ -119,9 +119,6 @@ namespace cucumber_cpp
                 : matches{ std::move(matches) }
             {}
 
-            AmbiguousStepError(const AmbiguousStepError&) = delete;
-            AmbiguousStepError& operator=(const AmbiguousStepError&) = delete;
-
             std::vector<StepMatch> matches;
         };
 

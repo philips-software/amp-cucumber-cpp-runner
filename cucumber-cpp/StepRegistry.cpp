@@ -1,4 +1,3 @@
-
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include <algorithm>
