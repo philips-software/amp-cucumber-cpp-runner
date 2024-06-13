@@ -26,7 +26,7 @@ jobs:
     runs-on: [ubuntu-latest]
     container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 #v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id: cache-winsdk
         with:
@@ -47,7 +47,7 @@ jobs:
     runs-on: [ubuntu-latest]
     container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 #v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 #v1.2.13
         with:
           key: ${{ github.job }}
@@ -66,7 +66,7 @@ jobs:
       pull-requests: write
     container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 #v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 #v1.2.13
         with:
           key: ${{ github.job }}
