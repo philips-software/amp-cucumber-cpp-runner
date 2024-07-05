@@ -3,9 +3,12 @@
 
 #include "cucumber-cpp/Body.hpp"
 #include "cucumber-cpp/Context.hpp"
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace cucumber_cpp
 {

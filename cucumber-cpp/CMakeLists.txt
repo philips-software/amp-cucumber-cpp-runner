@@ -8,10 +8,6 @@ target_sources(cucumber-cpp PRIVATE
     BodyMacro.hpp
     Body.hpp
     Context.hpp
-    CucumberRunner.cpp
-    CucumberRunner.hpp
-    FeatureRunner.cpp
-    FeatureRunner.hpp
     HookRegistry.cpp
     HookRegistry.hpp
     Hooks.hpp
@@ -22,13 +18,9 @@ target_sources(cucumber-cpp PRIVATE
     OnTestPartResultEventListener.hpp
     Rtrim.cpp
     Rtrim.hpp
-    ScenarioRunner.cpp
-    ScenarioRunner.hpp
     Steps.hpp
     StepRegistry.cpp
     StepRegistry.hpp
-    StepRunner.cpp
-    StepRunner.hpp
     TagExpression.cpp
     TagExpression.hpp
     TagsToSet.hpp
@@ -45,6 +37,7 @@ target_link_libraries(cucumber-cpp PUBLIC
     gmock
     cucumber_gherkin_lib
     cucumber-cpp.report
+    cucumber-cpp.engine
     CLI11
 )
 
@@ -56,6 +49,7 @@ target_compile_options(cucumber-cpp
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
+add_subdirectory(engine)
 add_subdirectory(report)
 
 if (CCR_BUILD_TESTS)

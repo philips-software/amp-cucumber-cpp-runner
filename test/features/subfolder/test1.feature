@@ -1,6 +1,5 @@
 Feature: test1 feature
-    Scenario Outline: test1 scenario
-        Given there are <x> cucumbers
-        Examples:
-            | x  |
-            | 10 |
+    Scenario: test1 scenario
+        Given a given step
+        When a when step
+        Then a then step
