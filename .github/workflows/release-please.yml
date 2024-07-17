@@ -18,12 +18,13 @@ jobs:
   release_please:
     name: Create Release
     runs-on: [ubuntu-latest]
-    outputs:
-      releases_created: ${{ steps.release.outputs.releases_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      - uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
+        id: token
+        with:
+          app-id: ${{ vars.FOREST_RELEASER_APP_ID }}
+          private-key: ${{ secrets.FOREST_RELEASER_APP_PRIVATE_KEY }}
       - uses: googleapis/release-please-action@f3969c04a4ec81d7a9aa4010d84ae6a7602f86a7 # v4.1.1
         id: release
         with:
-          command: manifest
-          token: ${{ secrets.RELEASE_PLEASE_WORKFLOW_ACCESS }} # expires 2024-12-31, requires workflow scope
+          token: ${{ steps.token.outputs.token }}
