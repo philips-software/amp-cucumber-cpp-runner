@@ -24,9 +24,9 @@ jobs:
   build-windows:
     name: Windows Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b #v4.1.4
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id: cache-winsdk
         with:
@@ -34,7 +34,7 @@ jobs:
           key: cache-winsdk
       - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 #v1.2.13
+      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -45,10 +45,10 @@ jobs:
   build-linux:
     name: Linux Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b #v4.1.4
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 #v1.2.13
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -64,10 +64,10 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
-    container: ghcr.io/philips-software/amp-devcontainer-vscode:4.7.0@sha256:4c7279baa6c3f1acf28d91a5c8f074d80cbe78034647eee358fc5b05968dccfb #4.7.0
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b #v4.1.4
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 #v1.2.13
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
         with:
           key: ${{ github.job }}
           max-size: 2G
