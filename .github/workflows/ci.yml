@@ -26,7 +26,7 @@ jobs:
     runs-on: [ubuntu-latest]
     container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id: cache-winsdk
         with:
@@ -34,7 +34,7 @@ jobs:
           key: cache-winsdk
       - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
+      - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -47,8 +47,8 @@ jobs:
     runs-on: [ubuntu-latest]
     container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -66,8 +66,8 @@ jobs:
       pull-requests: write
     container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -75,7 +75,7 @@ jobs:
           cmake --preset=Host
           cmake --build --preset=Host-Debug
           bats --formatter junit test/test.bats | tee test-report.xml
-      - uses: EnricoMi/publish-unit-test-result-action@30eadd5010312f995f0d3b3cff7fe2984f69409e # v2.16.1
+      - uses: EnricoMi/publish-unit-test-result-action@567cc7f8dcea3eba5da355f6ebc95663310d8a07 # v2.17.0
         if: always()
         with:
           files: test-report.xml
