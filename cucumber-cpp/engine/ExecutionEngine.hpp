@@ -2,6 +2,8 @@
 #define ENGINE_EXECUTIONENGINE_HPP
 
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include <utility>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {

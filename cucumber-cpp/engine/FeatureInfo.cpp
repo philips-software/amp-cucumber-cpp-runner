@@ -1,4 +1,14 @@
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include <cstddef>
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {

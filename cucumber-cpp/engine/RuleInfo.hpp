@@ -3,6 +3,7 @@
 
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <cstddef>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>

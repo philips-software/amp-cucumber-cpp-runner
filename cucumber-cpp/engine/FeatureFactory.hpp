@@ -3,6 +3,9 @@
 
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
 #include "cucumber/gherkin/app.hpp"
+#include <filesystem>
+#include <memory>
+#include <string_view>
 
 namespace cucumber_cpp::engine
 {

@@ -81,10 +81,10 @@ namespace cucumber_cpp
             std::unique_ptr<Body> (&factory)(Context& context);
         };
 
-        std::vector<HookMatch> Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const;
+        [[nodiscard]] std::vector<HookMatch> Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const;
 
-        std::size_t Size() const;
-        std::size_t Size(HookType hookType) const;
+        [[nodiscard]] std::size_t Size() const;
+        [[nodiscard]] std::size_t Size(HookType hookType) const;
 
     protected:
         template<class T>
@@ -114,9 +114,9 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<class T>
-    std::size_t HookRegistryBase::Register(const std::string& matcher, HookType hookType)
+    std::size_t HookRegistryBase::Register(const std::string& tagExpression, HookType hookType)
     {
-        registry.emplace_back(hookType, HookTagExpression{ matcher }, Construct<T>);
+        registry.emplace_back(hookType, HookTagExpression{ tagExpression }, Construct<T>);
         return registry.size();
     }
 
@@ -127,9 +127,9 @@ namespace cucumber_cpp
     }
 
     template<class T>
-    std::size_t HookRegistry::Register(const std::string& matcher, HookType hookType)
+    std::size_t HookRegistry::Register(const std::string& tagExpression, HookType hookType)
     {
-        return Instance().HookRegistryBase::Register<T>(matcher, hookType);
+        return Instance().HookRegistryBase::Register<T>(tagExpression, hookType);
     }
 }
 

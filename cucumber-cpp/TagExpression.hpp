@@ -1,9 +1,10 @@
 #ifndef CUCUMBER_CPP_TAGEXPRESSION_HPP
 #define CUCUMBER_CPP_TAGEXPRESSION_HPP
 
+#include <functional>
 #include <set>
 #include <string>
-#include <vector>
+#include <string_view>
 
 namespace cucumber_cpp
 {

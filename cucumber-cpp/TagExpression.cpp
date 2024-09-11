@@ -1,6 +1,3 @@
-#ifndef CUCUMBER_CPP_TAGEXPRESSION_CPP
-#define CUCUMBER_CPP_TAGEXPRESSION_CPP
-
 #include "cucumber-cpp/TagExpression.hpp"
 #include <functional>
 #include <regex>
@@ -75,5 +72,3 @@ namespace cucumber_cpp
         return eval == std::string("1");
     }
 }
-
-#endif

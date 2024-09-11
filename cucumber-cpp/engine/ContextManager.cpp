@@ -1,9 +1,18 @@
 #include "cucumber-cpp/engine/ContextManager.hpp"
+#include "cucumber-cpp/Context.hpp"
+#include "cucumber-cpp/TraceTime.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/RuleInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include "cucumber-cpp/engine/StepInfo.hpp"
+#include <memory>
+#include <optional>
+#include <utility>
 
 namespace cucumber_cpp::engine
 {
     CurrentContext::CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : Context{ contextStorageFactory }
+        : Context{ std::move(contextStorageFactory) }
     {
         Start();
     }

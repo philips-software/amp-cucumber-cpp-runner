@@ -1,5 +1,10 @@
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include "cucumber-cpp/StepRegistry.hpp"
+#include <cstddef>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {

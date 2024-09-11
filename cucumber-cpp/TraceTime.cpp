@@ -1,5 +1,5 @@
-
 #include "cucumber-cpp/TraceTime.hpp"
+#include <chrono>
 
 namespace cucumber_cpp
 {

@@ -42,8 +42,8 @@ namespace cucumber_cpp
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
-        template<class Trange, class Delim>
-        std::string Join(const Trange& range, const Delim& delim)
+        template<class Range, class Delim>
+        std::string Join(const Range& range, const Delim& delim)
         {
             if (range.empty())
                 return "";

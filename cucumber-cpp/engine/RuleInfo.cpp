@@ -1,5 +1,11 @@
 #include "cucumber-cpp/engine/RuleInfo.hpp"
 #include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/ScenarioInfo.hpp"
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {

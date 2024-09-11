@@ -53,7 +53,7 @@ namespace cucumber_cpp
         {
             ContextStorageImpl() = default;
 
-            ContextStorageImpl(ContextStorage& parent)
+            explicit ContextStorageImpl(ContextStorage& parent)
                 : parent{ &parent }
             {}
 
@@ -64,7 +64,7 @@ namespace cucumber_cpp
                     return true;
                 }
 
-                if (parent)
+                if (parent != nullptr)
                 {
                     return parent->Contains(key);
                 }
@@ -78,23 +78,20 @@ namespace cucumber_cpp
                 {
                     return iter->value;
                 }
-                else if (parent)
+                else if (parent != nullptr)
                 {
                     return parent->Get(key);
                 }
                 else
                 {
-                    std::cerr << "key not found: \"" << key << "\"" << std::endl;
+                    std::cerr << "key not found: \"" << key << "\"\n";
                     throw KeyNotFound{ std::string{ key } };
                 }
             }
 
             [[nodiscard]] std::forward_list<Entry>::const_iterator Find(std::string_view key) const override
             {
-                return std::find_if(context.begin(), context.end(), [&key](const Entry& pair)
-                    {
-                        return pair.key == key;
-                    });
+                return std::ranges::find(context, key, &Entry::key);
             }
 
             void Erase(std::string_view key) override
@@ -121,7 +118,7 @@ namespace cucumber_cpp
 
         struct ContextStorageDecorator : ContextStorage
         {
-            ContextStorageDecorator(std::unique_ptr<ContextStorage> contextStorage)
+            explicit ContextStorageDecorator(std::unique_ptr<ContextStorage> contextStorage)
                 : contextStorage{ std::move(contextStorage) }
             {}
 
@@ -156,7 +153,7 @@ namespace cucumber_cpp
 
         struct ThreadSafeContextStorage : ContextStorageDecorator
         {
-            ThreadSafeContextStorage(std::unique_ptr<ContextStorage> contextStorage)
+            explicit ThreadSafeContextStorage(std::unique_ptr<ContextStorage> contextStorage)
                 : ContextStorageDecorator{ std::move(contextStorage) }
             {}
 
@@ -198,18 +195,24 @@ namespace cucumber_cpp
 
     struct ContextStorageFactory
     {
-        virtual std::unique_ptr<detail::ContextStorage> Create() const = 0;
-        virtual std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const = 0;
+    protected:
+        ~ContextStorageFactory() = default;
+
+    public:
+        [[nodiscard]] virtual std::unique_ptr<detail::ContextStorage> Create() const = 0;
+        [[nodiscard]] virtual std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const = 0;
     };
 
     struct ContextStorageFactoryImpl : ContextStorageFactory
     {
-        std::unique_ptr<detail::ContextStorage> Create() const override
+        virtual ~ContextStorageFactoryImpl() = default;
+
+        [[nodiscard]] std::unique_ptr<detail::ContextStorage> Create() const override
         {
             return std::make_unique<detail::ContextStorageImpl>();
         }
 
-        std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const override
+        [[nodiscard]] std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const override
         {
             return std::make_unique<detail::ContextStorageImpl>(parent);
         }
@@ -217,12 +220,12 @@ namespace cucumber_cpp
 
     struct ContextStorageFactoryThreadSafe : ContextStorageFactoryImpl
     {
-        std::unique_ptr<detail::ContextStorage> Create() const override
+        [[nodiscard]] std::unique_ptr<detail::ContextStorage> Create() const override
         {
             return std::make_unique<detail::ThreadSafeContextStorage>(ContextStorageFactoryImpl::Create());
         }
 
-        std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const override
+        [[nodiscard]] std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const override
         {
             return std::make_unique<detail::ThreadSafeContextStorage>(ContextStorageFactoryImpl::Create(parent));
         }
@@ -230,13 +233,13 @@ namespace cucumber_cpp
 
     struct Context
     {
-        Context(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+        explicit Context(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
             : contextStorageFactory{ std::move(contextStorageFactory) }
         {}
 
-        explicit Context(Context* parent)
+        explicit Context(const Context* parent)
             : contextStorageFactory{ parent->contextStorageFactory }
-            , storage{ contextStorageFactory->Create(*parent->storage.get()) }
+            , storage{ contextStorageFactory->Create(*parent->storage) }
         {}
 
         template<class T, class... Args>
@@ -298,7 +301,7 @@ namespace cucumber_cpp
         template<class T>
         void InsertRefAt(std::string_view key, T& ref)
         {
-            storage->Assign(key, std::shared_ptr<T>(&ref, [](auto) {}));
+            storage->Assign(key, std::shared_ptr<T>(&ref, [](auto) { /* lifetime managed by caller */ }));
         }
 
         template<class T>
