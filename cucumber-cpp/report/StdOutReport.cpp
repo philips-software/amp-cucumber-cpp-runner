@@ -117,17 +117,17 @@ namespace cucumber_cpp::report
             std::ostringstream out;
 
             if (duration < std::chrono::microseconds{ 1 })
-                out << std::chrono::duration<double, std::chrono::nanoseconds::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::nanoseconds::period>(duration);
             else if (duration < std::chrono::milliseconds{ 1 })
-                out << std::chrono::duration<double, std::chrono::microseconds::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::microseconds::period>(duration);
             else if (duration < std::chrono::seconds{ 1 })
-                out << std::chrono::duration<double, std::chrono::milliseconds::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::milliseconds::period>(duration);
             else if (duration < std::chrono::minutes{ 1 })
-                out << std::chrono::duration<double, std::chrono::seconds::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::seconds::period>(duration);
             else if (duration < std::chrono::hours{ 1 })
-                out << std::chrono::duration<double, std::chrono::minutes::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::minutes::period>(duration);
             else
-                out << std::chrono::duration<double, std::chrono::hours::period>(duration);
+                out << std::chrono::duration<uint64_t, std::chrono::hours::period>(duration);
 
             return out.str();
         }
