@@ -213,11 +213,8 @@ namespace cucumber_cpp
 
         for (const auto feature : options.features | std::views::transform(to_fs_path))
             if (std::filesystem::is_directory(feature))
-            {
-                const auto featureDirectory{ std::filesystem::directory_iterator{ feature } };
-                for (const auto& entry : featureDirectory | std::views::filter(is_feature_file))
+                for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
                     files.emplace_back(entry.path());
-            }
             else
                 files.emplace_back(feature);
 
