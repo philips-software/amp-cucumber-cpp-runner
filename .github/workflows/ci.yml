@@ -24,7 +24,7 @@ jobs:
   build-windows:
     name: Windows Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
@@ -57,10 +57,11 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+
   build-linux-devcontainer:
     name: Linux Host Build in Devcontainer
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
@@ -72,6 +73,7 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+
   test-linux:
     name: Linux Host Test
     runs-on: [ubuntu-latest]
@@ -80,7 +82,7 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
