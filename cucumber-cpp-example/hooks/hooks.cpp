@@ -17,19 +17,3 @@ HOOK_BEFORE_SCENARIO("@dingus")
 {
     std::cout << "running only for dingus tests\n";
 }
-
-HOOK_BEFORE_STEP()
-{
-}
-
-HOOK_AFTER_STEP()
-{
-}
-
-HOOK_AFTER_SCENARIO()
-{
-}
-
-HOOK_AFTER_ALL()
-{
-}
