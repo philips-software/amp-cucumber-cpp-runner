@@ -3,6 +3,27 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "tag",
+            "description": "Enter the tag to run",
+            "type": "pickString",
+            "options": [
+                "@rule1 or @smoke",
+                "@keyword-asterisk",
+                "@result:UNDEFINED"
+            ]
+        },
+        {
+            "id": "features",
+            "description": "Enter the tag to run",
+            "type": "pickString",
+            "options": [
+                "cucumber-cpp-example/features",
+                "test/features"
+            ]
+        }
+    ],
     "configurations": [
         {
             "name": "(gdb) Launch",
@@ -12,14 +33,14 @@
             "args": [
                 "run",
                 "--feature",
-                "cucumber-cpp-example/features",
+                "${input:features}",
                 "--report",
                 "console",
                 "--com",
                 "COMx",
                 "--nordic",
                 "--tag",
-                "@rule1 or @smoke"
+                "${input:tag}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
