@@ -1,10 +1,9 @@
 #ifndef CUCUMBER_CPP_TAGSTOSET_HPP
 #define CUCUMBER_CPP_TAGSTOSET_HPP
 
-#include <ranges>
+#include <functional>
 #include <set>
 #include <string>
-#include <vector>
 
 namespace cucumber_cpp
 {

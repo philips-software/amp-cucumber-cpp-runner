@@ -1,12 +1,9 @@
 #include "cucumber-cpp/Steps.hpp"
-#include "cucumber-cpp-example/fixtures/Fixture.hpp"
 #include "cucumber-cpp/Context.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include <any>
+#include <cstdint>
 #include <iostream>
-#include <regex>
-#include <stdexcept>
 #include <string>
 
 GIVEN(R"(a background step)")
@@ -14,14 +11,13 @@ GIVEN(R"(a background step)")
     std::cout << "\nthis is a background step\n";
 }
 
-GIVEN("a step")
-{
-    /* keep empty */
-}
-
 GIVEN(R"(a simple data table)")
 {
-    auto fixture = context.Get<NordicBleFixture>();
+    std::cout << "row0.col0: " << table[0][0].As<std::string>() << "\n";
+    std::cout << "row0.col1: " << table[0][1].As<std::string>() << "\n";
+
+    std::cout << "row1.col0: " << table[1][0].As<std::string>() << "\n";
+    std::cout << "row1.col1: " << table[1][1].As<std::string>() << "\n";
 }
 
 GIVEN(R"(there are {int} cucumbers)", (std::uint32_t num))
@@ -54,14 +50,22 @@ THEN(R"(I should have ([0-9]+) cucumbers left)", (std::uint32_t num))
     ASSERT_THAT(actual, testing::Eq(num));
 }
 
-STEP(R"(a data table with a single cell)")
-{}
+STEP(R"(a data table with a single cell)", (int i, double d))
+{
+    /* no body, example only */
+}
 
 STEP(R"(a data table with different fromatting)")
-{}
+{
+    /* no body, example only */
+}
 
 STEP(R"(a data table with an empty cell)")
-{}
+{
+    /* no body, example only */
+}
 
 STEP(R"(a data table with comments and newlines inside)")
-{}
+{
+    /* no body, example only */
+}

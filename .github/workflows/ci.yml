@@ -24,7 +24,7 @@ jobs:
   build-windows:
     name: Windows Host Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
@@ -44,18 +44,36 @@ jobs:
 
   build-linux:
     name: Linux Host Build
-    runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    runs-on: [ubuntu-24.04]
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: ${{ github.job }}
           max-size: 2G
-      - run: |
-          cmake --preset=Host
-          cmake --build --preset=Host-Release
-          ctest --preset=Host-Release
+      - uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+      - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
+        with:
+          configurePreset: "Host"
+          buildPreset: "Host-Release"
+          testPreset: "Host-Release"
+
+  build-linux-devcontainer:
+    name: Linux Host Build in Devcontainer
+    runs-on: [ubuntu-latest]
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
+        with:
+          key: ${{ github.job }}
+          max-size: 2G
+      - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
+        with:
+          configurePreset: "Host"
+          buildPreset: "Host-Release"
+          testPreset: "Host-Release"
+
   test-linux:
     name: Linux Host Test
     runs-on: [ubuntu-latest]
@@ -64,7 +82,7 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.1.3@sha256:a2a0ec9e240078be2302858721a3c0d904a1cce602847349245ee186cdd166ec
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:5.2.0@sha256:c47fcc83b59fb08f3a3a6e591b18bad49b3862acc35770fca6cec9ad0adb9cb2 # v5.2.0
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14

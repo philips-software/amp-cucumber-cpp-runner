@@ -1,20 +1,8 @@
-
 #include "cucumber-cpp/TraceTime.hpp"
+#include <chrono>
 
 namespace cucumber_cpp
 {
-
-    TraceTime::Scoped::Scoped(TraceTime& traceTime)
-        : traceTime{ traceTime }
-    {
-        traceTime.Start();
-    }
-
-    TraceTime::Scoped::~Scoped()
-    {
-        traceTime.Stop();
-    }
-
     void TraceTime::Start()
     {
         timeStart = std::chrono::high_resolution_clock::now();
@@ -27,6 +15,9 @@ namespace cucumber_cpp
 
     TraceTime::Duration TraceTime::Delta() const
     {
-        return timeStop - timeStart;
+        if (timeStop != TimePoint{})
+            return timeStop - timeStart;
+
+        return std::chrono::high_resolution_clock::now() - timeStart;
     }
 }

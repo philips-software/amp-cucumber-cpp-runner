@@ -1,8 +1,16 @@
 
 #include "cucumber-cpp/HookRegistry.hpp"
+#include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/TagExpression.hpp"
+#include <algorithm>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <ranges>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace cucumber_cpp
 {

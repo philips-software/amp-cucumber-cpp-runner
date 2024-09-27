@@ -3,13 +3,14 @@
 
 #include <source_location>
 #include <stdexcept>
+#include <string>
 
 namespace cucumber_cpp
 {
     struct InternalError : std::runtime_error
     {
-        InternalError(std::string str, std::source_location sourceLocation = std::source_location::current())
-            : std::runtime_error{ std::move(str) }
+        InternalError(const std::string& str, std::source_location sourceLocation = std::source_location::current())
+            : std::runtime_error{ str }
             , sourceLocation{ sourceLocation }
         {}
 

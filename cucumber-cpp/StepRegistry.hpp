@@ -3,13 +3,14 @@
 
 #include "cucumber-cpp/Body.hpp"
 #include "cucumber-cpp/Context.hpp"
+#include <cstddef>
+#include <cstdint>
 #include <exception>
-#include <functional>
 #include <memory>
-#include <ranges>
 #include <regex>
 #include <source_location>
-#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp
@@ -64,7 +65,7 @@ namespace cucumber_cpp
         void When(const std::string& step);
         void Then(const std::string& step);
 
-        [[noreturn]] void Pending(const std::string& message, std::source_location current = std::source_location::current()) const noexcept(false);
+        [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
     private:
         void Any(StepType type, const std::string& step);
@@ -100,9 +101,9 @@ namespace cucumber_cpp
 
     struct StepMatch
     {
-        std::unique_ptr<RegexMatch> regexMatch;
         std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
-        const StepRegex& stepRegex;
+        std::vector<std::string> matches{};
+        std::string stepRegexStr{};
     };
 
     struct StepRegistryBase
@@ -118,10 +119,7 @@ namespace cucumber_cpp
                 : matches{ std::move(matches) }
             {}
 
-            AmbiguousStepError(const AmbiguousStepError&) = delete;
-            AmbiguousStepError& operator=(const AmbiguousStepError&) = delete;
-
-            const std::vector<StepMatch> matches;
+            std::vector<StepMatch> matches;
         };
 
         struct Entry
@@ -129,16 +127,27 @@ namespace cucumber_cpp
             StepType type{};
             StepRegex regex;
             std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
+
+            std::uint32_t used{ 0 };
         };
 
-        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression) const;
+        struct EntryView
+        {
+            const StepRegex& stepRegex;
+            const std::uint32_t& used;
+        };
+
+        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression);
 
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(StepType stepType) const;
 
+        std::vector<EntryView> List() const;
+
     protected:
         template<class T>
-        std::size_t Register(const std::string& matcher, StepType stepType);
+        std::size_t
+        Register(const std::string& matcher, StepType stepType);
 
     private:
         template<class T>

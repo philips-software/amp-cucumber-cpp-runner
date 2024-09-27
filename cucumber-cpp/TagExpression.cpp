@@ -1,13 +1,11 @@
-#ifndef CUCUMBER_CPP_TAGEXPRESSION_CPP
-#define CUCUMBER_CPP_TAGEXPRESSION_CPP
 #include "cucumber-cpp/TagExpression.hpp"
-#include <algorithm>
-#include <iostream>
-#include <iterator>
-#include <ostream>
-#include <ranges>
+#include "cucumber-cpp/InternalError.hpp"
+#include <functional>
 #include <regex>
+#include <set>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace cucumber_cpp
 {
@@ -19,14 +17,14 @@ namespace cucumber_cpp
         }
     }
 
-    bool IsTagExprSelected(const std::string& tagExpr, const std::set<std::string, std::less<>>& tags)
+    bool IsTagExprSelected(std::string_view tagExpr, const std::set<std::string, std::less<>>& tags)
     {
         if (tagExpr.empty())
         {
             return true;
         }
 
-        std::string eval = tagExpr;
+        std::string eval{ tagExpr };
 
         for (std::smatch matches; std::regex_search(eval, matches, std::regex(R"((@[^ \)]+))"));)
         {
@@ -69,11 +67,9 @@ namespace cucumber_cpp
 
         if (eval.size() != 1)
         {
-            throw std::logic_error("Could not parse tag expression: \"" + tagExpr + "\"");
+            throw InternalError("Could not parse tag expression: \"" + std::string{ tagExpr } + "\"");
         }
 
         return eval == std::string("1");
     }
 }
-
-#endif

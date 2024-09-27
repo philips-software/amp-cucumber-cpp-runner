@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <source_location>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -38,7 +37,7 @@ namespace cucumber_cpp
 
     protected:
         template<class T, class... Args, std::size_t... I>
-        void InvokeWithArgImpl(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...), std::index_sequence<I...>) const
+        void InvokeWithArgImpl(T* t, const std::vector<std::string>& args, void (T::*ptr)(Args...), std::index_sequence<I...> /*seq*/) const
         {
             (t->*ptr)(StringTo<std::remove_cvref_t<Args>>(args[I])...);
         }

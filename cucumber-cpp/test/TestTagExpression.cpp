@@ -1,5 +1,9 @@
 #include "cucumber-cpp/TagExpression.hpp"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include <functional>
+#include <set>
+#include <string>
 
 namespace cucumber_cpp
 {

@@ -1,25 +1,31 @@
 #include "cucumber-cpp/Application.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/CucumberRunner.hpp"
+#include "cucumber-cpp/engine/ContextManager.hpp"
+#include "cucumber-cpp/engine/FeatureFactory.hpp"
+#include "cucumber-cpp/engine/FeatureInfo.hpp"
+#include "cucumber-cpp/engine/Result.hpp"
+#include "cucumber-cpp/engine/TestRunner.hpp"
 #include "cucumber-cpp/report/JunitReport.hpp"
 #include "cucumber-cpp/report/Report.hpp"
 #include "cucumber-cpp/report/StdOutReport.hpp"
-#include "cucumber/gherkin/file.hpp"
-#include "cucumber/gherkin/parse_error.hpp"
+#include <CLI/Error.hpp>
+#include <CLI/Option.hpp>
 #include <CLI/Validators.hpp>
+#include <CLI/impl/App_inl.hpp>
+#include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
-#include <cstdlib>
 #include <filesystem>
-#include <fstream>
-#include <iomanip>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ostream>
 #include <ranges>
-#include <span>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp
@@ -36,8 +42,8 @@ namespace cucumber_cpp
             return { subrange.data(), subrange.data() + subrange.size() };
         }
 
-        template<class Trange, class Delim>
-        std::string Join(const Trange& range, const Delim& delim)
+        template<class Range, class Delim>
+        std::string Join(const Range& range, const Delim& delim)
         {
             if (range.empty())
                 return "";
@@ -97,8 +103,8 @@ namespace cucumber_cpp
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : programContext{ std::move(contextStorageFactory) }
-        , reportHandlerValidator{ reporters }
+        : reportHandlerValidator{ reporters }
+        , contextManager{ std::move(contextStorageFactory) }
     {
         gherkin.include_source(false);
         gherkin.include_ast(true);
@@ -117,11 +123,12 @@ namespace cucumber_cpp
         runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation")->check(reportHandlerValidator);
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
+        runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
 
         reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
 
-        programContext.InsertRef(options);
+        ProgramContext().InsertRef(options);
     }
 
     int Application::Run(int argc, const char* const* argv)
@@ -149,7 +156,7 @@ namespace cucumber_cpp
 
     Context& Application::ProgramContext()
     {
-        return programContext;
+        return contextManager.CurrentContext();
     }
 
     const Application::Options& Application::CliOptions() const
@@ -157,7 +164,7 @@ namespace cucumber_cpp
         return options;
     }
 
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandler>&& reporter)
+    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
     {
         reporters.Add(name, std::move(reporter));
     }
@@ -167,42 +174,34 @@ namespace cucumber_cpp
         for (const auto& selectedReporter : options.reporters)
             reporters.Use(selectedReporter);
 
-        CucumberRunner cucumberRunner{ programContext, Join(options.tags, " "), reporters };
+        auto tagExpression = Join(options.tags, " ");
 
-        for (const auto& featurePath : GetFeatureFiles())
-            resultStatus = RunFeature(cucumberRunner, featurePath);
+        if (options.dryrun)
+            engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::dryRun);
+        else
+            engine::TestRunner::Run(contextManager, GetFeatureTree(tagExpression), reporters, engine::runTest);
 
-        if (static_cast<ResultStatus::Result>(resultStatus) == ResultStatus::Result::undefined)
-            std::cout << "\nError: no features have been executed";
+        std::cout << '\n'
+                  << std::flush;
     }
 
-    [[nodiscard]] report::ReportHandler::Result Application::RunFeature(CucumberRunner& cucumberRunner, const std::filesystem::path& path)
+    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)
     {
-        std::unique_ptr<FeatureRunner> featureRunner;
+        auto featureFiles = GetFeatureFiles();
+        std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
+        vec.reserve(featureFiles.size());
 
-        cucumber::gherkin::app::callbacks callbacks{
-            .ast = [&featureRunner, &cucumberRunner](const cucumber::gherkin::app::parser_result& ast)
-            {
-                featureRunner = cucumberRunner.StartFeature(ast);
-            },
-            .pickle = [&featureRunner](const cucumber::messages::pickle& pickle)
-            {
-                featureRunner->StartScenario(pickle);
-            },
-            .error = [](const cucumber::gherkin::parse_error& /* _ */)
-            {
-                /* not handled yet */
-            }
-        };
+        for (const auto& featurePath : featureFiles)
+            vec.push_back(featureTreeFactory.Create(featurePath, tagExpression));
 
-        gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
+        vec.shrink_to_fit();
 
-        return featureRunner->Result();
+        return vec;
     }
 
     int Application::GetExitCode() const
     {
-        if (resultStatus.IsSuccess())
+        if (contextManager.CurrentContext().ExecutionStatus() == engine::Result::passed)
             return 0;
         else
             return 1;

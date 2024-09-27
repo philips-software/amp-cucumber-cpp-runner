@@ -1,44 +1,24 @@
 @smoke
 Feature: Simple feature file
-  This is a Simple feature file
-
   Background:
     Given a background step
 
   @result:OK
-  Scenario Outline: Can substract
-    Given there are <x> cucumbers
-      | foo | bar | asdasd | ad     |
-      | boz | boo | asd    | asdasd |
-    When I eat <y> cucumbers
-    Then I should have <z> cucumbers
-
-    Examples:
-      | x  | y | z |
-      | 10 | 5 | 5 |
-      | 11 | 3 | 8 |
+  Scenario: An OK scenario
+    Given a given step
+    When a when step
+    Then a then step
 
   @result:FAILED
-  Scenario Outline: Is a dingus
-    Given there are <x> cucumbers
-    When I eat <y> cucumbers
-    Then I should have <z> cucumbers
-    And this step should be skipped
-      | foo | bar |
-      | boz | boo |
-
-    Examples:
-      | x  | y | z |
-      | 10 | 4 | 5 |
-      | 11 | 3 | 6 |
+  Scenario: A failing scenario
+    Given a given step
+    When a when step
+    Then an assertion is raised
+    Then a then step
 
   @result:UNDEFINED
-  Scenario: a scenario with a missing step
-    Given there are <x> cucumbers
-    When I eat <y> cucumbers
-    Then I should have <z> cucumbers left
-    And this step should be skipped
-    Examples:
-      | x  | y | z |
-      | 10 | 5 | 5 |
-      | 11 | 3 | 8 |
+  Scenario: A scenario with undefined step
+    Given a given step
+    When a when step
+    Then a when step
+    Then a then step

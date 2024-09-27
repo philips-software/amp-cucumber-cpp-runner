@@ -1,5 +1,5 @@
 #include "cucumber-cpp/Application.hpp"
-#include <span>
+#include <string>
 
 int main(int argc, char** argv)
 {

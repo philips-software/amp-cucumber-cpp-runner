@@ -1,13 +1,13 @@
-
 #include "cucumber-cpp/StepRegistry.hpp"
 #include "cucumber-cpp/Context.hpp"
-#include "cucumber-cpp/StepRunner.hpp"
 #include <algorithm>
-#include <iterator>
+#include <cstddef>
+#include <memory>
 #include <ranges>
 #include <regex>
 #include <source_location>
-#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp
@@ -84,10 +84,10 @@ namespace cucumber_cpp
     void Step::Any(StepType type, const std::string& step)
     {
         const auto stepMatch = StepRegistry::Instance().Query(type, step);
-        stepMatch.factory(context, {})->Execute(stepMatch.regexMatch->Matches());
+        stepMatch.factory(context, {})->Execute(stepMatch.matches);
     }
 
-    void Step::Pending(const std::string& message, std::source_location current) const noexcept(false)
+    void Step::Pending(const std::string& message, std::source_location current) noexcept(false)
     {
         throw StepPending{ message, current };
     }
@@ -130,13 +130,16 @@ namespace cucumber_cpp
         return instance;
     }
 
-    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression) const
+    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
-        for (const Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
+        for (Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
             if (auto match = entry.regex.Match(expression); match->Matched())
-                matches.emplace_back(std::move(match), entry.factory, entry.regex);
+            {
+                matches.emplace_back(entry.factory, match->Matches(), entry.regex.String());
+                ++entry.used;
+            }
 
         if (matches.empty())
             throw StepNotFoundError{};
@@ -155,5 +158,17 @@ namespace cucumber_cpp
     std::size_t StepRegistryBase::Size(StepType stepType) const
     {
         return std::ranges::count(registry, stepType, &Entry::type);
+    }
+
+    std::vector<StepRegistryBase::EntryView> StepRegistryBase::List() const
+    {
+        std::vector<StepRegistryBase::EntryView> list;
+
+        list.reserve(registry.size());
+
+        for (const Entry& entry : registry)
+            list.emplace_back(entry.regex, entry.used);
+
+        return list;
     }
 }

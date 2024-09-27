@@ -3,6 +3,7 @@
 
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/HookRegistry.hpp"
+#include <functional>
 #include <set>
 #include <string>
 
@@ -25,6 +26,11 @@ namespace cucumber_cpp
     {
     public:
         BeforeAfterScope(Context& context, const std::set<std::string, std::less<>>& tags = {});
+
+        BeforeAfterScope(const BeforeAfterScope&) = delete;
+        BeforeAfterScope& operator=(const BeforeAfterScope&) = delete;
+        BeforeAfterScope(BeforeAfterScope&&) = delete;
+        BeforeAfterScope& operator=(BeforeAfterScope&&) = delete;
 
     protected:
         ~BeforeAfterScope();
