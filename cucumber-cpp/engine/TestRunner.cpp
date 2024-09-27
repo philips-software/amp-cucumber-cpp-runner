@@ -175,7 +175,7 @@ namespace cucumber_cpp::engine
 
             void StepResult(ContextManager& contextManager, Result result)
             {
-                contextManager.CurrentContext().ExecutionStatus(result);
+                contextManager.StepContext().ExecutionStatus(result);
             }
 
             void ExecuteStep(ContextManager& contextManager, const ScenarioInfo& scenario, const StepInfo& stepInfo, const RunPolicy& runPolicy)
