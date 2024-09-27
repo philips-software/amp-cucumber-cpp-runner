@@ -22,7 +22,6 @@
 #include <minwindef.h>
 #include <processenv.h>
 #include <winbase.h>
-
 #endif
 
 namespace cucumber_cpp::report

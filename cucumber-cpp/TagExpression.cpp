@@ -1,4 +1,5 @@
 #include "cucumber-cpp/TagExpression.hpp"
+#include "cucumber-cpp/InternalError.hpp"
 #include <functional>
 #include <regex>
 #include <set>
@@ -66,7 +67,7 @@ namespace cucumber_cpp
 
         if (eval.size() != 1)
         {
-            throw std::logic_error("Could not parse tag expression: \"" + std::string{ tagExpr } + "\"");
+            throw InternalError("Could not parse tag expression: \"" + std::string{ tagExpr } + "\"");
         }
 
         return eval == std::string("1");

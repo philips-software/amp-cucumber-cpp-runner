@@ -10,6 +10,12 @@ namespace cucumber_cpp
         OnTestPartResultEventListener();
         ~OnTestPartResultEventListener() override;
 
+        OnTestPartResultEventListener(const OnTestPartResultEventListener&) = delete;
+        OnTestPartResultEventListener& operator=(const OnTestPartResultEventListener&) = delete;
+
+        OnTestPartResultEventListener(OnTestPartResultEventListener&&) = delete;
+        OnTestPartResultEventListener& operator=(OnTestPartResultEventListener&&) = delete;
+
     private:
         testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
     };
