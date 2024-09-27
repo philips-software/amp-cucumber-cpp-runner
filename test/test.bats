@@ -123,10 +123,28 @@ teardown() {
     assert_success
 }
 
-
 @test "Dry run with known missing steps" {
     run .build/Host/test/Debug/cucumber-cpp-test run --feature test/features --tag "@result:UNDEFINED" --report console --dry
     assert_failure
     assert_output --partial "undefined \"test/features/test_scenarios.feature\""
     assert_output --partial "skipped Then a then step"
+}
+
+@test "Test the and keyword" {
+    run .build/Host/test/Debug/cucumber-cpp-test run --feature test/features --tag "@keyword-and" --report console
+    assert_success
+    assert_output --partial "--when--"
+    assert_output --partial "--and--"
+}
+
+@test "Test the but keyword" {
+    run .build/Host/test/Debug/cucumber-cpp-test run --feature test/features --tag "@keyword-but" --report console
+    assert_success
+    assert_output --partial "--when--"
+    assert_output --partial "--but--"
+}
+
+@test "Test the asterisk keyword - will fail" {
+    run .build/Host/test/Debug/cucumber-cpp-test run --feature test/features --tag "@keyword-asterisk" --report console
+    assert_failure
 }

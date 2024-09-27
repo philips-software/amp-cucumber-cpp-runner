@@ -1,6 +1,7 @@
 #include "cucumber-cpp/Steps.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <iostream>
 #include <string>
 
 GIVEN("a background step")
@@ -26,6 +27,11 @@ THEN("a then step")
 STEP("a step step")
 {
     // empty
+}
+
+WHEN("I print {string}", (const std::string& str))
+{
+    std::cout << "print: " << str;
 }
 
 THEN("an assertion is raised")
