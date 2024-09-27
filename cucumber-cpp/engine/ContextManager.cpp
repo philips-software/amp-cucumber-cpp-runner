@@ -2,11 +2,7 @@
 #include "cucumber-cpp/Context.hpp"
 #include "cucumber-cpp/TraceTime.hpp"
 #include "cucumber-cpp/engine/Result.hpp"
-#include "cucumber-cpp/engine/RuleInfo.hpp"
-#include "cucumber-cpp/engine/ScenarioInfo.hpp"
-#include "cucumber-cpp/engine/StepInfo.hpp"
 #include <memory>
-#include <optional>
 #include <utility>
 
 namespace cucumber_cpp::engine
@@ -54,112 +50,28 @@ namespace cucumber_cpp::engine
     {
     }
 
-    FeatureContext::FeatureContext(RunnerContext& parent, const FeatureInfo& featureInfo)
-        : RunnerContext{ &parent }
-        , featureInfo{ featureInfo }
-    {
-    }
-
-    RuleContext::RuleContext(RunnerContext& parent, const RuleInfo& ruleInfo)
-        : RunnerContext{ &parent }
-        , ruleInfo{ ruleInfo }
-    {
-    }
-
-    ScenarioContext::ScenarioContext(RunnerContext& parent, const ScenarioInfo& scenarioInfo)
-        : RunnerContext{ &parent }
-        , scenarioInfo{ scenarioInfo }
-    {
-    }
-
-    StepContext::StepContext(RunnerContext& parent, const StepInfo& stepInfo)
-        : RunnerContext{ &parent }
-        , stepInfo{ stepInfo }
-    {
-    }
-
     ContextManager::ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : programContext{ std::move(contextStorageFactory) }
-    {}
-
-    void ContextManager::StartFeature(const FeatureInfo& featureInfo)
     {
-        featureContext.emplace(programContext, featureInfo);
-    }
-
-    void ContextManager::StopFeature()
-    {
-        featureContext = std::nullopt;
-    }
-
-    void ContextManager::StartRule(const RuleInfo& ruleInfo)
-    {
-        ruleContext.emplace(*featureContext, ruleInfo);
-    }
-
-    void ContextManager::StopRule()
-    {
-        ruleContext = std::nullopt;
-    }
-
-    void ContextManager::StartScenario(const ScenarioInfo& scenarioInfo)
-    {
-        scenarioContext.emplace(*featureContext, scenarioInfo);
-    }
-
-    void ContextManager::StopScenario()
-    {
-        scenarioContext = std::nullopt;
-    }
-
-    void ContextManager::StartStep(const StepInfo& stepInfo)
-    {
-        stepContext.emplace(CurrentContext(), stepInfo);
-    }
-
-    void ContextManager::StopStep()
-    {
-        stepContext.pop();
-    }
-
-    struct ProgramContext& ContextManager::ProgramContext()
-    {
-        return programContext;
-    }
-
-    const struct ProgramContext& ContextManager::ProgramContext() const
-    {
-        return programContext;
-    }
-
-    struct FeatureContext& ContextManager::FeatureContext()
-    {
-        return *featureContext;
-    }
-
-    struct RuleContext& ContextManager::RuleContext()
-    {
-        return *ruleContext;
-    }
-
-    struct ScenarioContext& ContextManager::ScenarioContext()
-    {
-        return *scenarioContext;
-    }
-
-    struct StepContext& ContextManager::StepContext()
-    {
-        return stepContext.top();
+        activeContextStack.push(std::make_unique<struct ProgramContext>(std::move(contextStorageFactory)));
     }
 
     RunnerContext& ContextManager::CurrentContext()
     {
-        if (!stepContext.empty())
-            return stepContext.top();
-        if (scenarioContext)
-            return *scenarioContext;
-        if (featureContext)
-            return *featureContext;
-        return programContext;
+        return *activeContextStack.top();
+    }
+
+    const RunnerContext& ContextManager::CurrentContext() const
+    {
+        return *activeContextStack.top();
+    }
+
+    RunnerContext& ContextManager::StepContext()
+    {
+        return *stepContext.top();
+    }
+
+    const RunnerContext& ContextManager::StepContext() const
+    {
+        return *stepContext.top();
     }
 }

@@ -8,7 +8,6 @@
 #include "cucumber-cpp/engine/ScenarioInfo.hpp"
 #include "cucumber-cpp/engine/StepInfo.hpp"
 #include <memory>
-#include <optional>
 #include <stack>
 
 namespace cucumber_cpp::engine
@@ -44,66 +43,70 @@ namespace cucumber_cpp::engine
         explicit ProgramContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
     };
 
-    struct FeatureContext : RunnerContext
+    template<class T>
+    struct NestedContext : RunnerContext
     {
-        FeatureContext(RunnerContext& parent, const FeatureInfo& featureInfo);
+        NestedContext(RunnerContext& parent, const T& info)
+            : RunnerContext{ &parent }
+            , info{ info }
+        {}
 
-        const FeatureInfo& featureInfo;
+        const T& info;
     };
 
-    struct RuleContext : RunnerContext
-    {
-        RuleContext(RunnerContext& parent, const RuleInfo& ruleInfo);
-
-        const RuleInfo& ruleInfo;
-    };
-
-    struct ScenarioContext : RunnerContext
-    {
-        ScenarioContext(RunnerContext& parent, const ScenarioInfo& scenarioInfo);
-
-        const ScenarioInfo& scenarioInfo;
-    };
-
-    struct StepContext : RunnerContext
-    {
-        StepContext(RunnerContext& parent, const StepInfo& stepInfo);
-
-        const StepInfo& stepInfo;
-    };
+    using FeatureContext = NestedContext<FeatureInfo>;
+    using RuleContext = NestedContext<RuleInfo>;
+    using ScenarioContext = NestedContext<ScenarioInfo>;
+    using StepContext = NestedContext<StepInfo>;
 
     struct ContextManager
     {
         explicit ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
-        void StartFeature(const FeatureInfo& featureInfo);
-        void StopFeature();
+        struct ScopedContextLock
+        {
+            explicit ScopedContextLock(std::stack<std::unique_ptr<RunnerContext>>& activeContextStack)
+                : activeContextStack{ activeContextStack }
+            {}
 
-        void StartRule(const RuleInfo& ruleInfo);
-        void StopRule();
+            ScopedContextLock(const ScopedContextLock&) = delete;
+            ScopedContextLock& operator=(const ScopedContextLock&) = delete;
+            ScopedContextLock(ScopedContextLock&&) = delete;
+            ScopedContextLock& operator=(ScopedContextLock&&) = delete;
 
-        void StartScenario(const ScenarioInfo& scenarioInfo);
-        void StopScenario();
+            std::stack<std::unique_ptr<RunnerContext>>& activeContextStack;
+        };
 
-        void StartStep(const StepInfo& stepInfo);
-        void StopStep();
+        template<class T>
+        [[nodiscard]] auto& StartScope(const T& info)
+        {
+            activeContextStack.push(std::make_unique<struct NestedContext<T>>(*activeContextStack.top(), info));
 
-        struct ProgramContext& ProgramContext();
-        [[nodiscard]] const struct ProgramContext& ProgramContext() const;
+            return activeContextStack;
+        }
 
-        struct FeatureContext& FeatureContext();
-        struct RuleContext& RuleContext();
-        struct ScenarioContext& ScenarioContext();
-        struct StepContext& StepContext();
+        [[nodiscard]] auto& StartScope(const StepInfo& stepInfo)
+        {
+            stepContext.push(std::make_unique<NestedContext<StepInfo>>(CurrentContext(), stepInfo));
+
+            return activeContextStack;
+        }
 
         RunnerContext& CurrentContext();
+        [[nodiscard]] const RunnerContext& CurrentContext() const;
+
+        template<class T>
+        NestedContext<T>& CurrentContextAs()
+        {
+            return static_cast<NestedContext<T>&>(*activeContextStack.top());
+        }
+
+        RunnerContext& StepContext();
+        [[nodiscard]] const RunnerContext& StepContext() const;
 
     private:
-        struct ProgramContext programContext;
-        std::optional<struct FeatureContext> featureContext;
-        std::optional<struct RuleContext> ruleContext;
-        std::optional<struct ScenarioContext> scenarioContext;
-        std::stack<struct StepContext> stepContext;
+        std::stack<std::unique_ptr<RunnerContext>> activeContextStack;
+        std::stack<std::unique_ptr<RunnerContext>> stepContext;
     };
 }
 

@@ -24,7 +24,7 @@ namespace cucumber_cpp::engine
 {
     void RunTestPolicy::ExecuteStep(ContextManager& contextManager, const StepInfo& stepInfo, const StepMatch& stepMatch) const
     {
-        stepMatch.factory(contextManager.ScenarioContext(), stepInfo.Table())->Execute(stepMatch.matches);
+        stepMatch.factory(contextManager.CurrentContext(), stepInfo.Table())->Execute(stepMatch.matches);
     }
 
     bool RunTestPolicy::ExecuteHook(ContextManager& context, HookType hook, const std::set<std::string, std::less<>>& tags) const
@@ -48,6 +48,7 @@ namespace cucumber_cpp::engine
 
     void DryRunPolicy::ExecuteStep(ContextManager& /* contextManager */, const StepInfo& /* stepInfo */, const StepMatch& /* stepMatch */) const
     {
+        /* dry run doesn't execute */
     }
 
     bool DryRunPolicy::ExecuteHook(ContextManager& /* context */, HookType /* hook */, const std::set<std::string, std::less<>>& /* tags */) const
@@ -143,7 +144,9 @@ namespace cucumber_cpp::engine
                 }
 
                 ExecuteHookOnDescruction(const ExecuteHookOnDescruction&) = delete;
+                ExecuteHookOnDescruction& operator=(const ExecuteHookOnDescruction&) = delete;
                 ExecuteHookOnDescruction(ExecuteHookOnDescruction&&) = delete;
+                ExecuteHookOnDescruction& operator=(ExecuteHookOnDescruction&&) = delete;
 
             private:
                 ContextManager& context;
@@ -152,21 +155,21 @@ namespace cucumber_cpp::engine
                 const RunPolicy& runPolicy;
             };
 
-            [[noreturn]] void ExecuteStep(const ContextManager& /* contextManager */, const StepInfo& /* stepInfo */, std::monostate /* */, const RunPolicy& /* runPolicy */)
+            [[noreturn]] void ExecuteStep(const ContextManager& /* contextManager */, const ScenarioInfo& /*scenario*/, const StepInfo& /* stepInfo */, std::monostate /* */, const RunPolicy& /* runPolicy */)
             {
                 throw StepNotFoundException{};
             }
 
-            [[noreturn]] void ExecuteStep(const ContextManager& /* contextManager */, const StepInfo& /* stepInfo */, const std::vector<StepMatch>& /* */, const RunPolicy& /* runPolicy */)
+            [[noreturn]] void ExecuteStep(const ContextManager& /* contextManager */, const ScenarioInfo& /*scenario*/, const StepInfo& /* stepInfo */, const std::vector<StepMatch>& /* */, const RunPolicy& /* runPolicy */)
             {
                 throw AmbiguousStepException{};
             }
 
-            void ExecuteStep(ContextManager& contextManager, const StepInfo& stepInfo, const StepMatch& stepMatch, const RunPolicy& runPolicy)
+            void ExecuteStep(ContextManager& contextManager, const ScenarioInfo& scenario, const StepInfo& stepInfo, const StepMatch& stepMatch, const RunPolicy& runPolicy)
             {
-                ExecuteHookOnDescruction afterStepHook{ contextManager, HookType::afterStep, contextManager.ScenarioContext().scenarioInfo.Tags(), runPolicy };
+                ExecuteHookOnDescruction afterStepHook{ contextManager, HookType::afterStep, scenario.Tags(), runPolicy };
 
-                if (runPolicy.ExecuteHook(contextManager, HookType::beforeStep, contextManager.ScenarioContext().scenarioInfo.Tags()))
+                if (runPolicy.ExecuteHook(contextManager, HookType::beforeStep, scenario.Tags()))
                     runPolicy.ExecuteStep(contextManager, stepInfo, stepMatch);
             }
 
@@ -175,13 +178,13 @@ namespace cucumber_cpp::engine
                 contextManager.CurrentContext().ExecutionStatus(result);
             }
 
-            void ExecuteStep(ContextManager& contextManager, const StepInfo& stepInfo, const RunPolicy& runPolicy)
+            void ExecuteStep(ContextManager& contextManager, const ScenarioInfo& scenario, const StepInfo& stepInfo, const RunPolicy& runPolicy)
             {
                 try
                 {
-                    std::visit([&contextManager, &stepInfo, &runPolicy](auto& value)
+                    std::visit([&contextManager, &stepInfo, &runPolicy, &scenario](auto& value)
                         {
-                            ExecuteStep(contextManager, stepInfo, value, runPolicy);
+                            ExecuteStep(contextManager, scenario, stepInfo, value, runPolicy);
                         },
                         stepInfo.StepMatch());
                 }
@@ -208,40 +211,38 @@ namespace cucumber_cpp::engine
             }
         }
 
-        void WrapExecuteStep(ContextManager& contextManager, const StepInfo& step, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
+        void WrapExecuteStep(ContextManager& contextManager, const ScenarioInfo& scenario, const StepInfo& step, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
         {
             AppendFailureOnTestPartResultEvent appendFailureOnTestPartResultEvent{ reportHandler };
             CaptureAndTraceStdOut captureAndTraceStdOut{ reportHandler };
 
-            ExecuteStep(contextManager, step, runPolicy);
+            ExecuteStep(contextManager, scenario, step, runPolicy);
 
             if (appendFailureOnTestPartResultEvent.HasFailures())
                 StepResult(contextManager, engine::Result::failed);
         }
 
-        void ManageExecuteStep(ContextManager& contextManager, const StepInfo& step, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
+        void ManageExecuteStep(ContextManager& contextManager, const ScenarioInfo& scenario, const StepInfo& step, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
         {
-            contextManager.StartStep(step);
+            ContextManager::ScopedContextLock contextScope{ contextManager.StartScope(step) };
 
-            if (const auto mustSkip = contextManager.ScenarioContext().ExecutionStatus() != Result::passed)
+            if (const auto mustSkip = contextManager.CurrentContext().ExecutionStatus() != Result::passed)
                 reportHandler.StepSkipped(step);
             else
             {
                 reportHandler.StepStart(step);
 
-                WrapExecuteStep(contextManager, step, reportHandler, runPolicy);
+                WrapExecuteStep(contextManager, scenario, step, reportHandler, runPolicy);
 
                 reportHandler.StepEnd(contextManager.StepContext().ExecutionStatus(), step, contextManager.StepContext().Duration());
             }
-
-            contextManager.StopStep();
         }
 
         void ExecuteSteps(ContextManager& contextManager, const ScenarioInfo& scenario, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
         {
             for (const auto& step : scenario.Children())
             {
-                ManageExecuteStep(contextManager, *step, reportHandler, runPolicy);
+                ManageExecuteStep(contextManager, scenario, *step, reportHandler, runPolicy);
             }
         }
 
@@ -249,7 +250,7 @@ namespace cucumber_cpp::engine
         {
             for (const auto& scenario : scenarios)
             {
-                contextManager.StartScenario(*scenario);
+                ContextManager::ScopedContextLock contextScope{ contextManager.StartScope(*scenario) };
 
                 reportHandler.ScenarioStart(*scenario);
 
@@ -258,9 +259,7 @@ namespace cucumber_cpp::engine
 
                 runPolicy.ExecuteHook(contextManager, HookType::after, scenario->Tags());
 
-                reportHandler.ScenarioEnd(contextManager.ScenarioContext().ExecutionStatus(), *scenario, contextManager.ScenarioContext().Duration());
-
-                contextManager.StopScenario();
+                reportHandler.ScenarioEnd(contextManager.CurrentContext().ExecutionStatus(), *scenario, contextManager.CurrentContext().Duration());
             }
         }
 
@@ -268,15 +267,13 @@ namespace cucumber_cpp::engine
         {
             for (const auto& rule : rules)
             {
-                contextManager.StartRule(*rule);
+                ContextManager::ScopedContextLock contextScope{ contextManager.StartScope(*rule) };
 
                 reportHandler.RuleStart(*rule);
 
                 RunScenarios(contextManager, rule->Scenarios(), reportHandler, runPolicy);
 
-                reportHandler.RuleEnd(contextManager.RuleContext().ExecutionStatus(), *rule, contextManager.RuleContext().Duration());
-
-                contextManager.StopRule();
+                reportHandler.RuleEnd(contextManager.CurrentContext().ExecutionStatus(), *rule, contextManager.CurrentContext().Duration());
             }
         }
 
@@ -285,7 +282,7 @@ namespace cucumber_cpp::engine
             if (feature.Rules().empty() && feature.Scenarios().empty())
                 return;
 
-            contextManager.StartFeature(feature);
+            ContextManager::ScopedContextLock contextScope{ contextManager.StartScope(feature) };
 
             reportHandler.FeatureStart(feature);
 
@@ -297,9 +294,7 @@ namespace cucumber_cpp::engine
 
             runPolicy.ExecuteHook(contextManager, HookType::afterFeature, feature.Tags());
 
-            reportHandler.FeatureEnd(contextManager.FeatureContext().ExecutionStatus(), feature, contextManager.FeatureContext().Duration());
-
-            contextManager.StopFeature();
+            reportHandler.FeatureEnd(contextManager.CurrentContext().ExecutionStatus(), feature, contextManager.CurrentContext().Duration());
         }
 
         void Run(ContextManager& contextManager, const std::vector<std::unique_ptr<FeatureInfo>>& feature, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
@@ -310,7 +305,7 @@ namespace cucumber_cpp::engine
 
             runPolicy.ExecuteHook(contextManager, HookType::afterAll, {});
 
-            reportHandler.Summary(contextManager.ProgramContext().Duration());
+            reportHandler.Summary(contextManager.CurrentContext().Duration());
         }
     }
 }

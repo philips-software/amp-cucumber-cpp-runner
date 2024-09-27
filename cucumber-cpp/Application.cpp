@@ -156,7 +156,7 @@ namespace cucumber_cpp
 
     Context& Application::ProgramContext()
     {
-        return contextManager.ProgramContext();
+        return contextManager.CurrentContext();
     }
 
     const Application::Options& Application::CliOptions() const
@@ -201,7 +201,7 @@ namespace cucumber_cpp
 
     int Application::GetExitCode() const
     {
-        if (contextManager.ProgramContext().ExecutionStatus() == engine::Result::passed)
+        if (contextManager.CurrentContext().ExecutionStatus() == engine::Result::passed)
             return 0;
         else
             return 1;
