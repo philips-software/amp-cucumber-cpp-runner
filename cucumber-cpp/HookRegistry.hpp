@@ -67,6 +67,12 @@ namespace cucumber_cpp
 
     struct HookMatch
     {
+        HookMatch(std::unique_ptr<TagExpressionMatch> tagExpressionMatch, std::unique_ptr<Body> (&factory)(Context& context), const HookTagExpression& hookRegex)
+            : tagExpressionMatch(std::move(tagExpressionMatch))
+            , factory(factory)
+            , hookRegex(hookRegex)
+        {}
+
         std::unique_ptr<TagExpressionMatch> tagExpressionMatch;
         std::unique_ptr<Body> (&factory)(Context& context);
         const HookTagExpression& hookRegex;
@@ -76,6 +82,12 @@ namespace cucumber_cpp
     {
         struct Entry
         {
+            Entry(HookType type, HookTagExpression hookTagExpression, std::unique_ptr<Body> (&factory)(Context& context))
+                : type(type)
+                , hookTagExpression(hookTagExpression)
+                , factory(factory)
+            {}
+
             HookType type;
             HookTagExpression hookTagExpression;
             std::unique_ptr<Body> (&factory)(Context& context);
