@@ -38,9 +38,11 @@ jobs:
         with:
           key: ${{ github.job }}
           max-size: 2G
-      - run: |
-          cmake --preset=Windows
-          cmake --build --preset=Windows-Release
+      - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
+        with:
+          configurePreset: "Windows"
+          buildPreset: "Windows-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
 
   build-linux:
     name: Linux Host Build
@@ -57,6 +59,7 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
 
   build-linux-devcontainer:
     name: Linux Host Build in Devcontainer
@@ -73,6 +76,7 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
 
   test-linux:
     name: Linux Host Test
@@ -89,9 +93,12 @@ jobs:
         with:
           key: ${{ github.job }}
           max-size: 2G
+      - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
+        with:
+          configurePreset: "Host"
+          buildPreset: "Host-Debug"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - run: |
-          cmake --preset=Host
-          cmake --build --preset=Host-Debug
           bats --formatter junit test/test.bats | tee test-report.xml
       - uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
         if: always()
