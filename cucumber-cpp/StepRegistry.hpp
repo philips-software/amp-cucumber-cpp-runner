@@ -28,6 +28,10 @@ namespace cucumber_cpp
         template<class T>
         T As(std::source_location sourceLocation = std::source_location::current()) const;
 
+        explicit TableValue(const std::string& value)
+            : value(value)
+        {}
+
         std::string value;
     };
 
