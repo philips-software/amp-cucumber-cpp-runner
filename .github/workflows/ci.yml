@@ -115,13 +115,13 @@ jobs:
           variant: sccache
       - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
         with:
-          configurePreset: "Host"
-          buildPreset: "Host-Debug"
-          testPreset: "Host-Debug"
+          configurePreset: "host-single-Debug"
+          buildPreset: "host-single-Debug"
+          testPreset: "host-single-Debug"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
       - name: Upload test logs
         if: ${{ failure() }}
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: test-logs
-          path: build/Host/Testing/Temporary/
+          path: build/host-single-Dbebug/Testing/Temporary/

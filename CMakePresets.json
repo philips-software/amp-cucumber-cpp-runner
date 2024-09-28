@@ -16,19 +16,28 @@
                 "CMAKE_C_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
-            },
-            "generator": "Ninja Multi-Config"
+            }
         },
         {
             "name": "Host",
-            "inherits": "defaults"
+            "inherits": "defaults",
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "host-single-Debug",
+            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
+            "inherits": "defaults",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
         },
         {
             "name": "Host-Iwyu",
             "inherits": "defaults",
             "cacheVariables": {
                 "CMAKE_CXX_INCLUDE_WHAT_YOU_USE": "include-what-you-use;-Wno-unknown-warning-option;-Xiwyu;--no_comments;-Xiwyu;--cxx17ns;-Xiwyu;--no_fwd_decls"
-            }
+            },
+            "generator": "Ninja Multi-Config"
         },
         {
             "name": "Windows",
@@ -37,7 +46,8 @@
             "environment": {
                 "CCACHE_DEPEND": "true",
                 "CCACHE_COMPILERTYPE": "clang-cl"
-            }
+            },
+            "generator": "Ninja Multi-Config"
         }
     ],
     "buildPresets": [
@@ -55,6 +65,11 @@
             "name": "Host-Iwyu-Debug",
             "configuration": "Debug",
             "configurePreset": "Host-Iwyu"
+        },
+        {
+            "name": "host-single-Debug",
+            "configuration": "Debug",
+            "configurePreset": "host-single-Debug"
         },
         {
             "name": "Windows-Release",
@@ -89,6 +104,12 @@
             "name": "Host-Release",
             "configurePreset": "Host",
             "configuration": "Release",
+            "inherits": "defaults"
+        },
+        {
+            "name": "host-single-Debug",
+            "configurePreset": "host-single-Debug",
+            "configuration": "Debug",
             "inherits": "defaults"
         }
     ]
