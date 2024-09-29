@@ -17,11 +17,13 @@
 #include <string>
 
 #ifdef _MSC_VER
+// clang-format off
 #include <Windows.h>
 #include <consoleapi2.h>
 #include <minwindef.h>
 #include <processenv.h>
-#include <winbase.h>
+#include <WinBase.h>
+// clang-format on
 #endif
 
 namespace cucumber_cpp::report

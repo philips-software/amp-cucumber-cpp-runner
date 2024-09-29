@@ -16,7 +16,7 @@ namespace cucumber_cpp
 
         struct Obj
         {
-            Obj(Mock* mock = nullptr)
+            explicit Obj(Mock* mock = nullptr)
                 : mock{ mock }
             {}
 
@@ -87,10 +87,6 @@ namespace cucumber_cpp
         Context scenarioContext{ &programContext };
     };
 
-    TEST_F(TestContext, Construct)
-    {
-    }
-
     TEST_F(TestContext, GetByReference)
     {
         programContext.Emplace<Obj>();
@@ -154,7 +150,7 @@ namespace cucumber_cpp
     {
         scenarioContext.Emplace<NonDefaultCtor>(1, 2);
 
-        auto& obj = scenarioContext.Get<NonDefaultCtor>();
+        const auto& obj = scenarioContext.Get<NonDefaultCtor>();
         EXPECT_THAT(obj.a, testing::Eq(1));
         EXPECT_THAT(obj.b, testing::Eq(2));
     }
@@ -164,11 +160,11 @@ namespace cucumber_cpp
         scenarioContext.EmplaceAt<Derived>("key1", "a", 2);
         scenarioContext.EmplaceAt<Derived>("key2", "b", 4);
 
-        auto& key1 = scenarioContext.Get<Derived>("key1");
+        const auto& key1 = scenarioContext.Get<Derived>("key1");
         EXPECT_THAT(key1.a, testing::StrEq("a"));
         EXPECT_THAT(key1.b, testing::Eq(2));
 
-        auto& key2 = scenarioContext.Get<Derived>("key2");
+        const auto& key2 = scenarioContext.Get<Derived>("key2");
         EXPECT_THAT(key2.a, testing::StrEq("b"));
         EXPECT_THAT(key2.b, testing::Eq(4));
     }
@@ -263,11 +259,11 @@ namespace cucumber_cpp
         auto privateContext = std::make_unique<Context>(std::make_shared<ContextStorageFactoryImpl>());
         Mock mock;
 
-        auto* dkey = privateContext->EmplaceAt<Ordered>("dkey", mock, 1).get();
-        auto* ckey = privateContext->EmplaceAt<Ordered>("ckey", mock, 2).get();
-        auto* bkey = privateContext->EmplaceAt<Ordered>("bkey", mock, 3).get();
-        auto* akey = privateContext->EmplaceAt<Ordered>("akey", mock, 4).get();
-        auto* xkey = privateContext->EmplaceAt<Ordered>("xkey", mock, 5).get();
+        const auto* dkey = privateContext->EmplaceAt<Ordered>("dkey", mock, 1).get();
+        const auto* ckey = privateContext->EmplaceAt<Ordered>("ckey", mock, 2).get();
+        const auto* bkey = privateContext->EmplaceAt<Ordered>("bkey", mock, 3).get();
+        const auto* akey = privateContext->EmplaceAt<Ordered>("akey", mock, 4).get();
+        const auto* xkey = privateContext->EmplaceAt<Ordered>("xkey", mock, 5).get();
 
         testing::InSequence seq;
         EXPECT_CALL(mock, Deconstructing(ckey));

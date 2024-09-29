@@ -77,10 +77,6 @@ namespace cucumber_cpp
         Context context{ contextStorage };
     };
 
-    TEST_F(TestHooks, Construct)
-    {
-    }
-
     TEST_F(TestHooks, UnconditionalStep)
     {
         EXPECT_THAT(context.Contains("BeforeAll"), testing::IsFalse());

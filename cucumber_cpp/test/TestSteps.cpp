@@ -56,10 +56,6 @@ namespace cucumber_cpp
         StepRegistry& stepRegistry{ StepRegistry::Instance() };
     };
 
-    TEST_F(TestSteps, Construct)
-    {
-    }
-
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
         EXPECT_THAT(stepRegistry.Size(), testing::Eq(8));
