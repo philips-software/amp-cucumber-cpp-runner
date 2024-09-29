@@ -58,7 +58,7 @@ teardown() {
 }
 
 @test "Missing mandatory custom argument" {
-    run .build/Host/cucumber_cpp/integration_test/Debug/cucumber_cpp.integration_test-custom run --feature cucumber_cpp/integration_test/features --report console
+    run .build/Host/cucumber_cpp/integration_test/Debug/cucumber_cpp.integration_test.custom run --feature cucumber_cpp/integration_test/features --report console
     assert_failure
     assert_output --partial "--required is required"
 }
