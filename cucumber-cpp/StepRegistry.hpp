@@ -105,7 +105,7 @@ namespace cucumber_cpp
 
     struct StepMatch
     {
-        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const Table& table), std::vector<std::string> matches, std::string stepRegexStr)
+        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const Table& table), const std::vector<std::string>& matches, const std::string& stepRegexStr)
             : factory(factory)
             , matches(matches)
             , stepRegexStr(stepRegexStr)
@@ -134,7 +134,7 @@ namespace cucumber_cpp
 
         struct Entry
         {
-            Entry(StepType type, StepRegex regex, std::unique_ptr<Body> (&factory)(Context& context, const Table& table))
+            Entry(StepType type, const StepRegex& regex, std::unique_ptr<Body> (&factory)(Context& context, const Table& table))
                 : type(type)
                 , regex(regex)
                 , factory(factory)

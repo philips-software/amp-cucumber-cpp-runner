@@ -82,7 +82,7 @@ namespace cucumber_cpp
     {
         struct Entry
         {
-            Entry(HookType type, HookTagExpression hookTagExpression, std::unique_ptr<Body> (&factory)(Context& context))
+            Entry(HookType type, const HookTagExpression& hookTagExpression, std::unique_ptr<Body> (&factory)(Context& context))
                 : type(type)
                 , hookTagExpression(hookTagExpression)
                 , factory(factory)

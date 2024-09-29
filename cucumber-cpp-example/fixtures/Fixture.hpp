@@ -8,7 +8,7 @@ struct NordicBleFixture
 
 struct StBleFixture
 {
-    StBleFixture(std::string_view coms)
+    explicit StBleFixture(std::string_view coms)
         : coms(coms)
     {}
 
