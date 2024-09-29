@@ -111,7 +111,7 @@ jobs:
           buildPreset: "Host-Debug"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - run: |
-          bats --formatter junit test/test.bats | tee test-report.xml
+          bats --formatter junit cucumber_cpp/integration_test/test.bats | tee test-report.xml
       - uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
         if: always()
         with:

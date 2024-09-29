@@ -33,6 +33,3 @@ include(GoogleTest)
 
 add_subdirectory(external)
 add_subdirectory(cucumber_cpp)
-add_subdirectory(cucumber_cpp_runner)
-add_subdirectory(cucumber_cpp_example)
-add_subdirectory(test)
