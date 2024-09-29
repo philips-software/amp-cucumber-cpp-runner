@@ -1,12 +1,12 @@
 #ifndef CUCUMBER_CPP_APPLICATION_HPP
 #define CUCUMBER_CPP_APPLICATION_HPP
 
+#include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/Context.hpp"
 #include "cucumber_cpp/engine/ContextManager.hpp"
 #include "cucumber_cpp/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/report/Report.hpp"
-#include "cucumber/gherkin/app.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>

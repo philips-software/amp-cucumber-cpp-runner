@@ -1,6 +1,6 @@
 #include "cucumber_cpp/Hooks.hpp"
-#include "cucumber_cpp_example/fixtures/Fixture.hpp"
 #include "cucumber_cpp/Context.hpp"
+#include "cucumber_cpp_example/fixtures/Fixture.hpp"
 #include <algorithm>
 #include <string_view>
 
