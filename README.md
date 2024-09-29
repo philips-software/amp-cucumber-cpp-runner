@@ -40,4 +40,4 @@ Please refer to our [Contributing](CONTRIBUTING.md) guide when you want to contr
 
 ## License
 
-amp-cucumber-cpp-runner is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license. See [LICENSE file](License).
+amp-cucumber-cpp-runner is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license. See [LICENSE file](LICENSE).
