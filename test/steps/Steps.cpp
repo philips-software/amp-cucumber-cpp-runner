@@ -1,4 +1,4 @@
-#include "cucumber-cpp/Steps.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <iostream>

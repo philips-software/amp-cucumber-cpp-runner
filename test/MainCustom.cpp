@@ -1,4 +1,4 @@
-#include "cucumber-cpp/Application.hpp"
+#include "cucumber_cpp/Application.hpp"
 #include <span>
 
 int main(int argc, char** argv)

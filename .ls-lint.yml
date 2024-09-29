@@ -1,5 +1,5 @@
 ls:
-  .dir: snake_case | kebab-case
+  .dir: snake_case
   .hpp: PascalCase
   .cpp: PascalCase
 
