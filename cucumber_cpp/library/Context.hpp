@@ -242,20 +242,6 @@ namespace cucumber_cpp
             , storage{ contextStorageFactory->Create(*parent->storage) }
         {}
 
-        template<class T, class... Args>
-        [[deprecated("Use Emplace or EmplaceAs instead")]] std::shared_ptr<T> MakeShared(Args&&... args)
-        {
-            return MakeShared<T, Args...>(typeid(T).name(), std::forward<Args>(args)...);
-        }
-
-        template<class T, class... Args>
-        [[deprecated("Use EmplaceAt instead")]] std::shared_ptr<T> MakeShared(std::string_view key, Args&&... value)
-        {
-            SetShared(key, std::make_shared<T>(std::forward<Args>(value)...));
-
-            return GetShared<T>(key);
-        }
-
         template<class T>
         void SetShared(const std::shared_ptr<T>& value)
         {
