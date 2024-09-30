@@ -39,7 +39,7 @@ namespace cucumber_cpp
 
         std::string_view subrange_to_sv(const auto& subrange)
         {
-            return { subrange.data(), subrange.data() + subrange.size() };
+            return { std::data(subrange), std::data(subrange) + std::size(subrange) };
         }
 
         template<class Range, class Delim>
