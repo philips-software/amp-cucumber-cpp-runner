@@ -6,7 +6,7 @@
         {
             "label": "bats",
             "type": "shell",
-            "command": "bats --formatter junit test/test.bats | tee test-report.xml",
+            "command": "bats --formatter junit cucumber_cpp/integration_test/test.bats | tee test-report.xml",
             "problemMatcher": []
         }
     ]
