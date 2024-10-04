@@ -38,9 +38,11 @@ jobs:
         with:
           key: ${{ github.job }}
           max-size: 2G
-      - run: |
-          cmake --preset=Windows
-          cmake --build --preset=Windows-Release
+      - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
+        with:
+          configurePreset: "Windows"
+          buildPreset: "Windows-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
 
   build-linux:
     name: Linux Host Build
@@ -57,6 +59,13 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+      - name: Upload test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: test-logs
+          path: build/Host/Testing/Temporary/
 
   build-linux-devcontainer:
     name: Linux Host Build in Devcontainer
@@ -73,6 +82,13 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Release"
           testPreset: "Host-Release"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+      - name: Upload test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: test-logs
+          path: build/Host/Testing/Temporary/
 
   test-linux:
     name: Linux Host Test
@@ -89,11 +105,42 @@ jobs:
         with:
           key: ${{ github.job }}
           max-size: 2G
+      - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
+        with:
+          configurePreset: "Host"
+          buildPreset: "Host-Debug"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - run: |
-          cmake --preset=Host
-          cmake --build --preset=Host-Debug
-          bats --formatter junit test/test.bats | tee test-report.xml
+          bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
       - uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
         if: always()
         with:
           files: test-report.xml
+
+  host_build_test:
+    name: Host Build & Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          persist-credentials: false
+      - uses: hendrikmuhs/ccache-action@c92f40bee50034e84c763e33b317c77adaa81c92 # v1.2.13
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          max-size: 2G
+          variant: sccache
+      - uses: lukka/run-cmake@2ce8982be71b8e9a3c4d5e432135035afd1e76a7 # v10.7
+        with:
+          configurePreset: "host-single-Debug"
+          buildPreset: "host-single-Debug"
+          testPreset: "host-single-Debug"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
+      - name: Upload test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: test-logs
+          path: build/host-single-Dbebug/Testing/Temporary/

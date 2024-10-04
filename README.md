@@ -19,8 +19,8 @@ amp-cucumber-cpp-runner is not supposed to be used standalone. It is possible to
 
 En example project is provided which shows most features of amp-cucumber-cpp-runner and how to configure a cmake project to use amp-cucumber-cpp-runner. The simplest solution is to simply add a dependency on `cucumber-cpp-runner` like so:
 `cmake
-target_link_libraries(cucumber-cpp-example PRIVATE
-    cucumber-cpp-runner
+target_link_libraries(cucumber_cpp.example PRIVATE
+    cucumber_cpp.runner
 )
 `
 
@@ -40,4 +40,4 @@ Please refer to our [Contributing](CONTRIBUTING.md) guide when you want to contr
 
 ## License
 
-amp-cucumber-cpp-runner is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license. See [LICENSE file](License).
+amp-cucumber-cpp-runner is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license. See [LICENSE file](LICENSE).

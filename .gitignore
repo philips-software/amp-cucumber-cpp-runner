@@ -2,3 +2,4 @@
 .install
 .xwin-cache
 .vs/
+megalinter-reports/
