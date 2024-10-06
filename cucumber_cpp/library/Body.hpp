@@ -32,6 +32,27 @@ namespace cucumber_cpp
 
         virtual void Execute(const std::vector<std::string>& args = {}) = 0;
     };
+
+    template<class T>
+    struct SetUpTearDownWrapper
+    {
+        SetUpTearDownWrapper(T& t)
+            : t{ t }
+        {
+            t.SetUp();
+        }
+
+        SetUpTearDownWrapper(const SetUpTearDownWrapper&) = delete;
+        SetUpTearDownWrapper(SetUpTearDownWrapper&&) = delete;
+
+        ~SetUpTearDownWrapper()
+        {
+            t.TearDown();
+        }
+
+    private:
+        T& t;
+    };
 }
 
 #endif
