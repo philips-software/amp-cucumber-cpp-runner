@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
@@ -18,8 +19,11 @@ namespace cucumber_cpp
         MOCK_METHOD(void, TearDown, (), (override));
 
         using Step::context;
+        using Step::Given;
         using Step::Pending;
         using Step::table;
+        using Step::Then;
+        using Step::When;
     };
 
     struct TestStep : testing::Test
@@ -67,5 +71,12 @@ namespace cucumber_cpp
     TEST_F(TestStep, ThrowsStepPendingExceptionOnPending)
     {
         ASSERT_THROW(step.Pending("message"), Step::StepPending);
+    }
+
+    TEST_F(TestStep, ThrowsStepNotFoundWhenCallingOtherSteps)
+    {
+        ASSERT_THROW(step.Given("step"), StepRegistryBase::StepNotFoundError);
+        ASSERT_THROW(step.When("step"), StepRegistryBase::StepNotFoundError);
+        ASSERT_THROW(step.Then("step"), StepRegistryBase::StepNotFoundError);
     }
 }
