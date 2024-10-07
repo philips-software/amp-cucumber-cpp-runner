@@ -1,3 +1,4 @@
+#include "cucumber_cpp/library/InternalError.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -67,5 +68,10 @@ namespace cucumber_cpp
         const auto result = StringTo<CustomType>(s);
 
         EXPECT_THAT(result, testing::Eq(CustomType{}));
+    }
+
+    TEST(TestStringTo, ThrowsOnInvalidConversion)
+    {
+        EXPECT_THROW(StringTo<int>("Hello, World!"), InternalError);
     }
 }
