@@ -38,6 +38,8 @@ jobs:
           buildPreset: "Coverage"
           testPreset: "Coverage"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+        env:
+          GTEST_OUTPUT: "xml:${PWD}/testresults/"
 
       - name: Convert Results
         run: |
