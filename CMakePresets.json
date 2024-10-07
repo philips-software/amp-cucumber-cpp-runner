@@ -17,6 +17,15 @@
       }
     },
     {
+      "name": "Coverage",
+      "inherits": "defaults",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CCR_ENABLE_COVERAGE": "On"
+      }
+    },
+    {
       "name": "Host",
       "inherits": "defaults",
       "generator": "Ninja Multi-Config"
@@ -49,6 +58,11 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "Coverage",
+      "configuration": "Debug",
+      "configurePreset": "Coverage"
+    },
     {
       "name": "Host-Release",
       "configuration": "Release",
@@ -91,6 +105,12 @@
         "noTestsAction": "error",
         "stopOnFailure": true
       }
+    },
+    {
+      "name": "Coverage",
+      "configurePreset": "Coverage",
+      "configuration": "Debug",
+      "inherits": "defaults"
     },
     {
       "name": "Host-Debug",

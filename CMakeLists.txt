@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cucumber-cpp-runner LANGUAGES C CXX VERSION 1.0.0) # x-release-please-version
+
+include(ccr_test_helpers)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CCR_STANDALONE On)
@@ -19,6 +22,10 @@ else()
 endif()
 
 option(CCR_BUILD_TESTS "Enable building the tests" ${CCR_DEFAULTOPT})
+
+if (CCR_BUILD_TESTS)
+    ccr_enable_testing()
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
