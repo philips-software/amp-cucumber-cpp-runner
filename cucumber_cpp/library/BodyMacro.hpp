@@ -2,6 +2,7 @@
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
 #include "cucumber_cpp/library/Body.hpp"
+#include "cucumber_cpp/library/engine/StringTo.hpp"
 #include <cstddef>
 #include <functional>
 

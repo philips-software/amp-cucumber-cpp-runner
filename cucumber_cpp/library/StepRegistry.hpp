@@ -3,82 +3,19 @@
 
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <regex>
-#include <source_location>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace cucumber_cpp
 {
-    enum struct StepType
-    {
-        given,
-        when,
-        then,
-        any
-    };
-
-    struct TableValue
-    {
-        template<class T>
-        T As(std::source_location sourceLocation = std::source_location::current()) const;
-
-        explicit TableValue(const std::string& value)
-            : value(value)
-        {}
-
-        std::string value;
-    };
-
-    using Table = std::vector<std::vector<TableValue>>;
-
-    struct Step
-    {
-        struct StepPending : std::exception
-        {
-            StepPending(std::string message, std::source_location sourceLocation)
-                : message{ std::move(message) }
-                , sourceLocation{ sourceLocation }
-            {
-            }
-
-            std::string message;
-            std::source_location sourceLocation;
-        };
-
-        Step(Context& context, const Table& table);
-        virtual ~Step() = default;
-
-        virtual void SetUp()
-        {
-            /* nothing to do */
-        }
-
-        virtual void TearDown()
-        {
-            /* nothing to do */
-        }
-
-    protected:
-        void Given(const std::string& step);
-        void When(const std::string& step);
-        void Then(const std::string& step);
-
-        [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
-
-    private:
-        void Any(StepType type, const std::string& step);
-
-    protected:
-        Context& context;
-        const Table& table;
-    };
-
     struct RegexMatch
     {
         RegexMatch(const std::regex& regex, const std::string& expression);
@@ -134,9 +71,9 @@ namespace cucumber_cpp
 
         struct Entry
         {
-            Entry(StepType type, const StepRegex& regex, std::unique_ptr<Body> (&factory)(Context& context, const Table& table))
+            Entry(StepType type, StepRegex regex, std::unique_ptr<Body> (&factory)(Context& context, const Table& table))
                 : type(type)
-                , regex(regex)
+                , regex(std::move(regex))
                 , factory(factory)
             {}
 
@@ -163,7 +100,7 @@ namespace cucumber_cpp
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(StepType stepType) const;
 
-        std::vector<EntryView> List() const;
+        [[nodiscard]] std::vector<EntryView> List() const;
 
     protected:
         template<class T>
@@ -192,12 +129,6 @@ namespace cucumber_cpp
     //////////////////////////
     //    implementation    //
     //////////////////////////
-
-    template<class T>
-    T TableValue::As(std::source_location sourceLocation) const
-    {
-        return StringTo<T>(value, sourceLocation);
-    }
 
     template<class T>
     std::size_t StepRegistryBase::Register(const std::string& matcher, StepType stepType)
