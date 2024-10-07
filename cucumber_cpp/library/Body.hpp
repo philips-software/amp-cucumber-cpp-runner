@@ -1,10 +1,8 @@
 #ifndef CUCUMBER_CPP_BODY_HPP
 #define CUCUMBER_CPP_BODY_HPP
 
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/engine/StringTo.hpp"
 #include <cstddef>
-#include <source_location>
-#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -12,23 +10,6 @@
 
 namespace cucumber_cpp
 {
-    template<class To>
-    inline To StringTo(const std::string& s, std::source_location sourceLocation = std::source_location::current())
-    {
-        std::istringstream stream{ s };
-        To to;
-        stream >> to;
-        if (stream.fail())
-            throw InternalError{ "Cannnot convert parameter \"" + s + "\"", sourceLocation };
-        return to;
-    }
-
-    template<>
-    inline std::string StringTo<std::string>(const std::string& s, std::source_location /*sourceLocation*/)
-    {
-        return s;
-    }
-
     struct Body
     {
         virtual ~Body() = default;
