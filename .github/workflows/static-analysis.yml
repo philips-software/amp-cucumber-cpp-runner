@@ -48,7 +48,7 @@ jobs:
       - name: Prepare dependencies for sonar-scanner
         run: apt-get update && apt-get install -y --no-install-recommends curl
 
-      - name:  Install sonar-scanner and build-wrapper
+      - name: Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarqube-github-c-cpp@4aebde3df73d6b8588d2b61acc360cd94185da2c # v2.0.0
         env:
           SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
