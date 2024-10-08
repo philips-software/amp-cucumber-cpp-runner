@@ -23,7 +23,8 @@
             "package-name": "amp-cucumber-cpp-runner",
             "release-type": "simple",
             "extra-files": [
-                "CMakeLists.txt"
+                "CMakeLists.txt",
+                "sonar-project.properties"
             ]
         }
     },
