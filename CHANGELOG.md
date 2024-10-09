@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v1.0.0...v1.1.0) (2024-10-09)
+
+
+### Features
+
+* Add workflows similar to amp-embedded-infra-lib, restructure components ([#84](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/84)) ([2386d9e](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/2386d9e571d92f8180167d95611be62f4d4509e5))
+* Refactor and add tests for Step and StepRegistry ([#89](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/89)) ([3d824cb](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/3d824cb1a0c4824339d2e89b39801bc62c37a60e))
+
+
+### Chores
+
+* Removed unnecessary member function pointer ([#88](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/88)) ([562ea5d](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/562ea5db3bd4643c3304d4758fdc301ccb804bca))
+
 ## 1.0.0 (2024-09-27)
 
 
