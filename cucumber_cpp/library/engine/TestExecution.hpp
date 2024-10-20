@@ -55,10 +55,10 @@ namespace cucumber_cpp::library::engine
 
         void RunStep(const ::cucumber_cpp::engine::StepInfo& stepInfo) override;
 
-        void StepFailure() override;
-        void StepError() override;
-        void HookFailure() override;
-        void HookError() override;
+        // void StepFailure() override;
+        // void StepError() override;
+        // void HookFailure() override;
+        // void HookError() override;
 
     private:
         void RunStepMatch(std::monostate);

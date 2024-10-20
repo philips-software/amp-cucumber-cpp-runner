@@ -27,6 +27,9 @@ namespace cucumber_cpp::library::engine
 
         MOCK_METHOD(void, StepStarted, (), (override));
         MOCK_METHOD(void, StepFinished, (), (override));
+
+        MOCK_METHOD(void, StepFailure, (), (override));
+        MOCK_METHOD(void, StepError, (), (override));
     };
 
     struct TestEvents : testing::Test

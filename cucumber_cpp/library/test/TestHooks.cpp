@@ -1,6 +1,8 @@
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/HookScopes.hpp"
 #include "cucumber_cpp/library/Hooks.hpp"
+#include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "gmock/gmock.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -73,138 +75,137 @@ namespace cucumber_cpp
     {
         HookRegistry& hookRegistry{ HookRegistry::Instance() };
 
-        std::shared_ptr<ContextStorageFactory> contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
-        Context context{ contextStorage };
+        library::engine::test_helper::ContextManagerInstance contextManager;
     };
 
     TEST_F(TestHooks, UnconditionalStep)
     {
-        EXPECT_THAT(context.Contains("BeforeAll"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterAll"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeAll"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterAll"), testing::IsFalse());
 
         {
-            BeforeAfterAllScope beforeAfterAllScope{ context };
+            BeforeAfterAllScope beforeAfterAllScope{ contextManager.CurrentContext() };
 
-            EXPECT_THAT(context.Contains("BeforeAll"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("AfterAll"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeAll"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterAll"), testing::IsFalse());
         }
 
-        EXPECT_THAT(context.Contains("BeforeAll"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterAll"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeAll"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterAll"), testing::IsTrue());
     }
 
     TEST_F(TestHooks, FeatureScope)
     {
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
 
         {
-            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ context };
+            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ contextManager.CurrentContext() };
 
-            EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsFalse());
-            EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-            EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
         }
 
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsTrue());
     }
 
     TEST_F(TestHooks, SingleTag)
     {
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
 
         {
-            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ context, { "@tag1" } };
+            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ contextManager.CurrentContext(), { "@tag1" } };
 
-            EXPECT_THAT(context.Contains("BeforeFeature2"), testing::IsTrue());
-            ASSERT_THAT(context.Contains("BeforeFeature2"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-            EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+            ASSERT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
 
-            EXPECT_THAT(context.Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
+            EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
         }
 
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsTrue());
 
-        EXPECT_THAT(context.Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
+        EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
     }
 
     TEST_F(TestHooks, MultiTag)
     {
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeatureCond2"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond2"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
 
         {
-            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ context, { "@tag1", "@tag2" } };
+            BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ contextManager.CurrentContext(), { "@tag1", "@tag2" } };
 
-            EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
-            EXPECT_THAT(context.Contains("AfterFeatureCond2"), testing::IsFalse());
-            EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond2"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsFalse());
 
-            EXPECT_THAT(context.Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
+            EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
         }
 
-        EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterFeatureCond2"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeature"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeFeatureCond"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeatureCond2"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterFeature"), testing::IsTrue());
 
-        EXPECT_THAT(context.Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
-        EXPECT_THAT(context.Get<std::string>("AfterFeatureCond"), testing::StrEq("AfterFeatureCond@Tag2"));
-        EXPECT_THAT(context.Get<std::string>("AfterFeatureCond2"), testing::StrEq("AfterFeatureCond@Tag1&Tag2"));
+        EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("BeforeFeatureCond"), testing::StrEq("BeforeFeature@Tag1"));
+        EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("AfterFeatureCond"), testing::StrEq("AfterFeatureCond@Tag2"));
+        EXPECT_THAT(contextManager.CurrentContext().Get<std::string>("AfterFeatureCond2"), testing::StrEq("AfterFeatureCond@Tag1&Tag2"));
     }
 
     TEST_F(TestHooks, ScenarioScope)
     {
-        EXPECT_THAT(context.Contains("BeforeScenarioCond"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("BeforeScenario"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterScenario"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenarioCond"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenario"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterScenario"), testing::IsFalse());
 
         {
-            BeforeAfterHookScope beforeAfterHookScope{ context, { "@tag3", "@tag1" } };
+            BeforeAfterHookScope beforeAfterHookScope{ contextManager.CurrentContext(), { "@tag3", "@tag1" } };
 
-            EXPECT_THAT(context.Contains("BeforeScenarioCond"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("BeforeScenario"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("AfterScenario"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenarioCond"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenario"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterScenario"), testing::IsFalse());
         }
 
-        EXPECT_THAT(context.Contains("BeforeScenarioCond"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("BeforeScenario"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterScenario"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenarioCond"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeScenario"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterScenario"), testing::IsTrue());
     }
 
     TEST_F(TestHooks, StepScope)
     {
-        EXPECT_THAT(context.Contains("BeforeStep"), testing::IsFalse());
-        EXPECT_THAT(context.Contains("AfterStep"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeStep"), testing::IsFalse());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterStep"), testing::IsFalse());
 
         {
-            BeforeAfterStepHookScope beforeAfterStepHookScope{ context, { "@tag3", "@tag1" } };
+            BeforeAfterStepHookScope beforeAfterStepHookScope{ contextManager.CurrentContext(), { "@tag3", "@tag1" } };
 
-            EXPECT_THAT(context.Contains("BeforeStep"), testing::IsTrue());
-            EXPECT_THAT(context.Contains("AfterStep"), testing::IsFalse());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeStep"), testing::IsTrue());
+            EXPECT_THAT(contextManager.CurrentContext().Contains("AfterStep"), testing::IsFalse());
         }
 
-        EXPECT_THAT(context.Contains("BeforeStep"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("AfterStep"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("BeforeStep"), testing::IsTrue());
+        EXPECT_THAT(contextManager.CurrentContext().Contains("AfterStep"), testing::IsTrue());
     }
 }

@@ -7,9 +7,13 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "gtest/gtest.h"
+#include <filesystem>
 #include <memory>
 #include <stack>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace cucumber_cpp::engine
 {
@@ -37,6 +41,19 @@ namespace cucumber_cpp::engine
     {
         using CurrentContext::CurrentContext;
         using CurrentContext::ExecutionStatus;
+
+        void AppendFailure(testing::TestPartResult::Type type, std::filesystem::path srcfile, int line_num, std::string message);
+
+    private:
+        struct Failure
+        {
+            testing::TestPartResult::Type type;
+            std::filesystem::path srcfile;
+            int line_num;
+            std::string message;
+        };
+
+        std::vector<std::shared_ptr<Failure>> failures;
     };
 
     struct ProgramContext : RunnerContext
@@ -89,13 +106,16 @@ namespace cucumber_cpp::engine
         void DisposeStepContext();
         cucumber_cpp::engine::StepContext& StepContext();
 
-    private:
-        std::unique_ptr<cucumber_cpp::engine::ProgramContext> programContext;
-        std::unique_ptr<cucumber_cpp::engine::FeatureContext> featureContext;
-        std::unique_ptr<cucumber_cpp::engine::RuleContext> ruleContext;
-        std::unique_ptr<cucumber_cpp::engine::ScenarioContext> scenarioContext;
+        cucumber_cpp::engine::RunnerContext& CurrentContext();
 
-        std::stack<std::unique_ptr<cucumber_cpp::engine::StepContext>> stepContext;
+    private:
+        std::shared_ptr<cucumber_cpp::engine::ProgramContext> programContext;
+        std::shared_ptr<cucumber_cpp::engine::FeatureContext> featureContext;
+        std::shared_ptr<cucumber_cpp::engine::RuleContext> ruleContext;
+        std::shared_ptr<cucumber_cpp::engine::ScenarioContext> scenarioContext;
+
+        std::stack<std::shared_ptr<cucumber_cpp::engine::RunnerContext>> runnerContext;
+        std::stack<std::shared_ptr<cucumber_cpp::engine::StepContext>> stepContext;
     };
 }
 
