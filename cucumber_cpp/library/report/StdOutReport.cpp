@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -210,11 +211,11 @@ namespace cucumber_cpp::report
         std::cout << TcRed;
 
         if (path && line && column)
-            std::cout << "\n"
-                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Failure";
+            std::cout << std::format("\nFailure @ ./{}:{}:{}:", path.value().string(), line.value(), column.value());
+        else if (path && line)
+            std::cout << std::format("\nFailure @ ./{}:{}:", path.value().string(), line.value());
 
-        std::cout << "\n"
-                  << error;
+        std::cout << std::format("\n{}", error);
 
         std::cout << TcDefault;
     }
@@ -224,12 +225,11 @@ namespace cucumber_cpp::report
         std::cout << TcRed;
 
         if (path && line && column)
-            std::cout << "\n"
-                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Error";
+            std::cout << std::format("\nError @ ./{}:{}:{}:", path.value().string(), line.value(), column.value());
+        else if (path && line)
+            std::cout << std::format("\nError @ ./{}:{}:", path.value().string(), line.value());
 
-        std::cout
-            << "\n"
-            << error;
+        std::cout << std::format("\n{}", error);
 
         std::cout << TcDefault;
     }

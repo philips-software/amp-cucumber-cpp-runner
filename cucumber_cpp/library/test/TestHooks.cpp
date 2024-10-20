@@ -125,7 +125,8 @@ namespace cucumber_cpp
         {
             BeforeAfterFeatureHookScope beforeAfterFeatureHookScope{ context, { "@tag1" } };
 
-            EXPECT_THAT(context.Contains("BeforeFeature"), testing::IsTrue());
+            EXPECT_THAT(context.Contains("BeforeFeature2"), testing::IsTrue());
+            ASSERT_THAT(context.Contains("BeforeFeature2"), testing::IsTrue());
             EXPECT_THAT(context.Contains("BeforeFeatureCond"), testing::IsTrue());
             EXPECT_THAT(context.Contains("AfterFeatureCond"), testing::IsFalse());
             EXPECT_THAT(context.Contains("AfterFeature"), testing::IsFalse());

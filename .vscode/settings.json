@@ -20,5 +20,9 @@
     "C/C++ Include Guard.Remove Extension": false,
     "C/C++ Include Guard.Comment Style": "None",
     "C/C++ Include Guard.Path Skip": 0,
-    "testMate.cpp.test.executables": "${workspaceFolder}/.build/**/*{test,Test,TEST}*"
+    "testMate.cpp.test.executables": "${workspaceFolder}/.build/**/*{test,Test,TEST}*",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "philips-software",
+        "projectKey": "philips-software_amp-cucumber-cpp-runner"
+    }
 }

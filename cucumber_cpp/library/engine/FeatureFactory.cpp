@@ -19,7 +19,10 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -146,19 +149,7 @@ namespace cucumber_cpp::engine
         {
             auto table = TableFactory(pickleStep.argument);
 
-            try
-            {
-                auto stepMatch = StepRegistry::Instance().Query(stepTypeLut.at(*pickleStep.type), pickleStep.text);
-                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table), std::move(stepMatch)));
-            }
-            catch (const StepRegistry::StepNotFoundError&)
-            {
-                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table)));
-            }
-            catch (StepRegistry::AmbiguousStepError& ase)
-            {
-                scenarioInfo.Children().push_back(std::make_unique<StepInfo>(scenarioInfo, pickleStep.text, stepTypeLut.at(*pickleStep.type), step.location.line, step.location.column.value_or(0), std::move(table), std::move(ase.matches)));
-            }
+            scenarioInfo.Children().push_back(FeatureTreeFactory::CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
         }
 
         void ConstructSteps(ScenarioInfo& scenarioInfo, const FlatAst& flatAst, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
@@ -281,6 +272,23 @@ namespace cucumber_cpp::engine
                 std::move(path),
                 ast.feature->location.line,
                 ast.feature->location.column.value_or(0));
+        }
+    }
+
+    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, const std::string& stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
+    {
+        try
+        {
+            auto stepMatch = StepRegistry::Instance().Query(stepType, stepText);
+            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table), std::move(stepMatch));
+        }
+        catch (const StepRegistry::StepNotFoundError&)
+        {
+            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table));
+        }
+        catch (StepRegistry::AmbiguousStepError& ase)
+        {
+            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table), std::move(ase.matches));
         }
     }
 

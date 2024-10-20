@@ -9,6 +9,7 @@
             "description": "Enter the tag to run",
             "type": "pickString",
             "options": [
+                "@smoke",
                 "@rule1 or @smoke",
                 "@keyword-asterisk",
                 "@result:UNDEFINED"
@@ -19,8 +20,8 @@
             "description": "Enter the tag to run",
             "type": "pickString",
             "options": [
-                "cucumber-cpp-example/features",
-                "test/features"
+                "cucumber_cpp/example/features",
+                "cucumber_cpp/acceptance_test/features"
             ]
         }
     ],

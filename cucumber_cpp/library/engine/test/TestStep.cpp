@@ -2,7 +2,10 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
+#include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
+#include "cucumber_cpp/library/engine/test_helper/TestRunnerMock.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <memory>
@@ -28,15 +31,15 @@ namespace cucumber_cpp
 
     struct TestStep : testing::Test
     {
-        std::shared_ptr<ContextStorageFactoryImpl> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
-        engine::ContextManager contextManager{ contextStorageFactory };
-
         Table table{
             std::vector{ TableValue{ "header1" }, TableValue{ "header2}" } },
             std::vector{ TableValue{ "value1" }, TableValue{ "value2}" } }
         };
 
-        StepMock step{ contextManager.CurrentContext(), table };
+        library::engine::test_helper::ContextManagerInstance contextManager;
+
+        engine::test_helper::TestRunnerMock testRunnerMock;
+        StepMock step{ contextManager.StepContext(), table };
     };
 
     TEST_F(TestStep, StepProvidesAccessToSetUpFunction)
@@ -55,11 +58,11 @@ namespace cucumber_cpp
 
     TEST_F(TestStep, ProvidesAccessToCurrentContext)
     {
-        ASSERT_THAT(contextManager.CurrentContext().Contains("top level value"), testing::Eq(false));
+        ASSERT_THAT(contextManager.StepContext().Contains("top level value"), testing::Eq(false));
 
         step.context.InsertAt<std::string>("top level value", "value");
 
-        ASSERT_THAT(contextManager.CurrentContext().Contains("top level value"), testing::Eq(true));
+        ASSERT_THAT(contextManager.StepContext().Contains("top level value"), testing::Eq(true));
     }
 
     TEST_F(TestStep, ProvidesAccessToTable)
@@ -71,12 +74,5 @@ namespace cucumber_cpp
     TEST_F(TestStep, ThrowsStepPendingExceptionOnPending)
     {
         ASSERT_THROW(step.Pending("message"), Step::StepPending);
-    }
-
-    TEST_F(TestStep, ThrowsStepNotFoundWhenCallingOtherSteps)
-    {
-        ASSERT_THROW(step.Given("step"), StepRegistryBase::StepNotFoundError);
-        ASSERT_THROW(step.When("step"), StepRegistryBase::StepNotFoundError);
-        ASSERT_THROW(step.Then("step"), StepRegistryBase::StepNotFoundError);
     }
 }

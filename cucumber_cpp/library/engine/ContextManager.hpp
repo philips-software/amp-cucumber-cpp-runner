@@ -9,6 +9,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <memory>
 #include <stack>
+#include <stdexcept>
 
 namespace cucumber_cpp::engine
 {
@@ -58,55 +59,43 @@ namespace cucumber_cpp::engine
     using RuleContext = NestedContext<RuleInfo>;
     using ScenarioContext = NestedContext<ScenarioInfo>;
     using StepContext = NestedContext<StepInfo>;
+    using NestedStepContext = NestedContext<NestedStepInfo>;
+
+    struct ContextNotAvailable : std::logic_error
+    {
+        using std::logic_error::logic_error;
+    };
 
     struct ContextManager
     {
         explicit ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
-        struct ScopedContextLock
-        {
-            explicit ScopedContextLock(std::stack<std::unique_ptr<RunnerContext>>& activeContextStack)
-                : activeContextStack{ activeContextStack }
-            {}
+        cucumber_cpp::engine::ProgramContext& ProgramContext();
+        cucumber_cpp::engine::ProgramContext& ProgramContext() const;
 
-            ScopedContextLock(const ScopedContextLock&) = delete;
-            ScopedContextLock& operator=(const ScopedContextLock&) = delete;
-            ScopedContextLock(ScopedContextLock&&) = delete;
-            ScopedContextLock& operator=(ScopedContextLock&&) = delete;
+        void CreateFeatureContext(const FeatureInfo& featureInfo);
+        void DisposeFeatureContext();
+        cucumber_cpp::engine::FeatureContext& FeatureContext();
 
-            std::stack<std::unique_ptr<RunnerContext>>& activeContextStack;
-        };
+        void CreateRuleContext(const RuleInfo& ruleInfo);
+        void DisposeRuleContext();
+        cucumber_cpp::engine::RuleContext& RuleContext();
 
-        template<class T>
-        [[nodiscard]] auto& StartScope(const T& info)
-        {
-            activeContextStack.push(std::make_unique<struct NestedContext<T>>(*activeContextStack.top(), info));
+        void CreateScenarioContext(const ScenarioInfo& scenarioInfo);
+        void DisposeScenarioContext();
+        cucumber_cpp::engine::ScenarioContext& ScenarioContext();
 
-            return activeContextStack;
-        }
-
-        [[nodiscard]] auto& StartScope(const StepInfo& stepInfo)
-        {
-            stepContext.push(std::make_unique<NestedContext<StepInfo>>(CurrentContext(), stepInfo));
-
-            return activeContextStack;
-        }
-
-        RunnerContext& CurrentContext();
-        [[nodiscard]] const RunnerContext& CurrentContext() const;
-
-        template<class T>
-        NestedContext<T>& CurrentContextAs()
-        {
-            return static_cast<NestedContext<T>&>(*activeContextStack.top());
-        }
-
-        RunnerContext& StepContext();
-        [[nodiscard]] const RunnerContext& StepContext() const;
+        void CreateStepContext(const StepInfo& stepInfo);
+        void DisposeStepContext();
+        cucumber_cpp::engine::StepContext& StepContext();
 
     private:
-        std::stack<std::unique_ptr<RunnerContext>> activeContextStack;
-        std::stack<std::unique_ptr<RunnerContext>> stepContext;
+        std::unique_ptr<cucumber_cpp::engine::ProgramContext> programContext;
+        std::unique_ptr<cucumber_cpp::engine::FeatureContext> featureContext;
+        std::unique_ptr<cucumber_cpp::engine::RuleContext> ruleContext;
+        std::unique_ptr<cucumber_cpp::engine::ScenarioContext> scenarioContext;
+
+        std::stack<std::unique_ptr<cucumber_cpp::engine::StepContext>> stepContext;
     };
 }
 
