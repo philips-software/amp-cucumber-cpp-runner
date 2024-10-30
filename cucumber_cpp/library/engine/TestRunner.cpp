@@ -248,6 +248,7 @@ namespace cucumber_cpp::engine
 
         void RunScenarios(ContextManager& contextManager, const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
         {
+            bool allScenariosPassed = true;
             for (const auto& scenario : scenarios)
             {
                 ContextManager::ScopedContextLock contextScope{ contextManager.StartScope(*scenario) };
@@ -260,7 +261,9 @@ namespace cucumber_cpp::engine
                 runPolicy.ExecuteHook(contextManager, HookType::after, scenario->Tags());
 
                 reportHandler.ScenarioEnd(contextManager.CurrentContext().ExecutionStatus(), *scenario, contextManager.CurrentContext().Duration());
+                allScenariosPassed &= contextManager.CurrentContext().ExecutionStatus() == Result::passed;
             }
+            contextManager.CurrentContext().ExecutionStatus(allScenariosPassed ? Result::passed : Result::failed);
         }
 
         void RunRules(ContextManager& contextManager, const std::vector<std::unique_ptr<RuleInfo>>& rules, report::ReportHandlerV2& reportHandler, const RunPolicy& runPolicy)
