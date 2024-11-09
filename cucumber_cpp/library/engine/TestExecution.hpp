@@ -35,9 +35,13 @@ namespace cucumber_cpp::library::engine
 
     struct TestExecution::ProgramScope : library::util::Immoveable
     {
-        ProgramScope(HookExecutor& hookExecution);
+        ProgramScope(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution);
 
     private:
+        cucumber_cpp::engine::ContextManager& contextManager;
+        report::ReportForwarder& reportHandler;
+
+        report::ReportForwarder::ProgramScope scopedProgramReport;
         HookExecutor::ProgramScope scopedProgramHook;
     };
 

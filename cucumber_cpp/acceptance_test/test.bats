@@ -148,3 +148,9 @@ teardown() {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@keyword-asterisk" --report console
     assert_failure
 }
+
+@test "Test passing scenario after failed scenario reports feature as failed" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_feature" --report console
+    assert_failure
+    assert_output --partial "tests   : 1/2 passed"
+}

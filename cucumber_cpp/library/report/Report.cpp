@@ -53,6 +53,16 @@ namespace cucumber_cpp::report
         return reporters;
     }
 
+    ReportForwarder::ProgramScope::ProgramScope(cucumber_cpp::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : programContext{ programContext }
+        , reporters{ reporters }
+    {}
+
+    ReportForwarder::ProgramScope::~ProgramScope()
+    {
+        ForwardCall(reporters, &ReportHandlerV2::Summary, programContext.Duration());
+    }
+
     ReportForwarder::FeatureScope::FeatureScope(cucumber_cpp::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : featureContext{ featureContext }
         , reporters{ reporters }
@@ -104,6 +114,11 @@ namespace cucumber_cpp::report
     ReportForwarderImpl::ReportForwarderImpl(cucumber_cpp::engine::ContextManager& contextManager)
         : contextManager{ contextManager }
     {}
+
+    [[nodiscard]] ReportForwarder::ProgramScope ReportForwarderImpl::ProgramStart()
+    {
+        return ProgramScope{ contextManager.ProgramContext(), Storage() };
+    }
 
     ReportForwarder::FeatureScope ReportForwarderImpl::FeatureStart()
     {

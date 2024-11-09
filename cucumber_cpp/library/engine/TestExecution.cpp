@@ -16,8 +16,11 @@ namespace cucumber_cpp::library::engine
     const DryRunPolicy dryRunPolicy;
     const ExecuteRunPolicy executeRunPolicy;
 
-    TestExecution::ProgramScope::ProgramScope(HookExecutor& hookExecution)
-        : scopedProgramHook{ hookExecution.BeforeAll() }
+    TestExecution::ProgramScope::ProgramScope(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution)
+        : contextManager{ contextManager }
+        , reportHandler{ reportHandler }
+        , scopedProgramReport{ reportHandler.ProgramStart() }
+        , scopedProgramHook{ hookExecution.BeforeAll() }
     {
     }
 
@@ -66,7 +69,7 @@ namespace cucumber_cpp::library::engine
 
     TestExecution::ProgramScope TestExecutionImpl::StartRun()
     {
-        return ProgramScope{ hookExecution };
+        return ProgramScope{ contextManager, reportHandler, hookExecution };
     }
 
     TestExecution::FeatureScope TestExecutionImpl::StartFeature(const ::cucumber_cpp::engine::FeatureInfo& featureInfo)

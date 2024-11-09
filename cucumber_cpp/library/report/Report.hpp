@@ -68,11 +68,13 @@ namespace cucumber_cpp::report
 
     struct ReportForwarder
     {
+        struct ProgramScope;
         struct FeatureScope;
         struct RuleScope;
         struct ScenarioScope;
         struct StepScope;
 
+        [[nodiscard]] virtual ProgramScope ProgramStart() = 0;
         [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
         [[nodiscard]] virtual RuleScope RuleStart() = 0;
         [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
@@ -86,6 +88,16 @@ namespace cucumber_cpp::report
         virtual void Trace(const std::string& trace) = 0;
 
         virtual void Summary(TraceTime::Duration duration) = 0;
+    };
+
+    struct ReportForwarder::ProgramScope
+    {
+        ProgramScope(cucumber_cpp::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ~ProgramScope();
+
+    private:
+        cucumber_cpp::engine::ProgramContext& programContext;
+        std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
     struct ReportForwarder::FeatureScope
@@ -134,6 +146,7 @@ namespace cucumber_cpp::report
     {
         explicit ReportForwarderImpl(cucumber_cpp::engine::ContextManager& contextManager);
 
+        [[nodiscard]] ProgramScope ProgramStart() override;
         [[nodiscard]] FeatureScope FeatureStart() override;
         [[nodiscard]] RuleScope RuleStart() override;
         [[nodiscard]] ScenarioScope ScenarioStart() override;
