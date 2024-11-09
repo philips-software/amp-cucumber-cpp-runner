@@ -13,7 +13,8 @@
                 "@rule1 or @smoke",
                 "@keyword-asterisk",
                 "@result:UNDEFINED",
-                "@result:FAILED"
+                "@result:FAILED",
+                "@fail_feature"
             ]
         },
         {
@@ -38,9 +39,10 @@
                 "${input:features}",
                 "--report",
                 "console",
-                "--com",
-                "COMx",
-                "--nordic",
+                "junit-xml",
+                // "--com",
+                // "COMx",
+                // "--nordic",
                 "--tag",
                 "${input:tag}"
             ],

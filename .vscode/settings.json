@@ -1,8 +1,8 @@
 {
     "cmake.useCMakePresets": "always",
     "cucumberautocomplete.steps": [
-        "cucumber-cpp-example/steps/*.cpp",
-        "test/steps/*.cpp"
+        "cucumber_cpp/example/steps/*.cpp",
+        "cucumber_cpp/acceptance_test/steps/*.cpp"
     ],
     "cucumberautocomplete.gherkinDefinitionPart": "(GIVEN|WHEN|THEN|STEP)\\(",
     "cucumberautocomplete.customParameters": [
