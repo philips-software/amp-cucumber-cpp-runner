@@ -154,3 +154,25 @@ teardown() {
     assert_failure
     assert_output --partial "tests   : 1/2 passed"
 }
+
+@test "Test failing hook before results in error" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_scenariohook_before" --report console
+    assert_failure
+    assert_output --partial "skipped Given a given step"
+    assert_output --partial "tests   : 0/1 passed"
+}
+
+@test "Test failing hook after results in error" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_scenariohook_after" --report console
+    assert_failure
+    assert_output --partial "Given a given step"
+    assert_output --partial "-> done"
+    assert_output --partial "tests   : 0/1 passed"
+}
+
+@test "Test throwing hook results in error" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@throw_scenariohook" --report console
+    assert_failure
+    assert_output --partial "skipped Given a given step"
+    assert_output --partial "tests   : 0/1 passed"
+}
