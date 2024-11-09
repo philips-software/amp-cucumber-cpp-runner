@@ -3,6 +3,7 @@
 
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "cucumber_cpp/library/engine/TestFailureHandler.hpp"
 #include <cstddef>
 #include <functional>
 
@@ -50,5 +51,10 @@
     }                                                                                                            \
     const std::size_t BODY_STRUCT::ID = cucumber_cpp::registration<BODY_STRUCT>(matcher, type);                  \
     void BODY_STRUCT::ExecuteWithArgs targs
+
+#undef GTEST_MESSAGE_AT_
+#define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
+    cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
+        ::testing::Message()
 
 #endif

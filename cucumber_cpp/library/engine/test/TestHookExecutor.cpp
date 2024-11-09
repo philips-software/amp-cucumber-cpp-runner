@@ -1,51 +1,9 @@
-#include "cucumber_cpp/library/Hooks.hpp"
 #include "cucumber_cpp/library/engine/HookExecutor.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include <gtest/gtest.h>
-#include <string>
 
 namespace cucumber_cpp::library::engine
 {
-    HOOK_BEFORE_ALL()
-    {
-        context.InsertAt("hookBeforeAll", std::string{ "hookBeforeAll" });
-    }
-
-    HOOK_AFTER_ALL()
-    {
-        context.InsertAt("hookAfterAll", std::string{ "hookAfterAll" });
-    }
-
-    HOOK_BEFORE_FEATURE()
-    {
-        context.InsertAt("hookBeforeFeature", std::string{ "hookBeforeFeature" });
-    }
-
-    HOOK_AFTER_FEATURE()
-    {
-        context.InsertAt("hookAfterFeature", std::string{ "hookAfterFeature" });
-    }
-
-    HOOK_BEFORE_SCENARIO()
-    {
-        context.InsertAt("hookBeforeScenario", std::string{ "hookBeforeScenario" });
-    }
-
-    HOOK_AFTER_SCENARIO()
-    {
-        context.InsertAt("hookAfterScenario", std::string{ "hookAfterScenario" });
-    }
-
-    HOOK_BEFORE_STEP()
-    {
-        context.InsertAt("hookBeforeStep", std::string{ "hookBeforeStep" });
-    }
-
-    HOOK_AFTER_STEP()
-    {
-        context.InsertAt("hookAfterStep", std::string{ "hookAfterStep" });
-    }
-
     struct TestHookExecutor : testing::Test
     {
         test_helper::ContextManagerInstance contextManagerInstance;
@@ -56,51 +14,51 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    TEST_F(TestHookExecutor, ExecuteBeforeAll)
+    TEST_F(TestHookExecutor, ExecuteProgramHooks)
     {
-        hookExecutor.BeforeAll();
-        EXPECT_TRUE(contextManagerInstance.ProgramContext().Contains("hookBeforeAll"));
-    }
+        ASSERT_FALSE(contextManagerInstance.ProgramContext().Contains("hookBeforeAll"));
+        ASSERT_FALSE(contextManagerInstance.ProgramContext().Contains("hookAfterAll"));
 
-    TEST_F(TestHookExecutor, ExecuteAfterAll)
-    {
-        hookExecutor.AfterAll();
+        {
+            auto scope = hookExecutor.BeforeAll();
+            EXPECT_TRUE(contextManagerInstance.ProgramContext().Contains("hookBeforeAll"));
+        }
         EXPECT_TRUE(contextManagerInstance.ProgramContext().Contains("hookAfterAll"));
     }
 
     TEST_F(TestHookExecutor, ExecuteBeforeFeature)
     {
-        hookExecutor.BeforeFeature();
-        EXPECT_TRUE(contextManagerInstance.FeatureContext().Contains("hookBeforeFeature"));
-    }
+        ASSERT_FALSE(contextManagerInstance.FeatureContext().Contains("hookBeforeFeature"));
+        ASSERT_FALSE(contextManagerInstance.FeatureContext().Contains("hookAfterFeature"));
 
-    TEST_F(TestHookExecutor, ExecuteAfterFeature)
-    {
-        hookExecutor.AfterFeature();
+        {
+            auto scope = hookExecutor.FeatureStart();
+            EXPECT_TRUE(contextManagerInstance.FeatureContext().Contains("hookBeforeFeature"));
+        }
         EXPECT_TRUE(contextManagerInstance.FeatureContext().Contains("hookAfterFeature"));
     }
 
     TEST_F(TestHookExecutor, ExecuteBeforeScenario)
     {
-        hookExecutor.BeforeScenario();
-        EXPECT_TRUE(contextManagerInstance.ScenarioContext().Contains("hookBeforeScenario"));
-    }
+        ASSERT_FALSE(contextManagerInstance.ScenarioContext().Contains("hookBeforeScenario"));
+        ASSERT_FALSE(contextManagerInstance.ScenarioContext().Contains("hookAfterScenario"));
 
-    TEST_F(TestHookExecutor, ExecuteAfterScenario)
-    {
-        hookExecutor.AfterScenario();
+        {
+            auto scope = hookExecutor.ScenarioStart();
+            EXPECT_TRUE(contextManagerInstance.ScenarioContext().Contains("hookBeforeScenario"));
+        }
         EXPECT_TRUE(contextManagerInstance.ScenarioContext().Contains("hookAfterScenario"));
     }
 
     TEST_F(TestHookExecutor, ExecuteBeforeStep)
     {
-        hookExecutor.BeforeStep();
-        EXPECT_TRUE(contextManagerInstance.StepContext().Contains("hookBeforeStep"));
-    }
+        ASSERT_FALSE(contextManagerInstance.StepContext().Contains("hookBeforeStep"));
+        ASSERT_FALSE(contextManagerInstance.StepContext().Contains("hookAfterStep"));
 
-    TEST_F(TestHookExecutor, ExecuteAfterStep)
-    {
-        hookExecutor.AfterStep();
+        {
+            auto scope = hookExecutor.StepStart();
+            EXPECT_TRUE(contextManagerInstance.StepContext().Contains("hookBeforeStep"));
+        }
         EXPECT_TRUE(contextManagerInstance.StepContext().Contains("hookAfterStep"));
     }
 }

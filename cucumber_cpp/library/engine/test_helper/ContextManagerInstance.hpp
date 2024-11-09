@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include <any>
 #include <memory>
 
 namespace cucumber_cpp::library::engine::test_helper
@@ -22,11 +23,11 @@ namespace cucumber_cpp::library::engine::test_helper
     {
         ContextManagerInstance()
             : cucumber_cpp::engine::ContextManager{ contextStorageFactory }
+            , featureContextScope{ CreateFeatureContext(feature) }
+            , ruleContextScope{ CreateRuleContext(rule) }
+            , scenarioContextScope{ CreateScenarioContext(scenario) }
+            , stepContextScope{ CreateStepContext(step) }
         {
-            CreateFeatureContext(feature);
-            CreateRuleContext(rule);
-            CreateScenarioContext(scenario);
-            CreateStepContext(step);
         }
 
     private:
@@ -34,6 +35,11 @@ namespace cucumber_cpp::library::engine::test_helper
         cucumber_cpp::engine::RuleInfo rule{ feature, {}, {}, {}, {} };
         cucumber_cpp::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
         cucumber_cpp::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
+
+        ContextManager::ScopedFeautureContext featureContextScope;
+        ContextManager::ScopedRuleContext ruleContextScope;
+        ContextManager::ScopedScenarioContext scenarioContextScope;
+        ContextManager::ScopedStepContext stepContextScope;
     };
 }
 

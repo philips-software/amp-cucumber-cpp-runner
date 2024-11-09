@@ -6,7 +6,7 @@ setup() {
 }
 
 teardown() {
-    rm -rf out.json out.xml
+    rm -rf ./out/ ./test-report.xml
 }
 
 @test "Successful test" {

@@ -94,55 +94,46 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestContextManager, FeatureContextLifetimeManagement)
     {
-        contextManager.CreateFeatureContext(feature);
-        ASSERT_NO_THROW(contextManager.FeatureContext());
-
-        contextManager.DisposeFeatureContext();
+        {
+            auto scoped = contextManager.CreateFeatureContext(feature);
+            ASSERT_NO_THROW(contextManager.FeatureContext());
+        }
         ASSERT_ANY_THROW(contextManager.FeatureContext());
     }
 
     TEST_F(TestContextManager, RuleContextLifetimeManagement)
     {
-        contextManager.CreateFeatureContext(feature);
-        contextManager.CreateRuleContext(rule);
+        {
+            auto scopedFeature = contextManager.CreateFeatureContext(feature);
+            auto scopedRule = contextManager.CreateRuleContext(rule);
 
-        ASSERT_NO_THROW(contextManager.RuleContext());
-
-        contextManager.DisposeRuleContext();
+            ASSERT_NO_THROW(contextManager.RuleContext());
+        }
         ASSERT_ANY_THROW(contextManager.RuleContext());
-
-        contextManager.DisposeFeatureContext();
     }
 
     TEST_F(TestContextManager, ScenarioContextLifetimeManagement)
     {
-        contextManager.CreateFeatureContext(feature);
-        contextManager.CreateRuleContext(rule);
-        contextManager.CreateScenarioContext(scenario);
+        {
+            auto scopedFeature = contextManager.CreateFeatureContext(feature);
+            auto scopedRule = contextManager.CreateRuleContext(rule);
+            auto scopedScenario = contextManager.CreateScenarioContext(scenario);
 
-        ASSERT_NO_THROW(contextManager.ScenarioContext());
-
-        contextManager.DisposeScenarioContext();
+            ASSERT_NO_THROW(contextManager.ScenarioContext());
+        }
         ASSERT_ANY_THROW(contextManager.ScenarioContext());
-
-        contextManager.DisposeRuleContext();
-        contextManager.DisposeFeatureContext();
     }
 
     TEST_F(TestContextManager, StepContextLifetimeManagement)
     {
-        contextManager.CreateFeatureContext(feature);
-        contextManager.CreateRuleContext(rule);
-        contextManager.CreateScenarioContext(scenario);
-        contextManager.CreateStepContext(step);
+        {
+            auto scopedFeature = contextManager.CreateFeatureContext(feature);
+            auto scopedRule = contextManager.CreateRuleContext(rule);
+            auto scopedScenario = contextManager.CreateScenarioContext(scenario);
+            auto stepContextScope = contextManager.CreateStepContext(step);
 
-        ASSERT_NO_THROW(contextManager.StepContext());
-
-        contextManager.DisposeStepContext();
+            ASSERT_NO_THROW(contextManager.StepContext());
+        }
         ASSERT_ANY_THROW(contextManager.StepContext());
-
-        contextManager.DisposeScenarioContext();
-        contextManager.DisposeRuleContext();
-        contextManager.DisposeFeatureContext();
     }
 }

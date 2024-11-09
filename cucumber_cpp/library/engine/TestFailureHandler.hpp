@@ -30,14 +30,14 @@ namespace cucumber_cpp::library::engine
 
     struct TestAssertionHandlerImpl : TestAssertionHandler
     {
-        explicit TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportHandlerV2& reportHandler);
+        explicit TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
         virtual ~TestAssertionHandlerImpl() = default;
 
         void AddAssertionError(testing::TestPartResult::Type type, const char* const file, int line, std::string message) override;
 
     private:
         cucumber_cpp::engine::ContextManager& contextManager;
-        report::ReportHandlerV2& reportHandler;
+        report::ReportForwarder& reportHandler;
     };
 
     class CucumberAssertHelper
@@ -77,10 +77,5 @@ namespace cucumber_cpp::library::engine
         CucumberAssertHelper& operator=(const CucumberAssertHelper&) = delete;
     };
 }
-
-#undef GTEST_MESSAGE_AT_
-#define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
-    cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
-        ::testing::Message()
 
 #endif

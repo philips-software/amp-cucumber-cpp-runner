@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/engine/TestExecution.hpp"
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -33,12 +34,10 @@ namespace cucumber_cpp::engine
 
     void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature)
     {
-        testExecution.StartRun();
+        auto scope = testExecution.StartRun();
 
         for (const auto& featurePtr : feature)
             RunFeature(*featurePtr);
-
-        testExecution.EndRun();
     }
 
     void TestRunnerImpl::RunFeature(const FeatureInfo& feature)
@@ -46,44 +45,41 @@ namespace cucumber_cpp::engine
         if (feature.Rules().empty() && feature.Scenarios().empty())
             return;
 
-        testExecution.StartFeature(feature);
+        const auto featureScope = testExecution.StartFeature(feature);
 
         RunRules(feature.Rules());
         RunScenarios(feature.Scenarios());
+    }
 
-        testExecution.EndFeature();
+    void TestRunnerImpl::RunRule(const std::unique_ptr<RuleInfo>& rule)
+    {
+        const auto ruleScope = testExecution.StartRule(*rule);
+
+        RunScenarios(rule->Scenarios());
     }
 
     void TestRunnerImpl::RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules)
     {
         for (const auto& rule : rules)
-        {
-            testExecution.StartRule(*rule);
+            RunRule(rule);
+    }
 
-            RunScenarios(rule->Scenarios());
+    void TestRunnerImpl::RunScenario(const std::unique_ptr<ScenarioInfo>& scenario)
+    {
+        const auto scenarioScope = testExecution.StartScenario(*scenario);
 
-            testExecution.EndRule();
-        }
+        ExecuteSteps(*scenario);
     }
 
     void TestRunnerImpl::RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios)
     {
         for (const auto& scenario : scenarios)
-        {
-            testExecution.StartScenario(*scenario);
-
-            ExecuteSteps(*scenario);
-
-            testExecution.EndScenario();
-        }
+            RunScenario(scenario);
     }
 
     void TestRunnerImpl::ExecuteSteps(const ScenarioInfo& scenario)
     {
         for (const auto& step : scenario.Children())
-        {
             testExecution.RunStep(*step);
-        }
     }
-
 }

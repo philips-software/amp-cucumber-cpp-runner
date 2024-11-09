@@ -2,13 +2,12 @@
 #define REPORT_REPORT_HPP
 
 #include "cucumber_cpp/library/TraceTime.hpp"
+#include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
-// #include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include <cstddef>
-#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -51,36 +50,6 @@ namespace cucumber_cpp::report
         virtual void Summary(TraceTime::Duration duration) = 0;
     };
 
-    struct ReportHandler
-    {
-        enum struct Result
-        {
-            success,
-            skipped,
-            failed,
-            error,
-            pending,
-            ambiguous,
-            undefined,
-        };
-
-        virtual ~ReportHandler() = default;
-
-        virtual void FeatureStart(const FeatureSource& featureSource) = 0;
-        virtual void FeatureEnd(const FeatureSource& featureSource, Result result, TraceTime::Duration duration) = 0;
-
-        virtual void ScenarioStart(const ScenarioSource& scenarioSource) = 0;
-        virtual void ScenarioEnd(const ScenarioSource& scenarioSource, Result result, TraceTime::Duration duration) = 0;
-
-        virtual void StepStart(const StepSource& stepSource) = 0;
-        virtual void StepEnd(const StepSource& stepSource, Result result, TraceTime::Duration duration) = 0;
-
-        virtual void Failure(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
-        virtual void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
-
-        virtual void Trace(const std::string& trace) = 0;
-    };
-
     struct Reporters
     {
         void Add(const std::string& name, std::unique_ptr<ReportHandlerV2> reporter);
@@ -98,21 +67,79 @@ namespace cucumber_cpp::report
     };
 
     struct ReportForwarder
-        : Reporters
-        , ReportHandlerV2
     {
-        void FeatureStart(const engine::FeatureInfo& featureInfo) override;
-        void FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration) override;
+        struct FeatureScope;
+        struct RuleScope;
+        struct ScenarioScope;
+        struct StepScope;
 
-        void RuleStart(const engine::RuleInfo& ruleInfo) override;
-        void RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration) override;
+        [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
+        [[nodiscard]] virtual RuleScope RuleStart() = 0;
+        [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
+        [[nodiscard]] virtual StepScope StepStart() = 0;
 
-        void ScenarioStart(const engine::ScenarioInfo& scenarioInfo) override;
-        void ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration) override;
+        virtual void StepSkipped() = 0;
 
-        void StepSkipped(const engine::StepInfo& stepInfo) override;
-        void StepStart(const engine::StepInfo& stepInfo) override;
-        void StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration) override;
+        virtual void Failure(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
+        virtual void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) = 0;
+
+        virtual void Trace(const std::string& trace) = 0;
+
+        virtual void Summary(TraceTime::Duration duration) = 0;
+    };
+
+    struct ReportForwarder::FeatureScope
+    {
+        FeatureScope(cucumber_cpp::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ~FeatureScope();
+
+    private:
+        cucumber_cpp::engine::FeatureContext& featureContext;
+        std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
+    };
+
+    struct ReportForwarder::RuleScope
+    {
+        RuleScope(cucumber_cpp::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ~RuleScope();
+
+    private:
+        cucumber_cpp::engine::RuleContext& ruleContext;
+        std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
+    };
+
+    struct ReportForwarder::ScenarioScope
+    {
+        ScenarioScope(cucumber_cpp::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ~ScenarioScope();
+
+    private:
+        cucumber_cpp::engine::ScenarioContext& scenarioContext;
+        std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
+    };
+
+    struct ReportForwarder::StepScope
+    {
+        StepScope(cucumber_cpp::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ~StepScope();
+
+    private:
+        cucumber_cpp::engine::StepContext& stepContext;
+        std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
+    };
+
+    struct ReportForwarderImpl
+        : Reporters
+        , ReportForwarder
+    {
+        explicit ReportForwarderImpl(cucumber_cpp::engine::ContextManager& contextManager);
+
+        [[nodiscard]] FeatureScope FeatureStart() override;
+        [[nodiscard]] RuleScope RuleStart() override;
+        [[nodiscard]] ScenarioScope ScenarioStart() override;
+        [[nodiscard]] StepScope StepStart() override;
+
+        void StepSkipped() override;
 
         void Failure(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) override;
         void Error(const std::string& error, std::optional<std::filesystem::path> path = {}, std::optional<std::size_t> line = {}, std::optional<std::size_t> column = {}) override;
@@ -120,6 +147,9 @@ namespace cucumber_cpp::report
         void Trace(const std::string& trace) override;
 
         void Summary(TraceTime::Duration duration) override;
+
+    private:
+        cucumber_cpp::engine::ContextManager& contextManager;
     };
 }
 

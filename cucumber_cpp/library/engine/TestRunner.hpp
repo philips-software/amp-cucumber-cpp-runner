@@ -50,7 +50,9 @@ namespace cucumber_cpp::engine
 
     private:
         void ExecuteSteps(const ScenarioInfo& scenario);
+        void RunScenario(const std::unique_ptr<ScenarioInfo>& scenario);
         void RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios);
+        void RunRule(const std::unique_ptr<RuleInfo>& rule);
         void RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules);
         void RunFeature(const FeatureInfo& feature);
 

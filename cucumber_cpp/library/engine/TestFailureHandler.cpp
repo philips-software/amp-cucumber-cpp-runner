@@ -44,7 +44,7 @@ namespace cucumber_cpp::library::engine
         return *instance;
     }
 
-    TestAssertionHandlerImpl::TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportHandlerV2& reportHandler)
+    TestAssertionHandlerImpl::TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler)
         : contextManager{ contextManager }
         , reportHandler{ reportHandler }
     {}
@@ -53,13 +53,12 @@ namespace cucumber_cpp::library::engine
     {
         std::filesystem::path relativeFilePath = std::filesystem::relative(file);
 
-        contextManager.StepContext().ExecutionStatus(cucumber_cpp::engine::Result::failed);
+        contextManager.CurrentContext().ExecutionStatus(cucumber_cpp::engine::Result::failed);
 
         reportHandler.Failure(message, relativeFilePath, line);
     }
 
-    CucumberAssertHelper::CucumberAssertHelper(testing::TestPartResult::Type type, const char* file,
-        int line, const char* message)
+    CucumberAssertHelper::CucumberAssertHelper(testing::TestPartResult::Type type, const char* file, int line, const char* message)
         : data(std::make_unique<CucumberAssertHelperData>(type, file, line, message))
     {}
 

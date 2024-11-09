@@ -1,14 +1,11 @@
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TestRunnerMock.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
-#include <memory>
 #include <string>
 #include <vector>
 

@@ -12,7 +12,8 @@
                 "@smoke",
                 "@rule1 or @smoke",
                 "@keyword-asterisk",
-                "@result:UNDEFINED"
+                "@result:UNDEFINED",
+                "@result:FAILED"
             ]
         },
         {

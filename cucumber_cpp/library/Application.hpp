@@ -25,7 +25,7 @@ namespace cucumber_cpp
 
     struct ResultStatus
     {
-        using Result = cucumber_cpp::report::ReportHandler::Result;
+        using Result = cucumber_cpp::engine::Result;
 
         ResultStatus& operator=(Result result);
         explicit operator Result() const;
@@ -66,19 +66,20 @@ namespace cucumber_cpp
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(std::string_view tagExpression);
-        [[nodiscard]] report::ReportHandler::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
+        [[nodiscard]] cucumber_cpp::engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
 
         Options options;
         CLI::App cli;
         CLI::App* runCommand;
 
-        report::ReportForwarder reporters;
+        engine::ContextManager contextManager;
+
+        report::ReportForwarderImpl reporters;
         ReportHandlerValidator reportHandlerValidator;
 
         cucumber::gherkin::app gherkin;
 
         engine::FeatureTreeFactory featureTreeFactory{};
-        engine::ContextManager contextManager;
     };
 }
 

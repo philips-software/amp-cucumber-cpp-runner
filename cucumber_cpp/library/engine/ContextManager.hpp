@@ -7,13 +7,10 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
-#include "gtest/gtest.h"
-#include <filesystem>
+#include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <memory>
 #include <stack>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 namespace cucumber_cpp::engine
 {
@@ -41,19 +38,6 @@ namespace cucumber_cpp::engine
     {
         using CurrentContext::CurrentContext;
         using CurrentContext::ExecutionStatus;
-
-        void AppendFailure(testing::TestPartResult::Type type, std::filesystem::path srcfile, int line_num, std::string message);
-
-    private:
-        struct Failure
-        {
-            testing::TestPartResult::Type type;
-            std::filesystem::path srcfile;
-            int line_num;
-            std::string message;
-        };
-
-        std::vector<std::shared_ptr<Failure>> failures;
     };
 
     struct ProgramContext : RunnerContext
@@ -90,20 +74,30 @@ namespace cucumber_cpp::engine
         cucumber_cpp::engine::ProgramContext& ProgramContext();
         cucumber_cpp::engine::ProgramContext& ProgramContext() const;
 
-        void CreateFeatureContext(const FeatureInfo& featureInfo);
-        void DisposeFeatureContext();
+        struct ScopedFeautureContext;
+        struct ScopedRuleContext;
+        struct ScopedScenarioContext;
+        struct ScopedStepContext;
+
+    public:
+        [[nodiscard]] ScopedFeautureContext CreateFeatureContext(const FeatureInfo& featureInfo);
         cucumber_cpp::engine::FeatureContext& FeatureContext();
 
-        void CreateRuleContext(const RuleInfo& ruleInfo);
-        void DisposeRuleContext();
+        [[nodiscard]] ScopedRuleContext CreateRuleContext(const RuleInfo& ruleInfo);
         cucumber_cpp::engine::RuleContext& RuleContext();
 
-        void CreateScenarioContext(const ScenarioInfo& scenarioInfo);
-        void DisposeScenarioContext();
+        [[nodiscard]] ScopedScenarioContext CreateScenarioContext(const ScenarioInfo& scenarioInfo);
         cucumber_cpp::engine::ScenarioContext& ScenarioContext();
 
-        void CreateStepContext(const StepInfo& stepInfo);
+        [[nodiscard]] ScopedStepContext CreateStepContext(const StepInfo& stepInfo);
+
+    private:
+        void DisposeFeatureContext();
+        void DisposeRuleContext();
+        void DisposeScenarioContext();
         void DisposeStepContext();
+
+    public:
         cucumber_cpp::engine::StepContext& StepContext();
 
         cucumber_cpp::engine::RunnerContext& CurrentContext();
@@ -116,6 +110,42 @@ namespace cucumber_cpp::engine
 
         std::stack<std::shared_ptr<cucumber_cpp::engine::RunnerContext>> runnerContext;
         std::stack<std::shared_ptr<cucumber_cpp::engine::StepContext>> stepContext;
+    };
+
+    struct ContextManager::ScopedFeautureContext : library::util::Immoveable
+    {
+        ScopedFeautureContext(ContextManager& contextManager);
+        ~ScopedFeautureContext();
+
+    private:
+        ContextManager& contextManager;
+    };
+
+    struct ContextManager::ScopedRuleContext : library::util::Immoveable
+    {
+        ScopedRuleContext(ContextManager& contextManager);
+        ~ScopedRuleContext();
+
+    private:
+        ContextManager& contextManager;
+    };
+
+    struct ContextManager::ScopedScenarioContext : library::util::Immoveable
+    {
+        ScopedScenarioContext(ContextManager& contextManager);
+        ~ScopedScenarioContext();
+
+    private:
+        ContextManager& contextManager;
+    };
+
+    struct ContextManager::ScopedStepContext : library::util::Immoveable
+    {
+        ScopedStepContext(ContextManager& contextManager);
+        ~ScopedStepContext();
+
+    private:
+        ContextManager& contextManager;
     };
 }
 

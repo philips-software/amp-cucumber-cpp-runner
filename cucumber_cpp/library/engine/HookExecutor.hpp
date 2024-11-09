@@ -4,7 +4,9 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
+#include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -13,39 +15,69 @@ namespace cucumber_cpp::library::engine
 
     struct HookExecutor
     {
-        virtual void BeforeAll() = 0;
-        virtual void AfterAll() = 0;
+        struct ProgramScope;
+        struct FeatureScope;
+        struct ScenarioScope;
+        struct StepScope;
 
-        virtual void BeforeFeature() = 0;
-        virtual void AfterFeature() = 0;
+    public:
+        [[nodiscard]] virtual ProgramScope BeforeAll() = 0;
+        [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
+        [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
+        [[nodiscard]] virtual StepScope StepStart() = 0;
 
-        virtual void BeforeScenario() = 0;
-        virtual void AfterScenario() = 0;
+    private:
+        struct ScopedHook;
+    };
 
-        virtual void BeforeStep() = 0;
-        virtual void AfterStep() = 0;
+    struct HookPair
+    {
+        const HookType before;
+        const HookType after;
+    };
+
+    struct HookExecutor::ScopedHook : util::Immoveable
+    {
+        ScopedHook(cucumber_cpp::engine::RunnerContext& runnerContext, HookPair hookPair, const std::set<std::string, std::less<>>& tags);
+        ~ScopedHook();
+
+    private:
+        cucumber_cpp::engine::RunnerContext& runnerContext;
+        HookPair hookPair;
+        const std::set<std::string, std::less<>>& tags;
+    };
+
+    struct HookExecutor::ProgramScope : private ScopedHook
+    {
+        explicit ProgramScope(cucumber_cpp::engine::ContextManager& contextManager);
+    };
+
+    struct HookExecutor::FeatureScope : private ScopedHook
+    {
+        explicit FeatureScope(cucumber_cpp::engine::ContextManager& contextManager);
+    };
+
+    struct HookExecutor::ScenarioScope : private ScopedHook
+    {
+        explicit ScenarioScope(cucumber_cpp::engine::ContextManager& contextManager);
+    };
+
+    struct HookExecutor::StepScope : private ScopedHook
+    {
+        explicit StepScope(cucumber_cpp::engine::ContextManager& contextManager);
     };
 
     struct HookExecutorImpl : HookExecutor
     {
         explicit HookExecutorImpl(::cucumber_cpp::engine::ContextManager& contextManager);
 
-        void BeforeAll() override;
-        void AfterAll() override;
-
-        void BeforeFeature() override;
-        void AfterFeature() override;
-
-        void BeforeScenario() override;
-        void AfterScenario() override;
-
-        void BeforeStep() override;
-        void AfterStep() override;
+        [[nodiscard]] ProgramScope BeforeAll() override;
+        [[nodiscard]] FeatureScope FeatureStart() override;
+        [[nodiscard]] ScenarioScope ScenarioStart() override;
+        [[nodiscard]] StepScope StepStart() override;
 
     private:
-        void ExecuteHook(Context& context, HookType hook, const std::set<std::string, std::less<>>& tags);
-
-        ::cucumber_cpp::engine::ContextManager& contextManager;
+        cucumber_cpp::engine::ContextManager& contextManager;
     };
 }
 

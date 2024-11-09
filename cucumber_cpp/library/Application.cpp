@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "cucumber_cpp/library/engine/HookExecutor.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/TestExecution.hpp"
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
@@ -87,7 +88,7 @@ namespace cucumber_cpp
 
     ResultStatus& ResultStatus::operator=(Result result)
     {
-        if ((resultStatus == Result::undefined || resultStatus == Result::success) && result != Result::undefined)
+        if ((resultStatus == Result::undefined || resultStatus == Result::passed) && result != Result::undefined)
             resultStatus = result;
 
         return *this;
@@ -100,12 +101,14 @@ namespace cucumber_cpp
 
     bool ResultStatus::IsSuccess() const
     {
-        return resultStatus == Result::success;
+        return resultStatus == Result::passed;
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
-        : reportHandlerValidator{ reporters }
-        , contextManager{ std::move(contextStorageFactory) }
+        : contextManager{ std::move(contextStorageFactory) }
+        , reporters{ contextManager }
+        , reportHandlerValidator{ reporters }
+
     {
         gherkin.include_source(false);
         gherkin.include_ast(true);
@@ -176,16 +179,18 @@ namespace cucumber_cpp
             reporters.Use(selectedReporter);
 
         auto tagExpression = Join(options.tags, " ");
-        library::engine::EventSubjects eventsSubjects;
         library::engine::HookExecutorImpl hookExecution{ contextManager };
-        library::engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, eventsSubjects };
+        library::engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, [this]() -> const library::engine::TestExecution::Policy&
+            {
+                if (options.dryrun)
+                    return library::engine::dryRunPolicy;
+                else
+                    return library::engine::executeRunPolicy;
+            }() };
 
         engine::TestRunnerImpl testRunner{ testExecution };
 
-        if (options.dryrun)
-            testRunner.Run(GetFeatureTree(tagExpression));
-        else
-            testRunner.Run(GetFeatureTree(tagExpression));
+        testRunner.Run(GetFeatureTree(tagExpression));
 
         std::cout << '\n'
                   << std::flush;
