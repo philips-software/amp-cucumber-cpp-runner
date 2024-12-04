@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/Hooks.hpp"
+#include "gmock/gmock.h"
 #include <iostream>
 
 HOOK_BEFORE_ALL()
@@ -29,4 +30,19 @@ HOOK_BEFORE_STEP("@stephook and @bats")
 HOOK_AFTER_STEP("@stephook and @bats")
 {
     std::cout << "HOOK_AFTER_STEP\n";
+}
+
+HOOK_BEFORE_SCENARIO("@fail_scenariohook_before")
+{
+    ASSERT_THAT(false, testing::IsTrue());
+}
+
+HOOK_AFTER_SCENARIO("@fail_scenariohook_after")
+{
+    ASSERT_THAT(false, testing::IsTrue());
+}
+
+HOOK_BEFORE_SCENARIO("@throw_scenariohook")
+{
+    throw "error";
 }
