@@ -3,7 +3,7 @@
 
 int main(int argc, char** argv)
 {
-    cucumber_cpp::Application application{};
+    cucumber_cpp::library::Application application{};
 
     return application.Run(argc, argv);
 }

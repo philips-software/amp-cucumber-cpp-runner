@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     auto& GetOrThrow(auto& ptr, std::string typeName)
     {
@@ -104,12 +104,12 @@ namespace cucumber_cpp::engine
         runnerContext.push(programContext);
     }
 
-    cucumber_cpp::engine::ProgramContext& ContextManager::ProgramContext()
+    cucumber_cpp::library::engine::ProgramContext& ContextManager::ProgramContext()
     {
         return *programContext;
     }
 
-    cucumber_cpp::engine::ProgramContext& ContextManager::ProgramContext() const
+    cucumber_cpp::library::engine::ProgramContext& ContextManager::ProgramContext() const
     {
         return *programContext;
     }
@@ -173,7 +173,7 @@ namespace cucumber_cpp::engine
 
     ContextManager::ScopedStepContext ContextManager::CreateStepContext(const StepInfo& stepInfo)
     {
-        stepContext.push(std::make_shared<cucumber_cpp::engine::StepContext>(*scenarioContext, stepInfo));
+        stepContext.push(std::make_shared<cucumber_cpp::library::engine::StepContext>(*scenarioContext, stepInfo));
         runnerContext.push(stepContext.top());
 
         return ScopedStepContext{ *this };
@@ -193,7 +193,7 @@ namespace cucumber_cpp::engine
         return *stepContext.top();
     }
 
-    cucumber_cpp::engine::RunnerContext& ContextManager::CurrentContext()
+    cucumber_cpp::library::engine::RunnerContext& ContextManager::CurrentContext()
     {
         return *runnerContext.top();
     }

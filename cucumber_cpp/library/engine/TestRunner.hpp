@@ -1,7 +1,6 @@
 #ifndef ENGINE_TESTRUNNER_HPP
 #define ENGINE_TESTRUNNER_HPP
 
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
@@ -9,12 +8,12 @@
 #include <memory>
 #include <vector>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     struct ReportHandlerV2;
 }
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     struct TestRunner
     {
@@ -44,7 +43,7 @@ namespace cucumber_cpp::engine
 
     struct TestRunnerImpl : TestRunner
     {
-        explicit TestRunnerImpl(::cucumber_cpp::library::engine::TestExecution& testExecution);
+        explicit TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution);
 
         void Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature) override;
 
@@ -56,7 +55,7 @@ namespace cucumber_cpp::engine
         void RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules);
         void RunFeature(const FeatureInfo& feature);
 
-        ::cucumber_cpp::library::engine::TestExecution& testExecution;
+        cucumber_cpp::library::engine::TestExecution& testExecution;
     };
 }
 

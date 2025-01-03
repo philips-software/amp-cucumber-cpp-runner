@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     void Rtrim(std::string& s);
 }

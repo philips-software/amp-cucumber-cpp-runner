@@ -8,7 +8,7 @@
 #include <source_location>
 #include <string>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library::engine
 {
     Step::Step(Context& context, const Table& table)
         : context{ context }

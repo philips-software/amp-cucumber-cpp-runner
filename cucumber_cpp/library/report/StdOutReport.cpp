@@ -27,7 +27,7 @@
 // clang-format on
 #endif
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     namespace
     {
@@ -108,10 +108,10 @@ namespace cucumber_cpp::report
             { engine::Result ::undefined, "undefined" },
         };
 
-        const std::map<StepType, std::string> stepTypeLut{
-            { StepType::given, "Given" },
-            { StepType::when, "When" },
-            { StepType::then, "Then" }
+        const std::map<engine::StepType, std::string> stepTypeLut{
+            { engine::StepType::given, "Given" },
+            { engine::StepType::when, "When" },
+            { engine::StepType::then, "Then" }
         };
 
         std::string ScaledDuration(TraceTime::Duration duration)

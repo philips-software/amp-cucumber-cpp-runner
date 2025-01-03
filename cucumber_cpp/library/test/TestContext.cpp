@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct TestContext : testing::Test
     {

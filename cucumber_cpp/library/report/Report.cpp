@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     namespace
     {
@@ -53,7 +53,7 @@ namespace cucumber_cpp::report
         return reporters;
     }
 
-    ReportForwarder::ProgramScope::ProgramScope(cucumber_cpp::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+    ReportForwarder::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : programContext{ programContext }
         , reporters{ reporters }
     {}
@@ -63,7 +63,7 @@ namespace cucumber_cpp::report
         ForwardCall(reporters, &ReportHandlerV2::Summary, programContext.Duration());
     }
 
-    ReportForwarder::FeatureScope::FeatureScope(cucumber_cpp::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+    ReportForwarder::FeatureScope::FeatureScope(cucumber_cpp::library::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : featureContext{ featureContext }
         , reporters{ reporters }
     {
@@ -75,7 +75,7 @@ namespace cucumber_cpp::report
         ForwardCall(reporters, &ReportHandlerV2::FeatureEnd, featureContext.ExecutionStatus(), featureContext.info, featureContext.Duration());
     }
 
-    ReportForwarder::RuleScope::RuleScope(cucumber_cpp::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+    ReportForwarder::RuleScope::RuleScope(cucumber_cpp::library::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : ruleContext{ ruleContext }
         , reporters{ reporters }
     {
@@ -87,7 +87,7 @@ namespace cucumber_cpp::report
         ForwardCall(reporters, &ReportHandlerV2::RuleEnd, ruleContext.ExecutionStatus(), ruleContext.info, ruleContext.Duration());
     }
 
-    ReportForwarder::ScenarioScope::ScenarioScope(cucumber_cpp::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+    ReportForwarder::ScenarioScope::ScenarioScope(cucumber_cpp::library::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : scenarioContext{ scenarioContext }
         , reporters{ reporters }
     {
@@ -99,7 +99,7 @@ namespace cucumber_cpp::report
         ForwardCall(reporters, &ReportHandlerV2::ScenarioEnd, scenarioContext.ExecutionStatus(), scenarioContext.info, scenarioContext.Duration());
     }
 
-    ReportForwarder::StepScope::StepScope(cucumber_cpp::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+    ReportForwarder::StepScope::StepScope(cucumber_cpp::library::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
         : stepContext{ stepContext }
         , reporters{ reporters }
     {
@@ -111,7 +111,7 @@ namespace cucumber_cpp::report
         ForwardCall(reporters, &ReportHandlerV2::StepEnd, stepContext.ExecutionStatus(), stepContext.info, stepContext.Duration());
     }
 
-    ReportForwarderImpl::ReportForwarderImpl(cucumber_cpp::engine::ContextManager& contextManager)
+    ReportForwarderImpl::ReportForwarderImpl(cucumber_cpp::library::engine::ContextManager& contextManager)
         : contextManager{ contextManager }
     {}
 

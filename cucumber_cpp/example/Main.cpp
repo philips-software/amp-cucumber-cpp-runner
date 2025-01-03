@@ -3,7 +3,7 @@
 
 int main(int argc, char** argv)
 {
-    cucumber_cpp::Application application{};
+    cucumber_cpp::library::Application application{};
 
     application.CliParser().add_option("--com", *application.ProgramContext().EmplaceAt<std::string>("--com"))->required();
     auto* stOpt = application.CliParser().add_flag("--st", *application.ProgramContext().EmplaceAt<bool>("--st"));

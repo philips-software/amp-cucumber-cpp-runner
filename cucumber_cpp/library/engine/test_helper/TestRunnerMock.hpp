@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace cucumber_cpp::engine::test_helper
+namespace cucumber_cpp::library::engine::test_helper
 {
     struct TestRunnerMock : TestRunner
     {

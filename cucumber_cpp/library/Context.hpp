@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     namespace detail
     {

@@ -36,7 +36,7 @@
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     namespace
     {

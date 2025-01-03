@@ -38,38 +38,38 @@ namespace cucumber_cpp::library::engine
 
     struct HookExecutor::ScopedHook : util::Immoveable
     {
-        ScopedHook(cucumber_cpp::engine::RunnerContext& runnerContext, HookPair hookPair, const std::set<std::string, std::less<>>& tags);
+        ScopedHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookPair hookPair, const std::set<std::string, std::less<>>& tags);
         ~ScopedHook();
 
     private:
-        cucumber_cpp::engine::RunnerContext& runnerContext;
+        cucumber_cpp::library::engine::RunnerContext& runnerContext;
         HookPair hookPair;
         const std::set<std::string, std::less<>>& tags;
     };
 
     struct HookExecutor::ProgramScope : private ScopedHook
     {
-        explicit ProgramScope(cucumber_cpp::engine::ContextManager& contextManager);
+        explicit ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager);
     };
 
     struct HookExecutor::FeatureScope : private ScopedHook
     {
-        explicit FeatureScope(cucumber_cpp::engine::ContextManager& contextManager);
+        explicit FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager);
     };
 
     struct HookExecutor::ScenarioScope : private ScopedHook
     {
-        explicit ScenarioScope(cucumber_cpp::engine::ContextManager& contextManager);
+        explicit ScenarioScope(cucumber_cpp::library::engine::ContextManager& contextManager);
     };
 
     struct HookExecutor::StepScope : private ScopedHook
     {
-        explicit StepScope(cucumber_cpp::engine::ContextManager& contextManager);
+        explicit StepScope(cucumber_cpp::library::engine::ContextManager& contextManager);
     };
 
     struct HookExecutorImpl : HookExecutor
     {
-        explicit HookExecutorImpl(::cucumber_cpp::engine::ContextManager& contextManager);
+        explicit HookExecutorImpl(cucumber_cpp::library::engine::ContextManager& contextManager);
 
         [[nodiscard]] ProgramScope BeforeAll() override;
         [[nodiscard]] FeatureScope FeatureStart() override;
@@ -77,7 +77,7 @@ namespace cucumber_cpp::library::engine
         [[nodiscard]] StepScope StepStart() override;
 
     private:
-        cucumber_cpp::engine::ContextManager& contextManager;
+        cucumber_cpp::library::engine::ContextManager& contextManager;
     };
 }
 

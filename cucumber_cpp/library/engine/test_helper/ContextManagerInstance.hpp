@@ -19,10 +19,10 @@ namespace cucumber_cpp::library::engine::test_helper
     };
 
     struct ContextManagerInstance : private ContextManagerInstanceStorage
-        , cucumber_cpp::engine::ContextManager
+        , cucumber_cpp::library::engine::ContextManager
     {
         ContextManagerInstance()
-            : cucumber_cpp::engine::ContextManager{ contextStorageFactory }
+            : cucumber_cpp::library::engine::ContextManager{ contextStorageFactory }
             , featureContextScope{ CreateFeatureContext(feature) }
             , ruleContextScope{ CreateRuleContext(rule) }
             , scenarioContextScope{ CreateScenarioContext(scenario) }
@@ -31,10 +31,10 @@ namespace cucumber_cpp::library::engine::test_helper
         }
 
     private:
-        cucumber_cpp::engine::FeatureInfo feature{ {}, {}, {}, {}, {}, {} };
-        cucumber_cpp::engine::RuleInfo rule{ feature, {}, {}, {}, {} };
-        cucumber_cpp::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
-        cucumber_cpp::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::FeatureInfo feature{ {}, {}, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::RuleInfo rule{ feature, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
 
         ContextManager::ScopedFeautureContext featureContextScope;
         ContextManager::ScopedRuleContext ruleContextScope;

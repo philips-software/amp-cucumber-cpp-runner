@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     RuleInfo::RuleInfo(const struct FeatureInfo& featureInfo, std::string title, std::string description, std::size_t line, std::size_t column)
         : featureInfo{ featureInfo }

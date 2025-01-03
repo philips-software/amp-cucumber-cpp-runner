@@ -18,7 +18,7 @@ namespace cucumber_cpp::library::engine
         constexpr HookPair scenarioHooks{ HookType::before, HookType::after };
         constexpr HookPair stepHooks{ HookType::beforeStep, HookType::afterStep };
 
-        void ExecuteHook(cucumber_cpp::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
+        void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
             try
             {
@@ -26,18 +26,18 @@ namespace cucumber_cpp::library::engine
                 {
                     match.factory(runnerContext)->Execute();
 
-                    if (runnerContext.ExecutionStatus() != cucumber_cpp::engine::Result::passed)
+                    if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
                         return;
                 }
             }
             catch (...)
             {
-                runnerContext.ExecutionStatus(cucumber_cpp::engine::Result::failed);
+                runnerContext.ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
             }
         }
     }
 
-    HookExecutor::ScopedHook::ScopedHook(cucumber_cpp::engine::RunnerContext& runnerContext, HookPair hookPair, const std::set<std::string, std::less<>>& tags)
+    HookExecutor::ScopedHook::ScopedHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookPair hookPair, const std::set<std::string, std::less<>>& tags)
         : runnerContext{ runnerContext }
         , hookPair{ hookPair }
         , tags{ tags }
@@ -50,24 +50,24 @@ namespace cucumber_cpp::library::engine
         ExecuteHook(runnerContext, hookPair.after, tags);
     }
 
-    HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::engine::ContextManager& contextManager)
+    HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.ProgramContext(), programHooks, {} }
     {
     }
 
-    HookExecutor::FeatureScope::FeatureScope(cucumber_cpp::engine::ContextManager& contextManager)
+    HookExecutor::FeatureScope::FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.FeatureContext(), featureHooks, contextManager.FeatureContext().info.Tags() }
     {}
 
-    HookExecutor::ScenarioScope::ScenarioScope(cucumber_cpp::engine::ContextManager& contextManager)
+    HookExecutor::ScenarioScope::ScenarioScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.ScenarioContext(), scenarioHooks, contextManager.ScenarioContext().info.Tags() }
     {}
 
-    HookExecutor::StepScope::StepScope(cucumber_cpp::engine::ContextManager& contextManager)
+    HookExecutor::StepScope::StepScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.StepContext(), stepHooks, contextManager.ScenarioContext().info.Tags() }
     {}
 
-    HookExecutorImpl::HookExecutorImpl(::cucumber_cpp::engine::ContextManager& contextManager)
+    HookExecutorImpl::HookExecutorImpl(cucumber_cpp::library::engine::ContextManager& contextManager)
         : contextManager{ contextManager }
     {}
 

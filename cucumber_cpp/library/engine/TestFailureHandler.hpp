@@ -30,13 +30,13 @@ namespace cucumber_cpp::library::engine
 
     struct TestAssertionHandlerImpl : TestAssertionHandler
     {
-        explicit TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
+        explicit TestAssertionHandlerImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
         virtual ~TestAssertionHandlerImpl() = default;
 
         void AddAssertionError(testing::TestPartResult::Type type, const char* const file, int line, std::string message) override;
 
     private:
-        cucumber_cpp::engine::ContextManager& contextManager;
+        cucumber_cpp::library::engine::ContextManager& contextManager;
         report::ReportForwarder& reportHandler;
     };
 

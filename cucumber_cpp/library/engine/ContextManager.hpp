@@ -12,7 +12,7 @@
 #include <stack>
 #include <stdexcept>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     struct CurrentContext : Context
     {
@@ -71,8 +71,8 @@ namespace cucumber_cpp::engine
     {
         explicit ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
-        cucumber_cpp::engine::ProgramContext& ProgramContext();
-        cucumber_cpp::engine::ProgramContext& ProgramContext() const;
+        cucumber_cpp::library::engine::ProgramContext& ProgramContext();
+        cucumber_cpp::library::engine::ProgramContext& ProgramContext() const;
 
         struct ScopedFeautureContext;
         struct ScopedRuleContext;
@@ -81,13 +81,13 @@ namespace cucumber_cpp::engine
 
     public:
         [[nodiscard]] ScopedFeautureContext CreateFeatureContext(const FeatureInfo& featureInfo);
-        cucumber_cpp::engine::FeatureContext& FeatureContext();
+        cucumber_cpp::library::engine::FeatureContext& FeatureContext();
 
         [[nodiscard]] ScopedRuleContext CreateRuleContext(const RuleInfo& ruleInfo);
-        cucumber_cpp::engine::RuleContext& RuleContext();
+        cucumber_cpp::library::engine::RuleContext& RuleContext();
 
         [[nodiscard]] ScopedScenarioContext CreateScenarioContext(const ScenarioInfo& scenarioInfo);
-        cucumber_cpp::engine::ScenarioContext& ScenarioContext();
+        cucumber_cpp::library::engine::ScenarioContext& ScenarioContext();
 
         [[nodiscard]] ScopedStepContext CreateStepContext(const StepInfo& stepInfo);
 
@@ -98,18 +98,18 @@ namespace cucumber_cpp::engine
         void DisposeStepContext();
 
     public:
-        cucumber_cpp::engine::StepContext& StepContext();
+        cucumber_cpp::library::engine::StepContext& StepContext();
 
-        cucumber_cpp::engine::RunnerContext& CurrentContext();
+        cucumber_cpp::library::engine::RunnerContext& CurrentContext();
 
     private:
-        std::shared_ptr<cucumber_cpp::engine::ProgramContext> programContext;
-        std::shared_ptr<cucumber_cpp::engine::FeatureContext> featureContext;
-        std::shared_ptr<cucumber_cpp::engine::RuleContext> ruleContext;
-        std::shared_ptr<cucumber_cpp::engine::ScenarioContext> scenarioContext;
+        std::shared_ptr<cucumber_cpp::library::engine::ProgramContext> programContext;
+        std::shared_ptr<cucumber_cpp::library::engine::FeatureContext> featureContext;
+        std::shared_ptr<cucumber_cpp::library::engine::RuleContext> ruleContext;
+        std::shared_ptr<cucumber_cpp::library::engine::ScenarioContext> scenarioContext;
 
-        std::stack<std::shared_ptr<cucumber_cpp::engine::RunnerContext>> runnerContext;
-        std::stack<std::shared_ptr<cucumber_cpp::engine::StepContext>> stepContext;
+        std::stack<std::shared_ptr<cucumber_cpp::library::engine::RunnerContext>> runnerContext;
+        std::stack<std::shared_ptr<cucumber_cpp::library::engine::StepContext>> stepContext;
     };
 
     struct ContextManager::ScopedFeautureContext : library::util::Immoveable

@@ -44,7 +44,7 @@ namespace cucumber_cpp::library::engine
         return *instance;
     }
 
-    TestAssertionHandlerImpl::TestAssertionHandlerImpl(cucumber_cpp::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler)
+    TestAssertionHandlerImpl::TestAssertionHandlerImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler)
         : contextManager{ contextManager }
         , reportHandler{ reportHandler }
     {}
@@ -53,7 +53,7 @@ namespace cucumber_cpp::library::engine
     {
         std::filesystem::path relativeFilePath = std::filesystem::relative(file);
 
-        contextManager.CurrentContext().ExecutionStatus(cucumber_cpp::engine::Result::failed);
+        contextManager.CurrentContext().ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
 
         reportHandler.Failure(message, relativeFilePath, line);
     }

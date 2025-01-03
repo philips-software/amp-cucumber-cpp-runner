@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     namespace
     {

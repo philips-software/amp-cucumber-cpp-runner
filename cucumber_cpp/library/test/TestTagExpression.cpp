@@ -5,7 +5,7 @@
 #include <set>
 #include <string>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct TestTagExpression : testing::Test
     {

@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library::engine
 {
     struct Step
     {

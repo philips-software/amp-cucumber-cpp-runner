@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     TestRunner* TestRunner::instance = nullptr;
 
@@ -27,7 +27,7 @@ namespace cucumber_cpp::engine
         return *instance;
     }
 
-    TestRunnerImpl::TestRunnerImpl(::cucumber_cpp::library::engine::TestExecution& testExecution)
+    TestRunnerImpl::TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution)
         : testExecution{ testExecution }
     {
     }

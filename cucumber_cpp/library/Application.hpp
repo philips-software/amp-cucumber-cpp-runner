@@ -16,7 +16,7 @@
 #include <string_view>
 #include <vector>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct ReportHandlerValidator : public CLI::Validator
     {
@@ -25,7 +25,7 @@ namespace cucumber_cpp
 
     struct ResultStatus
     {
-        using Result = cucumber_cpp::engine::Result;
+        using Result = cucumber_cpp::library::engine::Result;
 
         ResultStatus& operator=(Result result);
         explicit operator Result() const;
@@ -66,7 +66,7 @@ namespace cucumber_cpp
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(std::string_view tagExpression);
-        [[nodiscard]] cucumber_cpp::engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
+        [[nodiscard]] cucumber_cpp::library::engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
 
         Options options;
         CLI::App cli;

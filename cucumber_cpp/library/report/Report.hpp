@@ -23,7 +23,7 @@ namespace cucumber_cpp
     struct StepSource;
 }
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     struct ReportHandlerV2
     {
@@ -92,51 +92,51 @@ namespace cucumber_cpp::report
 
     struct ReportForwarder::ProgramScope
     {
-        ProgramScope(cucumber_cpp::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ProgramScope(cucumber_cpp::library::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
         ~ProgramScope();
 
     private:
-        cucumber_cpp::engine::ProgramContext& programContext;
+        cucumber_cpp::library::engine::ProgramContext& programContext;
         std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
     struct ReportForwarder::FeatureScope
     {
-        FeatureScope(cucumber_cpp::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        FeatureScope(cucumber_cpp::library::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
         ~FeatureScope();
 
     private:
-        cucumber_cpp::engine::FeatureContext& featureContext;
+        cucumber_cpp::library::engine::FeatureContext& featureContext;
         std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
     struct ReportForwarder::RuleScope
     {
-        RuleScope(cucumber_cpp::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        RuleScope(cucumber_cpp::library::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
         ~RuleScope();
 
     private:
-        cucumber_cpp::engine::RuleContext& ruleContext;
+        cucumber_cpp::library::engine::RuleContext& ruleContext;
         std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
     struct ReportForwarder::ScenarioScope
     {
-        ScenarioScope(cucumber_cpp::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        ScenarioScope(cucumber_cpp::library::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
         ~ScenarioScope();
 
     private:
-        cucumber_cpp::engine::ScenarioContext& scenarioContext;
+        cucumber_cpp::library::engine::ScenarioContext& scenarioContext;
         std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
     struct ReportForwarder::StepScope
     {
-        StepScope(cucumber_cpp::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
+        StepScope(cucumber_cpp::library::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters);
         ~StepScope();
 
     private:
-        cucumber_cpp::engine::StepContext& stepContext;
+        cucumber_cpp::library::engine::StepContext& stepContext;
         std::vector<std::unique_ptr<ReportHandlerV2>>& reporters;
     };
 
@@ -144,7 +144,7 @@ namespace cucumber_cpp::report
         : Reporters
         , ReportForwarder
     {
-        explicit ReportForwarderImpl(cucumber_cpp::engine::ContextManager& contextManager);
+        explicit ReportForwarderImpl(cucumber_cpp::library::engine::ContextManager& contextManager);
 
         [[nodiscard]] ProgramScope ProgramStart() override;
         [[nodiscard]] FeatureScope FeatureStart() override;
@@ -162,7 +162,7 @@ namespace cucumber_cpp::report
         void Summary(TraceTime::Duration duration) override;
 
     private:
-        cucumber_cpp::engine::ContextManager& contextManager;
+        cucumber_cpp::library::engine::ContextManager& contextManager;
     };
 }
 

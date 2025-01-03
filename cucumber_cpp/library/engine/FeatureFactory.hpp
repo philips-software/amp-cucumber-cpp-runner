@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     struct FeatureTreeFactory
     {
