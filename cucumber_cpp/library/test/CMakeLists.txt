@@ -10,7 +10,6 @@ target_link_libraries(cucumber_cpp.library.test PUBLIC
 
 target_sources(cucumber_cpp.library.test PRIVATE
     TestContext.cpp
-    TestHooks.cpp
     TestTagExpression.cpp
     TestSteps.cpp
 )

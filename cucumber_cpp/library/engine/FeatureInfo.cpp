@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column)
         : tags{ std::move(tags) }

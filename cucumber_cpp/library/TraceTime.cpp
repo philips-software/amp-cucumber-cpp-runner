@@ -1,7 +1,7 @@
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include <chrono>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     void TraceTime::Start()
     {

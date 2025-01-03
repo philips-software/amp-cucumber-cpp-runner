@@ -3,7 +3,7 @@
 
 #include <chrono>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct TraceTime
     {

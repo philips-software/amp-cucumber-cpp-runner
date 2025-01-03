@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct RegexMatch
     {
@@ -42,13 +42,13 @@ namespace cucumber_cpp
 
     struct StepMatch
     {
-        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const Table& table), const std::vector<std::string>& matches, const std::string& stepRegexStr)
+        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), const std::vector<std::string>& matches, const std::string& stepRegexStr)
             : factory(factory)
             , matches(matches)
             , stepRegexStr(stepRegexStr)
         {}
 
-        std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
+        std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
         std::vector<std::string> matches{};
         std::string stepRegexStr{};
     };
@@ -71,15 +71,15 @@ namespace cucumber_cpp
 
         struct Entry
         {
-            Entry(StepType type, StepRegex regex, std::unique_ptr<Body> (&factory)(Context& context, const Table& table))
+            Entry(engine::StepType type, StepRegex regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
                 : type(type)
                 , regex(std::move(regex))
                 , factory(factory)
             {}
 
-            StepType type{};
+            engine::StepType type{};
             StepRegex regex;
-            std::unique_ptr<Body> (&factory)(Context& context, const Table& table);
+            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
 
             std::uint32_t used{ 0 };
         };
@@ -95,21 +95,21 @@ namespace cucumber_cpp
             const std::uint32_t& used;
         };
 
-        [[nodiscard]] StepMatch Query(StepType stepType, const std::string& expression);
+        [[nodiscard]] StepMatch Query(engine::StepType stepType, const std::string& expression);
 
         [[nodiscard]] std::size_t Size() const;
-        [[nodiscard]] std::size_t Size(StepType stepType) const;
+        [[nodiscard]] std::size_t Size(engine::StepType stepType) const;
 
         [[nodiscard]] std::vector<EntryView> List() const;
 
     protected:
         template<class T>
         std::size_t
-        Register(const std::string& matcher, StepType stepType);
+        Register(const std::string& matcher, engine::StepType stepType);
 
     private:
         template<class T>
-        static std::unique_ptr<Body> Construct(Context& context, const Table& table);
+        static std::unique_ptr<Body> Construct(Context& context, const engine::Table& table);
 
         std::vector<Entry> registry;
     };
@@ -123,7 +123,7 @@ namespace cucumber_cpp
         static StepRegistry& Instance();
 
         template<class T>
-        static std::size_t Register(const std::string& matcher, StepType stepType);
+        static std::size_t Register(const std::string& matcher, engine::StepType stepType);
     };
 
     //////////////////////////
@@ -131,20 +131,20 @@ namespace cucumber_cpp
     //////////////////////////
 
     template<class T>
-    std::size_t StepRegistryBase::Register(const std::string& matcher, StepType stepType)
+    std::size_t StepRegistryBase::Register(const std::string& matcher, engine::StepType stepType)
     {
         registry.emplace_back(stepType, StepRegex{ matcher }, Construct<T>);
         return registry.size();
     }
 
     template<class T>
-    std::unique_ptr<Body> StepRegistryBase::Construct(Context& context, const Table& table)
+    std::unique_ptr<Body> StepRegistryBase::Construct(Context& context, const engine::Table& table)
     {
         return std::make_unique<T>(context, table);
     }
 
     template<class T>
-    std::size_t StepRegistry::Register(const std::string& matcher, StepType stepType)
+    std::size_t StepRegistry::Register(const std::string& matcher, engine::StepType stepType)
     {
         return Instance().StepRegistryBase::Register<T>(matcher, stepType);
     }

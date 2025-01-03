@@ -18,7 +18,7 @@
 #include <sstream>
 #include <string>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     namespace
     {

@@ -6,7 +6,7 @@
 #include <string>
 #include <string_view>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     bool IsTagExprSelected(std::string_view tagExpr, const std::set<std::string, std::less<>>& tags);
 }

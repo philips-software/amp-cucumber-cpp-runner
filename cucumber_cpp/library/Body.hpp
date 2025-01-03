@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct Body
     {

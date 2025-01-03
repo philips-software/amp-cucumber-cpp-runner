@@ -2,14 +2,13 @@
 #define ENGINE_STEP_HPP
 
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include <exception>
 #include <source_location>
 #include <string>
 #include <utility>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library::engine
 {
     struct Step
     {
@@ -46,8 +45,6 @@ namespace cucumber_cpp
         [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
     private:
-        void Any(StepType type, const std::string& step);
-
     protected:
         Context& context;
         const Table& table;

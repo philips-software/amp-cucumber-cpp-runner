@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library::engine
 {
     template<class To>
     inline To StringTo(const std::string& s, std::source_location sourceLocation = std::source_location::current())

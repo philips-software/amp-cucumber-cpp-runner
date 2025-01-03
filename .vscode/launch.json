@@ -9,9 +9,12 @@
             "description": "Enter the tag to run",
             "type": "pickString",
             "options": [
+                "@smoke",
                 "@rule1 or @smoke",
                 "@keyword-asterisk",
-                "@result:UNDEFINED"
+                "@result:UNDEFINED",
+                "@result:FAILED",
+                "@fail_feature"
             ]
         },
         {
@@ -19,8 +22,8 @@
             "description": "Enter the tag to run",
             "type": "pickString",
             "options": [
-                "cucumber-cpp-example/features",
-                "test/features"
+                "cucumber_cpp/example/features",
+                "cucumber_cpp/acceptance_test/features"
             ]
         }
     ],
@@ -36,9 +39,10 @@
                 "${input:features}",
                 "--report",
                 "console",
-                "--com",
-                "COMx",
-                "--nordic",
+                "junit-xml",
+                // "--com",
+                // "COMx",
+                // "--nordic",
                 "--tag",
                 "${input:tag}"
             ],

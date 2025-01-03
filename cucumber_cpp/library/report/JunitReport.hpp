@@ -14,7 +14,7 @@
 #include <optional>
 #include <string>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     struct JunitReport : ReportHandlerV2
     {

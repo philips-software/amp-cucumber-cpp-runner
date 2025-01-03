@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/Steps.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/TestFailureHandler.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
@@ -8,7 +9,7 @@
 
 GIVEN(R"(a background step)")
 {
-    std::cout << "\nthis is a background step\n";
+    std::cout << "\nthis is a background step";
 }
 
 GIVEN(R"(a simple data table)")
