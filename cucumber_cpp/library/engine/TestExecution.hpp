@@ -3,12 +3,12 @@
 
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
+#include "cucumber_cpp/library/engine/FailureHandler.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/HookExecutor.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
-#include "cucumber_cpp/library/engine/TestFailureHandler.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <variant>

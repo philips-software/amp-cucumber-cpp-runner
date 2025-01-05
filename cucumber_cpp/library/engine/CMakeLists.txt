@@ -23,8 +23,8 @@ target_sources(cucumber_cpp.library.engine PRIVATE
     Table.hpp
     TestExecution.cpp
     TestExecution.hpp
-    TestFailureHandler.cpp
-    TestFailureHandler.hpp
+    FailureHandler.cpp
+    FailureHandler.hpp
     TestRunner.cpp
     TestRunner.hpp
 )

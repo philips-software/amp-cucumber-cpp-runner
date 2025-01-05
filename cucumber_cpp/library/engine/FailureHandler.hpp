@@ -1,5 +1,5 @@
-#ifndef ENGINE_TESTFAILUREHANDLER_HPP
-#define ENGINE_TESTFAILUREHANDLER_HPP
+#ifndef ENGINE_FAILUREHANDLER_HPP
+#define ENGINE_FAILUREHANDLER_HPP
 
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
