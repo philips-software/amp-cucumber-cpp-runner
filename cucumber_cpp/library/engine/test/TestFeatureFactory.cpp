@@ -293,4 +293,54 @@ namespace cucumber_cpp::library::engine
         const auto& scenario1 = feature->Rules()[0]->Scenarios()[0];
         EXPECT_THAT(scenario1->Title(), testing::StrEq("Test scenario2"));
     }
+
+    TEST_F(TestFeatureFactory, CreateMultipleScenariosInOneRule)
+    {
+        auto tmp = TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Rule: Test rule\n"
+               "    Scenario: Test scenario1\n"
+               "      Given I have a step1\n"
+               "    Scenario: Test scenario2\n"
+               "      Given I have a step2\n";
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
+        EXPECT_THAT(feature->Rules().size(), testing::Eq(1));
+
+        const auto& rule = feature->Rules()[0];
+        EXPECT_THAT(rule->Scenarios().size(), testing::Eq(2));
+
+        const auto& scenario1 = rule->Scenarios()[0];
+        EXPECT_THAT(scenario1->Title(), testing::StrEq("Test scenario1"));
+        EXPECT_THAT(scenario1->Children().size(), testing::Eq(1));
+        EXPECT_THAT(scenario1->Children()[0]->Type(), testing::Eq(StepType::given));
+        EXPECT_THAT(scenario1->Children()[0]->Text(), testing::StrEq("I have a step1"));
+
+        const auto& scenario2 = rule->Scenarios()[1];
+        EXPECT_THAT(scenario2->Title(), testing::StrEq("Test scenario2"));
+        EXPECT_THAT(scenario2->Children().size(), testing::Eq(1));
+        EXPECT_THAT(scenario2->Children()[0]->Type(), testing::Eq(StepType::given));
+        EXPECT_THAT(scenario2->Children()[0]->Text(), testing::StrEq("I have a step2"));
+    }
+
+    TEST_F(TestFeatureFactory, CreateTable)
+    {
+        auto tmp = TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario1\n"
+               "    Given I have a step1\n"
+               "      | a | b |\n"
+               "      | c | d |\n";
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
+
+        const auto& scenario1 = feature->Scenarios()[0];
+        EXPECT_THAT(scenario1->Children().size(), testing::Eq(1));
+        EXPECT_THAT(scenario1->Children()[0]->Table()[0][0].As<std::string>(), testing::StrEq("a"));
+        EXPECT_THAT(scenario1->Children()[0]->Table()[0][1].As<std::string>(), testing::StrEq("b"));
+        EXPECT_THAT(scenario1->Children()[0]->Table()[1][0].As<std::string>(), testing::StrEq("c"));
+        EXPECT_THAT(scenario1->Children()[0]->Table()[1][1].As<std::string>(), testing::StrEq("d"));
+    }
 }
