@@ -277,11 +277,12 @@ namespace cucumber_cpp::library::engine
 
         tmp << "@feature\n"
                "Feature: Test feature\n"
+               "  Rule: Test rule1\n"
                "  @scenario1 @debug\n"
                "  Scenario: Test scenario1\n"
                "    Given I have a step1\n"
                "  @rule\n"
-               "  Rule: Test rule\n"
+               "  Rule: Test rule2\n"
                "    @scenario2 @debug\n"
                "    Scenario: Test scenario2\n"
                "      Given I have a step2\n";
