@@ -125,7 +125,7 @@ namespace cucumber_cpp::library::engine
         {
             std::set<std::string, std::less<>> noTags{};
 
-            features.back()->Rules().push_back(std::make_unique<RuleInfo>(*features.back(), "title", "description", 1, 1));
+            features.back()->Rules().push_back(std::make_unique<RuleInfo>(*features.back(), "id", "title", "description", 1, 1));
         }
 
         static void AddScenarioToRule(std::vector<std::unique_ptr<FeatureInfo>>& features)

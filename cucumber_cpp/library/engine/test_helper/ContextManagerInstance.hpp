@@ -7,7 +7,6 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
-#include <any>
 #include <memory>
 
 namespace cucumber_cpp::library::engine::test_helper
@@ -32,7 +31,7 @@ namespace cucumber_cpp::library::engine::test_helper
 
     private:
         cucumber_cpp::library::engine::FeatureInfo feature{ {}, {}, {}, {}, {}, {} };
-        cucumber_cpp::library::engine::RuleInfo rule{ feature, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::RuleInfo rule{ feature, {}, {}, {}, {}, {} };
         cucumber_cpp::library::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
         cucumber_cpp::library::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
 

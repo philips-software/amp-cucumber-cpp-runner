@@ -195,16 +195,12 @@ namespace cucumber_cpp::library::engine
 
         RuleInfo& GetOrConstructRule(FeatureInfo& featureInfo, const cucumber::messages::rule& rule)
         {
-            if (auto iter = std::ranges::find_if(
-                    featureInfo.Rules(), [&rule](const auto& ptr)
-                    {
-                        return ptr->Title() == rule.name;
-                    });
-                iter != featureInfo.Rules().end())
+            if (auto iter = std::ranges::find(featureInfo.Rules(), rule.id, &RuleInfo::Id); iter != featureInfo.Rules().end())
                 return **iter;
 
             featureInfo.Rules().push_back(
                 std::make_unique<RuleInfo>(featureInfo,
+                    rule.id,
                     rule.name,
                     rule.description,
                     rule.location.line,

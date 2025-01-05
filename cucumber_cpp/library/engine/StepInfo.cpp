@@ -1,5 +1,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <cstddef>
 #include <string>
 #include <utility>

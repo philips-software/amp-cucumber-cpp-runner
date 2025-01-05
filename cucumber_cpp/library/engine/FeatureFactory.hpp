@@ -19,7 +19,7 @@ namespace cucumber_cpp::library::engine
     {
         static std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, const std::string& stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
 
-        std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression);
+        [[nodiscard]] std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression);
 
     private:
         cucumber::gherkin::app gherkin;

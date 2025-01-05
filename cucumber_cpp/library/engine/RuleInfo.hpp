@@ -3,9 +3,10 @@
 
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <cstddef>
+#include <filesystem>
 #include <memory>
-#include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library::engine
@@ -14,12 +15,16 @@ namespace cucumber_cpp::library::engine
 
     struct RuleInfo
     {
-        RuleInfo(const FeatureInfo& featureInfo, std::string title, std::string description, std::size_t line, std::size_t column);
+        RuleInfo(const FeatureInfo& featureInfo, std::string id, std::string title, std::string description, std::size_t line, std::size_t column);
 
         [[nodiscard]] const struct FeatureInfo& FeatureInfo() const;
 
+        [[nodiscard]] std::string_view Id() const;
+
         [[nodiscard]] const std::string& Title() const;
         [[nodiscard]] const std::string& Description() const;
+
+        [[nodiscard]] const std::filesystem::path& Path() const;
 
         [[nodiscard]] std::size_t Line() const;
         [[nodiscard]] std::size_t Column() const;
@@ -29,6 +34,8 @@ namespace cucumber_cpp::library::engine
 
     private:
         const struct FeatureInfo& featureInfo;
+
+        std::string id;
 
         std::string title;
         std::string description;

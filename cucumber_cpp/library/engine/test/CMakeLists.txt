@@ -9,6 +9,7 @@ target_link_libraries(cucumber_cpp.library.engine.test PUBLIC
 
 target_sources(cucumber_cpp.library.engine.test PRIVATE
     TestContextManager.cpp
+    TestFeatureFactory.cpp
     TestHookExecutor.cpp
     TestHookExecutorHooks.cpp
     TestStep.cpp
