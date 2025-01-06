@@ -6,6 +6,7 @@
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
@@ -25,7 +26,7 @@ namespace cucumber_cpp::library
 
     struct ResultStatus
     {
-        using Result = cucumber_cpp::library::engine::Result;
+        using Result = engine::Result;
 
         ResultStatus& operator=(Result result);
         explicit operator Result() const;
@@ -64,7 +65,7 @@ namespace cucumber_cpp::library
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(std::string_view tagExpression);
-        [[nodiscard]] cucumber_cpp::library::engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
+        [[nodiscard]] engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
 
         Options options;
         CLI::App cli;

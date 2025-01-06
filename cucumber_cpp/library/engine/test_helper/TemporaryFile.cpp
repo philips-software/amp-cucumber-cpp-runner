@@ -31,6 +31,6 @@ namespace cucumber_cpp::library::engine::test_helper
     std::ofstream TemporaryFile::CreateOfstream()
     {
         std::filesystem::create_directories(path.parent_path());
-        return { path };
+        return std::ofstream{ path };
     }
 }

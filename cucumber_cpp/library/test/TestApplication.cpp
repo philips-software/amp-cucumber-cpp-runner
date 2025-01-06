@@ -70,7 +70,7 @@ namespace cucumber_cpp::library
     TEST_F(TestApplication, DryRunFeatureFile)
     {
         auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
-        const auto path = tmp.Path();
+        const auto path = tmp.Path().string();
 
         tmp << "Feature: Test feature\n"
                "  Rule: Test rule\n"
@@ -87,7 +87,7 @@ namespace cucumber_cpp::library
     TEST_F(TestApplication, RunFeatureFile)
     {
         auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
-        const auto path = tmp.Path();
+        const auto path = tmp.Path().string();
 
         tmp << "Feature: Test feature\n"
                "  Rule: Test rule\n"
@@ -104,7 +104,7 @@ namespace cucumber_cpp::library
     TEST_F(TestApplication, RunFeatureFileWithError)
     {
         auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
-        const auto path = tmp.Path();
+        const auto path = tmp.Path().string();
 
         tmp << "Feature: Test feature\n"
                "  Rule: Test rule\n"
