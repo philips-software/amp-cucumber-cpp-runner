@@ -1,56 +1,11 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
-#include "cucumber_cpp/library/Steps.hpp"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "cucumber_cpp/library/engine/StepType.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdexcept>
 
 namespace cucumber_cpp::library
 {
-    GIVEN("This is a GIVEN step")
-    {
-        /* do nothing */
-    }
-
-    WHEN("This is a WHEN step")
-    {
-        /* do nothing */
-    }
-
-    THEN("This is a THEN step")
-    {
-        /* do nothing */
-    }
-
-    STEP("This is a STEP step")
-    {
-        /* do nothing */
-    }
-
-    STEP("This is a step with a ([0-9]+)s delay", (std::uint32_t delay))
-    {
-        context.InsertAt("std::uint32_t", delay);
-    }
-
-    THEN("an ambiguous step")
-    {
-        /* do nothing */
-    }
-
-    STEP("an ambiguous step")
-    {
-        /* do nothing */
-    }
-
-    STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::uint32_t nr))
-    {
-        context.InsertAt("float", fl);
-        context.InsertAt("std::string", str);
-        context.InsertAt("std::uint32_t", nr);
-    }
-
     struct TestSteps : testing::Test
     {
         StepRegistry& stepRegistry{ StepRegistry::Instance() };
@@ -58,8 +13,8 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
-        EXPECT_THAT(stepRegistry.Size(), testing::Eq(8));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::given), testing::Eq(1));
+        EXPECT_THAT(stepRegistry.Size(), testing::Eq(9));
+        EXPECT_THAT(stepRegistry.Size(engine::StepType::given), testing::Eq(2));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::when), testing::Eq(1));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::then), testing::Eq(2));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::any), testing::Eq(4));

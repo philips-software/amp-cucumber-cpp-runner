@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
-#include <filesystem>
-#include <fstream>
+#include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
 #include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -11,41 +10,6 @@
 
 namespace cucumber_cpp::library::engine
 {
-    struct TemporaryFile
-    {
-        TemporaryFile(std::string_view name)
-            : path{ std::filesystem::temp_directory_path() / name }
-        {
-        }
-
-        ~TemporaryFile()
-        {
-            ofs.close();
-            std::filesystem::remove(path);
-        }
-
-        TemporaryFile& operator<<(const auto& data)
-        {
-            ofs << data; // NOLINT
-            ofs.flush();
-            return *this;
-        }
-
-        std::filesystem::path Path() const
-        {
-            return path;
-        }
-
-    private:
-        std::ofstream CreateOfstream()
-        {
-            std::filesystem::create_directories(path.parent_path());
-            return { path };
-        }
-
-        std::filesystem::path path;
-        std::ofstream ofs{ CreateOfstream() };
-    };
 
     struct TestFeatureFactory : testing::Test
     {
@@ -54,7 +18,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateEmptyFeature)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "Custom\n"
@@ -73,7 +37,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateScenario)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "Custom\n"
@@ -98,7 +62,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateRules)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "Custom\n"
@@ -115,9 +79,6 @@ namespace cucumber_cpp::library::engine
                "    Scenario: Test scenario2\n"
                "    Custom Scenario\n"
                "    Description\n";
-        //    "    Given I have a step\n"
-        //    "    When I do something\n"
-        //    "    Then I expect something\n";
 
         const auto feature = featureTreeFactory.Create(tmp.Path(), "");
         EXPECT_THAT(feature->Rules().size(), testing::Eq(2));
@@ -148,7 +109,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateSteps)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "  Scenario: Test scenario1\n"
@@ -203,7 +164,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateBackground)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "  Background: Test background\n"
@@ -249,7 +210,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateTagsTags)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "@feature\n"
                "Feature: Test feature\n"
@@ -273,7 +234,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, SelectTags)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "@feature\n"
                "Feature: Test feature\n"
@@ -297,7 +258,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateMultipleScenariosInOneRule)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "  Rule: Test rule\n"
@@ -327,7 +288,7 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFeatureFactory, CreateTable)
     {
-        auto tmp = TemporaryFile{ "tmpfile.feature" };
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
 
         tmp << "Feature: Test feature\n"
                "  Scenario: Test scenario1\n"

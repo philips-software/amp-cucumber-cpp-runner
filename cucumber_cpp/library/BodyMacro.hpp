@@ -52,6 +52,8 @@
     const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type);                                 \
     void BODY_STRUCT::ExecuteWithArgs targs
 
+#include <gtest/gtest.h>
+
 #undef GTEST_MESSAGE_AT_
 #define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
     cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \

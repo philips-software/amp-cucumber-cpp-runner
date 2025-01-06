@@ -56,13 +56,11 @@ namespace cucumber_cpp::library
 
         CLI::App& CliParser();
         Context& ProgramContext();
-        const Options& CliOptions() const;
 
         void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
 
     private:
         [[nodiscard]] int GetExitCode() const;
-        [[nodiscard]] std::vector<std::filesystem::path> GetFeatureFiles() const;
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(std::string_view tagExpression);

@@ -7,16 +7,31 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::engine
 {
-    auto& GetOrThrow(auto& ptr, std::string typeName)
+    namespace
     {
-        if (ptr)
-            return *ptr;
+        std::string ConstructErrorString(std::string_view typeName, std::string_view postfix)
+        {
+            std::string error;
 
-        throw ContextNotAvailable{ typeName + " not available" };
+            error.reserve(typeName.size() + postfix.size());
+            error.append(typeName);
+            error.append(postfix);
+
+            return error;
+        }
+
+        auto& GetOrThrow(auto& ptr, std::string_view typeName)
+        {
+            if (ptr)
+                return *ptr;
+
+            throw ContextNotAvailable{ ConstructErrorString(typeName, " not available") };
+        }
     }
 
     CurrentContext::CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)

@@ -72,7 +72,7 @@ namespace cucumber_cpp::library::engine
         explicit ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
 
         cucumber_cpp::library::engine::ProgramContext& ProgramContext();
-        cucumber_cpp::library::engine::ProgramContext& ProgramContext() const;
+        [[nodiscard]] cucumber_cpp::library::engine::ProgramContext& ProgramContext() const;
 
         struct ScopedFeautureContext;
         struct ScopedRuleContext;

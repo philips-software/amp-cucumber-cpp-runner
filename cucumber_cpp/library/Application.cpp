@@ -44,15 +44,20 @@ namespace cucumber_cpp::library
             return { std::data(subrange), std::data(subrange) + std::size(subrange) };
         }
 
-        template<class Range, class Delim>
-        std::string Join(const Range& range, const Delim& delim)
+        template<class Range>
+        std::string Join(const Range& range, std::string_view delim)
         {
             if (range.empty())
                 return "";
 
             return std::accumulate(std::next(range.begin()), range.end(), range.front(), [&delim](const auto& lhs, const auto& rhs)
                 {
-                    return lhs + delim + rhs;
+                    std::string join;
+                    join.reserve(lhs.size() + delim.size() + rhs.size());
+                    join.append(lhs);
+                    join.append(delim);
+                    join.append(rhs);
+                    return join;
                 });
         }
 
@@ -69,6 +74,20 @@ namespace cucumber_cpp::library
         bool is_feature_file(const std::filesystem::directory_entry& entry)
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
+        }
+
+        std::vector<std::filesystem::path> GetFeatureFiles(Application::Options& options)
+        {
+            std::vector<std::filesystem::path> files;
+
+            for (const auto feature : options.features | std::views::transform(to_fs_path))
+                if (std::filesystem::is_directory(feature))
+                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
+                        files.emplace_back(entry.path());
+                else
+                    files.emplace_back(feature);
+
+            return files;
         }
     }
 
@@ -163,11 +182,6 @@ namespace cucumber_cpp::library
         return contextManager.ProgramContext();
     }
 
-    const Application::Options& Application::CliOptions() const
-    {
-        return options;
-    }
-
     void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
     {
         reporters.Add(name, std::move(reporter));
@@ -179,13 +193,13 @@ namespace cucumber_cpp::library
             reporters.Use(selectedReporter);
 
         auto tagExpression = Join(options.tags, " ");
-        library::engine::HookExecutorImpl hookExecution{ contextManager };
-        library::engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, [this]() -> const library::engine::TestExecution::Policy&
+        engine::HookExecutorImpl hookExecution{ contextManager };
+        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, [this]() -> const engine::TestExecution::Policy&
             {
                 if (options.dryrun)
-                    return library::engine::dryRunPolicy;
+                    return engine::dryRunPolicy;
                 else
-                    return library::engine::executeRunPolicy;
+                    return engine::executeRunPolicy;
             }() };
 
         engine::TestRunnerImpl testRunner{ testExecution };
@@ -198,14 +212,12 @@ namespace cucumber_cpp::library
 
     std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)
     {
-        auto featureFiles = GetFeatureFiles();
+        const auto featureFiles = GetFeatureFiles(options);
         std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
         vec.reserve(featureFiles.size());
 
         for (const auto& featurePath : featureFiles)
             vec.push_back(featureTreeFactory.Create(featurePath, tagExpression));
-
-        vec.shrink_to_fit();
 
         return vec;
     }
@@ -218,17 +230,4 @@ namespace cucumber_cpp::library
             return 1;
     }
 
-    std::vector<std::filesystem::path> Application::GetFeatureFiles() const
-    {
-        std::vector<std::filesystem::path> files;
-
-        for (const auto feature : options.features | std::views::transform(to_fs_path))
-            if (std::filesystem::is_directory(feature))
-                for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
-                    files.emplace_back(entry.path());
-            else
-                files.emplace_back(feature);
-
-        return files;
-    }
 }
