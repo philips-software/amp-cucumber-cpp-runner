@@ -1,11 +1,9 @@
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FailureHandler.hpp"
+#include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "gtest/gtest.h"
 #include <filesystem>
-#include <format>
-#include <iomanip>
 #include <memory>
 #include <string>
 
@@ -15,7 +13,7 @@ namespace cucumber_cpp::library::engine
     {
         std::string AppendUserMessage(const std::string& gtest_msg, const testing::Message& user_msg)
         {
-            const std::string user_msg_string = user_msg.GetString();
+            std::string user_msg_string = user_msg.GetString();
 
             if (user_msg_string.empty())
                 return gtest_msg;
@@ -27,7 +25,7 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    TestAssertionHandler* TestAssertionHandler::instance{ nullptr };
+    TestAssertionHandler* TestAssertionHandler::instance{ nullptr }; // NOLINT
 
     TestAssertionHandler::TestAssertionHandler()
     {
@@ -49,7 +47,7 @@ namespace cucumber_cpp::library::engine
         , reportHandler{ reportHandler }
     {}
 
-    void TestAssertionHandlerImpl::AddAssertionError(testing::TestPartResult::Type type, const char* const file, int line, std::string message)
+    void TestAssertionHandlerImpl::AddAssertionError(const char* file, int line, std::string message)
     {
         std::filesystem::path relativeFilePath = std::filesystem::relative(file);
 
@@ -62,8 +60,8 @@ namespace cucumber_cpp::library::engine
         : data(std::make_unique<CucumberAssertHelperData>(type, file, line, message))
     {}
 
-    void CucumberAssertHelper::operator=(const testing::Message& message) const
+    void CucumberAssertHelper::operator=(const testing::Message& message) const // NOLINT
     {
-        TestAssertionHandler::Instance().AddAssertionError(data->type, data->file, data->line, AppendUserMessage(data->message, message));
+        TestAssertionHandler::Instance().AddAssertionError(data->file, data->line, AppendUserMessage(data->message, message));
     }
 }

@@ -91,18 +91,16 @@ namespace cucumber_cpp::library::engine
 
         [[nodiscard]] ScopedStepContext CreateStepContext(const StepInfo& stepInfo);
 
+        cucumber_cpp::library::engine::StepContext& StepContext();
+
+        cucumber_cpp::library::engine::RunnerContext& CurrentContext();
+
     private:
         void DisposeFeatureContext();
         void DisposeRuleContext();
         void DisposeScenarioContext();
         void DisposeStepContext();
 
-    public:
-        cucumber_cpp::library::engine::StepContext& StepContext();
-
-        cucumber_cpp::library::engine::RunnerContext& CurrentContext();
-
-    private:
         std::shared_ptr<cucumber_cpp::library::engine::ProgramContext> programContext;
         std::shared_ptr<cucumber_cpp::library::engine::FeatureContext> featureContext;
         std::shared_ptr<cucumber_cpp::library::engine::RuleContext> ruleContext;
