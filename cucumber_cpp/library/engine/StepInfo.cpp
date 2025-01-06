@@ -1,12 +1,14 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <cstddef>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
         : scenarioInfo{ scenarioInfo }

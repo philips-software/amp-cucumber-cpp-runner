@@ -14,7 +14,7 @@
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     ScenarioInfo::ScenarioInfo(const struct RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column)
         : parentInfo{ &ruleInfo }

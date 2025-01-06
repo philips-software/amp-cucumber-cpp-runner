@@ -2,11 +2,38 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
+#include "cucumber_cpp/library/engine/RuleInfo.hpp"
+#include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
+#include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <memory>
+#include <string>
+#include <string_view>
 #include <utility>
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
+    namespace
+    {
+        std::string ConstructErrorString(std::string_view typeName, std::string_view postfix)
+        {
+            std::string error;
+
+            error.reserve(typeName.size() + postfix.size());
+            error.append(typeName);
+            error.append(postfix);
+
+            return error;
+        }
+
+        auto& GetOrThrow(auto& ptr, std::string_view typeName)
+        {
+            if (ptr)
+                return *ptr;
+
+            throw ContextNotAvailable{ ConstructErrorString(typeName, " not available") };
+        }
+    }
+
     CurrentContext::CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
         : Context{ std::move(contextStorageFactory) }
     {
@@ -50,28 +77,139 @@ namespace cucumber_cpp::engine
     {
     }
 
+    ContextManager::ScopedFeautureContext::ScopedFeautureContext(ContextManager& contextManager)
+        : contextManager{ contextManager }
+    {}
+
+    ContextManager::ScopedFeautureContext ::~ScopedFeautureContext()
+    {
+        contextManager.DisposeFeatureContext();
+    }
+
+    ContextManager::ScopedRuleContext::ScopedRuleContext(ContextManager& contextManager)
+        : contextManager{ contextManager }
+    {}
+
+    ContextManager::ScopedRuleContext ::~ScopedRuleContext()
+    {
+        contextManager.DisposeRuleContext();
+    }
+
+    ContextManager::ScopedScenarioContext::ScopedScenarioContext(ContextManager& contextManager)
+        : contextManager{ contextManager }
+    {}
+
+    ContextManager::ScopedScenarioContext ::~ScopedScenarioContext()
+    {
+        contextManager.DisposeScenarioContext();
+    }
+
+    ContextManager::ScopedStepContext::ScopedStepContext(ContextManager& contextManager)
+        : contextManager{ contextManager }
+    {}
+
+    ContextManager::ScopedStepContext::~ScopedStepContext()
+    {
+        contextManager.DisposeStepContext();
+    }
+
     ContextManager::ContextManager(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
     {
-        activeContextStack.push(std::make_unique<struct ProgramContext>(std::move(contextStorageFactory)));
+        programContext = std::make_shared<struct ProgramContext>(std::move(contextStorageFactory));
+        runnerContext.push(programContext);
     }
 
-    RunnerContext& ContextManager::CurrentContext()
+    cucumber_cpp::library::engine::ProgramContext& ContextManager::ProgramContext()
     {
-        return *activeContextStack.top();
+        return *programContext;
     }
 
-    const RunnerContext& ContextManager::CurrentContext() const
+    cucumber_cpp::library::engine::ProgramContext& ContextManager::ProgramContext() const
     {
-        return *activeContextStack.top();
+        return *programContext;
     }
 
-    RunnerContext& ContextManager::StepContext()
+    ContextManager::ScopedFeautureContext ContextManager::CreateFeatureContext(const FeatureInfo& featureInfo)
     {
+        featureContext = std::make_shared<decltype(featureContext)::element_type>(*programContext, featureInfo);
+        runnerContext.push(featureContext);
+
+        return ScopedFeautureContext{ *this };
+    }
+
+    void ContextManager::DisposeFeatureContext()
+    {
+        runnerContext.pop();
+        featureContext.reset();
+    }
+
+    FeatureContext& ContextManager::FeatureContext()
+    {
+        return GetOrThrow(featureContext, "FeatureContext");
+    }
+
+    ContextManager::ScopedRuleContext ContextManager::CreateRuleContext(const RuleInfo& ruleInfo)
+    {
+        ruleContext = std::make_shared<decltype(ruleContext)::element_type>(*featureContext, ruleInfo);
+        runnerContext.push(ruleContext);
+
+        return ScopedRuleContext{ *this };
+    }
+
+    void ContextManager::DisposeRuleContext()
+    {
+        runnerContext.pop();
+        ruleContext.reset();
+    }
+
+    RuleContext& ContextManager::RuleContext()
+    {
+        return GetOrThrow(ruleContext, "RuleContext");
+    }
+
+    ContextManager::ScopedScenarioContext ContextManager::CreateScenarioContext(const ScenarioInfo& scenarioInfo)
+    {
+        scenarioContext = std::make_shared<decltype(scenarioContext)::element_type>(CurrentContext(), scenarioInfo);
+        runnerContext.push(scenarioContext);
+
+        return ScopedScenarioContext{ *this };
+    }
+
+    void ContextManager::DisposeScenarioContext()
+    {
+        runnerContext.pop();
+        scenarioContext.reset();
+    }
+
+    ScenarioContext& ContextManager::ScenarioContext()
+    {
+        return GetOrThrow(scenarioContext, "ScenarioContext");
+    }
+
+    ContextManager::ScopedStepContext ContextManager::CreateStepContext(const StepInfo& stepInfo)
+    {
+        stepContext.push(std::make_shared<cucumber_cpp::library::engine::StepContext>(*scenarioContext, stepInfo));
+        runnerContext.push(stepContext.top());
+
+        return ScopedStepContext{ *this };
+    }
+
+    void ContextManager::DisposeStepContext()
+    {
+        runnerContext.pop();
+        stepContext.pop();
+    }
+
+    StepContext& ContextManager::StepContext()
+    {
+        if (stepContext.empty())
+            throw ContextNotAvailable{ "StepContext not available" };
+
         return *stepContext.top();
     }
 
-    const RunnerContext& ContextManager::StepContext() const
+    cucumber_cpp::library::engine::RunnerContext& ContextManager::CurrentContext()
     {
-        return *stepContext.top();
+        return *runnerContext.top();
     }
 }

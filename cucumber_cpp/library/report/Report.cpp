@@ -1,10 +1,6 @@
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
-#include "cucumber_cpp/library/engine/FeatureInfo.hpp"
-#include "cucumber_cpp/library/engine/Result.hpp"
-#include "cucumber_cpp/library/engine/RuleInfo.hpp"
-#include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
-#include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
@@ -15,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     namespace
     {
@@ -57,67 +53,114 @@ namespace cucumber_cpp::report
         return reporters;
     }
 
-    void ReportForwarder::FeatureStart(const engine::FeatureInfo& featureInfo)
+    ReportForwarder::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ProgramContext& programContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : programContext{ programContext }
+        , reporters{ reporters }
+    {}
+
+    ReportForwarder::ProgramScope::~ProgramScope()
     {
-        ForwardCall(Storage(), &ReportHandlerV2::FeatureStart, featureInfo);
+        ForwardCall(reporters, &ReportHandlerV2::Summary, programContext.Duration());
     }
 
-    void ReportForwarder::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)
+    ReportForwarder::FeatureScope::FeatureScope(cucumber_cpp::library::engine::FeatureContext& featureContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : featureContext{ featureContext }
+        , reporters{ reporters }
     {
-        ForwardCall(Storage(), &ReportHandlerV2::FeatureEnd, result, featureInfo, duration);
+        ForwardCall(reporters, &ReportHandlerV2::FeatureStart, featureContext.info);
     }
 
-    void ReportForwarder::RuleStart(const engine::RuleInfo& ruleInfo)
+    ReportForwarder::FeatureScope::~FeatureScope()
     {
-        ForwardCall(Storage(), &ReportHandlerV2::RuleStart, ruleInfo);
+        ForwardCall(reporters, &ReportHandlerV2::FeatureEnd, featureContext.ExecutionStatus(), featureContext.info, featureContext.Duration());
     }
 
-    void ReportForwarder::RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration)
+    ReportForwarder::RuleScope::RuleScope(cucumber_cpp::library::engine::RuleContext& ruleContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : ruleContext{ ruleContext }
+        , reporters{ reporters }
     {
-        ForwardCall(Storage(), &ReportHandlerV2::RuleEnd, result, ruleInfo, duration);
+        ForwardCall(reporters, &ReportHandlerV2::RuleStart, ruleContext.info);
     }
 
-    void ReportForwarder::ScenarioStart(const engine::ScenarioInfo& scenarioInfo)
+    ReportForwarder::RuleScope::~RuleScope()
     {
-        ForwardCall(Storage(), &ReportHandlerV2::ScenarioStart, scenarioInfo);
+        ForwardCall(reporters, &ReportHandlerV2::RuleEnd, ruleContext.ExecutionStatus(), ruleContext.info, ruleContext.Duration());
     }
 
-    void ReportForwarder::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
+    ReportForwarder::ScenarioScope::ScenarioScope(cucumber_cpp::library::engine::ScenarioContext& scenarioContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : scenarioContext{ scenarioContext }
+        , reporters{ reporters }
     {
-        ForwardCall(Storage(), &ReportHandlerV2::ScenarioEnd, result, scenarioInfo, duration);
+        ForwardCall(reporters, &ReportHandlerV2::ScenarioStart, scenarioContext.info);
     }
 
-    void ReportForwarder::StepSkipped(const engine::StepInfo& stepInfo)
+    ReportForwarder::ScenarioScope::~ScenarioScope()
     {
-        ForwardCall(Storage(), &ReportHandlerV2::StepSkipped, stepInfo);
+        ForwardCall(reporters, &ReportHandlerV2::ScenarioEnd, scenarioContext.ExecutionStatus(), scenarioContext.info, scenarioContext.Duration());
     }
 
-    void ReportForwarder::StepStart(const engine::StepInfo& stepInfo)
+    ReportForwarder::StepScope::StepScope(cucumber_cpp::library::engine::StepContext& stepContext, std::vector<std::unique_ptr<ReportHandlerV2>>& reporters)
+        : stepContext{ stepContext }
+        , reporters{ reporters }
     {
-        ForwardCall(Storage(), &ReportHandlerV2::StepStart, stepInfo);
+        ForwardCall(reporters, &ReportHandlerV2::StepStart, stepContext.info);
     }
 
-    void ReportForwarder::StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration)
+    ReportForwarder::StepScope::~StepScope()
     {
-        ForwardCall(Storage(), &ReportHandlerV2::StepEnd, result, stepInfo, duration);
+        ForwardCall(reporters, &ReportHandlerV2::StepEnd, stepContext.ExecutionStatus(), stepContext.info, stepContext.Duration());
     }
 
-    void ReportForwarder::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    ReportForwarderImpl::ReportForwarderImpl(cucumber_cpp::library::engine::ContextManager& contextManager)
+        : contextManager{ contextManager }
+    {}
+
+    [[nodiscard]] ReportForwarder::ProgramScope ReportForwarderImpl::ProgramStart()
+    {
+        return ProgramScope{ contextManager.ProgramContext(), Storage() };
+    }
+
+    ReportForwarder::FeatureScope ReportForwarderImpl::FeatureStart()
+    {
+        return FeatureScope{ contextManager.FeatureContext(), Storage() };
+    }
+
+    ReportForwarder::RuleScope ReportForwarderImpl::RuleStart()
+    {
+        return RuleScope{ contextManager.RuleContext(), Storage() };
+    }
+
+    ReportForwarder::ScenarioScope ReportForwarderImpl::ScenarioStart()
+    {
+        return ScenarioScope{ contextManager.ScenarioContext(), Storage() };
+    }
+
+    ReportForwarder::StepScope ReportForwarderImpl::StepStart()
+    {
+        return StepScope{ contextManager.StepContext(), Storage() };
+    }
+
+    void ReportForwarderImpl::StepSkipped()
+    {
+        ForwardCall(Storage(), &ReportHandlerV2::StepSkipped, contextManager.StepContext().info);
+    }
+
+    void ReportForwarderImpl::Failure(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         ForwardCall(Storage(), &ReportHandlerV2::Failure, error, path, line, column);
     }
 
-    void ReportForwarder::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
+    void ReportForwarderImpl::Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column)
     {
         ForwardCall(Storage(), &ReportHandlerV2::Error, error, path, line, column);
     }
 
-    void ReportForwarder::Trace(const std::string& trace)
+    void ReportForwarderImpl::Trace(const std::string& trace)
     {
         ForwardCall(Storage(), &ReportHandlerV2::Trace, trace);
     }
 
-    void ReportForwarder::Summary(TraceTime::Duration duration)
+    void ReportForwarderImpl::Summary(TraceTime::Duration duration)
     {
         ForwardCall(Storage(), &ReportHandlerV2::Summary, duration);
     }

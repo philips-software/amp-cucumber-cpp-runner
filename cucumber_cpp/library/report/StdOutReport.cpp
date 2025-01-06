@@ -1,14 +1,15 @@
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -26,32 +27,32 @@
 // clang-format on
 #endif
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     namespace
     {
 #ifndef _MSC_VER
         inline std::ostream& TcRed(std::ostream& o)
         {
-            o << "\033[1m\033[31m";
+            o << "\o{33}[1m\o{33}[31m";
             return o;
         }
 
         inline std::ostream& TcGreen(std::ostream& o)
         {
-            o << "\033[1m\033[32m";
+            o << "\o{33}[1m\o{33}[32m";
             return o;
         }
 
         inline std::ostream& TcCyan(std::ostream& o)
         {
-            o << "\033[1m\033[36m";
+            o << "\o{33}[1m\o{33}[36m";
             return o;
         }
 
         inline std::ostream& TcDefault(std::ostream& o)
         {
-            o << "\033[0m\033[39m";
+            o << "\o{33}[0m\o{33}[39m";
             return o;
         }
 #else
@@ -107,10 +108,10 @@ namespace cucumber_cpp::report
             { engine::Result ::undefined, "undefined" },
         };
 
-        const std::map<StepType, std::string> stepTypeLut{
-            { StepType::given, "Given" },
-            { StepType::when, "When" },
-            { StepType::then, "Then" }
+        const std::map<engine::StepType, std::string> stepTypeLut{
+            { engine::StepType::given, "Given" },
+            { engine::StepType::when, "When" },
+            { engine::StepType::then, "Then" }
         };
 
         std::string ScaledDuration(TraceTime::Duration duration)
@@ -210,11 +211,11 @@ namespace cucumber_cpp::report
         std::cout << TcRed;
 
         if (path && line && column)
-            std::cout << "\n"
-                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Failure";
+            std::cout << std::format("\nFailure @ ./{}:{}:{}:", path.value().string(), line.value(), column.value());
+        else if (path && line)
+            std::cout << std::format("\nFailure @ ./{}:{}:", path.value().string(), line.value());
 
-        std::cout << "\n"
-                  << error;
+        std::cout << std::format("\n{}", error);
 
         std::cout << TcDefault;
     }
@@ -224,12 +225,11 @@ namespace cucumber_cpp::report
         std::cout << TcRed;
 
         if (path && line && column)
-            std::cout << "\n"
-                      << path.value().string() << ":" << line.value() << ":" << column.value() << ": Error";
+            std::cout << std::format("\nError @ ./{}:{}:{}:", path.value().string(), line.value(), column.value());
+        else if (path && line)
+            std::cout << std::format("\nError @ ./{}:{}:", path.value().string(), line.value());
 
-        std::cout
-            << "\n"
-            << error;
+        std::cout << std::format("\n{}", error);
 
         std::cout << TcDefault;
     }

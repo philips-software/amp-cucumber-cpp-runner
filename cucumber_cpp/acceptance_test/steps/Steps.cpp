@@ -44,3 +44,8 @@ THEN("two expectations are raised")
     EXPECT_THAT(0, testing::Eq(1));
     EXPECT_THAT(1, testing::Eq(0));
 }
+
+WHEN("I print {string} with value {int}", (const std::string& str, std::int32_t value))
+{
+    std::cout << "print: " << str << " with value " << value;
+}

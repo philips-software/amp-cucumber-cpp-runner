@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace cucumber_cpp::report
+namespace cucumber_cpp::library::report
 {
     struct StdOutReport : ReportHandlerV2
     {

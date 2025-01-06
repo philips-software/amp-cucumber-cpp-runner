@@ -1,7 +1,7 @@
 #ifndef ENGINE_RESULT_HPP
 #define ENGINE_RESULT_HPP
 
-namespace cucumber_cpp::engine
+namespace cucumber_cpp::library::engine
 {
     enum struct Result
     {

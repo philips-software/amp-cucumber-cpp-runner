@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     struct InternalError : std::runtime_error
     {

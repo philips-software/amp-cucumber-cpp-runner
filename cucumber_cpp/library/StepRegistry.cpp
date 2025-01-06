@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library
 {
     namespace
     {
@@ -52,11 +52,11 @@ namespace cucumber_cpp
             return string;
         }
 
-        auto TypeFilter(StepType stepType)
+        auto TypeFilter(engine::StepType stepType)
         {
             return [stepType](const StepRegistry::Entry& entry)
             {
-                return entry.type == stepType || entry.type == StepType::any;
+                return entry.type == stepType || entry.type == engine::StepType::any;
             };
         };
     }
@@ -99,7 +99,7 @@ namespace cucumber_cpp
         return instance;
     }
 
-    StepMatch StepRegistryBase::Query(StepType stepType, const std::string& expression)
+    StepMatch StepRegistryBase::Query(engine::StepType stepType, const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
@@ -124,7 +124,7 @@ namespace cucumber_cpp
         return registry.size();
     }
 
-    std::size_t StepRegistryBase::Size(StepType stepType) const
+    std::size_t StepRegistryBase::Size(engine::StepType stepType) const
     {
         return std::ranges::count(registry, stepType, &Entry::type);
     }

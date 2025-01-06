@@ -5,7 +5,7 @@
 #include <istream>
 #include <string>
 
-namespace cucumber_cpp
+namespace cucumber_cpp::library::engine
 {
     struct CustomType
     {
