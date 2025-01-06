@@ -13,7 +13,7 @@
 
 namespace cucumber_cpp::library::engine
 {
-    TestRunner* TestRunner::instance = nullptr;
+    TestRunner* TestRunner::instance = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
     TestRunner::TestRunner()
     {
@@ -60,32 +60,32 @@ namespace cucumber_cpp::library::engine
         RunScenarios(feature.Scenarios());
     }
 
-    void TestRunnerImpl::RunRule(const std::unique_ptr<RuleInfo>& rule)
+    void TestRunnerImpl::RunRule(const RuleInfo& rule)
     {
-        const auto ruleScope = testExecution.StartRule(*rule);
+        const auto ruleScope = testExecution.StartRule(rule);
 
-        RunScenarios(rule->Scenarios());
+        RunScenarios(rule.Scenarios());
     }
 
     void TestRunnerImpl::RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules)
     {
         for (const auto& rule : rules)
-            RunRule(rule);
+            RunRule(*rule);
     }
 
-    void TestRunnerImpl::RunScenario(const std::unique_ptr<ScenarioInfo>& scenario)
+    void TestRunnerImpl::RunScenario(const ScenarioInfo& scenario)
     {
-        const auto scenarioScope = testExecution.StartScenario(*scenario);
+        const auto scenarioScope = testExecution.StartScenario(scenario);
 
-        currentScenario = scenario.get();
+        currentScenario = &scenario;
 
-        ExecuteSteps(*scenario);
+        ExecuteSteps(scenario);
     }
 
     void TestRunnerImpl::RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios)
     {
         for (const auto& scenario : scenarios)
-            RunScenario(scenario);
+            RunScenario(*scenario);
     }
 
     void TestRunnerImpl::ExecuteSteps(const ScenarioInfo& scenario)

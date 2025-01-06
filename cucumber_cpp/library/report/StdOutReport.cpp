@@ -34,25 +34,25 @@ namespace cucumber_cpp::library::report
 #ifndef _MSC_VER
         inline std::ostream& TcRed(std::ostream& o)
         {
-            o << "\033[1m\033[31m";
+            o << "\o{33}[1m\o{33}[31m";
             return o;
         }
 
         inline std::ostream& TcGreen(std::ostream& o)
         {
-            o << "\033[1m\033[32m";
+            o << "\o{33}[1m\o{33}[32m";
             return o;
         }
 
         inline std::ostream& TcCyan(std::ostream& o)
         {
-            o << "\033[1m\033[36m";
+            o << "\o{33}[1m\o{33}[36m";
             return o;
         }
 
         inline std::ostream& TcDefault(std::ostream& o)
         {
-            o << "\033[0m\033[39m";
+            o << "\o{33}[0m\o{33}[39m";
             return o;
         }
 #else

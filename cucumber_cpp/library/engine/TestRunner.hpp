@@ -42,12 +42,13 @@ namespace cucumber_cpp::library::engine
         virtual void NestedStep(StepType type, std::string step) = 0;
 
     private:
-        static TestRunner* instance;
+        static TestRunner* instance; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     };
 
     struct TestRunnerImpl : TestRunner
     {
         explicit TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution);
+        virtual ~TestRunnerImpl() = default;
 
         void Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature) override;
 
@@ -55,15 +56,15 @@ namespace cucumber_cpp::library::engine
 
     private:
         void ExecuteSteps(const ScenarioInfo& scenario);
-        void RunScenario(const std::unique_ptr<ScenarioInfo>& scenario);
+        void RunScenario(const ScenarioInfo& scenario);
         void RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios);
-        void RunRule(const std::unique_ptr<RuleInfo>& rule);
+        void RunRule(const RuleInfo& rule);
         void RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules);
         void RunFeature(const FeatureInfo& feature);
 
         cucumber_cpp::library::engine::TestExecution& testExecution;
 
-        ScenarioInfo* currentScenario = nullptr;
+        const ScenarioInfo* currentScenario = nullptr;
     };
 }
 

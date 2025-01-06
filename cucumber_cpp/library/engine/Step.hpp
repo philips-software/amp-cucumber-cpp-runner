@@ -38,14 +38,12 @@ namespace cucumber_cpp::library::engine
         }
 
     protected:
-        void Given(const std::string& step);
-        void When(const std::string& step);
-        void Then(const std::string& step);
+        void Given(const std::string& step) const;
+        void When(const std::string& step) const;
+        void Then(const std::string& step) const;
 
         [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
-    private:
-    protected:
         Context& context;
         const Table& table;
     };

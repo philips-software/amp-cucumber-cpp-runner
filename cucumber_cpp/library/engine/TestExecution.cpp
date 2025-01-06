@@ -16,10 +16,8 @@ namespace cucumber_cpp::library::engine
     const DryRunPolicy dryRunPolicy;
     const ExecuteRunPolicy executeRunPolicy;
 
-    TestExecution::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution)
-        : contextManager{ contextManager }
-        , reportHandler{ reportHandler }
-        , scopedProgramReport{ reportHandler.ProgramStart() }
+    TestExecution::ProgramScope::ProgramScope(report::ReportForwarder& reportHandler, HookExecutor& hookExecution)
+        : scopedProgramReport{ reportHandler.ProgramStart() }
         , scopedProgramHook{ hookExecution.BeforeAll() }
     {
     }
@@ -28,16 +26,12 @@ namespace cucumber_cpp::library::engine
         : scopedFeatureContext{ contextManager.CreateFeatureContext(featureInfo) }
         , scopedFeatureReport{ reportHandler.FeatureStart() }
         , scopedFeatureHook{ hookExecution.FeatureStart() }
-        , contextManager{ contextManager }
-        , reportHandler{ reportHandler }
     {
     }
 
     TestExecution::RuleScope::RuleScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, const cucumber_cpp::library::engine::RuleInfo& ruleInfo)
         : scopedRuleContext{ contextManager.CreateRuleContext(ruleInfo) }
         , scopedRuleReport{ reportHandler.RuleStart() }
-        , contextManager{ contextManager }
-        , reportHandler{ reportHandler }
     {
     }
 
@@ -45,17 +39,17 @@ namespace cucumber_cpp::library::engine
         : scopedScenarioContext{ contextManager.CreateScenarioContext(scenarioInfo) }
         , scopedScenarioReport{ reportHandler.ScenarioStart() }
         , scopedScenarioHook{ hookExecution.ScenarioStart() }
-        , contextManager{ contextManager }
-        , reportHandler{ reportHandler }
     {
     }
 
-    void DryRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager&, const StepMatch&) const
-    {}
+    void DryRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& /* contextManager */, const StepMatch& /* stepMatch */) const
+    {
+        /* don't execute actual steps */
+    }
 
     void ExecuteRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const
     {
-        auto& stepContext = contextManager.StepContext();
+        const auto& stepContext = contextManager.StepContext();
         auto& scenarioContext = contextManager.ScenarioContext();
         stepMatch.factory(scenarioContext, stepContext.info.Table())->Execute(stepMatch.matches);
     }
@@ -69,7 +63,7 @@ namespace cucumber_cpp::library::engine
 
     TestExecution::ProgramScope TestExecutionImpl::StartRun()
     {
-        return ProgramScope{ contextManager, reportHandler, hookExecution };
+        return ProgramScope{ reportHandler, hookExecution };
     }
 
     TestExecution::FeatureScope TestExecutionImpl::StartFeature(const cucumber_cpp::library::engine::FeatureInfo& featureInfo)
@@ -108,12 +102,12 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    void TestExecutionImpl::RunStepMatch(std::monostate)
+    void TestExecutionImpl::RunStepMatch(std::monostate /* not used */)
     {
         contextManager.StepContext().ExecutionStatus(cucumber_cpp::library::engine::Result::undefined);
     }
 
-    void TestExecutionImpl::RunStepMatch(const std::vector<StepMatch>&)
+    void TestExecutionImpl::RunStepMatch(const std::vector<StepMatch>& /* not used */)
     {
         contextManager.StepContext().ExecutionStatus(cucumber_cpp::library::engine::Result::ambiguous);
     }

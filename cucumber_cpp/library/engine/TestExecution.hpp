@@ -18,6 +18,10 @@ namespace cucumber_cpp::library::engine
 {
     struct TestExecution
     {
+    protected:
+        ~TestExecution() = default;
+
+    public:
         struct ProgramScope;
         struct FeatureScope;
         struct RuleScope;
@@ -35,12 +39,9 @@ namespace cucumber_cpp::library::engine
 
     struct TestExecution::ProgramScope : library::util::Immoveable
     {
-        ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution);
+        ProgramScope(report::ReportForwarder& reportHandler, HookExecutor& hookExecution);
 
     private:
-        cucumber_cpp::library::engine::ContextManager& contextManager;
-        report::ReportForwarder& reportHandler;
-
         report::ReportForwarder::ProgramScope scopedProgramReport;
         HookExecutor::ProgramScope scopedProgramHook;
     };
@@ -53,9 +54,6 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::ContextManager::ScopedFeautureContext scopedFeatureContext;
         report::ReportForwarder::FeatureScope scopedFeatureReport;
         HookExecutor::FeatureScope scopedFeatureHook;
-
-        cucumber_cpp::library::engine::ContextManager& contextManager;
-        report::ReportForwarder& reportHandler;
     };
 
     struct TestExecution::RuleScope : library::util::Immoveable
@@ -65,9 +63,6 @@ namespace cucumber_cpp::library::engine
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedRuleContext scopedRuleContext;
         report::ReportForwarder::RuleScope scopedRuleReport;
-
-        cucumber_cpp::library::engine::ContextManager& contextManager;
-        report::ReportForwarder& reportHandler;
     };
 
     struct TestExecution::ScenarioScope : library::util::Immoveable
@@ -78,23 +73,28 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::ContextManager::ScopedScenarioContext scopedScenarioContext;
         report::ReportForwarder::ScenarioScope scopedScenarioReport;
         HookExecutor::ScenarioScope scopedScenarioHook;
-
-        cucumber_cpp::library::engine::ContextManager& contextManager;
-        report::ReportForwarder& reportHandler;
     };
 
     struct TestExecution::Policy
     {
+    protected:
+        ~Policy() = default;
+
+    public:
         virtual void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const = 0;
     };
 
     struct DryRunPolicy : TestExecution::Policy
     {
+        virtual ~DryRunPolicy() = default;
+
         void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const override;
     };
 
     struct ExecuteRunPolicy : TestExecution::Policy
     {
+        virtual ~ExecuteRunPolicy() = default;
+
         void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const override;
     };
 
@@ -104,6 +104,8 @@ namespace cucumber_cpp::library::engine
     struct TestExecutionImpl : TestExecution
     {
         TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
+        virtual ~TestExecutionImpl() = default;
+
         ProgramScope StartRun() override;
         FeatureScope StartFeature(const cucumber_cpp::library::engine::FeatureInfo& featureInfo) override;
         RuleScope StartRule(const cucumber_cpp::library::engine::RuleInfo& ruleInfo) override;

@@ -1,7 +1,5 @@
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
-#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
@@ -15,17 +13,17 @@ namespace cucumber_cpp::library::engine
         , table{ table }
     {}
 
-    void Step::Given(const std::string& step)
+    void Step::Given(const std::string& step) const
     {
         TestRunner::Instance().NestedStep(StepType::given, step);
     }
 
-    void Step::When(const std::string& step)
+    void Step::When(const std::string& step) const
     {
         TestRunner::Instance().NestedStep(StepType::when, step);
     }
 
-    void Step::Then(const std::string& step)
+    void Step::Then(const std::string& step) const
     {
         TestRunner::Instance().NestedStep(StepType::then, step);
     }
