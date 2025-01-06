@@ -1,11 +1,11 @@
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
