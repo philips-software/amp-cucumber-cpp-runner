@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/Hooks.hpp"
 #include "gmock/gmock.h"
 #include <iostream>
+#include <string>
 
 HOOK_BEFORE_ALL()
 {
@@ -44,5 +45,5 @@ HOOK_AFTER_SCENARIO("@fail_scenariohook_after")
 
 HOOK_BEFORE_SCENARIO("@throw_scenariohook")
 {
-    throw "error";
+    throw std::string{ "error" };
 }
