@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::engine
 {
     struct FeatureTreeFactory
     {
-        static std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, const std::string& stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
+        [[nodiscard]] static std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
 
         [[nodiscard]] std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression);
 

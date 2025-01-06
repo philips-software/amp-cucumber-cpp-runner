@@ -17,17 +17,17 @@ namespace cucumber_cpp::library::engine
 
     void Step::Given(const std::string& step)
     {
-        // engine::TestRunner::Instance().ExecuteStep(StepType::given, step);
+        TestRunner::Instance().NestedStep(StepType::given, step);
     }
 
     void Step::When(const std::string& step)
     {
-        // engine::TestRunner::Instance().ExecuteStep(StepType::when, step);
+        TestRunner::Instance().NestedStep(StepType::when, step);
     }
 
     void Step::Then(const std::string& step)
     {
-        // engine::TestRunner::Instance().ExecuteStep(StepType::then, step);
+        TestRunner::Instance().NestedStep(StepType::then, step);
     }
 
     void Step::Pending(const std::string& message, std::source_location current) noexcept(false)

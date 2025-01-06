@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::engine
         , reportHandler{ reportHandler }
     {}
 
-    void TestAssertionHandlerImpl::AddAssertionError(const char* file, int line, std::string message)
+    void TestAssertionHandlerImpl::AddAssertionError(const char* file, int line, const std::string& message)
     {
         std::filesystem::path relativeFilePath = std::filesystem::relative(file);
 

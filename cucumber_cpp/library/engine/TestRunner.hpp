@@ -3,9 +3,12 @@
 
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
+#include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/TestExecution.hpp"
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace cucumber_cpp::library::report
@@ -36,6 +39,7 @@ namespace cucumber_cpp::library::engine
         static TestRunner& Instance();
 
         virtual void Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature) = 0;
+        virtual void NestedStep(StepType type, std::string step) = 0;
 
     private:
         static TestRunner* instance;
@@ -47,6 +51,8 @@ namespace cucumber_cpp::library::engine
 
         void Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature) override;
 
+        void NestedStep(StepType type, std::string step) override;
+
     private:
         void ExecuteSteps(const ScenarioInfo& scenario);
         void RunScenario(const std::unique_ptr<ScenarioInfo>& scenario);
@@ -56,6 +62,8 @@ namespace cucumber_cpp::library::engine
         void RunFeature(const FeatureInfo& feature);
 
         cucumber_cpp::library::engine::TestExecution& testExecution;
+
+        ScenarioInfo* currentScenario = nullptr;
     };
 }
 

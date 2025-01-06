@@ -5,6 +5,7 @@ target_link_libraries(cucumber_cpp.library.engine.test PUBLIC
     cucumber_cpp.library.engine
     gmock_main
     cucumber_cpp.library.engine.test_helper
+    cucumber_cpp.library.engine.test_helper.steps
 )
 
 target_sources(cucumber_cpp.library.engine.test PRIVATE

@@ -103,7 +103,7 @@ namespace cucumber_cpp::library::engine
 
     struct TestExecutionImpl : TestExecution
     {
-        TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = ExecuteRunPolicy{});
+        TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
         ProgramScope StartRun() override;
         FeatureScope StartFeature(const cucumber_cpp::library::engine::FeatureInfo& featureInfo) override;
         RuleScope StartRule(const cucumber_cpp::library::engine::RuleInfo& ruleInfo) override;

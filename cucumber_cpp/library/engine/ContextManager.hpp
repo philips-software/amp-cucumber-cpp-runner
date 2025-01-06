@@ -79,7 +79,6 @@ namespace cucumber_cpp::library::engine
         struct ScopedScenarioContext;
         struct ScopedStepContext;
 
-    public:
         [[nodiscard]] ScopedFeautureContext CreateFeatureContext(const FeatureInfo& featureInfo);
         cucumber_cpp::library::engine::FeatureContext& FeatureContext();
 
@@ -112,7 +111,7 @@ namespace cucumber_cpp::library::engine
 
     struct ContextManager::ScopedFeautureContext : library::util::Immoveable
     {
-        ScopedFeautureContext(ContextManager& contextManager);
+        explicit ScopedFeautureContext(ContextManager& contextManager);
         ~ScopedFeautureContext();
 
     private:
@@ -121,7 +120,7 @@ namespace cucumber_cpp::library::engine
 
     struct ContextManager::ScopedRuleContext : library::util::Immoveable
     {
-        ScopedRuleContext(ContextManager& contextManager);
+        explicit ScopedRuleContext(ContextManager& contextManager);
         ~ScopedRuleContext();
 
     private:
@@ -130,7 +129,7 @@ namespace cucumber_cpp::library::engine
 
     struct ContextManager::ScopedScenarioContext : library::util::Immoveable
     {
-        ScopedScenarioContext(ContextManager& contextManager);
+        explicit ScopedScenarioContext(ContextManager& contextManager);
         ~ScopedScenarioContext();
 
     private:
@@ -139,7 +138,7 @@ namespace cucumber_cpp::library::engine
 
     struct ContextManager::ScopedStepContext : library::util::Immoveable
     {
-        ScopedStepContext(ContextManager& contextManager);
+        explicit ScopedStepContext(ContextManager& contextManager);
         ~ScopedStepContext();
 
     private:

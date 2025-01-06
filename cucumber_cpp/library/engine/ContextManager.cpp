@@ -108,7 +108,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedStepContext ::~ScopedStepContext()
+    ContextManager::ScopedStepContext::~ScopedStepContext()
     {
         contextManager.DisposeStepContext();
     }

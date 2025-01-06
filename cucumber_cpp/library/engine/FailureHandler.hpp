@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::engine
 
         static TestAssertionHandler& Instance();
 
-        virtual void AddAssertionError(const char* file, int line, std::string message) = 0;
+        virtual void AddAssertionError(const char* file, int line, const std::string& message) = 0;
 
     private:
         static TestAssertionHandler* instance; // NOLINT
@@ -31,7 +31,7 @@ namespace cucumber_cpp::library::engine
         explicit TestAssertionHandlerImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
         virtual ~TestAssertionHandlerImpl() = default;
 
-        void AddAssertionError(const char* file, int line, std::string message) override;
+        void AddAssertionError(const char* file, int line, const std::string& message) override;
 
     private:
         cucumber_cpp::library::engine::ContextManager& contextManager;

@@ -13,8 +13,8 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
-        EXPECT_THAT(stepRegistry.Size(), testing::Eq(9));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::given), testing::Eq(2));
+        EXPECT_THAT(stepRegistry.Size(), testing::Eq(11));
+        EXPECT_THAT(stepRegistry.Size(engine::StepType::given), testing::Eq(4));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::when), testing::Eq(1));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::then), testing::Eq(2));
         EXPECT_THAT(stepRegistry.Size(engine::StepType::any), testing::Eq(4));

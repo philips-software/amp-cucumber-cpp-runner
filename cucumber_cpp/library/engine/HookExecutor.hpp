@@ -1,12 +1,10 @@
 #ifndef ENGINE_HOOKEXECUTOR_HPP
 #define ENGINE_HOOKEXECUTOR_HPP
 
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <functional>
-#include <optional>
 #include <set>
 #include <string>
 
@@ -15,12 +13,15 @@ namespace cucumber_cpp::library::engine
 
     struct HookExecutor
     {
+    protected:
+        ~HookExecutor() = default;
+
+    public:
         struct ProgramScope;
         struct FeatureScope;
         struct ScenarioScope;
         struct StepScope;
 
-    public:
         [[nodiscard]] virtual ProgramScope BeforeAll() = 0;
         [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
         [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
@@ -70,8 +71,10 @@ namespace cucumber_cpp::library::engine
     struct HookExecutorImpl : HookExecutor
     {
         explicit HookExecutorImpl(cucumber_cpp::library::engine::ContextManager& contextManager);
+        virtual ~HookExecutorImpl() = default;
 
-        [[nodiscard]] ProgramScope BeforeAll() override;
+        [[nodiscard]] ProgramScope
+        BeforeAll() override;
         [[nodiscard]] FeatureScope FeatureStart() override;
         [[nodiscard]] ScenarioScope ScenarioStart() override;
         [[nodiscard]] StepScope StepStart() override;

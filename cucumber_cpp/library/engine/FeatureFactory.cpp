@@ -271,20 +271,20 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, const std::string& stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
+    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
     {
         try
         {
             auto stepMatch = StepRegistry::Instance().Query(stepType, stepText);
-            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table), std::move(stepMatch));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(stepMatch));
         }
         catch (const StepRegistry::StepNotFoundError&)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table));
         }
         catch (StepRegistry::AmbiguousStepError& ase)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table), std::move(ase.matches));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(ase.matches));
         }
     }
 

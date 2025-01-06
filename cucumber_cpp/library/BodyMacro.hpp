@@ -6,6 +6,12 @@
 #include "cucumber_cpp/library/engine/StringTo.hpp"
 #include <cstddef>
 #include <functional>
+#include <gtest/gtest.h>
+
+#undef GTEST_MESSAGE_AT_
+#define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
+    cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
+        ::testing::Message()
 
 #define BODY_MATCHER(matcher, ...) matcher
 #define BODY_ARGS(matcher, args, ...) args
@@ -29,7 +35,7 @@
             void Execute(const std::vector<std::string>& args) override                                           \
             {                                                                                                     \
                 cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                     \
-                ExecuteWithArgs(args, std::function<void targs>{});                                               \
+                EXPECT_NO_THROW(ExecuteWithArgs(args, std::function<void targs>{}));                              \
             }                                                                                                     \
                                                                                                                   \
             template<class... TArgs>                                                                              \
@@ -51,12 +57,5 @@
     }                                                                                                             \
     const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type);                                 \
     void BODY_STRUCT::ExecuteWithArgs targs
-
-#include <gtest/gtest.h>
-
-#undef GTEST_MESSAGE_AT_
-#define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
-    cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
-        ::testing::Message()
 
 #endif
