@@ -8,7 +8,7 @@ target_sources(cucumber_cpp.example PRIVATE
 )
 
 target_link_libraries(cucumber_cpp.example PRIVATE
-    cucumber_cpp.library
+    cucumber_cpp
     cucumber_cpp.example.hooks
     cucumber_cpp.example.steps
 )
