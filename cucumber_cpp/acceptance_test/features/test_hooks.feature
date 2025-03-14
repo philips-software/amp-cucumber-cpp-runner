@@ -1,6 +1,10 @@
 @bats
 Feature: Test scenario and step hook bindings
 
+  @program_hooks
+  Scenario: Run failing Scenario hooks before
+    Given a given step
+
   @fail_scenariohook_before
   Scenario: Run failing Scenario hooks before
     Given a given step

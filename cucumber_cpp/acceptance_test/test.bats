@@ -75,7 +75,7 @@ teardown() {
 }
 
 @test "Run Program hooks" {
-    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag @bats --report console
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag @bats and @program_hooks --report console
     assert_success
 
     assert_output --partial "HOOK_BEFORE_ALL"

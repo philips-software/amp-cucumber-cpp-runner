@@ -1,8 +1,8 @@
 #include "cucumber_cpp/library/Hooks.hpp"
 #include "cucumber_cpp/example/fixtures/Fixture.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include <algorithm>
-#include <string_view>
+#include <iostream>
+#include <string>
 
 HOOK_BEFORE_ALL()
 {

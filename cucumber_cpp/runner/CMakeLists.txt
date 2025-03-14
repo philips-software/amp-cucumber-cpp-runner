@@ -5,5 +5,5 @@ target_sources(cucumber_cpp.runner PRIVATE
 )
 
 target_link_libraries(cucumber_cpp.runner PUBLIC
-    cucumber_cpp.library
+    cucumber_cpp
 )

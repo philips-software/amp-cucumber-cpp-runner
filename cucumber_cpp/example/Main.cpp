@@ -1,9 +1,9 @@
-#include "cucumber_cpp/library/Application.hpp"
+#include "cucumber_cpp/cucumber_cpp.hpp"
 #include <string>
 
 int main(int argc, char** argv)
 {
-    cucumber_cpp::library::Application application{};
+    cucumber_cpp::Application application{};
 
     application.CliParser().add_option("--com", *application.ProgramContext().EmplaceAt<std::string>("--com"))->required();
     auto* stOpt = application.CliParser().add_flag("--st", *application.ProgramContext().EmplaceAt<bool>("--st"));
