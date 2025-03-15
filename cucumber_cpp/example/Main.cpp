@@ -1,4 +1,4 @@
-#include "cucumber_cpp/cucumber_cpp.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include <string>
 
 int main(int argc, char** argv)

@@ -8,7 +8,7 @@ add_subdirectory(acceptance_test)
 add_library(cucumber_cpp INTERFACE)
 
 target_sources(cucumber_cpp INTERFACE
-    cucumber_cpp.hpp
+    CucumberCpp.hpp
 )
 
 target_include_directories(cucumber_cpp INTERFACE
