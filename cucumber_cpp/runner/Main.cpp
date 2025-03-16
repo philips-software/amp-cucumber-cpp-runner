@@ -1,9 +1,8 @@
-#include "cucumber_cpp/library/Application.hpp"
-#include <span>
+#include "cucumber_cpp/CucumberCpp.hpp"
 
 int main(int argc, char** argv)
 {
-    cucumber_cpp::library::Application application{};
+    cucumber_cpp::Application application{};
 
     return application.Run(argc, argv);
 }

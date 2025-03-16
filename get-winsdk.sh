@@ -1,1 +1,1 @@
-xwin --accept-license --manifest-version 17 splat --preserve-ms-arch-notation --include-debug-libs && mv .xwin-cache/splat/ /winsdk
+xwin --accept-license --temp --sdk-version "10.0.26100" splat --preserve-ms-arch-notation --include-debug-libs --output /winsdk
