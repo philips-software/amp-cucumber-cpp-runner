@@ -29,8 +29,8 @@ target_include_directories(cucumber_cpp.library PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library PUBLIC
-    gtest
-    gmock
+    GTest::gtest
+    GTest::gmock
     cucumber_gherkin_lib
     cucumber_cpp.library.report
     cucumber_cpp.library.engine

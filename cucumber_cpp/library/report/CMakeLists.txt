@@ -14,6 +14,6 @@ target_include_directories(cucumber_cpp.library.report PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.report PUBLIC
-    pugixml
+    pugixml::pugixml
     cucumber_cpp.library
 )

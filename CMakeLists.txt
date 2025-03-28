@@ -21,6 +21,12 @@ else()
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
+option(
+      CCR_FETCH_DEPS
+      "Fetch dependencies via FetchContent."
+      On
+)
+
 option(CCR_BUILD_TESTS "Enable building the tests" ${CCR_DEFAULTOPT})
 
 if (CCR_BUILD_TESTS)
@@ -38,5 +44,15 @@ include(GNUInstallDirs)
 include(CTest)
 include(GoogleTest)
 
-add_subdirectory(external)
+if (CCR_FETCH_DEPS)
+    add_subdirectory(external)
+else()
+    find_package(CLI11 REQUIRED)
+    find_package(nlohmann_json REQUIRED)
+    find_package(GTest REQUIRED)
+    find_package(pugixml REQUIRED)
+    find_package(cucumber_messages REQUIRED)
+    find_package(cucumber_gherkin REQUIRED)
+endif()
+
 add_subdirectory(cucumber_cpp)
