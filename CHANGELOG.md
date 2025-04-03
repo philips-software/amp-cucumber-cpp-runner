@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v1.0.0...v1.1.0) (2025-04-03)
+
+
+### Features
+
+* Add error handling without invoking the google test test environment ([#104](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/104)) ([08d653f](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/08d653fe47d31d7e070195f7536d4f32e03180e6))
+* Add option to disable fetch externals ([#161](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/161)) ([#166](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/166)) ([5513d57](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/5513d5759e9a019adea9930b76e85fadd1bff45c))
+* Add workflows similar to amp-embedded-infra-lib, restructure components ([#84](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/84)) ([2386d9e](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/2386d9e571d92f8180167d95611be62f4d4509e5))
+* Added single include header that exposes all required interfaces in the cucumber_cpp namespace ([#149](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/149)) ([bb8e89a](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/bb8e89aa5988a3fa23539560b1bfe382358e9934))
+* Pinned windows sdk to version 10.0.26100 ([842cfd4](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/842cfd418512471cf2fa83d80e0b719a5d423284))
+* Refactor and add tests for Step and StepRegistry ([#89](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/89)) ([3d824cb](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/3d824cb1a0c4824339d2e89b39801bc62c37a60e))
+* Update devcontainer to 5.6.2 ([#150](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/150)) ([842cfd4](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/842cfd418512471cf2fa83d80e0b719a5d423284))
+
+
+### Chores
+
+* Removed unnecessary member function pointer ([#88](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/88)) ([562ea5d](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/562ea5db3bd4643c3304d4758fdc301ccb804bca))
+* Update nlohmann::json to latest main ([#165](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/165)) ([a8ba3f7](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/a8ba3f77ed411ee79c92f306cdcfd3e19d409d76))
+
 ## 1.0.0 (2024-09-27)
 
 
