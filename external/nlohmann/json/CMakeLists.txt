@@ -1,6 +1,6 @@
 FetchContent_Declare(nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG "bc889afb4c5bf1c0d8ee29ef35eaaf4c8bef8a5d" # v3.11.2
+    GIT_TAG "79587f896ed4db2a0b63baa9151113f4da336599" # Unreleased
 
     OVERRIDE_FIND_PACKAGE
 )
