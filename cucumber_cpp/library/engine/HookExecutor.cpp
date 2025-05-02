@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <functional>
 #include <set>
+#include <stdexcept>
 #include <string>
 
 namespace cucumber_cpp::library::engine
@@ -18,21 +19,19 @@ namespace cucumber_cpp::library::engine
         constexpr HookPair scenarioHooks{ HookType::before, HookType::after };
         constexpr HookPair stepHooks{ HookType::beforeStep, HookType::afterStep };
 
+        struct HookFailed : std::runtime_error
+        {
+            using runtime_error::runtime_error;
+        };
+
         void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
-            try
+            for (const auto& match : HookRegistry::Instance().Query(hook, tags))
             {
-                for (const auto& match : HookRegistry::Instance().Query(hook, tags))
-                {
-                    match.factory(runnerContext)->Execute();
+                match.factory(runnerContext)->Execute();
 
-                    if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
-                        return;
-                }
-            }
-            catch (...)
-            {
-                runnerContext.ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
+                if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
+                    throw HookFailed{ "hook failed" };
             }
         }
     }
@@ -42,12 +41,31 @@ namespace cucumber_cpp::library::engine
         , hookPair{ hookPair }
         , tags{ tags }
     {
-        ExecuteHook(runnerContext, hookPair.before, tags);
+        try
+        {
+            ExecuteHook(runnerContext, hookPair.before, tags);
+        }
+        catch (HookFailed&)
+        {
+            /* This throw ensures no tests are executed in and below the current scope. */
+            throw HookFailed{ "Error during BEFORE_x_HOOK" };
+        }
     }
 
     HookExecutor::ScopedHook::~ScopedHook()
     {
-        ExecuteHook(runnerContext, hookPair.after, tags);
+        try
+        {
+            ExecuteHook(runnerContext, hookPair.after, tags);
+        }
+        catch (HookFailed&)
+        {
+            /*
+            Can't throw from a destructor. Error state will be handled by calling functions.
+
+            Errors during AFTER_ALL hook is not a problem, because no other hooks will be executed.
+            */
+        }
     }
 
     HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)

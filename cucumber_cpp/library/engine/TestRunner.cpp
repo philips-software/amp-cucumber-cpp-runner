@@ -1,5 +1,6 @@
 
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
+#include "cucumber_cpp/library/BodyMacro.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
@@ -37,10 +38,15 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature)
     {
-        auto scope = testExecution.StartRun();
+        auto run = [this, &feature]
+        {
+            auto scope = testExecution.StartRun();
 
-        for (const auto& featurePtr : feature)
-            RunFeature(*featurePtr);
+            for (const auto& featurePtr : feature)
+                RunFeature(*featurePtr);
+        };
+
+        ASSERT_NO_THROW(run());
     }
 
     void TestRunnerImpl::NestedStep(StepType type, std::string step)
@@ -51,20 +57,28 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::RunFeature(const FeatureInfo& feature)
     {
-        if (feature.Rules().empty() && feature.Scenarios().empty())
-            return;
+        auto run = [this, &feature]
+        {
+            if (feature.Rules().empty() && feature.Scenarios().empty())
+                return;
 
-        const auto featureScope = testExecution.StartFeature(feature);
+            const auto featureScope = testExecution.StartFeature(feature);
 
-        RunRules(feature.Rules());
-        RunScenarios(feature.Scenarios());
+            RunRules(feature.Rules());
+            RunScenarios(feature.Scenarios());
+        };
+        ASSERT_NO_THROW(run());
     }
 
     void TestRunnerImpl::RunRule(const RuleInfo& rule)
     {
-        const auto ruleScope = testExecution.StartRule(rule);
+        auto run = [this, &rule]
+        {
+            const auto ruleScope = testExecution.StartRule(rule);
 
-        RunScenarios(rule.Scenarios());
+            RunScenarios(rule.Scenarios());
+        };
+        ASSERT_NO_THROW(run());
     }
 
     void TestRunnerImpl::RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules)
@@ -75,11 +89,15 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::RunScenario(const ScenarioInfo& scenario)
     {
-        const auto scenarioScope = testExecution.StartScenario(scenario);
+        auto run = [this, &scenario]
+        {
+            const auto scenarioScope = testExecution.StartScenario(scenario);
 
-        currentScenario = &scenario;
+            currentScenario = &scenario;
 
-        ExecuteSteps(scenario);
+            ExecuteSteps(scenario);
+        };
+        ASSERT_NO_THROW(run());
     }
 
     void TestRunnerImpl::RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios)
