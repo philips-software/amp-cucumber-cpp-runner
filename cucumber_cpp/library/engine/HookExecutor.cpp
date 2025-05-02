@@ -64,7 +64,7 @@ namespace cucumber_cpp::library::engine
     {}
 
     HookExecutor::StepScope::StepScope(cucumber_cpp::library::engine::ContextManager& contextManager)
-        : ScopedHook{ contextManager.StepContext(), stepHooks, contextManager.ScenarioContext().info.Tags() }
+        : ScopedHook{ contextManager.ScenarioContext(), stepHooks, contextManager.ScenarioContext().info.Tags() }
     {}
 
     HookExecutorImpl::HookExecutorImpl(cucumber_cpp::library::engine::ContextManager& contextManager)
