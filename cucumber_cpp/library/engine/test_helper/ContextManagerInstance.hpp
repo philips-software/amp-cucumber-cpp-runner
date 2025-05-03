@@ -31,7 +31,7 @@ namespace cucumber_cpp::library::engine::test_helper
         cucumber_cpp::library::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
         cucumber_cpp::library::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
 
-        ContextManager::ScopedFeautureContext featureContextScope{ CreateFeatureContext(feature) };
+        ContextManager::ScopedFeatureContext featureContextScope{ CreateFeatureContext(feature) };
         ContextManager::ScopedRuleContext ruleContextScope{ CreateRuleContext(rule) };
         ContextManager::ScopedScenarioContext scenarioContextScope{ CreateScenarioContext(scenario) };
         ContextManager::ScopedStepContext stepContextScope{ CreateStepContext(step) };
