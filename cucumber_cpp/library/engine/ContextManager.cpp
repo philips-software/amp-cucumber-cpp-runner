@@ -5,6 +5,7 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -48,9 +49,27 @@ namespace cucumber_cpp::library::engine
         Start();
     }
 
+    [[nodiscard]] Result CurrentContext::InheritedExecutionStatus() const
+    {
+        if (parent == nullptr)
+            return executionStatus;
+        else
+            return std::max(executionStatus, parent->InheritedExecutionStatus());
+    }
+
+    [[nodiscard]] Result CurrentContext::EffectiveExecutionStatus() const
+    {
+        return std::max(executionStatus, nestedExecutionStatus);
+    }
+
     [[nodiscard]] Result CurrentContext::ExecutionStatus() const
     {
         return executionStatus;
+    }
+
+    [[nodiscard]] Result CurrentContext::NestedExecutionStatus() const
+    {
+        return nestedExecutionStatus;
     }
 
     void CurrentContext::Start()
@@ -69,7 +88,16 @@ namespace cucumber_cpp::library::engine
             executionStatus = result;
 
         if (parent != nullptr)
-            parent->ExecutionStatus(result);
+            parent->NestedExecutionStatus(result);
+    }
+
+    void CurrentContext::NestedExecutionStatus(Result result)
+    {
+        if (result > nestedExecutionStatus)
+            nestedExecutionStatus = result;
+
+        if (parent != nullptr)
+            parent->NestedExecutionStatus(result);
     }
 
     ProgramContext::ProgramContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
@@ -189,14 +217,11 @@ namespace cucumber_cpp::library::engine
     ContextManager::ScopedStepContext ContextManager::CreateStepContext(const StepInfo& stepInfo)
     {
         stepContext.push(std::make_shared<cucumber_cpp::library::engine::StepContext>(*scenarioContext, stepInfo));
-        runnerContext.push(stepContext.top());
-
         return ScopedStepContext{ *this };
     }
 
     void ContextManager::DisposeStepContext()
     {
-        runnerContext.pop();
         stepContext.pop();
     }
 
@@ -211,5 +236,13 @@ namespace cucumber_cpp::library::engine
     cucumber_cpp::library::engine::RunnerContext& ContextManager::CurrentContext()
     {
         return *runnerContext.top();
+    }
+
+    cucumber_cpp::library::engine::RunnerContext* ContextManager::CurrentStepContext()
+    {
+        if (stepContext.empty())
+            return nullptr;
+
+        return stepContext.top().get();
     }
 }

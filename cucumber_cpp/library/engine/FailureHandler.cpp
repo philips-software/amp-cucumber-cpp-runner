@@ -53,6 +53,9 @@ namespace cucumber_cpp::library::engine
 
         contextManager.CurrentContext().ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
 
+        if (auto* stepContext = contextManager.CurrentStepContext(); stepContext != nullptr)
+            stepContext->ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
+
         reportHandler.Failure(message, relativeFilePath, line);
     }
 

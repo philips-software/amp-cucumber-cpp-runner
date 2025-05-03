@@ -1,8 +1,10 @@
 #include "cucumber_cpp/library/engine/FailureHandler.hpp"
 #include "cucumber_cpp/library/engine/HookExecutor.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "cucumber_cpp/library/report/test_helper/ReportForwarderMock.hpp"
 #include <functional>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <optional>
 #include <set>
@@ -69,7 +71,7 @@ namespace cucumber_cpp::library::engine
         EXPECT_TRUE(contextManagerInstance->ScenarioContext().Contains("hookAfterStep"));
     }
 
-    TEST_F(TestHookExecutor, ThrowOnBeforeHookError)
+    TEST_F(TestHookExecutor, BeforeHookError)
     {
         contextManagerInstance.emplace(std::set<std::string, std::less<>>{ "@errorbefore" });
         hookExecutor.emplace(*contextManagerInstance);
@@ -77,9 +79,8 @@ namespace cucumber_cpp::library::engine
         report::test_helper::ReportForwarderMock reportHandler{ *contextManagerInstance };
         TestAssertionHandlerImpl assertionHandler{ *contextManagerInstance, reportHandler };
 
-        EXPECT_ANY_THROW([this]
-            {
-                auto hook = hookExecutor->StepStart();
-            }());
+        auto hook = hookExecutor->StepStart();
+
+        EXPECT_THAT(contextManagerInstance->CurrentStepContext()->ExecutionStatus(), testing::Eq(Result::failed));
     }
 }

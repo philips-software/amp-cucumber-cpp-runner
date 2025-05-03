@@ -211,11 +211,11 @@ namespace cucumber_cpp::library::engine
 
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
 
         runner.Run(features);
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
     }
 
     TEST_F(TestTestRunner, TestExceptionContinuesWithNextScenario)
@@ -235,110 +235,17 @@ namespace cucumber_cpp::library::engine
 
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
 
         testing::internal::CaptureStdout();
         runner.Run(features);
         const auto stdoutString = testing::internal::GetCapturedStdout();
 
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("Exception thrown"));
         EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("Should Not Be Thrown")));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
-    }
-
-    TEST_F(TestTestRunner, ErrorDuringStartRunStopsExecution)
-    {
-        EXPECT_CALL(testExecutionMock, StartRunMock).WillOnce(testing::Throw(std::runtime_error{ "start run error" }));
-        EXPECT_CALL(testExecutionMock, StartFeatureMock).Times(0);
-        EXPECT_CALL(testExecutionMock, StartScenarioMock).Times(0);
-        EXPECT_CALL(testExecutionMock, RunStepMock).Times(0);
-
-        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
-        tmp << "Feature: Test feature\n"
-               "  Scenario: Test scenario\n"
-               "    Given I have a step\n";
-
-        features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
-
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-
-        testing::internal::CaptureStdout();
-        runner.Run(features);
-        const auto stdoutString = testing::internal::GetCapturedStdout();
-
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("start run error"));
-    }
-
-    TEST_F(TestTestRunner, ErrorDuringStartFeatureStopsExecutionOfCurrentFeature)
-    {
-        EXPECT_CALL(testExecutionMock, StartRunMock);
-        EXPECT_CALL(testExecutionMock, StartFeatureMock).Times(2).WillOnce(testing::Throw(std::runtime_error{ "start feature error" }));
-        EXPECT_CALL(testExecutionMock, StartScenarioMock).Times(1);
-        EXPECT_CALL(testExecutionMock, RunStepMock).Times(1);
-
-        auto tmp1 = test_helper::TemporaryFile{ "tmpfile1.feature" };
-        tmp1 << "Feature: Test feature1\n"
-                "  Scenario: Test scenario1\n"
-                "    Given I have a step\n";
-
-        features.push_back(featureTreeFactory.Create(tmp1.Path(), ""));
-
-        auto tmp2 = test_helper::TemporaryFile{ "tmpfile2.feature" };
-        tmp2 << "Feature: Test feature2\n"
-                "  Scenario: Test scenario2\n"
-                "    Given I have a step\n";
-
-        features.push_back(featureTreeFactory.Create(tmp2.Path(), ""));
-
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-
-        testing::internal::CaptureStdout();
-        runner.Run(features);
-        const auto stdoutString = testing::internal::GetCapturedStdout();
-
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("start feature error"));
-    }
-
-    TEST_F(TestTestRunner, ErrorDuringStartScenarioStopsExecution)
-    {
-        EXPECT_CALL(testExecutionMock, StartRunMock);
-        EXPECT_CALL(testExecutionMock, StartFeatureMock).Times(2);
-        EXPECT_CALL(testExecutionMock, StartScenarioMock).Times(4).WillOnce(testing::Throw(std::runtime_error{ "start scenario error" }));
-        EXPECT_CALL(testExecutionMock, RunStepMock).Times(3);
-
-        auto tmp1 = test_helper::TemporaryFile{ "tmpfile1.feature" };
-        tmp1 << "Feature: Test feature1\n"
-                "  Scenario: Test scenario1\n"
-                "    Given I have a step\n"
-                "  Scenario: Test scenario2\n"
-                "    Given I have a step\n";
-
-        features.push_back(featureTreeFactory.Create(tmp1.Path(), ""));
-
-        auto tmp2 = test_helper::TemporaryFile{ "tmpfile2.feature" };
-        tmp2 << "Feature: Test feature2\n"
-                "  Scenario: Test scenario3\n"
-                "    Given I have a step\n"
-                "  Scenario: Test scenario4\n"
-                "    Given I have a step\n";
-
-        features.push_back(featureTreeFactory.Create(tmp2.Path(), ""));
-
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-
-        testing::internal::CaptureStdout();
-        runner.Run(features);
-        const auto stdoutString = testing::internal::GetCapturedStdout();
-
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("start scenario error"));
     }
 }

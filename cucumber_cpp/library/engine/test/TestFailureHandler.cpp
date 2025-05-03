@@ -36,21 +36,21 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestFailureHandler, SetContextToFailed)
     {
-        ASSERT_THAT(contextManager.CurrentContext().ExecutionStatus(), testing::Eq(Result::passed));
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-        ASSERT_THAT(contextManager.FeatureContext().ExecutionStatus(), testing::Eq(Result::passed));
-        ASSERT_THAT(contextManager.RuleContext().ExecutionStatus(), testing::Eq(Result::passed));
-        ASSERT_THAT(contextManager.ScenarioContext().ExecutionStatus(), testing::Eq(Result::passed));
-        ASSERT_THAT(contextManager.StepContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.CurrentContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.FeatureContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.RuleContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ScenarioContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.StepContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
 
         ErrorWithFailureMessage("failure");
 
-        EXPECT_THAT(contextManager.CurrentContext().ExecutionStatus(), testing::Eq(Result::failed));
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
-        EXPECT_THAT(contextManager.FeatureContext().ExecutionStatus(), testing::Eq(Result::failed));
-        EXPECT_THAT(contextManager.RuleContext().ExecutionStatus(), testing::Eq(Result::failed));
-        EXPECT_THAT(contextManager.ScenarioContext().ExecutionStatus(), testing::Eq(Result::failed));
-        EXPECT_THAT(contextManager.StepContext().ExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.CurrentContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.FeatureContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.RuleContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.ScenarioContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.StepContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
     }
 
     TEST_F(TestFailureHandler, ReportFailureMessage)

@@ -56,13 +56,14 @@ namespace cucumber_cpp::library::engine
 
         void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags, const ThrowPolicy& throwPolicy)
         {
-            for (const auto& match : HookRegistry::Instance().Query(hook, tags))
-            {
-                match.factory(runnerContext)->Execute();
+            if (runnerContext.InheritedExecutionStatus() == Result::passed)
+                for (const auto& match : HookRegistry::Instance().Query(hook, tags))
+                {
+                    match.factory(runnerContext)->Execute();
 
-                if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
-                    throwPolicy.Throw();
-            }
+                    if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
+                        return;
+                }
         }
     }
 

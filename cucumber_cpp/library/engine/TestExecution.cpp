@@ -84,7 +84,8 @@ namespace cucumber_cpp::library::engine
     void TestExecutionImpl::RunStep(const cucumber_cpp::library::engine::StepInfo& stepInfo)
     {
         auto scopedContext = contextManager.CreateStepContext(stepInfo);
-        if (contextManager.ScenarioContext().ExecutionStatus() == cucumber_cpp::library::engine::Result::passed)
+        if (contextManager.ScenarioContext().InheritedExecutionStatus() == Result::passed &&
+            contextManager.ScenarioContext().EffectiveExecutionStatus() == Result::passed)
         {
             const auto scopedStepReport = reportHandler.StepStart();
             const auto scopedStepHook = hookExecution.StepStart();
