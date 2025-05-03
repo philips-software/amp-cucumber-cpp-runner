@@ -81,7 +81,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedFeautureContext ::~ScopedFeautureContext()
+    ContextManager::ScopedFeautureContext::~ScopedFeautureContext()
     {
         contextManager.DisposeFeatureContext();
     }
@@ -90,7 +90,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedRuleContext ::~ScopedRuleContext()
+    ContextManager::ScopedRuleContext::~ScopedRuleContext()
     {
         contextManager.DisposeRuleContext();
     }
@@ -99,7 +99,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedScenarioContext ::~ScopedScenarioContext()
+    ContextManager::ScopedScenarioContext::~ScopedScenarioContext()
     {
         contextManager.DisposeScenarioContext();
     }
