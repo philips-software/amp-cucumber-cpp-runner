@@ -176,3 +176,12 @@ teardown() {
     assert_output --partial "skipped Given a given step"
     assert_output --partial "tests   : 0/1 passed"
 }
+
+
+@test "Test error program hook results in error and skipped steps" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test.custom run --feature cucumber_cpp/acceptance_test/features  --tag "@smoke and @result:OK" --report console --required --failprogramhook
+    assert_failure
+    assert_output --partial "skipped Given a given step"
+    refute_output --partial "should not be executed"
+    # assert_output --partial "tests   : 0/1 passed"
+}

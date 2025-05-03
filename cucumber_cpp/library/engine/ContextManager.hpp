@@ -19,7 +19,10 @@ namespace cucumber_cpp::library::engine
         explicit CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
         explicit CurrentContext(CurrentContext* parent);
 
+        [[nodiscard]] Result InheritedExecutionStatus() const;
+        [[nodiscard]] Result EffectiveExecutionStatus() const;
         [[nodiscard]] Result ExecutionStatus() const;
+        [[nodiscard]] Result NestedExecutionStatus() const;
 
         void Start();
         [[nodiscard]] TraceTime::Duration Duration() const;
@@ -28,9 +31,12 @@ namespace cucumber_cpp::library::engine
         void ExecutionStatus(Result result);
 
     private:
+        void NestedExecutionStatus(Result result);
+
         CurrentContext* parent{ nullptr };
 
         Result executionStatus{ Result::passed };
+        Result nestedExecutionStatus{ Result::passed };
         TraceTime traceTime;
     };
 
@@ -74,12 +80,12 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::ProgramContext& ProgramContext();
         [[nodiscard]] cucumber_cpp::library::engine::ProgramContext& ProgramContext() const;
 
-        struct ScopedFeautureContext;
+        struct ScopedFeatureContext;
         struct ScopedRuleContext;
         struct ScopedScenarioContext;
         struct ScopedStepContext;
 
-        [[nodiscard]] ScopedFeautureContext CreateFeatureContext(const FeatureInfo& featureInfo);
+        [[nodiscard]] ScopedFeatureContext CreateFeatureContext(const FeatureInfo& featureInfo);
         cucumber_cpp::library::engine::FeatureContext& FeatureContext();
 
         [[nodiscard]] ScopedRuleContext CreateRuleContext(const RuleInfo& ruleInfo);
@@ -93,6 +99,7 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::StepContext& StepContext();
 
         cucumber_cpp::library::engine::RunnerContext& CurrentContext();
+        cucumber_cpp::library::engine::RunnerContext* CurrentStepContext();
 
     private:
         void DisposeFeatureContext();
@@ -109,10 +116,10 @@ namespace cucumber_cpp::library::engine
         std::stack<std::shared_ptr<cucumber_cpp::library::engine::StepContext>> stepContext;
     };
 
-    struct ContextManager::ScopedFeautureContext : library::util::Immoveable
+    struct ContextManager::ScopedFeatureContext : library::util::Immoveable
     {
-        explicit ScopedFeautureContext(ContextManager& contextManager);
-        ~ScopedFeautureContext();
+        explicit ScopedFeatureContext(ContextManager& contextManager);
+        ~ScopedFeatureContext();
 
     private:
         ContextManager& contextManager;

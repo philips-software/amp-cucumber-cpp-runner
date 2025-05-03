@@ -17,3 +17,7 @@ target_link_libraries(cucumber_cpp.library.report PUBLIC
     pugixml::pugixml
     cucumber_cpp.library
 )
+
+if (CCR_BUILD_TESTS)
+    add_subdirectory(test_helper)
+endif()

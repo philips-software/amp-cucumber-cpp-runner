@@ -224,7 +224,7 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        if (contextManager.ProgramContext().ExecutionStatus() == engine::Result::passed)
+        if (contextManager.ProgramContext().EffectiveExecutionStatus() == engine::Result::passed)
             return 0;
         else
             return 1;
