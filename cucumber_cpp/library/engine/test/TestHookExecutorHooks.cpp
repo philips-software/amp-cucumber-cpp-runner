@@ -43,4 +43,9 @@ namespace cucumber_cpp::library::engine
     {
         context.InsertAt("hookAfterStep", std::string{ "hookAfterStep" });
     }
+
+    HOOK_BEFORE_STEP("@errorbefore")
+    {
+        ASSERT_FALSE(true);
+    }
 }

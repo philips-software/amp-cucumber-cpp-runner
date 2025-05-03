@@ -36,17 +36,17 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature)
+    void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& features)
     {
-        auto run = [this, &feature]
+        auto runFeatures = [this, &features]
         {
             auto scope = testExecution.StartRun();
 
-            for (const auto& featurePtr : feature)
+            for (const auto& featurePtr : features)
                 RunFeature(*featurePtr);
         };
 
-        ASSERT_NO_THROW(run());
+        ASSERT_NO_THROW(runFeatures());
     }
 
     void TestRunnerImpl::NestedStep(StepType type, std::string step)
@@ -57,7 +57,7 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::RunFeature(const FeatureInfo& feature)
     {
-        auto run = [this, &feature]
+        auto runFeature = [this, &feature]
         {
             if (feature.Rules().empty() && feature.Scenarios().empty())
                 return;
@@ -67,18 +67,18 @@ namespace cucumber_cpp::library::engine
             RunRules(feature.Rules());
             RunScenarios(feature.Scenarios());
         };
-        ASSERT_NO_THROW(run());
+        ASSERT_NO_THROW(runFeature());
     }
 
     void TestRunnerImpl::RunRule(const RuleInfo& rule)
     {
-        auto run = [this, &rule]
+        auto runRule = [this, &rule]
         {
             const auto ruleScope = testExecution.StartRule(rule);
 
             RunScenarios(rule.Scenarios());
         };
-        ASSERT_NO_THROW(run());
+        ASSERT_NO_THROW(runRule());
     }
 
     void TestRunnerImpl::RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules)
@@ -89,7 +89,7 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::RunScenario(const ScenarioInfo& scenario)
     {
-        auto run = [this, &scenario]
+        auto runScenario = [this, &scenario]
         {
             const auto scenarioScope = testExecution.StartScenario(scenario);
 
@@ -97,7 +97,7 @@ namespace cucumber_cpp::library::engine
 
             ExecuteSteps(scenario);
         };
-        ASSERT_NO_THROW(run());
+        ASSERT_NO_THROW(runScenario());
     }
 
     void TestRunnerImpl::RunScenarios(const std::vector<std::unique_ptr<ScenarioInfo>>& scenarios)
