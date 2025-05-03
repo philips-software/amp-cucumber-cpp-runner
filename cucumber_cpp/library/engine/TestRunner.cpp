@@ -35,11 +35,11 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature)
+    void TestRunnerImpl::Run(const std::vector<std::unique_ptr<FeatureInfo>>& features)
     {
         auto scope = testExecution.StartRun();
 
-        for (const auto& featurePtr : feature)
+        for (const auto& featurePtr : features)
             RunFeature(*featurePtr);
     }
 

@@ -19,7 +19,10 @@ namespace cucumber_cpp::library::engine
         explicit CurrentContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
         explicit CurrentContext(CurrentContext* parent);
 
+        [[nodiscard]] Result InheritedExecutionStatus() const;
+        [[nodiscard]] Result EffectiveExecutionStatus() const;
         [[nodiscard]] Result ExecutionStatus() const;
+        [[nodiscard]] Result NestedExecutionStatus() const;
 
         void Start();
         [[nodiscard]] TraceTime::Duration Duration() const;
@@ -28,9 +31,12 @@ namespace cucumber_cpp::library::engine
         void ExecutionStatus(Result result);
 
     private:
+        void NestedExecutionStatus(Result result);
+
         CurrentContext* parent{ nullptr };
 
         Result executionStatus{ Result::passed };
+        Result nestedExecutionStatus{ Result::passed };
         TraceTime traceTime;
     };
 
@@ -93,6 +99,7 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::StepContext& StepContext();
 
         cucumber_cpp::library::engine::RunnerContext& CurrentContext();
+        cucumber_cpp::library::engine::RunnerContext* CurrentStepContext();
 
     private:
         void DisposeFeatureContext();

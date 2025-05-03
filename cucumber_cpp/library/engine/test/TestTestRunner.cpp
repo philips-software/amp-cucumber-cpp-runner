@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <vector>
 
 namespace cucumber_cpp::library::engine
@@ -79,7 +80,7 @@ namespace cucumber_cpp::library::engine
 
     struct TestTestRunner : testing::Test
     {
-        TestExecutionMockInstance testExecutionMock;
+        testing::StrictMock<TestExecutionMockInstance> testExecutionMock;
         TestRunnerImpl runner{ testExecutionMock };
 
         FeatureTreeFactory featureTreeFactory;
@@ -104,6 +105,18 @@ namespace cucumber_cpp::library::engine
         auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
         tmp << "Feature: Test feature\n"
                "  Scenario: Test scenario\n";
+        features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
+
+        runner.Run(features);
+    }
+
+    TEST_F(TestTestRunner, DontRunEmptyFeature)
+    {
+        EXPECT_CALL(testExecutionMock, StartRunMock);
+        EXPECT_CALL(testExecutionMock, StartFeatureMock).Times(0);
+
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+        tmp << "Feature: Test feature\n";
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
         runner.Run(features);
@@ -198,11 +211,11 @@ namespace cucumber_cpp::library::engine
 
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
 
         runner.Run(features);
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
     }
 
     TEST_F(TestTestRunner, TestExceptionContinuesWithNextScenario)
@@ -222,13 +235,13 @@ namespace cucumber_cpp::library::engine
 
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
+        ASSERT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::passed));
 
         testing::internal::CaptureStdout();
         runner.Run(features);
         const auto stdoutString = testing::internal::GetCapturedStdout();
 
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_THAT(contextManager.ProgramContext().EffectiveExecutionStatus(), testing::Eq(Result::failed));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("Exception thrown"));
         EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("Should Not Be Thrown")));

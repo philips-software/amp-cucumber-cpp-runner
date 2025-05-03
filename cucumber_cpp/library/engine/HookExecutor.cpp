@@ -7,7 +7,9 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <functional>
 #include <set>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace cucumber_cpp::library::engine
 {
@@ -20,8 +22,7 @@ namespace cucumber_cpp::library::engine
 
         void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
-            try
-            {
+            if (runnerContext.InheritedExecutionStatus() == Result::passed)
                 for (const auto& match : HookRegistry::Instance().Query(hook, tags))
                 {
                     match.factory(runnerContext)->Execute();
@@ -29,11 +30,6 @@ namespace cucumber_cpp::library::engine
                     if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
                         return;
                 }
-            }
-            catch (...)
-            {
-                runnerContext.ExecutionStatus(cucumber_cpp::library::engine::Result::failed);
-            }
         }
     }
 

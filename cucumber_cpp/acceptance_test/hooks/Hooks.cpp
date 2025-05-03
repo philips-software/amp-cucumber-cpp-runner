@@ -6,6 +6,9 @@
 HOOK_BEFORE_ALL()
 {
     std::cout << "HOOK_BEFORE_ALL\n";
+
+    if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
+        ASSERT_THAT(false, testing::IsTrue());
 }
 
 HOOK_AFTER_ALL()
@@ -46,4 +49,10 @@ HOOK_AFTER_SCENARIO("@fail_scenariohook_after")
 HOOK_BEFORE_SCENARIO("@throw_scenariohook")
 {
     throw std::string{ "error" };
+}
+
+HOOK_BEFORE_SCENARIO()
+{
+    if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
+        std::cout << "should not be executed\n";
 }
