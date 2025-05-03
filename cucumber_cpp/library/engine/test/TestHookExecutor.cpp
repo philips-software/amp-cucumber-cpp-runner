@@ -77,6 +77,9 @@ namespace cucumber_cpp::library::engine
         report::test_helper::ReportForwarderMock reportHandler{ *contextManagerInstance };
         TestAssertionHandlerImpl assertionHandler{ *contextManagerInstance, reportHandler };
 
-        EXPECT_ANY_THROW(auto scope = hookExecutor->StepStart());
+        EXPECT_ANY_THROW([this]
+            {
+                auto hook = hookExecutor->StepStart();
+            }());
     }
 }

@@ -9,6 +9,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace cucumber_cpp::library::engine
 {
@@ -26,17 +27,14 @@ namespace cucumber_cpp::library::engine
 
         struct ThrowPolicy
         {
-        protected:
-            ~ThrowPolicy() = default;
-
-        public:
+            virtual ~ThrowPolicy() = default;
             virtual void Throw() const = 0;
         };
 
         struct ThrowExceptionPolicy : ThrowPolicy
         {
-            ThrowExceptionPolicy(std::string message)
-                : message{ message }
+            explicit ThrowExceptionPolicy(std::string message)
+                : message{ std::move(message) }
             {}
 
             void Throw() const override

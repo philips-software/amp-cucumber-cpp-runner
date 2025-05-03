@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::engine
 
     struct TestTestRunner : testing::Test
     {
-        TestExecutionMockInstance testExecutionMock;
+        testing::StrictMock<TestExecutionMockInstance> testExecutionMock;
         TestRunnerImpl runner{ testExecutionMock };
 
         FeatureTreeFactory featureTreeFactory;
@@ -105,6 +105,18 @@ namespace cucumber_cpp::library::engine
         auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
         tmp << "Feature: Test feature\n"
                "  Scenario: Test scenario\n";
+        features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
+
+        runner.Run(features);
+    }
+
+    TEST_F(TestTestRunner, DontRunEmptyFeature)
+    {
+        EXPECT_CALL(testExecutionMock, StartRunMock);
+        EXPECT_CALL(testExecutionMock, StartFeatureMock).Times(0);
+
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+        tmp << "Feature: Test feature\n";
         features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
 
         runner.Run(features);
