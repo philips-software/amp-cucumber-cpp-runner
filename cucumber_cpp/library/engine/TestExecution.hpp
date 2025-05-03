@@ -51,7 +51,7 @@ namespace cucumber_cpp::library::engine
         FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const cucumber_cpp::library::engine::FeatureInfo& featureInfo);
 
     private:
-        cucumber_cpp::library::engine::ContextManager::ScopedFeautureContext scopedFeatureContext;
+        cucumber_cpp::library::engine::ContextManager::ScopedFeatureContext scopedFeatureContext;
         report::ReportForwarder::FeatureScope scopedFeatureReport;
         HookExecutor::FeatureScope scopedFeatureHook;
     };

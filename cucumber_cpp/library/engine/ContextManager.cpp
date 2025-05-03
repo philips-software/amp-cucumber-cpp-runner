@@ -77,11 +77,11 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    ContextManager::ScopedFeautureContext::ScopedFeautureContext(ContextManager& contextManager)
+    ContextManager::ScopedFeatureContext::ScopedFeatureContext(ContextManager& contextManager)
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedFeautureContext ::~ScopedFeautureContext()
+    ContextManager::ScopedFeatureContext::~ScopedFeatureContext()
     {
         contextManager.DisposeFeatureContext();
     }
@@ -90,7 +90,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedRuleContext ::~ScopedRuleContext()
+    ContextManager::ScopedRuleContext::~ScopedRuleContext()
     {
         contextManager.DisposeRuleContext();
     }
@@ -99,7 +99,7 @@ namespace cucumber_cpp::library::engine
         : contextManager{ contextManager }
     {}
 
-    ContextManager::ScopedScenarioContext ::~ScopedScenarioContext()
+    ContextManager::ScopedScenarioContext::~ScopedScenarioContext()
     {
         contextManager.DisposeScenarioContext();
     }
@@ -129,12 +129,12 @@ namespace cucumber_cpp::library::engine
         return *programContext;
     }
 
-    ContextManager::ScopedFeautureContext ContextManager::CreateFeatureContext(const FeatureInfo& featureInfo)
+    ContextManager::ScopedFeatureContext ContextManager::CreateFeatureContext(const FeatureInfo& featureInfo)
     {
         featureContext = std::make_shared<decltype(featureContext)::element_type>(*programContext, featureInfo);
         runnerContext.push(featureContext);
 
-        return ScopedFeautureContext{ *this };
+        return ScopedFeatureContext{ *this };
     }
 
     void ContextManager::DisposeFeatureContext()

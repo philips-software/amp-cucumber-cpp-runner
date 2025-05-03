@@ -52,13 +52,13 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestHookExecutor, ExecuteBeforeStep)
     {
-        ASSERT_FALSE(contextManagerInstance.StepContext().Contains("hookBeforeStep"));
-        ASSERT_FALSE(contextManagerInstance.StepContext().Contains("hookAfterStep"));
+        ASSERT_FALSE(contextManagerInstance.ScenarioContext().Contains("hookBeforeStep"));
+        ASSERT_FALSE(contextManagerInstance.ScenarioContext().Contains("hookAfterStep"));
 
         {
             auto scope = hookExecutor.StepStart();
-            EXPECT_TRUE(contextManagerInstance.StepContext().Contains("hookBeforeStep"));
+            EXPECT_TRUE(contextManagerInstance.ScenarioContext().Contains("hookBeforeStep"));
         }
-        EXPECT_TRUE(contextManagerInstance.StepContext().Contains("hookAfterStep"));
+        EXPECT_TRUE(contextManagerInstance.ScenarioContext().Contains("hookAfterStep"));
     }
 }
