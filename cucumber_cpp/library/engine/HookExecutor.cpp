@@ -20,41 +20,7 @@ namespace cucumber_cpp::library::engine
         constexpr HookPair scenarioHooks{ HookType::before, HookType::after };
         constexpr HookPair stepHooks{ HookType::beforeStep, HookType::afterStep };
 
-        struct HookFailed : std::runtime_error
-        {
-            using runtime_error::runtime_error;
-        };
-
-        struct ThrowPolicy
-        {
-            virtual ~ThrowPolicy() = default;
-            virtual void Throw() const = 0;
-        };
-
-        struct ThrowExceptionPolicy : ThrowPolicy
-        {
-            explicit ThrowExceptionPolicy(std::string message)
-                : message{ std::move(message) }
-            {}
-
-            void Throw() const override
-            {
-                throw HookFailed{ message };
-            }
-
-        private:
-            std::string message;
-        };
-
-        struct NoThrowExceptionPolicy : ThrowPolicy
-        {
-            void Throw() const override
-            {
-                // No exception thrown
-            }
-        };
-
-        void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags, const ThrowPolicy& throwPolicy)
+        void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
             if (runnerContext.InheritedExecutionStatus() == Result::passed)
                 for (const auto& match : HookRegistry::Instance().Query(hook, tags))
@@ -72,12 +38,12 @@ namespace cucumber_cpp::library::engine
         , hookPair{ hookPair }
         , tags{ tags }
     {
-        ExecuteHook(runnerContext, hookPair.before, tags, ThrowExceptionPolicy{ "Hook failed" });
+        ExecuteHook(runnerContext, hookPair.before, tags);
     }
 
     HookExecutor::ScopedHook::~ScopedHook()
     {
-        ExecuteHook(runnerContext, hookPair.after, tags, NoThrowExceptionPolicy{});
+        ExecuteHook(runnerContext, hookPair.after, tags);
     }
 
     HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)
