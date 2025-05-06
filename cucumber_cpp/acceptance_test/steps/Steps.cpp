@@ -49,3 +49,31 @@ WHEN("I print {string} with value {int}", (const std::string& str, std::int32_t 
 {
     std::cout << "print: " << str << " with value " << value;
 }
+
+
+THEN(R"(An expression with \(parenthesis) should remain as is)")
+{
+    // empty
+}
+
+THEN(R"(An expression that looks like a function func\({int}, {int}) should keep its parameters)", (int a, int b))
+{
+    EXPECT_THAT(a, testing::Eq(1));
+    EXPECT_THAT(b, testing::Eq(2));
+}
+
+THEN(R"(An expression with \\(escaped parenthesis\\) should keep the slash)")
+{
+    // empty
+}
+
+THEN(R"(An expression with \{parenthesis} should remain as is)")
+{
+    // empty
+}
+
+
+THEN(R"(An expression with \\{escaped parenthesis\\} should keep the slash)")
+{
+    // empty
+}
