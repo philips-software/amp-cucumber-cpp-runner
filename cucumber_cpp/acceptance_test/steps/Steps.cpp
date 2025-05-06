@@ -67,13 +67,13 @@ THEN(R"(An expression with \\(escaped parenthesis\\) should keep the slash)")
     // empty
 }
 
-THEN(R"(An expression with \{parenthesis} should remain as is)")
+THEN(R"(An expression with \{braces} should remain as is)")
 {
     // empty
 }
 
 
-THEN(R"(An expression with \\{escaped parenthesis\\} should keep the slash)")
+THEN(R"(An expression with \\{escaped braces\\} should keep the slash)")
 {
     // empty
 }
