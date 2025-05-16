@@ -10,6 +10,7 @@
 #include <optional>
 #include <ranges>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -75,7 +76,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 return RewriteExpression(node);
         }
 
-        std::unreachable();
+        throw std::runtime_error{ "Invalid node type" };
     }
 
     std::string Expression::EscapeRegex(std::string_view text) const

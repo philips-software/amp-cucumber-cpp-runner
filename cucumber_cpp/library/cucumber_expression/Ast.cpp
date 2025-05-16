@@ -2,6 +2,7 @@
 #include <cctype>
 #include <map>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
@@ -118,7 +119,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 return "invalid";
         }
 
-        std::unreachable();
+        throw std::runtime_error("Invalid token type");
     }
 
     std::string Token::SymbolOf(TokenType type)
