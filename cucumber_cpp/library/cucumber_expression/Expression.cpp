@@ -149,7 +149,7 @@ namespace cucumber_cpp::library::cucumber_expression
         if (parameter.regex.empty())
             throw 0;
 
-        converters.emplace_back(0, std::move(parameter.converter));
+        converters.emplace_back(0u, std::move(parameter.converter));
 
         std::string regex{};
         if (parameter.regex.size() == 1)
