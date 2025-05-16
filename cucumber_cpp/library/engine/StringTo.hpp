@@ -3,14 +3,17 @@
 
 #include "cucumber_cpp/library/InternalError.hpp"
 #include <algorithm>
+#include <any>
 #include <cctype>
 #include <source_location>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace cucumber_cpp::library::engine
 {
+
     template<class To>
     inline To StringTo(const std::string& s, std::source_location sourceLocation = std::source_location::current())
     {
@@ -48,6 +51,17 @@ namespace cucumber_cpp::library::engine
         using details::iequals;
 
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
+    }
+
+    template<class To>
+    To Transform(const std::variant<std::string, std::any>& variant)
+    {
+        if (std::holds_alternative<std::string>(variant))
+            return StringTo<To>(std::get<std::string>(variant));
+        else if (std::holds_alternative<std::any>(variant))
+            return std::any_cast<To>(std::get<std::any>(variant));
+        else
+            throw InternalError{ "Cannot convert parameter" };
     }
 }
 

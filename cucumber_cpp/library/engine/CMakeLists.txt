@@ -36,6 +36,7 @@ target_include_directories(cucumber_cpp.library.engine PUBLIC
 target_link_libraries(cucumber_cpp.library.engine PUBLIC
     cucumber_cpp.library
     cucumber_cpp.library.util
+    cucumber_cpp.library.cucumber_expression
 )
 
 if (CCR_BUILD_TESTS)

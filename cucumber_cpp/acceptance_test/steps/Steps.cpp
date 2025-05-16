@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/Steps.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -45,7 +46,7 @@ THEN("two expectations are raised")
     EXPECT_THAT(1, testing::Eq(0));
 }
 
-WHEN("I print {string} with value {int}", (const std::string& str, std::int32_t value))
+WHEN("I print {string} with value {int}", (const std::string& str, std::int64_t value))
 {
     std::cout << "print: " << str << " with value " << value;
 }

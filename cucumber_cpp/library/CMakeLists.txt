@@ -46,6 +46,7 @@ target_compile_options(cucumber_cpp.library
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
+add_subdirectory(cucumber_expression)
 add_subdirectory(engine)
 add_subdirectory(report)
 add_subdirectory(util)

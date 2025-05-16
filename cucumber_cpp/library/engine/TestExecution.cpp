@@ -51,6 +51,7 @@ namespace cucumber_cpp::library::engine
     {
         const auto& stepContext = contextManager.StepContext();
         auto& scenarioContext = contextManager.ScenarioContext();
+
         stepMatch.factory(scenarioContext, stepContext.info.Table())->Execute(stepMatch.matches);
     }
 

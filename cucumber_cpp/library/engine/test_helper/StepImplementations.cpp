@@ -26,9 +26,9 @@ STEP("This is a STEP step")
     /* do nothing */
 }
 
-STEP("This is a step with a ([0-9]+)s delay", (std::uint32_t delay))
+STEP("^This is a step with a ([0-9]+)s delay$", (std::uint32_t delay))
 {
-    context.InsertAt("std::uint32_t", delay);
+    context.InsertAt("std::int64_t", delay);
 }
 
 THEN("an ambiguous step")
@@ -41,16 +41,16 @@ STEP("an ambiguous step")
     /* do nothing */
 }
 
-GIVEN("{int} and {int} are equal", (std::uint32_t a, std::uint32_t b))
+GIVEN("{int} and {int} are equal", (std::int64_t a, std::int64_t b))
 {
     EXPECT_THAT(a, testing::Eq(b));
 }
 
-STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::uint32_t nr))
+STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::int64_t nr))
 {
     context.InsertAt("float", fl);
     context.InsertAt("std::string", str);
-    context.InsertAt("std::uint32_t", nr);
+    context.InsertAt("std::int64_t", nr);
 }
 
 GIVEN("I am a nested step")
@@ -81,6 +81,32 @@ THEN("the exception is caught")
 }
 
 THEN("the next scenario is executed")
+{
+    /* do nothing */
+}
+
+THEN(R"(An expression with \(parenthesis) should remain as is)")
+{
+    /* do nothing */
+}
+
+THEN(R"(An expression that looks like a function func\({int}, {int}) should keep its parameters)", (std::int64_t a, std::int64_t b))
+{
+    EXPECT_THAT(a, testing::Eq(1));
+    EXPECT_THAT(b, testing::Eq(2));
+}
+
+THEN(R"(An expression with \\\(escaped parenthesis\\) should keep the slash)")
+{
+    /* do nothing */
+}
+
+THEN(R"(An expression with \{braces} should remain as is)")
+{
+    /* do nothing */
+}
+
+THEN(R"(An expression with \\\{escaped braces\\} should keep the slash)")
 {
     /* do nothing */
 }
