@@ -50,3 +50,6 @@ WHEN("I print {string} with value {int}", (const std::string& str, std::int64_t 
 {
     std::cout << "print: " << str << " with value " << value;
 }
+
+GIVEN("a ← tuple\\({float}, {float}, {float}, {float}\\)", (float /* unused */, float /* unused */, float /* unused */, float /* unused */))
+{}

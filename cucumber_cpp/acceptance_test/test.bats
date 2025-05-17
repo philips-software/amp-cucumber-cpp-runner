@@ -185,3 +185,9 @@ teardown() {
     refute_output --partial "should not be executed"
     # assert_output --partial "tests   : 0/1 passed"
 }
+
+@test "Test unicode" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@unicode" --report console
+    assert_success
+    assert_output --partial "tests   : 1/1 passed"
+}
