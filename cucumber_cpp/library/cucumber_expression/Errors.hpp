@@ -49,6 +49,36 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         using std::runtime_error::runtime_error;
     };
+
+    struct OptionalMayNotBeEmpty : Error
+    {
+        OptionalMayNotBeEmpty(const Node& node, std::string_view expression);
+    };
+
+    struct ParameterIsNotAllowedInOptional : Error
+    {
+        ParameterIsNotAllowedInOptional(const Node& node, std::string_view expression);
+    };
+
+    struct OptionalIsNotAllowedInOptional : Error
+    {
+        OptionalIsNotAllowedInOptional(const Node& node, std::string_view expression);
+    };
+
+    struct AlternativeMayNotExclusivelyContainOptionals : Error
+    {
+        AlternativeMayNotExclusivelyContainOptionals(const Node& node, std::string_view expression);
+    };
+
+    struct AlternativeMayNotBeEmpty : Error
+    {
+        AlternativeMayNotBeEmpty(const Node& node, std::string_view expression);
+    };
+
+    struct UndefinedParameterTypeError : Error
+    {
+        UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName);
+    };
 }
 
 #endif

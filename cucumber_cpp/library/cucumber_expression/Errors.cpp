@@ -104,4 +104,65 @@ Otherwise rephrase your expression or consider using a regular expression instea
                                                             })),
         }
     {}
+
+    OptionalMayNotBeEmpty::OptionalMayNotBeEmpty(const Node& node, std::string_view expression)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            "An optional must contain some text",
+            R"(If you did not mean to use an optional you can use '\(' to escape the '(')",
+        }
+    {}
+
+    ParameterIsNotAllowedInOptional::ParameterIsNotAllowedInOptional(const Node& node, std::string_view expression)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            "An optional may not contain a parameter type",
+            R"(If you did not mean to use an parameter type you can use '\{' to escape the '{')",
+        }
+    {}
+
+    OptionalIsNotAllowedInOptional::OptionalIsNotAllowedInOptional(const Node& node, std::string_view expression)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            "An optional may not contain an other optional",
+            R"(If you did not mean to use an optional type you can use '\(' to escape the '('.
+For more complicated expressions consider using a regular expression instead.)",
+        }
+    {}
+
+    AlternativeMayNotExclusivelyContainOptionals::AlternativeMayNotExclusivelyContainOptionals(const Node& node, std::string_view expression)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            "An alternative may not exclusively contain optionals",
+            R"(If you did not mean to use an optional you can use '\(' to escape the '(')",
+        }
+    {}
+
+    AlternativeMayNotBeEmpty::AlternativeMayNotBeEmpty(const Node& node, std::string_view expression)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            "Alternative may not be empty",
+            R"(If you did not mean to use an alternative you can use '\/' to escape the '/')",
+        }
+    {}
+
+    UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName)
+        : Error{
+            node.start,
+            expression,
+            PointAtLocated(node),
+            std::format(R"('Undefined parameter type {}')", undefinedParameterName),
+            std::format(R"('Please register a ParameterType for {}')", undefinedParameterName),
+        }
+    {}
 }

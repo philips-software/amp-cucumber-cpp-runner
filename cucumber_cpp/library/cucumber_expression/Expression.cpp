@@ -1,6 +1,7 @@
 
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionParser.hpp"
 #include <algorithm>
 #include <any>
@@ -101,13 +102,13 @@ namespace cucumber_cpp::library::cucumber_expression
         std::string regex{ CreateString(node) };
 
         if (GetPossibleNodeWithParameters(node))
-            throw 0;
+            throw ParameterIsNotAllowedInOptional(node, expression);
 
         if (GetPossibleNodeWithOptionals(node))
-            throw 0;
+            throw OptionalIsNotAllowedInOptional(node, expression);
 
         if (AreNodesEmpty(node))
-            throw 0;
+            throw OptionalMayNotBeEmpty(node, expression);
 
         for (const auto& child : node.Children())
             regex += RewriteToRegex(child);
@@ -120,9 +121,10 @@ namespace cucumber_cpp::library::cucumber_expression
         for (const auto& child : node.Children())
         {
             if (child.Children().empty())
-                throw 0;
+                throw AlternativeMayNotBeEmpty(node, expression);
+
             if (AreNodesEmpty(child))
-                throw 0;
+                throw AlternativeMayNotExclusivelyContainOptionals(node, expression);
         }
 
         std::string regex{ CreateString(node) };
@@ -147,7 +149,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         auto parameter = parameterRegistry.Lookup(node.Text());
         if (parameter.regex.empty())
-            throw 0;
+            throw UndefinedParameterTypeError(node, expression, node.Text());
 
         converters.emplace_back(0u, parameter.converter);
 
