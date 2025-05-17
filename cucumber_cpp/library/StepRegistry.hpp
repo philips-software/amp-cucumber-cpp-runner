@@ -14,7 +14,6 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <regex>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -23,30 +22,6 @@
 
 namespace cucumber_cpp::library
 {
-    // struct RegexMatch
-    // {
-    //     RegexMatch(const std::regex& regex, const std::string& expression);
-
-    //     [[nodiscard]] bool Matched() const;
-    //     [[nodiscard]] std::vector<std::string> Matches() const;
-
-    // private:
-    //     bool matched;
-    //     std::vector<std::string> matches;
-    // };
-
-    // struct StepRegex
-    // {
-    //     explicit StepRegex(const std::string& string);
-
-    //     [[nodiscard]] std::unique_ptr<RegexMatch> Match(const std::string& expression) const;
-    //     [[nodiscard]] std::string String() const;
-
-    // private:
-    //     std::string string;
-    //     std::regex regex;
-    // };
-
     struct StepMatch
     {
         StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
@@ -89,8 +64,6 @@ namespace cucumber_cpp::library
             std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
 
             std::uint32_t used{ 0 };
-
-            // cucumber_expression::Matcher matcher;
         };
 
         struct EntryView

@@ -1,7 +1,6 @@
 #ifndef CUCUMBER_EXPRESSION_REGULAREXPRESSION_HPP
 #define CUCUMBER_EXPRESSION_REGULAREXPRESSION_HPP
 
-#include <any>
 #include <optional>
 #include <ranges>
 #include <regex>

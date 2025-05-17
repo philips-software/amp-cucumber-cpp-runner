@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <ranges>
-#include <regex>
 #include <string>
 #include <utility>
 #include <variant>
@@ -14,44 +13,6 @@ namespace cucumber_cpp::library
 {
     namespace
     {
-        // std::string ToString(std::string toString)
-        // {
-        //     return toString;
-        // }
-
-        // std::vector<std::string> ToVector(const std::smatch& matchResults)
-        // {
-        //     auto range = matchResults | std::views::drop(1) | std::views::transform(ToString);
-        //     return { range.begin(), range.end() };
-        // }
-
-        // std::string ParseCucumberExpression(std::string string)
-        // {
-        //     if (!(string.starts_with('^') && string.ends_with('$')))
-        //     {
-        //         string = std::regex_replace(string, std::regex(R"(\(.*\))"), R"((?:$&)?)");
-
-        //         string = std::regex_replace(string, std::regex(R"(\{int\})"), R"((-?\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{biginteger\})"), R"((-?\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{byte\})"), R"((-?\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{short\})"), R"((-?\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{long\})"), R"((-?\d+))");
-
-        //         string = std::regex_replace(string, std::regex(R"(\{float\})"), R"((-?\d+\.\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{bigdecimal\})"), R"((-?\d+\.\d+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{double\})"), R"((-?\d+\.\d+))");
-
-        //         string = std::regex_replace(string, std::regex(R"(\{word\})"), R"(([^\s]+))");
-        //         string = std::regex_replace(string, std::regex(R"(\{string\})"), R"-("+([^"]+)"+)-");
-
-        //         string = std::regex_replace(string, std::regex(R"(\{\})"), R"((.*))");
-
-        //         string = "^" + string + "$";
-        //     }
-
-        //     return string;
-        // }
-
         auto TypeFilter(engine::StepType stepType)
         {
             return [stepType](const StepRegistry::Entry& entry)
@@ -60,38 +21,6 @@ namespace cucumber_cpp::library
             };
         };
     }
-
-    // RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
-    // {
-    //     std::smatch smatch;
-    //     matched = std::regex_search(expression, smatch, regex);
-    //     matches = ToVector(smatch);
-    // }
-
-    // bool RegexMatch::Matched() const
-    // {
-    //     return matched;
-    // }
-
-    // std::vector<std::string> RegexMatch::Matches() const
-    // {
-    //     return matches;
-    // }
-
-    // StepRegex::StepRegex(const std::string& string)
-    //     : string{ string }
-    //     , regex{ ParseCucumberExpression(string) }
-    // {}
-
-    // std::unique_ptr<RegexMatch> StepRegex::Match(const std::string& expression) const
-    // {
-    //     return std::make_unique<RegexMatch>(regex, expression);
-    // }
-
-    // std::string StepRegex::String() const
-    // {
-    //     return string;
-    // }
 
     StepRegistry& StepRegistry::Instance()
     {
