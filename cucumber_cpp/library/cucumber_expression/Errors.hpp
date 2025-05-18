@@ -42,7 +42,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct NoEligibleParsers : std::runtime_error
     {
-        NoEligibleParsers(std::span<const Token> tokens);
+        explicit NoEligibleParsers(std::span<const Token> tokens);
     };
 
     struct CucumberExpressionError : std::runtime_error
