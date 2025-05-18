@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionParser.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <algorithm>
 #include <any>
 #include <format>
@@ -150,7 +151,7 @@ namespace cucumber_cpp::library::cucumber_expression
         if (parameter.regex.empty())
             throw UndefinedParameterTypeError(node, expression, node.Text());
 
-        converters.emplace_back(0u, parameter.converter);
+        converters.push_back(Converter{ 0u, parameter.converter });
 
         std::string partialRegex{};
         if (parameter.regex.size() == 1)
