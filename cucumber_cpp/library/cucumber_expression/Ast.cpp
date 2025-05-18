@@ -23,18 +23,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
             return demarcationMap;
         }
-
-        const std::map<TokenType, std::string>& TokenTypeMap()
-        {
-            static const std::map<TokenType, std::string> tokenTypeMap = {
-                { TokenType::alternation, "alternation" },
-                { TokenType::beginParameter, "beginParameter" },
-                { TokenType::endParameter, "endParameter" },
-                { TokenType::beginOptional, "beginOptional" },
-                { TokenType::endOptional, "endOptional" },
-            };
-            return tokenTypeMap;
-        }
     }
 
     std::string Node::Text()
@@ -68,12 +56,12 @@ namespace cucumber_cpp::library::cucumber_expression
         return std::get<std::vector<Node>>(children);
     }
 
-    bool Token::IsEscapeCharacter(char ch)
+    bool Token::IsEscapeCharacter(unsigned char ch)
     {
         return ch == '\\';
     }
 
-    TokenType Token::TypeOf(char ch)
+    TokenType Token::TypeOf(unsigned char ch)
     {
         if (std::isspace(ch) != 0)
             return TokenType::whiteSpace;
@@ -84,7 +72,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return TokenType::text;
     }
 
-    bool Token::CanEscape(char ch)
+    bool Token::CanEscape(unsigned char ch)
     {
         if (std::isspace(ch) != 0)
             return true;

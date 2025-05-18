@@ -57,9 +57,9 @@ namespace cucumber_cpp::library::cucumber_expression
 
         bool operator==(const Token& other) const = default;
 
-        static bool IsEscapeCharacter(char ch);
-        static TokenType TypeOf(char ch);
-        static bool CanEscape(char ch);
+        static bool IsEscapeCharacter(unsigned char ch);
+        static TokenType TypeOf(unsigned char ch);
+        static bool CanEscape(unsigned char ch);
         static std::string NameOf(TokenType type);
         static std::string SymbolOf(TokenType type);
         static std::string PurposeOf(TokenType type);
