@@ -151,12 +151,12 @@ namespace cucumber_cpp::library::cucumber_expression
                     return { 0, std::nullopt };
 
                 auto token = tokens[parser.current];
-                return Result(1, Node{
-                                     NodeType::alternative,
-                                     token.Start(),
-                                     token.End(),
-                                     token.Text(),
-                                 });
+                return { 1, Node{
+                                NodeType::alternative,
+                                token.Start(),
+                                token.End(),
+                                token.Text(),
+                            } };
             } };
 
         ExpressionParser::SubParser parseAlternation = { [this](const ExpressionParser::ParserState& parser, const SubParser& subParser) -> ExpressionParser::Result
@@ -202,7 +202,7 @@ namespace cucumber_cpp::library::cucumber_expression
         auto subParser = SubParser{ [this, type, beginToken, endToken](ParserState parser, const SubParser& subParser) -> Result
             {
                 if (!LookingAt(parser.tokens, parser.current, beginToken))
-                    return Result{ 0, std::nullopt };
+                    return { 0, std::nullopt };
 
                 auto subCurrent = parser.current + 1;
                 auto [consumed, ast] = ParseTokensUntil(parser.expression, subParser.subParsers, parser.tokens, subCurrent, { endToken, TokenType::endOfLine });
