@@ -16,10 +16,9 @@ namespace cucumber_cpp::library::cucumber_expression
     namespace
     {
 
-        template<class T>
-        struct InHelper
+        struct MatchTokenHelper
         {
-            T t;
+            TokenType t;
 
             bool in(auto... args)
             {
@@ -29,7 +28,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         auto MatchToken(TokenType expected)
         {
-            return InHelper{ expected };
+            return MatchTokenHelper{ expected };
         }
 
         bool LookingAt(std::span<const Token> tokens, std::size_t position, TokenType type)
