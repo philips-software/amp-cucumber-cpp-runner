@@ -133,9 +133,6 @@ namespace cucumber_cpp::library::cucumber_expression
                 if (MatchToken(token.Type()).in(TokenType::beginParameter, TokenType::endParameter, TokenType::beginOptional, TokenType::endOptional, TokenType::alternation))
                     throw InvalidParameterTypeNameInNode{ parser.expression, token };
 
-                if (MatchToken(token.Type()).in(TokenType::startOfLine, TokenType::endOfLine))
-                    return { 0, std::nullopt };
-
                 return { 0, std::nullopt };
             } };
 
