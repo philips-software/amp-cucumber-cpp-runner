@@ -79,6 +79,12 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName);
     };
+
+    struct InvalidTokenType : std::logic_error
+    {
+        using std::logic_error::logic_error;
+    };
+
 }
 
 #endif

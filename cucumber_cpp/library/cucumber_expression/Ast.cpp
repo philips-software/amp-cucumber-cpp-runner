@@ -1,10 +1,9 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include <cctype>
 #include <map>
 #include <ranges>
-#include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -119,7 +118,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 return "invalid";
         }
 
-        throw std::runtime_error("Invalid token type");
+        throw InvalidTokenType{ "Invalid token type" };
     }
 
     std::string Token::SymbolOf(TokenType type)
