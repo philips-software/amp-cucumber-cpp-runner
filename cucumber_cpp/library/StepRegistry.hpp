@@ -27,7 +27,7 @@ namespace cucumber_cpp::library
         StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
             : factory(factory)
             , matches(std::move(matches))
-            , stepRegexStr(std::move(stepRegexStr))
+            , stepRegexStr(stepRegexStr)
         {}
 
         std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
