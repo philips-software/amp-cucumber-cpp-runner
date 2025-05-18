@@ -31,10 +31,10 @@ namespace cucumber_cpp::library::cucumber_expression
 
         struct SubParser
         {
-            std::function<Result(ParserState parser, const SubParser& subParser)> parser;
+            std::function<Result(const ParserState& parser, const SubParser& subParser)> parser;
             std::vector<std::reference_wrapper<SubParser>> subParsers;
 
-            Result Parse(ParserState parser) const;
+            Result Parse(const ParserState& parser) const;
         };
 
     private:

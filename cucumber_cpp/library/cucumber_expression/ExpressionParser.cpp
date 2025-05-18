@@ -34,9 +34,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
         bool LookingAt(std::span<const Token> tokens, std::size_t position, TokenType type)
         {
-            if (position < 0)
-                return type == TokenType::startOfLine;
-
             if (position > tokens.size())
                 return type == TokenType::endOfLine;
 
@@ -82,12 +79,12 @@ namespace cucumber_cpp::library::cucumber_expression
             std::vector<Node> separators;
             std::vector<std::vector<Node>> alternatives{ {} };
 
-            for (auto& node : alternation)
+            for (const auto& node : alternation)
             {
                 if (node.type == NodeType::alternative)
                 {
                     separators.push_back(node);
-                    alternatives.push_back({});
+                    alternatives.emplace_back();
                 }
                 else
                     alternatives.back().push_back(node);
@@ -97,33 +94,33 @@ namespace cucumber_cpp::library::cucumber_expression
         }
     }
 
-    ExpressionParser::Result ExpressionParser::SubParser::Parse(ParserState parser) const
+    ExpressionParser::Result ExpressionParser::SubParser::Parse(const ParserState& parserState) const
     {
-        return this->parser(parser, *this);
+        return this->parser(parserState, *this);
     }
 
     Node ExpressionParser::Parse(std::string_view expression)
     {
         tokens = ExpressionTokenizer{}.Tokenize(expression);
 
-        ExpressionParser::SubParser parseText = { [](ExpressionParser::ParserState parser, const ExpressionParser::SubParser& subParser) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseText = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
                 const auto& token = parser.tokens[parser.current];
                 if (MatchToken(token.type).in(TokenType::whiteSpace, TokenType::text, TokenType::endParameter, TokenType::endOptional))
-                    return ExpressionParser::Result(1, Node{
-                                                           NodeType::text,
-                                                           token.start,
-                                                           token.end,
-                                                           token.text,
-                                                       });
+                    return { 1, Node{
+                                    NodeType::text,
+                                    token.start,
+                                    token.end,
+                                    token.text,
+                                } };
 
                 if (token.type == TokenType::alternation)
                     throw AlternationNotAllowedInOptional{ parser.expression, token };
 
-                return ExpressionParser::Result(0, std::nullopt);
+                return { 0, std::nullopt };
             } };
 
-        ExpressionParser::SubParser parseName = { [](ExpressionParser::ParserState parser, const ExpressionParser::SubParser& subParser) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseName = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
                 const auto& token = parser.tokens[parser.current];
                 if (MatchToken(token.type).in(TokenType::whiteSpace, TokenType::text))
@@ -163,7 +160,7 @@ namespace cucumber_cpp::library::cucumber_expression
                                  });
             } };
 
-        ExpressionParser::SubParser parseAlternation = { [this](ExpressionParser::ParserState parser, const SubParser& subParser) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseAlternation = { [this](const ExpressionParser::ParserState& parser, const SubParser& subParser) -> ExpressionParser::Result
             {
                 auto previous = parser.current - 1;
                 if (!LookingAtAny(tokens, previous, { TokenType::startOfLine, TokenType::whiteSpace, TokenType::endParameter }))
