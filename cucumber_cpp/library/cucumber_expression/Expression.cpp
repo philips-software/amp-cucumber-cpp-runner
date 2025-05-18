@@ -151,7 +151,7 @@ namespace cucumber_cpp::library::cucumber_expression
         if (parameter.regex.empty())
             throw UndefinedParameterTypeError(node, expression, node.Text());
 
-        converters.push_back(Converter{ 0u, parameter.converter });
+        converters.emplace_back(0u, parameter.converter);
 
         std::string partialRegex{};
         if (parameter.regex.size() == 1)

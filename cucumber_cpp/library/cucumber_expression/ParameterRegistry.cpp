@@ -55,6 +55,12 @@ namespace cucumber_cpp::library::cucumber_expression
         return *std::next(begin(), index);
     }
 
+    Converter::Converter(std::size_t matches,
+        std::function<std::any(MatchRange)> converter)
+        : matches{ matches }
+        , converter{ std::move(converter) }
+    {}
+
     ParameterRegistry::ParameterRegistry()
     {
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };

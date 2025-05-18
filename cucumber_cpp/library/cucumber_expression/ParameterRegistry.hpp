@@ -87,6 +87,9 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct Converter
     {
+        Converter(std::size_t matches,
+            std::function<std::any(MatchRange)> converter);
+
         std::size_t matches;
         std::function<std::any(MatchRange)> converter;
     };
