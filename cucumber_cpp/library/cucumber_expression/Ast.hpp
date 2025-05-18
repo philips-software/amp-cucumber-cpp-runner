@@ -34,10 +34,14 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct Node
     {
-        NodeType type;
-        std::size_t start;
-        std::size_t end;
-        std::variant<std::monostate, std::string, std::vector<Node>> children;
+        Node(NodeType type,
+            std::size_t start,
+            std::size_t end,
+            std::variant<std::string, std::vector<Node>> children);
+
+        NodeType Type() const;
+        std::size_t Start() const;
+        std::size_t End() const;
 
         std::string Text();
         std::string Text() const;
@@ -45,17 +49,25 @@ namespace cucumber_cpp::library::cucumber_expression
         std::vector<Node>& Children();
         const std::vector<Node>& Children() const;
 
+        const std::variant<std::string, std::vector<Node>>& GetLeafNodes() const;
+
         bool operator==(const Node& other) const = default;
+
+    private:
+        NodeType type;
+        std::size_t start;
+        std::size_t end;
+        std::variant<std::string, std::vector<Node>> children;
     };
 
     struct Token
     {
-        TokenType type;
-        std::string text;
-        std::size_t start;
-        std::size_t end;
+        Token(TokenType type, std::string text, std::size_t start, std::size_t end);
 
-        bool operator==(const Token& other) const = default;
+        TokenType Type() const;
+        std::string Text() const;
+        std::size_t Start() const;
+        std::size_t End() const;
 
         static bool IsEscapeCharacter(unsigned char ch);
         static TokenType TypeOf(unsigned char ch);
@@ -63,6 +75,14 @@ namespace cucumber_cpp::library::cucumber_expression
         static std::string NameOf(TokenType type);
         static std::string SymbolOf(TokenType type);
         static std::string PurposeOf(TokenType type);
+
+        bool operator==(const Token& other) const = default;
+
+    private:
+        TokenType type;
+        std::string text;
+        std::size_t start;
+        std::size_t end;
     };
 }
 

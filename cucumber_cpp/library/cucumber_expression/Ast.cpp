@@ -1,9 +1,11 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include <cctype>
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -23,6 +25,31 @@ namespace cucumber_cpp::library::cucumber_expression
 
             return demarcationMap;
         }
+    }
+
+    Node::Node(NodeType type,
+        std::size_t start,
+        std::size_t end,
+        std::variant<std::string, std::vector<Node>> children)
+        : type{ type }
+        , start{ start }
+        , end{ end }
+        , children{ std::move(children) }
+    {}
+
+    NodeType Node::Type() const
+    {
+        return type;
+    }
+
+    std::size_t Node::Start() const
+    {
+        return start;
+    }
+
+    std::size_t Node::End() const
+    {
+        return end;
     }
 
     std::string Node::Text()
@@ -54,6 +81,38 @@ namespace cucumber_cpp::library::cucumber_expression
     const std::vector<Node>& Node::Children() const
     {
         return std::get<std::vector<Node>>(children);
+    }
+
+    const std::variant<std::string, std::vector<Node>>& Node::GetLeafNodes() const
+    {
+        return children;
+    }
+
+    Token::Token(TokenType type, std::string text, std::size_t start, std::size_t end)
+        : type{ type }
+        , text{ std::move(text) }
+        , start{ start }
+        , end{ end }
+    {}
+
+    TokenType Token::Type() const
+    {
+        return type;
+    }
+
+    std::string Token::Text() const
+    {
+        return text;
+    }
+
+    std::size_t Token::Start() const
+    {
+        return start;
+    }
+
+    std::size_t Token::End() const
+    {
+        return end;
     }
 
     bool Token::IsEscapeCharacter(unsigned char ch)

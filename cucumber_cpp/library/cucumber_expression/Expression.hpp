@@ -45,7 +45,7 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             return std::views::filter(node.Children(), [type](const Node& child)
                 {
-                    return child.type == type;
+                    return child.Type() == type;
                 });
         }
 

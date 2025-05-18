@@ -61,7 +61,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string Expression::RewriteToRegex(const Node& node)
     {
-        switch (node.type)
+        switch (node.Type())
         {
             case NodeType::text:
                 return EscapeRegex(node.Text());

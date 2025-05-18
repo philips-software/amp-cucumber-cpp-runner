@@ -17,10 +17,10 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string PointAtLocated(const auto& node)
     {
-        auto pointer = PointAt(node.start);
-        if (node.start + 1 < node.end)
+        auto pointer = PointAt(node.Start());
+        if (node.Start() + 1 < node.End())
         {
-            for (auto i = node.start + 1; i < node.end; ++i)
+            for (auto i = node.Start() + 1; i < node.End(); ++i)
                 pointer += "-";
             pointer += "^";
         }
@@ -66,7 +66,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     AlternationNotAllowedInOptional::AlternationNotAllowedInOptional(std::string_view expression, const Token& token)
         : Error{
-            token.start,
+            token.Start(),
             expression,
             PointAtLocated(token),
             R"(An alternation can not be used inside an optional)",
@@ -77,7 +77,7 @@ Otherwise rephrase your expression or consider using a regular expression instea
 
     InvalidParameterTypeNameInNode::InvalidParameterTypeNameInNode(std::string_view expression, const Token& token)
         : Error{
-            token.start,
+            token.Start(),
             expression,
             PointAtLocated(token),
             R"(Parameter names may not contain '{', '}', '(', ')', '\' or '/')",
@@ -87,7 +87,7 @@ Otherwise rephrase your expression or consider using a regular expression instea
 
     MissingEndToken::MissingEndToken(std::string_view expression, TokenType beginToken, TokenType endToken, const Token& token)
         : Error{
-            token.start,
+            token.Start(),
             expression,
             PointAtLocated(token),
             std::format(R"(The '{}' does not have a matching '{}')", Token::SymbolOf(beginToken), Token::SymbolOf(endToken)),
@@ -97,17 +97,17 @@ Otherwise rephrase your expression or consider using a regular expression instea
 
     NoEligibleParsers::NoEligibleParsers(std::span<const Token> tokens)
         : std::runtime_error{
-            std::format("No eligible parsers for [{}]", std::accumulate(tokens.begin() + 1, tokens.end(), Token::NameOf(tokens.begin()->type),
+            std::format("No eligible parsers for [{}]", std::accumulate(tokens.begin() + 1, tokens.end(), Token::NameOf(tokens.begin()->Type()),
                                                             [](const auto& acc, const auto& token) -> std::string
                                                             {
-                                                                return acc + ", " + Token::NameOf(token.type);
+                                                                return acc + ", " + Token::NameOf(token.Type());
                                                             })),
         }
     {}
 
     OptionalMayNotBeEmpty::OptionalMayNotBeEmpty(const Node& node, std::string_view expression)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             "An optional must contain some text",
@@ -117,7 +117,7 @@ Otherwise rephrase your expression or consider using a regular expression instea
 
     ParameterIsNotAllowedInOptional::ParameterIsNotAllowedInOptional(const Node& node, std::string_view expression)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             "An optional may not contain a parameter type",
@@ -127,7 +127,7 @@ Otherwise rephrase your expression or consider using a regular expression instea
 
     OptionalIsNotAllowedInOptional::OptionalIsNotAllowedInOptional(const Node& node, std::string_view expression)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             "An optional may not contain an other optional",
@@ -138,7 +138,7 @@ For more complicated expressions consider using a regular expression instead.)",
 
     AlternativeMayNotExclusivelyContainOptionals::AlternativeMayNotExclusivelyContainOptionals(const Node& node, std::string_view expression)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             "An alternative may not exclusively contain optionals",
@@ -148,7 +148,7 @@ For more complicated expressions consider using a regular expression instead.)",
 
     AlternativeMayNotBeEmpty::AlternativeMayNotBeEmpty(const Node& node, std::string_view expression)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             "Alternative may not be empty",
@@ -158,7 +158,7 @@ For more complicated expressions consider using a regular expression instead.)",
 
     UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName)
         : Error{
-            node.start,
+            node.Start(),
             expression,
             PointAtLocated(node),
             std::format(R"('Undefined parameter type {}')", undefinedParameterName),

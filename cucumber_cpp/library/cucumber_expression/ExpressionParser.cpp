@@ -36,7 +36,7 @@ namespace cucumber_cpp::library::cucumber_expression
             if (position > tokens.size())
                 return type == TokenType::endOfLine;
 
-            return tokens[position].type == type;
+            return tokens[position].Type() == type;
         }
 
         bool LookingAtAny(std::span<const Token> tokens, std::size_t position, std::vector<TokenType> types)
@@ -56,18 +56,18 @@ namespace cucumber_cpp::library::cucumber_expression
                 if (index == 0)
                 {
                     const auto& rightSeparator = separators[index];
-                    retval.emplace_back(NodeType::alternative, start, rightSeparator.start, alternatives[index]);
+                    retval.emplace_back(NodeType::alternative, start, rightSeparator.Start(), alternatives[index]);
                 }
                 else if (index == max - 1)
                 {
                     const auto& leftSeparator = separators[index - 1];
-                    retval.emplace_back(NodeType::alternative, leftSeparator.end, end, alternatives[index]);
+                    retval.emplace_back(NodeType::alternative, leftSeparator.End(), end, alternatives[index]);
                 }
                 else
                 {
                     const auto& rightSeparator = separators[index];
                     const auto& leftSeparator = separators[index - 1];
-                    retval.emplace_back(NodeType::alternative, leftSeparator.end, rightSeparator.start, alternatives[index]);
+                    retval.emplace_back(NodeType::alternative, leftSeparator.End(), rightSeparator.Start(), alternatives[index]);
                 }
             }
             return retval;
@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
             for (const auto& node : alternation)
             {
-                if (node.type == NodeType::alternative)
+                if (node.Type() == NodeType::alternative)
                 {
                     separators.push_back(node);
                     alternatives.emplace_back();
@@ -105,15 +105,15 @@ namespace cucumber_cpp::library::cucumber_expression
         ExpressionParser::SubParser parseText = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
                 const auto& token = parser.tokens[parser.current];
-                if (MatchToken(token.type).in(TokenType::whiteSpace, TokenType::text, TokenType::endParameter, TokenType::endOptional))
+                if (MatchToken(token.Type()).in(TokenType::whiteSpace, TokenType::text, TokenType::endParameter, TokenType::endOptional))
                     return { 1, Node{
                                     NodeType::text,
-                                    token.start,
-                                    token.end,
-                                    token.text,
+                                    token.Start(),
+                                    token.End(),
+                                    token.Text(),
                                 } };
 
-                if (token.type == TokenType::alternation)
+                if (token.Type() == TokenType::alternation)
                     throw AlternationNotAllowedInOptional{ parser.expression, token };
 
                 return { 0, std::nullopt };
@@ -122,18 +122,18 @@ namespace cucumber_cpp::library::cucumber_expression
         ExpressionParser::SubParser parseName = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
                 const auto& token = parser.tokens[parser.current];
-                if (MatchToken(token.type).in(TokenType::whiteSpace, TokenType::text))
+                if (MatchToken(token.Type()).in(TokenType::whiteSpace, TokenType::text))
                     return { 1, Node{
                                     NodeType::text,
-                                    token.start,
-                                    token.end,
-                                    token.text,
+                                    token.Start(),
+                                    token.End(),
+                                    token.Text(),
                                 } };
 
-                if (MatchToken(token.type).in(TokenType::beginParameter, TokenType::endParameter, TokenType::beginOptional, TokenType::endOptional, TokenType::alternation))
+                if (MatchToken(token.Type()).in(TokenType::beginParameter, TokenType::endParameter, TokenType::beginOptional, TokenType::endOptional, TokenType::alternation))
                     throw InvalidParameterTypeNameInNode{ parser.expression, token };
 
-                if (MatchToken(token.type).in(TokenType::startOfLine, TokenType::endOfLine))
+                if (MatchToken(token.Type()).in(TokenType::startOfLine, TokenType::endOfLine))
                     return { 0, std::nullopt };
 
                 return { 0, std::nullopt };
@@ -153,9 +153,9 @@ namespace cucumber_cpp::library::cucumber_expression
                 auto token = tokens[parser.current];
                 return Result(1, Node{
                                      NodeType::alternative,
-                                     token.start,
-                                     token.end,
-                                     token.text,
+                                     token.Start(),
+                                     token.End(),
+                                     token.Text(),
                                  });
             } };
 
@@ -169,12 +169,12 @@ namespace cucumber_cpp::library::cucumber_expression
                 auto subCurrent = parser.current + consumed;
                 if (std::ranges::none_of(ast, [](const auto& node)
                         {
-                            return node.type == NodeType::alternative;
+                            return node.Type() == NodeType::alternative;
                         }))
                     return { 0, std::nullopt };
 
-                auto start = tokens[parser.current].start;
-                auto end = tokens[subCurrent].start;
+                auto start = tokens[parser.current].Start();
+                auto end = tokens[subCurrent].Start();
 
                 return { consumed, Node{
                                        NodeType::alternation,
@@ -213,8 +213,8 @@ namespace cucumber_cpp::library::cucumber_expression
                     throw MissingEndToken{ parser.expression, beginToken, endToken, parser.tokens[parser.current] };
 
                 // consumed endToken
-                auto start = parser.tokens[parser.current].start;
-                auto end = parser.tokens[subCurrent].end;
+                auto start = parser.tokens[parser.current].Start();
+                auto end = parser.tokens[subCurrent].End();
                 consumed = subCurrent + 1 - parser.current;
                 return { consumed, Node{
                                        type,

@@ -18,11 +18,11 @@ namespace cucumber_cpp::library::cucumber_expression
             {
                 if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::string>)
                 {
-                    *os << "{type:" << static_cast<std::size_t>(node.type) << " start:" << node.start << " end:" << node.end << " text: " << arg << "}";
+                    *os << "{type:" << static_cast<std::size_t>(node.Type()) << " start:" << node.Start() << " end:" << node.End() << " text: " << arg << "}";
                 }
                 else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::vector<Node>>)
                 {
-                    *os << "{type:" << static_cast<std::size_t>(node.type) << " start:" << node.start << " end:" << node.end << " children: [";
+                    *os << "{type:" << static_cast<std::size_t>(node.Type()) << " start:" << node.Start() << " end:" << node.End() << " children: [";
                     for (const auto& child : arg)
                     {
                         PrintTo(child, os);
@@ -32,10 +32,10 @@ namespace cucumber_cpp::library::cucumber_expression
                 }
                 else
                 {
-                    *os << "{type:" << static_cast<std::size_t>(node.type) << " start:" << node.start << " end:" << node.end << "}";
+                    *os << "{type:" << static_cast<std::size_t>(node.Type()) << " start:" << node.Start() << " end:" << node.End() << "}";
                 }
             },
-            node.children);
+            node.GetLeafNodes());
     }
 
     struct TestExpressionParser : testing::Test
