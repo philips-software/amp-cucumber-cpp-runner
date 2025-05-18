@@ -39,8 +39,7 @@ namespace cucumber_cpp::library::cucumber_expression
     std::optional<std::vector<std::any>> Expression::Match(const std::string& text) const
     {
         std::smatch smatch;
-        bool matched = std::regex_search(text, smatch, regex);
-        if (!matched)
+        if (!std::regex_search(text, smatch, regex))
             return std::nullopt;
 
         std::vector<std::any> result;
@@ -77,7 +76,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 return RewriteExpression(node);
         }
 
-        throw std::runtime_error{ "Invalid node type" };
+        throw InvalidNodeType{ "Invalid node type" };
     }
 
     std::string Expression::EscapeRegex(std::string_view text) const
@@ -99,7 +98,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string Expression::RewriteOptional(const Node& node)
     {
-        std::string regex{ CreateString(node) };
+        std::string partialRegex{ CreateString(node) };
 
         if (GetPossibleNodeWithParameters(node))
             throw ParameterIsNotAllowedInOptional(node, expression);
@@ -111,9 +110,9 @@ namespace cucumber_cpp::library::cucumber_expression
             throw OptionalMayNotBeEmpty(node, expression);
 
         for (const auto& child : node.Children())
-            regex += RewriteToRegex(child);
+            partialRegex += RewriteToRegex(child);
 
-        return std::format(R"((?:{})?)", regex);
+        return std::format(R"((?:{})?)", partialRegex);
     }
 
     std::string Expression::RewriteAlternation(const Node& node)
@@ -127,22 +126,22 @@ namespace cucumber_cpp::library::cucumber_expression
                 throw AlternativeMayNotExclusivelyContainOptionals(node, expression);
         }
 
-        std::string regex{ CreateString(node) };
-        regex += RewriteToRegex(node.Children().front());
+        std::string partialRegex{ CreateString(node) };
+        partialRegex += RewriteToRegex(node.Children().front());
         for (const auto& child : node.Children() | std::views::drop(1))
-            regex += '|' + RewriteToRegex(child);
+            partialRegex += '|' + RewriteToRegex(child);
 
-        return std::format(R"((?:{}))", regex);
+        return std::format(R"((?:{}))", partialRegex);
     }
 
     std::string Expression::RewriteAlternative(const Node& node)
     {
-        std::string regex{ CreateString(node) };
+        std::string partialRegex{ CreateString(node) };
 
         for (const auto& child : node.Children())
-            regex += RewriteToRegex(child);
+            partialRegex += RewriteToRegex(child);
 
-        return regex;
+        return partialRegex;
     }
 
     std::string Expression::RewriteParameter(const Node& node)
@@ -153,36 +152,36 @@ namespace cucumber_cpp::library::cucumber_expression
 
         converters.emplace_back(0u, parameter.converter);
 
-        std::string regex{};
+        std::string partialRegex{};
         if (parameter.regex.size() == 1)
-            regex = std::format(R"(({}))", parameter.regex.front());
+            partialRegex = std::format(R"(({}))", parameter.regex.front());
         else
         {
-            regex = { parameter.regex.front() };
-            for (const auto& parameter : parameter.regex | std::views::drop(1))
-                regex += R"()|(?:)" + parameter;
-            regex = std::format(R"(((?:{})))", regex);
+            partialRegex = { parameter.regex.front() };
+            for (const auto& parameterRegex : parameter.regex | std::views::drop(1))
+                partialRegex += R"()|(?:)" + parameterRegex;
+            partialRegex = std::format(R"(((?:{})))", partialRegex);
         }
 
-        converters.back().matches += std::regex{ regex }.mark_count();
-        return regex;
+        converters.back().matches += std::regex{ partialRegex }.mark_count();
+        return partialRegex;
     }
 
     std::string Expression::RewriteExpression(const Node& node)
     {
-        std::string regex{ CreateString(node) };
+        std::string partialRegex{ CreateString(node) };
 
         for (const auto& child : node.Children())
-            regex += RewriteToRegex(child);
+            partialRegex += RewriteToRegex(child);
 
-        return std::format("^{}$", regex);
+        return std::format("^{}$", partialRegex);
     }
 
     std::string Expression::CreateString(const Node& node) const
     {
-        std::string regex{};
-        regex.reserve(node.Children().size() * 10);
-        return std::move(regex);
+        std::string partialRegex{};
+        partialRegex.reserve(node.Children().size() * 10);
+        return partialRegex;
     }
 
     bool Expression::AreNodesEmpty(const Node& node) const

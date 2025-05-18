@@ -85,6 +85,10 @@ namespace cucumber_cpp::library::cucumber_expression
         using std::logic_error::logic_error;
     };
 
+    struct InvalidNodeType : std::logic_error
+    {
+        using std::logic_error::logic_error;
+    };
 }
 
 #endif
