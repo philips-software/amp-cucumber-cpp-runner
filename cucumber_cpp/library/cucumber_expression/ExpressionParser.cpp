@@ -9,6 +9,7 @@
 #include <span>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -102,9 +103,9 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         tokens = ExpressionTokenizer{}.Tokenize(expression);
 
-        ExpressionParser::SubParser parseText = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseText = { [](const ParserState& parserState, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
-                const auto& token = parser.tokens[parser.current];
+                const auto& token = parserState.tokens[parserState.current];
                 if (MatchToken(token.Type()).in(TokenType::whiteSpace, TokenType::text, TokenType::endParameter, TokenType::endOptional))
                     return { 1, Node{
                                     NodeType::text,
@@ -114,14 +115,14 @@ namespace cucumber_cpp::library::cucumber_expression
                                 } };
 
                 if (token.Type() == TokenType::alternation)
-                    throw AlternationNotAllowedInOptional{ parser.expression, token };
+                    throw AlternationNotAllowedInOptional{ parserState.expression, token };
 
                 return { 0, std::nullopt };
             } };
 
-        ExpressionParser::SubParser parseName = { [](const ExpressionParser::ParserState& parser, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseName = { [](const ParserState& parserState, const ExpressionParser::SubParser& /* subParser */) -> ExpressionParser::Result
             {
-                const auto& token = parser.tokens[parser.current];
+                const auto& token = parserState.tokens[parserState.current];
                 if (MatchToken(token.Type()).in(TokenType::whiteSpace, TokenType::text))
                     return { 1, Node{
                                     NodeType::text,
@@ -131,7 +132,7 @@ namespace cucumber_cpp::library::cucumber_expression
                                 } };
 
                 if (MatchToken(token.Type()).in(TokenType::beginParameter, TokenType::endParameter, TokenType::beginOptional, TokenType::endOptional, TokenType::alternation))
-                    throw InvalidParameterTypeNameInNode{ parser.expression, token };
+                    throw InvalidParameterTypeNameInNode{ parserState.expression, token };
 
                 return { 0, std::nullopt };
             } };
@@ -142,13 +143,14 @@ namespace cucumber_cpp::library::cucumber_expression
         auto parseOptional = ParseBetweenGenerator(NodeType::optional, TokenType::beginOptional, TokenType::endOptional);
         parseOptional.subParsers = { parseOptional, parseParameter, parseText };
 
-        ExpressionParser::SubParser parseAlternativeSeparator = { [this](ParserState parser, const SubParser& subParser) -> Result
+        ExpressionParser::SubParser parseAlternativeSeparator = { [this](const ParserState& parserState, const SubParser& /* subParser */) -> Result
             {
-                if (!LookingAt(tokens, parser.current, TokenType::alternation))
+                if (!LookingAt(tokens, parserState.current, TokenType::alternation))
                     return { 0, std::nullopt };
 
-                auto token = tokens[parser.current];
-                return { 1, Node{
+                auto token = tokens[parserState.current];
+                return { 1, std::optional<Node>{
+                                std::in_place_t{},
                                 NodeType::alternative,
                                 token.Start(),
                                 token.End(),
@@ -156,21 +158,21 @@ namespace cucumber_cpp::library::cucumber_expression
                             } };
             } };
 
-        ExpressionParser::SubParser parseAlternation = { [this](const ExpressionParser::ParserState& parser, const SubParser& subParser) -> ExpressionParser::Result
+        ExpressionParser::SubParser parseAlternation = { [this](const ParserState& parserState, const SubParser& subParser) -> ExpressionParser::Result
             {
-                auto previous = parser.current - 1;
+                auto previous = parserState.current - 1;
                 if (!LookingAtAny(tokens, previous, { TokenType::startOfLine, TokenType::whiteSpace, TokenType::endParameter }))
                     return { 0, std::nullopt };
 
-                auto [consumed, ast] = ParseTokensUntil(parser.expression, subParser.subParsers, tokens, parser.current, { TokenType::whiteSpace, TokenType::endOfLine, TokenType::beginParameter });
-                auto subCurrent = parser.current + consumed;
+                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, tokens, parserState.current, { TokenType::whiteSpace, TokenType::endOfLine, TokenType::beginParameter });
+                auto subCurrent = parserState.current + consumed;
                 if (std::ranges::none_of(ast, [](const auto& node)
                         {
                             return node.Type() == NodeType::alternative;
                         }))
                     return { 0, std::nullopt };
 
-                auto start = tokens[parser.current].Start();
+                auto start = tokens[parserState.current].Start();
                 auto end = tokens[subCurrent].Start();
 
                 return { consumed, Node{
@@ -196,23 +198,23 @@ namespace cucumber_cpp::library::cucumber_expression
 
     ExpressionParser::SubParser ExpressionParser::ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken)
     {
-        auto subParser = SubParser{ [this, type, beginToken, endToken](ParserState parser, const SubParser& subParser) -> Result
+        auto subParser = SubParser{ [this, type, beginToken, endToken](const ParserState& parserState, const SubParser& subParser) -> Result
             {
-                if (!LookingAt(parser.tokens, parser.current, beginToken))
+                if (!LookingAt(parserState.tokens, parserState.current, beginToken))
                     return { 0, std::nullopt };
 
-                auto subCurrent = parser.current + 1;
-                auto [consumed, ast] = ParseTokensUntil(parser.expression, subParser.subParsers, parser.tokens, subCurrent, { endToken, TokenType::endOfLine });
+                auto subCurrent = parserState.current + 1;
+                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, parserState.tokens, subCurrent, { endToken, TokenType::endOfLine });
                 subCurrent += consumed;
 
                 // endToken not found
-                if (!LookingAt(parser.tokens, subCurrent, endToken))
-                    throw MissingEndToken{ parser.expression, beginToken, endToken, parser.tokens[parser.current] };
+                if (!LookingAt(parserState.tokens, subCurrent, endToken))
+                    throw MissingEndToken{ parserState.expression, beginToken, endToken, parserState.tokens[parserState.current] };
 
                 // consumed endToken
-                auto start = parser.tokens[parser.current].Start();
-                auto end = parser.tokens[subCurrent].End();
-                consumed = subCurrent + 1 - parser.current;
+                auto start = parserState.tokens[parserState.current].Start();
+                auto end = parserState.tokens[subCurrent].End();
+                consumed = subCurrent + 1 - parserState.current;
                 return { consumed, Node{
                                        type,
                                        start,
