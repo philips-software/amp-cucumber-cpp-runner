@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::cucumber_expression
     using namespace std::literals;
 
     template<class To>
-    inline To StringTo(std::string s)
+    inline To StringTo(const std::string& s)
     {
         if (s.empty())
             return {};
@@ -36,21 +36,21 @@ namespace cucumber_cpp::library::cucumber_expression
     }
 
     template<>
-    inline std::string StringTo<std::string>(std::string s)
+    inline std::string StringTo<std::string>(const std::string& s)
     {
         return std::move(s);
     }
 
     template<>
-    inline float StringTo<float>(std::string s)
+    inline float StringTo<float>(const std::string& s)
     {
-        return std::atof(s.c_str());
+        return std::stof(s);
     }
 
     template<>
-    inline double StringTo<double>(std::string s)
+    inline double StringTo<double>(const std::string& s)
     {
-        return std::atof(s.c_str());
+        return std::stod(s);
     }
 
     namespace details
@@ -68,7 +68,7 @@ namespace cucumber_cpp::library::cucumber_expression
     }
 
     template<>
-    inline bool StringTo<bool>(std::string s)
+    inline bool StringTo<bool>(const std::string& s)
     {
         using details::iequals;
 
@@ -87,8 +87,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct Converter
     {
-        Converter(std::size_t matches,
-            std::function<std::any(MatchRange)> converter);
+        Converter(std::size_t matches, std::function<std::any(MatchRange)> converter);
 
         std::size_t matches;
         std::function<std::any(MatchRange)> converter;
@@ -109,7 +108,7 @@ namespace cucumber_cpp::library::cucumber_expression
         void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter);
 
     private:
-        std::map<std::string, Parameter> parameters{};
+        std::map<std::string, Parameter, std::less<>> parameters{};
     };
 }
 
