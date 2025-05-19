@@ -40,7 +40,7 @@ namespace cucumber_cpp::library::cucumber_expression
             return tokens[position].Type() == type;
         }
 
-        bool LookingAtAny(std::span<const Token> tokens, std::size_t position, std::vector<TokenType> types)
+        bool LookingAtAny(std::span<const Token> tokens, std::size_t position, const std::vector<TokenType>& types)
         {
             return std::ranges::any_of(types, [tokens, position](TokenType type)
                 {
@@ -164,7 +164,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 if (!LookingAtAny(tokens, previous, { TokenType::startOfLine, TokenType::whiteSpace, TokenType::endParameter }))
                     return { 0, std::nullopt };
 
-                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, tokens, parserState.current, { TokenType::whiteSpace, TokenType::endOfLine, TokenType::beginParameter });
+                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, parserState.current, { TokenType::whiteSpace, TokenType::endOfLine, TokenType::beginParameter });
                 auto subCurrent = parserState.current + consumed;
                 if (std::ranges::none_of(ast, [](const auto& node)
                         {
@@ -198,13 +198,13 @@ namespace cucumber_cpp::library::cucumber_expression
 
     ExpressionParser::SubParser ExpressionParser::ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken)
     {
-        auto subParser = SubParser{ [this, type, beginToken, endToken](const ParserState& parserState, const SubParser& subParser) -> Result
+        return { [this, type, beginToken, endToken](const ParserState& parserState, const SubParser& subParser) -> Result
             {
                 if (!LookingAt(parserState.tokens, parserState.current, beginToken))
                     return { 0, std::nullopt };
 
                 auto subCurrent = parserState.current + 1;
-                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, parserState.tokens, subCurrent, { endToken, TokenType::endOfLine });
+                auto [consumed, ast] = ParseTokensUntil(parserState.expression, subParser.subParsers, subCurrent, { endToken, TokenType::endOfLine });
                 subCurrent += consumed;
 
                 // endToken not found
@@ -222,10 +222,9 @@ namespace cucumber_cpp::library::cucumber_expression
                                        ast,
                                    } };
             } };
-        return subParser;
     }
 
-    std::tuple<std::size_t, std::vector<Node>> ExpressionParser::ParseTokensUntil(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::span<const Token> tokens, std::size_t startAt, std::vector<TokenType> endTokens)
+    std::tuple<std::size_t, std::vector<Node>> ExpressionParser::ParseTokensUntil(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt, const std::vector<TokenType>& endTokens) const
     {
         auto current = startAt;
         auto size = tokens.size();
@@ -236,7 +235,7 @@ namespace cucumber_cpp::library::cucumber_expression
             if (LookingAtAny(tokens, current, endTokens))
                 break;
 
-            auto [consumed, node] = ParseToken(expression, parsers, tokens, current);
+            auto [consumed, node] = ParseToken(expression, parsers, current);
             if (consumed == 0)
                 throw NoEligibleParsers{ tokens };
 
@@ -246,7 +245,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return { current - startAt, ast };
     }
 
-    ExpressionParser::Result ExpressionParser::ParseToken(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::span<const Token> tokens, std::size_t startAt)
+    ExpressionParser::Result ExpressionParser::ParseToken(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt) const
     {
         for (const auto& parser : parsers)
         {
