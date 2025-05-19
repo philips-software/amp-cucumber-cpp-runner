@@ -40,10 +40,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
         const std::string& text;
     };
-
-    static inline SourceVisitor sourceVisitor{};
-    static inline PatternVisitor patternVisitor{};
-    // static inline MatchVisitor matchVisitor{};
 }
 
 #endif

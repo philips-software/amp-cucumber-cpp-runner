@@ -37,7 +37,7 @@ namespace cucumber_cpp::library
             auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
             if (match)
             {
-                matches.emplace_back(entry.factory, *match, std::visit(cucumber_expression::patternVisitor, entry.regex));
+                matches.emplace_back(entry.factory, *match, std::visit(cucumber_expression::PatternVisitor{}, entry.regex));
                 ++entry.used;
             }
         }
