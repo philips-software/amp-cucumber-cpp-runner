@@ -18,9 +18,7 @@ namespace cucumber_cpp::library::cucumber_expression
         auto treatAsText = false;
 
         if (expression.empty())
-        {
             tokens.emplace_back(TokenType::startOfLine, "", 0, 0);
-        }
 
         for (const auto ch : expression)
         {
