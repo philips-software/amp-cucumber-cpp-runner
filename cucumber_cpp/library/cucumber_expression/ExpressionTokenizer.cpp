@@ -9,9 +9,6 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    ExpressionTokenizer::ExpressionTokenizer()
-    {}
-
     std::vector<Token> ExpressionTokenizer::Tokenize(std::string_view expression)
     {
         this->expression = expression;
