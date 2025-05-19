@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         for (const auto ch : expression)
         {
-            if (Token::IsEscapeCharacter(ch) and !treatAsText)
+            if (Token::IsEscapeCharacter(ch) && !treatAsText)
             {
                 ++escaped;
                 treatAsText = true;
