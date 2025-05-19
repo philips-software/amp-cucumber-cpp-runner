@@ -31,7 +31,7 @@ jobs:
         id: cache-winsdk
         with:
           path: /winsdk
-          key: cache-winsdk
+          key: cache-winsdk-10.0.26100-14.43.17.13
       - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
       - uses: hendrikmuhs/ccache-action@a1209f81afb8c005c13b4296c32e363431bffea5 # v1.2.17
