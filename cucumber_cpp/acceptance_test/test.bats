@@ -183,7 +183,7 @@ teardown() {
     assert_failure
     assert_output --partial "skipped Given a given step"
     refute_output --partial "should not be executed"
-    # assert_output --partial "tests   : 0/1 passed"
+    assert_output --partial "tests   : 0/1 passed"
 }
 
 @test "Test unicode" {

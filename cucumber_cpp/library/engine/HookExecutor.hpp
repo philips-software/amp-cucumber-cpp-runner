@@ -5,6 +5,7 @@
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -23,8 +24,8 @@ namespace cucumber_cpp::library::engine
         struct StepScope;
 
         [[nodiscard]] virtual ProgramScope BeforeAll() = 0;
-        [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
-        [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
+        [[nodiscard]] virtual std::optional<FeatureScope> FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager) = 0;
+        [[nodiscard]] virtual std::optional<ScenarioScope> ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager) = 0;
         [[nodiscard]] virtual StepScope StepStart() = 0;
 
     private:
@@ -75,8 +76,8 @@ namespace cucumber_cpp::library::engine
 
         [[nodiscard]] ProgramScope
         BeforeAll() override;
-        [[nodiscard]] FeatureScope FeatureStart() override;
-        [[nodiscard]] ScenarioScope ScenarioStart() override;
+        [[nodiscard]] std::optional<FeatureScope> FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager) override;
+        [[nodiscard]] std::optional<ScenarioScope> ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager) override;
         [[nodiscard]] StepScope StepStart() override;
 
     private:

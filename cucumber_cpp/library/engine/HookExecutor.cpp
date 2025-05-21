@@ -6,6 +6,7 @@
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <functional>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -72,14 +73,18 @@ namespace cucumber_cpp::library::engine
         return ProgramScope{ contextManager };
     }
 
-    HookExecutor::FeatureScope HookExecutorImpl::FeatureStart()
+    std::optional<HookExecutor::FeatureScope> HookExecutorImpl::FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager)
     {
-        return FeatureScope{ contextManager };
+        if (contextManager.FeatureContext().InheritedExecutionStatus() != Result::passed)
+            return std::nullopt;
+        return std::make_optional<FeatureScope>(contextManager);
     }
 
-    HookExecutor::ScenarioScope HookExecutorImpl::ScenarioStart()
+    std::optional<HookExecutor::ScenarioScope> HookExecutorImpl::ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager)
     {
-        return ScenarioScope{ contextManager };
+        if (contextManager.ScenarioContext().InheritedExecutionStatus() != Result::passed)
+            return std::nullopt;
+        return std::make_optional<ScenarioScope>(contextManager);
     }
 
     HookExecutor::StepScope HookExecutorImpl::StepStart()

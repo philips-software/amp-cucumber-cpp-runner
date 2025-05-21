@@ -25,7 +25,7 @@ namespace cucumber_cpp::library::engine
     TestExecution::FeatureScope::FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const cucumber_cpp::library::engine::FeatureInfo& featureInfo)
         : scopedFeatureContext{ contextManager.CreateFeatureContext(featureInfo) }
         , scopedFeatureReport{ reportHandler.FeatureStart() }
-        , scopedFeatureHook{ hookExecution.FeatureStart() }
+        , scopedFeatureHook{ hookExecution.FeatureStart(contextManager) }
     {
     }
 
@@ -38,7 +38,7 @@ namespace cucumber_cpp::library::engine
     TestExecution::ScenarioScope::ScenarioScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const cucumber_cpp::library::engine::ScenarioInfo& scenarioInfo)
         : scopedScenarioContext{ contextManager.CreateScenarioContext(scenarioInfo) }
         , scopedScenarioReport{ reportHandler.ScenarioStart() }
-        , scopedScenarioHook{ hookExecution.ScenarioStart() }
+        , scopedScenarioHook{ hookExecution.ScenarioStart(contextManager) }
     {
     }
 

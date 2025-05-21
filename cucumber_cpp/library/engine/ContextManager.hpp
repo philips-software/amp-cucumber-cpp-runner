@@ -57,7 +57,10 @@ namespace cucumber_cpp::library::engine
         NestedContext(RunnerContext& parent, const T& info)
             : RunnerContext{ &parent }
             , info{ info }
-        {}
+        {
+            if (parent.InheritedExecutionStatus() != Result::passed)
+                ExecutionStatus(Result::skipped);
+        }
 
         const T& info;
     };

@@ -11,6 +11,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -53,7 +54,7 @@ namespace cucumber_cpp::library::engine
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedFeatureContext scopedFeatureContext;
         report::ReportForwarder::FeatureScope scopedFeatureReport;
-        HookExecutor::FeatureScope scopedFeatureHook;
+        std::optional<HookExecutor::FeatureScope> scopedFeatureHook;
     };
 
     struct TestExecution::RuleScope : library::util::Immoveable
@@ -72,7 +73,7 @@ namespace cucumber_cpp::library::engine
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedScenarioContext scopedScenarioContext;
         report::ReportForwarder::ScenarioScope scopedScenarioReport;
-        HookExecutor::ScenarioScope scopedScenarioHook;
+        std::optional<HookExecutor::ScenarioScope> scopedScenarioHook;
     };
 
     struct TestExecution::Policy
