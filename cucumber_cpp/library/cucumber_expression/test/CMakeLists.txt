@@ -19,3 +19,10 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/testdata
         $<TARGET_FILE_DIR:cucumber_cpp.library.cucumber_expression.test>/testdata
 )
+
+add_custom_command(
+    TARGET cucumber_cpp.library.cucumber_expression.test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/testdata
+        $<TARGET_FILE_DIR:cucumber_cpp.library.cucumber_expression.test>/../testdata
+)
