@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <format>
 #include <functional>
 #include <iostream>
-#include <limits>
 #include <map>
 #include <regex>
 #include <sstream>
@@ -23,17 +23,22 @@ namespace cucumber_cpp::library::cucumber_expression
 {
     using namespace std::literals;
 
+    struct ConversionError : std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     template<class To>
     inline To StringTo(const std::string& s)
     {
         if (s.empty())
             return {};
 
-        std::istringstream stream{ std::move(s) };
+        std::istringstream stream{ s };
         To to{};
         stream >> to;
         if (stream.fail())
-            throw std::runtime_error{ "Cannnot convert parameter" };
+            throw ConversionError{ std::format("Cannot convert parameter {} in to {}", s, typeid(To).name()) };
 
         return to;
     }
@@ -41,7 +46,7 @@ namespace cucumber_cpp::library::cucumber_expression
     template<>
     inline std::string StringTo<std::string>(const std::string& s)
     {
-        return std::move(s);
+        return s;
     }
 
     template<>

@@ -89,7 +89,6 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         if (parameters.contains(name))
             return parameters.at(name);
-        ;
         return {};
     }
 
