@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         std::string_view expression;
 
-        std::size_t escaped{ 0 };
+        std::size_t escapedCharacters{ 0 };
         std::string buffer;
 
         std::size_t startIndex{ 0 };

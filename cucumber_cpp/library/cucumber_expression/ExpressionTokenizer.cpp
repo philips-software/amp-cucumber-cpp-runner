@@ -9,9 +9,9 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    std::vector<Token> ExpressionTokenizer::Tokenize(std::string_view expression)
+    std::vector<Token> ExpressionTokenizer::Tokenize(std::string_view expressionToTokenize)
     {
-        this->expression = expression;
+        expression = expressionToTokenize;
 
         std::vector<Token> tokens;
         auto previousTokenType = TokenType::startOfLine;
@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             if (Token::IsEscapeCharacter(ch) && !treatAsText)
             {
-                ++escaped;
+                ++escapedCharacters;
                 treatAsText = true;
                 continue;
             }
@@ -58,7 +58,7 @@ namespace cucumber_cpp::library::cucumber_expression
         if (Token::CanEscape(ch))
             return TokenType::text;
 
-        throw CantEscape(expression, startIndex + buffer.length() + escaped);
+        throw CantEscape(expression, startIndex + buffer.length() + escapedCharacters);
     }
 
     [[nodiscard]] bool ExpressionTokenizer::ShouldCreateNewToken(TokenType previousTokenType, TokenType currentTokenType)
@@ -68,13 +68,13 @@ namespace cucumber_cpp::library::cucumber_expression
 
     [[nodiscard]] Token ExpressionTokenizer::CreateToken(TokenType type)
     {
-        std::size_t escaped = 0;
+        std::size_t escapedCount = 0;
 
         if (type == TokenType::text)
-            escaped = std::exchange(this->escaped, 0);
+            escapedCount = std::exchange(this->escapedCharacters, 0);
 
         auto start = startIndex;
-        auto end = startIndex + buffer.length() + escaped;
+        auto end = startIndex + buffer.length() + escapedCount;
         auto text = std::string{};
         std::swap(text, buffer);
         startIndex = end;
