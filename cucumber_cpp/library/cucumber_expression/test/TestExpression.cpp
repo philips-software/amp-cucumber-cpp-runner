@@ -154,10 +154,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
         parameterRegistry.AddParameter("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
             {
-                std::cout << std::format("matches: {}\n", std::ranges::distance(matches));
-                for (const auto& match : matches)
-                    std::cout << std::format("match: {}\n", match.str());
-
                 std::optional<std::string> text{ matches[1].matched ? StringTo<std::string>(matches[1].str()) : std::optional<std::string>{ std::nullopt } };
                 std::optional<std::int64_t> number{ matches[2].matched ? StringTo<std::int64_t>(matches[2].str()) : std::optional<std::int64_t>{ std::nullopt } };
 
