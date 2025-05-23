@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         std::optional<std::variant<std::vector<std::string>, std::vector<std::any>>> operator()(const auto& expression) const
         {
-            return expression.Match(std::move(text));
+            return expression.Match(text);
         }
 
         const std::string& text;
