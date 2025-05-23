@@ -68,7 +68,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
             for (const auto& file : std::filesystem::directory_iterator(path))
                 if (file.is_regular_file() && file.path().extension() == ".yaml")
-                    testdata.emplace_back(file.path().string(), YAML::LoadFile(file.path()));
+                    testdata.emplace_back(file.path().string(), YAML::LoadFile(file.path().string()));
 
             return testdata;
         }
