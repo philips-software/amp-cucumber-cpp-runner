@@ -73,14 +73,14 @@ namespace cucumber_cpp::library::engine
         return ProgramScope{ contextManager };
     }
 
-    std::optional<HookExecutor::FeatureScope> HookExecutorImpl::FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager)
+    std::optional<HookExecutor::FeatureScope> HookExecutorImpl::FeatureStart()
     {
         if (contextManager.FeatureContext().InheritedExecutionStatus() != Result::passed)
             return std::nullopt;
         return std::make_optional<FeatureScope>(contextManager);
     }
 
-    std::optional<HookExecutor::ScenarioScope> HookExecutorImpl::ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager)
+    std::optional<HookExecutor::ScenarioScope> HookExecutorImpl::ScenarioStart()
     {
         if (contextManager.ScenarioContext().InheritedExecutionStatus() != Result::passed)
             return std::nullopt;

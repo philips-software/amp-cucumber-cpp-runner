@@ -24,8 +24,8 @@ namespace cucumber_cpp::library::engine
         struct StepScope;
 
         [[nodiscard]] virtual ProgramScope BeforeAll() = 0;
-        [[nodiscard]] virtual std::optional<FeatureScope> FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager) = 0;
-        [[nodiscard]] virtual std::optional<ScenarioScope> ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager) = 0;
+        [[nodiscard]] virtual std::optional<FeatureScope> FeatureStart() = 0;
+        [[nodiscard]] virtual std::optional<ScenarioScope> ScenarioStart() = 0;
         [[nodiscard]] virtual StepScope StepStart() = 0;
 
     private:
@@ -76,8 +76,8 @@ namespace cucumber_cpp::library::engine
 
         [[nodiscard]] ProgramScope
         BeforeAll() override;
-        [[nodiscard]] std::optional<FeatureScope> FeatureStart(cucumber_cpp::library::engine::ContextManager& contextManager) override;
-        [[nodiscard]] std::optional<ScenarioScope> ScenarioStart(cucumber_cpp::library::engine::ContextManager& contextManager) override;
+        [[nodiscard]] std::optional<FeatureScope> FeatureStart() override;
+        [[nodiscard]] std::optional<ScenarioScope> ScenarioStart() override;
         [[nodiscard]] StepScope StepStart() override;
 
     private:

@@ -41,7 +41,7 @@ namespace cucumber_cpp::library::engine
         ASSERT_FALSE(contextManagerInstance->FeatureContext().Contains("hookAfterFeature"));
 
         {
-            auto scope = hookExecutor->FeatureStart(*contextManagerInstance);
+            auto scope = hookExecutor->FeatureStart();
             EXPECT_TRUE(contextManagerInstance->FeatureContext().Contains("hookBeforeFeature"));
         }
         EXPECT_TRUE(contextManagerInstance->FeatureContext().Contains("hookAfterFeature"));
@@ -53,7 +53,7 @@ namespace cucumber_cpp::library::engine
         ASSERT_FALSE(contextManagerInstance->ScenarioContext().Contains("hookAfterScenario"));
 
         {
-            auto scope = hookExecutor->ScenarioStart(*contextManagerInstance);
+            auto scope = hookExecutor->ScenarioStart();
             EXPECT_TRUE(contextManagerInstance->ScenarioContext().Contains("hookBeforeScenario"));
         }
         EXPECT_TRUE(contextManagerInstance->ScenarioContext().Contains("hookAfterScenario"));
