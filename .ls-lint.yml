@@ -10,4 +10,5 @@ ignore:
   - .github
   - .vscode
   - external
+  - megalinter-reports
   - testdata
