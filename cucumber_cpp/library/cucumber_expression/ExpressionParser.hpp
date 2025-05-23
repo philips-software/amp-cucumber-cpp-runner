@@ -41,7 +41,7 @@ namespace cucumber_cpp::library::cucumber_expression
         using Parsers = std::vector<std::function<Result(ParserState)>>;
         using Tokens = std::vector<Token>;
 
-        SubParser ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken);
+        SubParser ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken) const;
 
         std::tuple<std::size_t, std::vector<Node>> ParseTokensUntil(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt, const std::vector<TokenType>& endTokens) const;
         Result ParseToken(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt) const;

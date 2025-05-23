@@ -196,7 +196,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return *ast;
     }
 
-    ExpressionParser::SubParser ExpressionParser::ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken)
+    ExpressionParser::SubParser ExpressionParser::ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken) const
     {
         return { [this, type, beginToken, endToken](const ParserState& parserState, const SubParser& subParser) -> Result
             {
