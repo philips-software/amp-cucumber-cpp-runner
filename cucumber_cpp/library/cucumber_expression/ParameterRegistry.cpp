@@ -32,9 +32,9 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             return [](MatchRange matches)
             {
-                std::string str{ StringTo<std::string>(matches.begin()->str()) };
-                str.erase(0, 1);
-                str.erase(str.size() - 1, 1);
+                std::string str = matches[1].matched ? matches[1].str() : matches[3].str();
+                str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
+                str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
                 return str;
             };
         }
@@ -65,8 +65,8 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        const static std::string stringDoubleRegex{ R"__("(?:[^"\\]*(?:\.[^"\\]*)*)")__" };
-        const static std::string stringSingleRegex{ R"__('(?:[^'\\]*(?:\.[^'\\]*)*)')__" };
+        const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
+        const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
         AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int64_t>());
@@ -89,7 +89,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         if (parameters.contains(name))
             return parameters.at(name);
-
+        ;
         return {};
     }
 

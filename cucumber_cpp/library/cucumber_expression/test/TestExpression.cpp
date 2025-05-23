@@ -1,11 +1,15 @@
 
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/node/parse.h"
+#include "yaml-cpp/yaml.h"
 #include "gmock/gmock.h"
 #include <any>
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <format>
 #include <functional>
 #include <gtest/gtest.h>
@@ -20,6 +24,28 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
+    namespace
+    {
+        std::vector<std::pair<std::string, YAML::Node>> GetTestData(const std::string& path)
+        {
+            std::vector<std::pair<std::string, YAML::Node>> testdata;
+
+            for (const auto& file : std::filesystem::directory_iterator(path))
+                if (file.is_regular_file() && file.path().extension() == ".yaml")
+                    testdata.emplace_back(file.path().string(), YAML::LoadFile(file.path()));
+
+            return testdata;
+        }
+
+        std::string FormatMessage(const YAML::Node& node, const Expression& expression)
+        {
+            return std::format("failed to match {}\n"
+                               "regex           {}\n"
+                               "against         {}",
+                node["expression"].as<std::string>(), expression.Pattern(), node["text"].as<std::string>());
+        }
+    }
+
     struct TestExpression : testing::Test
     {
         ParameterRegistry parameterRegistry{};
@@ -31,41 +57,44 @@ namespace cucumber_cpp::library::cucumber_expression
         }
     };
 
-    TEST_F(TestExpression, Escape)
+    TEST_F(TestExpression, TestFromFiles)
     {
-        auto match = Match(R"(hello \{world?)", "hello {world?");
-        EXPECT_THAT(match, testing::IsTrue());
-    }
+        std::filesystem::path testdataPath = "testdata/cucumber-expression/matching";
 
-    TEST_F(TestExpression, MatchOptional)
-    {
-        Expression expression{ R"(hello (world))", parameterRegistry };
-        EXPECT_THAT(expression.Pattern(), testing::StrEq(R"__(^hello (?:world)?$)__"));
-        EXPECT_THAT(expression.Match("hello world"), testing::IsTrue());
-        EXPECT_THAT(expression.Match("hello "), testing::IsTrue());
-    }
+        for (const auto& [file, testdata] : GetTestData(testdataPath))
+        {
+            if (testdata["exception"])
+                ASSERT_ANY_THROW(Match(testdata["expression"].as<std::string>(), testdata["text"].as<std::string>()))
+                    << std::format("Test failed for file: {}", file);
+            else
+            {
+                if (testdata["expected_args"].IsNull())
+                    ASSERT_THAT(Match(testdata["expression"].as<std::string>(), testdata["text"].as<std::string>()), testing::IsFalse());
+                else
+                {
+                    const auto expression = Expression{ testdata["expression"].as<std::string>(), parameterRegistry };
+                    const auto matchOpt = expression.Match(testdata["text"].as<std::string>());
 
-    TEST_F(TestExpression, MatchAlternative)
-    {
-        Expression expression{ R"(hello country/wo\/rld/city)", parameterRegistry };
-        EXPECT_THAT(expression.Pattern(), testing::StrEq(R"__(^hello (?:country|wo/rld|city)$)__"));
-        EXPECT_THAT(expression.Match("hello country"), testing::IsTrue());
-        EXPECT_THAT(expression.Match("hello wo/rld"), testing::IsTrue());
-        EXPECT_THAT(expression.Match("hello city"), testing::IsTrue());
-    }
+                    ASSERT_THAT(matchOpt, testing::IsTrue()) << FormatMessage(testdata, expression);
 
-    TEST_F(TestExpression, MatchString)
-    {
-        auto match = Match(R"__(hello {string})__", R"__(hello "beautiful world")__");
-        EXPECT_THAT(match, testing::IsTrue());
-        EXPECT_THAT(std::any_cast<std::string>((*match)[0]), testing::StrEq(R"__(beautiful world)__"));
-    }
-
-    TEST_F(TestExpression, MatchInt)
-    {
-        auto match = Match(R"__(there are {int} cucumbers)__", R"__(there are 15 cucumbers)__");
-        EXPECT_THAT(match, testing::IsTrue());
-        EXPECT_THAT(std::any_cast<std::int64_t>((*match)[0]), testing::Eq(15));
+                    const auto match = *matchOpt;
+                    for (std::size_t i = 0; i < testdata["expected_args"].size(); ++i)
+                    {
+                        if (match[i].type() == typeid(std::string))
+                            ASSERT_THAT(std::any_cast<std::string>(match[i]), testdata["expected_args"][i].as<std::string>()) << FormatMessage(testdata, expression);
+                        else if (match[i].type() == typeid(std::int64_t))
+                            ASSERT_THAT(std::any_cast<std::int64_t>(match[i]), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(testdata, expression);
+                        else if (match[i].type() == typeid(float))
+                            ASSERT_THAT(std::any_cast<float>(match[i]), testdata["expected_args"][i].as<float>()) << FormatMessage(testdata, expression);
+                        else if (match[i].type() == typeid(double))
+                            ASSERT_THAT(std::any_cast<double>(match[i]), testdata["expected_args"][i].as<double>()) << FormatMessage(testdata, expression);
+                        else
+                            FAIL() << "Unknown type: " << match[i].type().name() << " for:\n"
+                                   << FormatMessage(testdata, expression);
+                    }
+                }
+            }
+        }
     }
 
     TEST_F(TestExpression, MatchFloat)
@@ -156,11 +185,5 @@ namespace cucumber_cpp::library::cucumber_expression
         auto expr = "I have {int} cuke(s)";
         Expression expression{ expr, parameterRegistry };
         EXPECT_THAT(expr, testing::StrEq(expression.Source()));
-    }
-
-    TEST_F(TestExpression, MultiParamParsing)
-    {
-        auto matchString{ Match(R"__(Step with cucumber expression syntax {float} {string} {int})__", R"__(Step with cucumber expression syntax 1.1 "string" 10)__") };
-        EXPECT_THAT(matchString, testing::IsTrue());
     }
 }

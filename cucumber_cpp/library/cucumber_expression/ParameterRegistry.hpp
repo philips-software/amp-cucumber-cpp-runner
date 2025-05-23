@@ -5,8 +5,11 @@
 #include <any>
 #include <cctype>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <iostream>
+#include <limits>
 #include <map>
 #include <regex>
 #include <sstream>
@@ -39,6 +42,12 @@ namespace cucumber_cpp::library::cucumber_expression
     inline std::string StringTo<std::string>(const std::string& s)
     {
         return std::move(s);
+    }
+
+    template<>
+    inline int64_t StringTo<std::int64_t>(const std::string& s)
+    {
+        return std::stoll(s);
     }
 
     template<>
