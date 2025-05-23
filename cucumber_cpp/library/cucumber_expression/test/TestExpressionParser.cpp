@@ -62,7 +62,7 @@ namespace cucumber_cpp::library::cucumber_expression
             return CreateNode(yaml);
         }
 
-        std::vector<std::pair<std::string, YAML::Node>> GetTestData(const std::string& path)
+        std::vector<std::pair<std::string, YAML::Node>> GetTestData(const std::filesystem::path& path)
         {
             std::vector<std::pair<std::string, YAML::Node>> testdata;
 
