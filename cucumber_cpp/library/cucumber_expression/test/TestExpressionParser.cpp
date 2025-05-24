@@ -106,7 +106,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
         for (const auto& [file, testdata] : GetTestData(testdataPath))
         {
-            std::cout << std::format("Testing file: {}", file) << std::endl;
             if (testdata["exception"])
                 ASSERT_ANY_THROW(ExpressionParser{}.Parse(testdata["expression"].as<std::string>()))
                     << std::format("Test failed for file: {}", file);
