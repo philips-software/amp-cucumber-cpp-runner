@@ -182,4 +182,20 @@ namespace cucumber_cpp::library::cucumber_expression
         Expression expression{ expr, parameterRegistry };
         EXPECT_THAT(expr, testing::StrEq(expression.Source()));
     }
+
+    TEST_F(TestExpression, MatchBoolean)
+    {
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(true)__"))[0]), testing::IsTrue());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(1)__"))[0]), testing::IsTrue());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(yes)__"))[0]), testing::IsTrue());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(on)__"))[0]), testing::IsTrue());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(enabled)__"))[0]), testing::IsTrue());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(active)__"))[0]), testing::IsTrue());
+
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(false)__"))[0]), testing::IsFalse());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(0)__"))[0]), testing::IsFalse());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(2)__"))[0]), testing::IsFalse());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(off)__"))[0]), testing::IsFalse());
+        EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(foo)__"))[0]), testing::IsFalse());
+    }
 }
