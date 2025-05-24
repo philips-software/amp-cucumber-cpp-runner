@@ -74,4 +74,17 @@ namespace cucumber_cpp::library::cucumber_expression
                     << std::format("Test failed for file: {}", file);
             }
     }
+
+    TEST(TestExpressionTokenizer, TestNameOf)
+    {
+        EXPECT_THAT(Token::NameOf(TokenType::startOfLine), testing::StrEq("startOfLine"));
+        EXPECT_THAT(Token::NameOf(TokenType::endOfLine), testing::StrEq("endOfLine"));
+        EXPECT_THAT(Token::NameOf(TokenType::whiteSpace), testing::StrEq("whiteSpace"));
+        EXPECT_THAT(Token::NameOf(TokenType::beginOptional), testing::StrEq("beginOptional"));
+        EXPECT_THAT(Token::NameOf(TokenType::endOptional), testing::StrEq("endOptional"));
+        EXPECT_THAT(Token::NameOf(TokenType::beginParameter), testing::StrEq("beginParameter"));
+        EXPECT_THAT(Token::NameOf(TokenType::endParameter), testing::StrEq("endParameter"));
+        EXPECT_THAT(Token::NameOf(TokenType::alternation), testing::StrEq("alternation"));
+        EXPECT_THAT(Token::NameOf(TokenType::text), testing::StrEq("text"));
+    }
 }
