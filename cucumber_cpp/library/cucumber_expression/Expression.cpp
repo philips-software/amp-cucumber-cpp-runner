@@ -44,15 +44,16 @@ namespace cucumber_cpp::library::cucumber_expression
             return std::nullopt;
 
         std::vector<std::any> result;
+        result.reserve(converters.size());
 
         auto converterIter = converters.begin();
-        auto matchIt = smatch.begin() + 1;
+        auto matchIter = smatch.begin() + 1;
 
-        while (matchIt != smatch.end() && converterIter != converters.end())
+        while (matchIter != smatch.end() && converterIter != converters.end())
         {
-            result.emplace_back(converterIter->converter({ matchIt, matchIt + converterIter->matches }));
+            result.emplace_back(converterIter->converter({ matchIter, matchIter + converterIter->matches }));
 
-            matchIt = std::next(matchIt, converterIter->matches);
+            matchIter = std::next(matchIter, converterIter->matches);
             converterIter = std::next(converterIter);
         }
 
