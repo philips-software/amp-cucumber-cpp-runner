@@ -20,8 +20,7 @@ namespace cucumber_cpp::library::cucumber_expression
         auto pointer = PointAt(node.Start());
         if (node.Start() + 1 < node.End())
         {
-            for (auto i = node.Start() + 1; i < node.End(); ++i)
-                pointer += "-";
+            pointer.resize(node.End() - 1, '-');
             pointer += "^";
         }
         return pointer;
@@ -161,8 +160,8 @@ For more complicated expressions consider using a regular expression instead.)",
             node.Start(),
             expression,
             PointAtLocated(node),
-            std::format(R"('Undefined parameter type {}')", undefinedParameterName),
-            std::format(R"('Please register a ParameterType for {}')", undefinedParameterName),
+            std::format(R"(Undefined parameter type '{}')", undefinedParameterName),
+            std::format(R"(Please register a ParameterType for '{}')", undefinedParameterName),
         }
     {}
 }

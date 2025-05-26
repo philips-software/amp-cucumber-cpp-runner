@@ -1,4 +1,5 @@
 
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "yaml-cpp/node/node.h"
@@ -199,5 +200,25 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(2)__"))[0]), testing::IsFalse());
         EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(off)__"))[0]), testing::IsFalse());
         EXPECT_THAT(std::any_cast<bool>((*Match(R"__({bool})__", R"__(foo)__"))[0]), testing::IsFalse());
+    }
+
+    TEST_F(TestExpression, ThrowUnknownParameterType)
+    {
+        auto expr = "I have {doesnotexist} cuke(s)";
+
+        try
+        {
+            Expression expression{ expr, parameterRegistry };
+            FAIL() << "Expected UndefinedParameterTypeError to be thrown";
+        }
+        catch (UndefinedParameterTypeError e)
+        {
+            EXPECT_THAT(e.what(), testing::StrEq("This Cucumber Expression has a problem at column 8:\n"
+                                                 "\n"
+                                                 "I have {doesnotexist} cuke(s)\n"
+                                                 "       ^------------^\n"
+                                                 "Undefined parameter type 'doesnotexist'\n"
+                                                 "Please register a ParameterType for 'doesnotexist'\n"));
+        }
     }
 }
