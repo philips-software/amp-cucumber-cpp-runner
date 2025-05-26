@@ -21,5 +21,4 @@ target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
 
 if (CCR_BUILD_TESTS)
     add_subdirectory(test)
-#     add_subdirectory(test_helper)
 endif()
