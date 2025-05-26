@@ -100,15 +100,15 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string Expression::RewriteOptional(const Node& node)
     {
-        std::string partialRegex{ CreateString(node) };
+        std::string partialRegex{ CreateEmptyRegexString(node) };
 
-        if (GetPossibleNodeWithParameters(node))
+        if (ContainsNodeWithParameters(node))
             throw ParameterIsNotAllowedInOptional(node, expression);
 
-        if (GetPossibleNodeWithOptionals(node))
+        if (ContainsNodeWithOptionals(node))
             throw OptionalIsNotAllowedInOptional(node, expression);
 
-        if (AreNodesEmpty(node))
+        if (NodesAreEmpty(node))
             throw OptionalMayNotBeEmpty(node, expression);
 
         for (const auto& child : node.Children())
@@ -124,11 +124,11 @@ namespace cucumber_cpp::library::cucumber_expression
             if (child.Children().empty())
                 throw AlternativeMayNotBeEmpty(node, expression);
 
-            if (AreNodesEmpty(child))
+            if (NodesAreEmpty(child))
                 throw AlternativeMayNotExclusivelyContainOptionals(node, expression);
         }
 
-        std::string partialRegex{ CreateString(node) };
+        std::string partialRegex{ CreateEmptyRegexString(node) };
         partialRegex += RewriteToRegex(node.Children().front());
         for (const auto& child : node.Children() | std::views::drop(1))
             partialRegex += '|' + RewriteToRegex(child);
@@ -138,7 +138,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string Expression::RewriteAlternative(const Node& node)
     {
-        std::string partialRegex{ CreateString(node) };
+        std::string partialRegex{ CreateEmptyRegexString(node) };
 
         for (const auto& child : node.Children())
             partialRegex += RewriteToRegex(child);
@@ -171,7 +171,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::string Expression::RewriteExpression(const Node& node)
     {
-        std::string partialRegex{ CreateString(node) };
+        std::string partialRegex{ CreateEmptyRegexString(node) };
 
         for (const auto& child : node.Children())
             partialRegex += RewriteToRegex(child);
@@ -179,34 +179,31 @@ namespace cucumber_cpp::library::cucumber_expression
         return std::format("^{}$", partialRegex);
     }
 
-    std::string Expression::CreateString(const Node& node) const
+    std::string Expression::CreateEmptyRegexString(const Node& node) const
     {
         std::string partialRegex{};
         partialRegex.reserve(node.Children().size() * 10);
         return partialRegex;
     }
 
-    bool Expression::AreNodesEmpty(const Node& node) const
+    bool Expression::NodesAreEmpty(const Node& node) const
     {
         auto results = GetNodesWithType(node, NodeType::text);
         return results.empty();
     }
 
-    std::optional<std::reference_wrapper<const Node>> Expression::GetPossibleNodeWithParameters(const Node& node) const
+    bool Expression::ContainsNodeWithParameters(const Node& node) const
     {
-        return GetPossibleNode(node, NodeType::parameter);
+        return ContainsNodeWithType(node, NodeType::parameter);
     }
 
-    std::optional<std::reference_wrapper<const Node>> Expression::GetPossibleNodeWithOptionals(const Node& node) const
+    bool Expression::ContainsNodeWithOptionals(const Node& node) const
     {
-        return GetPossibleNode(node, NodeType::optional);
+        return ContainsNodeWithType(node, NodeType::optional);
     }
 
-    std::optional<std::reference_wrapper<const Node>> Expression::GetPossibleNode(const Node& node, NodeType type) const
+    bool Expression::ContainsNodeWithType(const Node& node, NodeType type) const
     {
-        auto results = GetNodesWithType(node, type);
-        if (results.empty())
-            return std::nullopt;
-        return std::ref(results.front());
+        return !GetNodesWithType(node, type).empty();
     }
 }

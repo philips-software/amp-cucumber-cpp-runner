@@ -33,13 +33,13 @@ namespace cucumber_cpp::library::cucumber_expression
         std::string RewriteParameter(const Node& node);
         std::string RewriteExpression(const Node& node);
 
-        std::string CreateString(const Node& node) const;
+        std::string CreateEmptyRegexString(const Node& node) const;
 
-        bool AreNodesEmpty(const Node& node) const;
+        bool NodesAreEmpty(const Node& node) const;
 
-        std::optional<std::reference_wrapper<const Node>> GetPossibleNodeWithParameters(const Node& node) const;
-        std::optional<std::reference_wrapper<const Node>> GetPossibleNodeWithOptionals(const Node& node) const;
-        std::optional<std::reference_wrapper<const Node>> GetPossibleNode(const Node& node, NodeType type) const;
+        bool ContainsNodeWithParameters(const Node& node) const;
+        bool ContainsNodeWithOptionals(const Node& node) const;
+        bool ContainsNodeWithType(const Node& node, NodeType type) const;
 
         auto GetNodesWithType(const Node& node, NodeType type) const
         {
