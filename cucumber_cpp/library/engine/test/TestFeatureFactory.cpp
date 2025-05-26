@@ -1,3 +1,5 @@
+#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
@@ -13,7 +15,9 @@ namespace cucumber_cpp::library::engine
 
     struct TestFeatureFactory : testing::Test
     {
-        FeatureTreeFactory featureTreeFactory;
+        cucumber_expression::ParameterRegistry parameterRegistry;
+        StepRegistry stepRegistry{ parameterRegistry };
+        FeatureTreeFactory featureTreeFactory{ stepRegistry };
     };
 
     TEST_F(TestFeatureFactory, CreateEmptyFeature)

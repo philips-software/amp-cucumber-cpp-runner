@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "gtest/gtest.h"
 #include <cstdint>
@@ -13,7 +14,9 @@ namespace cucumber_cpp::library
 {
     struct TestSteps : testing::Test
     {
-        StepRegistry& stepRegistry{ StepRegistry::Instance() };
+
+        cucumber_expression::ParameterRegistry parameterRegistry;
+        StepRegistry stepRegistry{ parameterRegistry };
     };
 
     TEST_F(TestSteps, RegisterThroughPreregistration)
@@ -65,7 +68,7 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, GetInvalidStep)
     {
-        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::when, "This step does not exist"), StepRegistryBase::StepNotFoundError);
+        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::when, "This step does not exist"), StepRegistry::StepNotFoundError);
     }
 
     TEST_F(TestSteps, GetAmbiguousStep)
@@ -73,7 +76,7 @@ namespace cucumber_cpp::library
         EXPECT_NO_THROW((void)stepRegistry.Query(engine::StepType::given, "an ambiguous step"));
         EXPECT_NO_THROW((void)stepRegistry.Query(engine::StepType::when, "an ambiguous step"));
 
-        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::then, "an ambiguous step"), StepRegistryBase::AmbiguousStepError);
+        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::then, "an ambiguous step"), StepRegistry::AmbiguousStepError);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)

@@ -30,8 +30,9 @@ namespace cucumber_cpp::library::engine
         return *instance;
     }
 
-    TestRunnerImpl::TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution)
-        : testExecution{ testExecution }
+    TestRunnerImpl::TestRunnerImpl(FeatureTreeFactory& featureTreeFactory, cucumber_cpp::library::engine::TestExecution& testExecution)
+        : featureTreeFactory{ featureTreeFactory }
+        , testExecution{ testExecution }
     {
     }
 
@@ -45,7 +46,7 @@ namespace cucumber_cpp::library::engine
 
     void TestRunnerImpl::NestedStep(StepType type, std::string step)
     {
-        const auto nestedStep = FeatureTreeFactory::CreateStepInfo(type, std::move(step), *currentScenario, 0, 0, {});
+        const auto nestedStep = featureTreeFactory.CreateStepInfo(type, std::move(step), *currentScenario, 0, 0, {});
         testExecution.RunStep(*nestedStep);
     }
 

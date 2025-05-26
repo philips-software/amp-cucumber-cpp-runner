@@ -1,9 +1,17 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/Body.hpp"
+#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <memory>
 #include <ranges>
+#include <span>
 #include <string>
 #include <utility>
 #include <variant>
@@ -22,13 +30,14 @@ namespace cucumber_cpp::library
         };
     }
 
-    StepRegistry& StepRegistry::Instance()
+    StepRegistry::StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry)
+        : parameterRegistry{ parameterRegistry }
     {
-        static StepRegistry instance;
-        return instance;
+        for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
+            Register(matcher.regex, matcher.type, matcher.factory);
     }
 
-    StepMatch StepRegistryBase::Query(engine::StepType stepType, const std::string& expression)
+    StepMatch StepRegistry::Query(engine::StepType stepType, const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
@@ -51,19 +60,19 @@ namespace cucumber_cpp::library
         return std::move(matches.front());
     }
 
-    std::size_t StepRegistryBase::Size() const
+    std::size_t StepRegistry::Size() const
     {
         return registry.size();
     }
 
-    std::size_t StepRegistryBase::Size(engine::StepType stepType) const
+    std::size_t StepRegistry::Size(engine::StepType stepType) const
     {
         return std::ranges::count(registry, stepType, &Entry::type);
     }
 
-    std::vector<StepRegistryBase::EntryView> StepRegistryBase::List() const
+    std::vector<StepRegistry::EntryView> StepRegistry::List() const
     {
-        std::vector<StepRegistryBase::EntryView> list;
+        std::vector<StepRegistry::EntryView> list;
 
         list.reserve(registry.size());
 
@@ -71,5 +80,29 @@ namespace cucumber_cpp::library
             list.emplace_back(entry.regex, entry.used);
 
         return list;
+    }
+
+    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+    {
+        if (matcher.starts_with('^') || matcher.ends_with('$'))
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::RegularExpression>, matcher }, factory);
+        else
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::Expression>, matcher, parameterRegistry }, factory);
+    }
+
+    StepStringRegistration& StepStringRegistration::Instance()
+    {
+        static StepStringRegistration instance;
+        return instance;
+    }
+
+    std::span<StepStringRegistration::Entry> StepStringRegistration::GetEntries()
+    {
+        return registry;
+    }
+
+    std::span<const StepStringRegistration::Entry> StepStringRegistration::GetEntries() const
+    {
+        return registry;
     }
 }

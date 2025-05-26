@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -202,16 +203,20 @@ namespace cucumber_cpp::library
                     return engine::executeRunPolicy;
             }() };
 
-        engine::TestRunnerImpl testRunner{ testExecution };
+        StepRegistry stepRegistry{ parameterRegistry };
+        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
 
-        testRunner.Run(GetFeatureTree(tagExpression));
+        engine::TestRunnerImpl testRunner{ featureTreeFactory, testExecution };
+
+        testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
 
         std::cout << '\n'
                   << std::flush;
     }
 
-    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)
+    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
     {
+
         const auto featureFiles = GetFeatureFiles(options);
         std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
         vec.reserve(featureFiles.size());
