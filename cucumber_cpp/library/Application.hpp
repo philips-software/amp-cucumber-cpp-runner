@@ -3,7 +3,6 @@
 
 #include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"

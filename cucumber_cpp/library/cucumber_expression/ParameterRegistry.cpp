@@ -69,15 +69,15 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
-        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int64_t>());
+        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
         AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
         AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
         AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
         AddParameter("", { ".*" }, CreateStreamConverter<std::string>());
         AddParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
         AddParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
         AddParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
         AddParameter("double", { floatRegex }, CreateStreamConverter<double>());
 

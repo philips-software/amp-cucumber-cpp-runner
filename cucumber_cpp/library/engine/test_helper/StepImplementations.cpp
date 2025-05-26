@@ -41,16 +41,16 @@ STEP("an ambiguous step")
     /* do nothing */
 }
 
-GIVEN("{int} and {int} are equal", (std::int64_t a, std::int64_t b))
+GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
 {
     EXPECT_THAT(a, testing::Eq(b));
 }
 
-STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::int64_t nr))
+STEP("Step with cucumber expression syntax {float} {string} {int}", (float fl, std::string str, std::int32_t nr))
 {
     context.InsertAt("float", fl);
     context.InsertAt("std::string", str);
-    context.InsertAt("std::int64_t", nr);
+    context.InsertAt("std::int32_t", nr);
 }
 
 GIVEN("I am a nested step")
@@ -90,7 +90,7 @@ THEN(R"(An expression with \(parenthesis) should remain as is)")
     /* do nothing */
 }
 
-THEN(R"(An expression that looks like a function func\({int}, {int}) should keep its parameters)", (std::int64_t a, std::int64_t b))
+THEN(R"(An expression that looks like a function func\({int}, {int}) should keep its parameters)", (std::int32_t a, std::int32_t b))
 {
     EXPECT_THAT(a, testing::Eq(1));
     EXPECT_THAT(b, testing::Eq(2));

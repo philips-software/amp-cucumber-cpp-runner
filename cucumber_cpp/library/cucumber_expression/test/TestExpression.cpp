@@ -82,6 +82,8 @@ namespace cucumber_cpp::library::cucumber_expression
                     {
                         if (match[i].type() == typeid(std::string))
                             ASSERT_THAT(std::any_cast<std::string>(match[i]), testdata["expected_args"][i].as<std::string>()) << FormatMessage(testdata, expression);
+                        else if (match[i].type() == typeid(std::int32_t))
+                            ASSERT_THAT(std::any_cast<std::int32_t>(match[i]), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(testdata, expression);
                         else if (match[i].type() == typeid(std::int64_t))
                             ASSERT_THAT(std::any_cast<std::int64_t>(match[i]), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(testdata, expression);
                         else if (match[i].type() == typeid(float))

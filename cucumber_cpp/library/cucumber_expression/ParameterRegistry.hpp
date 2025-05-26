@@ -50,6 +50,12 @@ namespace cucumber_cpp::library::cucumber_expression
     }
 
     template<>
+    inline int32_t StringTo<std::int32_t>(const std::string& s)
+    {
+        return std::stoi(s);
+    }
+
+    template<>
     inline int64_t StringTo<std::int64_t>(const std::string& s)
     {
         return std::stoll(s);

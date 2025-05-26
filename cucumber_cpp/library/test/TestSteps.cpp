@@ -90,11 +90,11 @@ namespace cucumber_cpp::library
 
         EXPECT_THAT(context.Contains("float"), testing::IsTrue());
         EXPECT_THAT(context.Contains("std::string"), testing::IsTrue());
-        EXPECT_THAT(context.Contains("std::int64_t"), testing::IsTrue());
+        EXPECT_THAT(context.Contains("std::int32_t"), testing::IsTrue());
 
         EXPECT_THAT(context.Get<float>("float"), testing::FloatEq(1.5));
         EXPECT_THAT(context.Get<std::string>("std::string"), testing::StrEq("abcdef"));
-        EXPECT_THAT(context.Get<std::int64_t>("std::int64_t"), testing::Eq(10));
+        EXPECT_THAT(context.Get<std::int32_t>("std::int32_t"), testing::Eq(10));
     }
 
     TEST_F(TestSteps, EscapedCucumberExpression)
