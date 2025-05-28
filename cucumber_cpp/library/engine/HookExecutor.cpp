@@ -23,14 +23,13 @@ namespace cucumber_cpp::library::engine
 
         void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
-            if (runnerContext.InheritedExecutionStatus() == Result::passed)
-                for (const auto& match : HookRegistry::Instance().Query(hook, tags))
-                {
-                    match.factory(runnerContext)->Execute();
+            for (const auto& match : HookRegistry::Instance().Query(hook, tags))
+            {
+                match.factory(runnerContext)->Execute();
 
-                    if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
-                        return;
-                }
+                if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
+                    return;
+            }
         }
     }
 
@@ -38,13 +37,16 @@ namespace cucumber_cpp::library::engine
         : runnerContext{ runnerContext }
         , hookPair{ hookPair }
         , tags{ tags }
+        , executeHooks{ runnerContext.InheritedExecutionStatus() == Result::passed }
     {
-        ExecuteHook(runnerContext, hookPair.before, tags);
+        if (executeHooks)
+            ExecuteHook(runnerContext, hookPair.before, tags);
     }
 
     HookExecutor::ScopedHook::~ScopedHook()
     {
-        ExecuteHook(runnerContext, hookPair.after, tags);
+        if (executeHooks)
+            ExecuteHook(runnerContext, hookPair.after, tags);
     }
 
     HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)
