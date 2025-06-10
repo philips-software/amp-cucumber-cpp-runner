@@ -124,6 +124,8 @@ namespace cucumber_cpp::library::engine
         explicit ScopedFeatureContext(ContextManager& contextManager);
         ~ScopedFeatureContext();
 
+        const cucumber_cpp::library::engine::CurrentContext& CurrentContext() const;
+
     private:
         ContextManager& contextManager;
     };

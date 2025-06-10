@@ -114,6 +114,11 @@ namespace cucumber_cpp::library::engine
         contextManager.DisposeFeatureContext();
     }
 
+    const cucumber_cpp::library::engine::CurrentContext& ContextManager::ScopedFeatureContext::CurrentContext() const
+    {
+        return contextManager.FeatureContext();
+    }
+
     ContextManager::ScopedRuleContext::ScopedRuleContext(ContextManager& contextManager)
         : contextManager{ contextManager }
     {}

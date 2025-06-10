@@ -2,6 +2,7 @@
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
@@ -40,6 +41,9 @@ namespace cucumber_cpp::library::engine
     {
         auto scope = testExecution.StartRun();
 
+        if (scope.ExecutionStatus() != Result::passed)
+            return;
+
         for (const auto& featurePtr : features)
             RunFeature(*featurePtr);
     }
@@ -56,6 +60,9 @@ namespace cucumber_cpp::library::engine
             return;
 
         const auto featureScope = testExecution.StartFeature(feature);
+
+        if (featureScope.ExecutionStatus() != Result::passed)
+            return;
 
         RunRules(feature.Rules());
         RunScenarios(feature.Scenarios());
