@@ -159,7 +159,7 @@ namespace cucumber_cpp::library::engine
             catch (const std::out_of_range& e)
             {
 
-                throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().c_str(), step.location.line) };
+                throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().string(), step.location.line) };
             }
         }
 
