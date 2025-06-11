@@ -156,7 +156,7 @@ namespace cucumber_cpp::library::engine
             {
                 scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
             }
-            catch (const std::out_of_range& e)
+            catch (const std::out_of_range&)
             {
 
                 throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().string(), step.location.line) };
