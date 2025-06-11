@@ -47,7 +47,6 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::RunnerContext& runnerContext;
         HookPair hookPair;
         const std::set<std::string, std::less<>>& tags;
-        // bool executeHooks{ true };
     };
 
     struct HookExecutor::ProgramScope : private ScopedHook
