@@ -143,14 +143,7 @@ namespace cucumber_cpp::library
 
         runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
             {
-                try
-                {
-                    RunFeatures();
-                }
-                catch (std::exception& error)
-                {
-                    std::cerr << error.what();
-                }
+                RunFeatures();
             });
 
         runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
@@ -187,6 +180,12 @@ namespace cucumber_cpp::library
             std::cout << error.what() << std::endl;
             return GetExitCode(engine::Result::failed);
         }
+        catch (const UnsupportedAsteriskError& error)
+        {
+            std::cout << "UnsupportedAsteriskError error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
         catch (const cucumber_expression::Error& error)
         {
             std::cout << "Cucumber Expression error:\n\n";
@@ -197,6 +196,11 @@ namespace cucumber_cpp::library
         {
             std::cout << "Generic error:\n\n";
             std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (...)
+        {
+            std::cout << "Unknown error";
             return GetExitCode(engine::Result::failed);
         }
 

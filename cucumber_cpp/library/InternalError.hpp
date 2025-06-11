@@ -16,6 +16,13 @@ namespace cucumber_cpp::library
 
         const std::source_location sourceLocation;
     };
+
+    struct UnsupportedAsteriskError : std::runtime_error
+    {
+        UnsupportedAsteriskError(const std::string& str)
+            : std::runtime_error{ str }
+        {}
+    };
 }
 
 #endif

@@ -13,6 +13,7 @@
 #include "cucumber/messages/scenario.hpp"
 #include "cucumber/messages/step.hpp"
 #include "cucumber/messages/tag.hpp"
+#include "cucumber_cpp/library/InternalError.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TagExpression.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -24,12 +25,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -149,7 +152,15 @@ namespace cucumber_cpp::library::engine
         {
             auto table = TableFactory(pickleStep.argument);
 
-            scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
+            try
+            {
+                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
+            }
+            catch (const std::out_of_range& e)
+            {
+
+                throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().c_str(), step.location.line) };
+            }
         }
 
         void ConstructSteps(const FeatureTreeFactory& featureTreeFactory, ScenarioInfo& scenarioInfo, const FlatAst& flatAst, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
