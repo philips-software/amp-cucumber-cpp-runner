@@ -63,6 +63,7 @@ namespace cucumber_cpp::library
 
     private:
         [[nodiscard]] int GetExitCode() const;
+        [[nodiscard]] int GetExitCode(engine::Result result) const;
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);

@@ -1,6 +1,8 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/InternalError.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -17,7 +19,9 @@
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
+#include <exception>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -139,7 +143,14 @@ namespace cucumber_cpp::library
 
         runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
             {
-                RunFeatures();
+                try
+                {
+                    RunFeatures();
+                }
+                catch (std::exception& error)
+                {
+                    std::cerr << error.what();
+                }
             });
 
         runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
@@ -169,6 +180,24 @@ namespace cucumber_cpp::library
         catch (const CLI::ParseError& e)
         {
             return cli.exit(e);
+        }
+        catch (const InternalError& error)
+        {
+            std::cout << "Internal error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (const cucumber_expression::Error& error)
+        {
+            std::cout << "Cucumber Expression error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (const std::exception& error)
+        {
+            std::cout << "Generic error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
         }
 
         return GetExitCode();
@@ -227,8 +256,11 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        const auto result = static_cast<std::underlying_type_t<engine::Result>>(contextManager.ProgramContext().ExecutionStatus());
-        return result - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
+        return GetExitCode(contextManager.ProgramContext().ExecutionStatus());
     }
 
+    int Application::GetExitCode(engine::Result result) const
+    {
+        return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
+    }
 }
