@@ -22,7 +22,7 @@ namespace cucumber_cpp::library::cucumber_expression
         template<class T>
         std::function<std::any(MatchRange)> CreateStreamConverter()
         {
-            return [](MatchRange matches)
+            return [](const MatchRange& matches)
             {
                 return StringTo<T>(matches.begin()->str());
             };
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         std::function<std::any(MatchRange)> CreateStringConverter()
         {
-            return [](MatchRange matches)
+            return [](const MatchRange& matches)
             {
                 std::string str = matches[1].matched ? matches[1].str() : matches[3].str();
                 str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
