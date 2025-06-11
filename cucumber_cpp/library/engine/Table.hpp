@@ -2,7 +2,6 @@
 #define ENGINE_TABLE_HPP
 
 #include "cucumber_cpp/library/engine/StringTo.hpp"
-#include <source_location>
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,9 +11,9 @@ namespace cucumber_cpp::library::engine
     struct TableValue
     {
         template<class T>
-        T As(std::source_location sourceLocation = std::source_location::current()) const
+        T As() const
         {
-            return StringTo<T>(value, sourceLocation);
+            return StringTo<T>(value);
         }
 
         explicit TableValue(std::string value)

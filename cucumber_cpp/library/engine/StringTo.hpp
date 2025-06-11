@@ -1,11 +1,10 @@
 #ifndef ENGINE_STRINGTO_HPP
 #define ENGINE_STRINGTO_HPP
 
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include <algorithm>
 #include <any>
 #include <cctype>
-#include <source_location>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -15,18 +14,18 @@ namespace cucumber_cpp::library::engine
 {
 
     template<class To>
-    inline To StringTo(const std::string& s, std::source_location sourceLocation = std::source_location::current())
+    inline To StringTo(const std::string& s)
     {
         std::istringstream stream{ s };
         To to;
         stream >> to;
         if (stream.fail())
-            throw InternalError{ "Cannnot convert parameter \"" + s + "\"", sourceLocation };
+            throw InternalError{ "Cannnot convert parameter \"" + s + "\"" };
         return to;
     }
 
     template<>
-    inline std::string StringTo<std::string>(const std::string& s, std::source_location /*sourceLocation*/)
+    inline std::string StringTo<std::string>(const std::string& s)
     {
         return s;
     }
@@ -46,7 +45,7 @@ namespace cucumber_cpp::library::engine
     }
 
     template<>
-    inline bool StringTo<bool>(const std::string& s, std::source_location /*sourceLocation*/)
+    inline bool StringTo<bool>(const std::string& s)
     {
         using details::iequals;
 

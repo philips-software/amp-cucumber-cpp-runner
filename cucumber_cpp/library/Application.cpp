@@ -1,6 +1,6 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <exception>
 #include <filesystem>
-#include <format>
 #include <functional>
 #include <iostream>
 #include <iterator>

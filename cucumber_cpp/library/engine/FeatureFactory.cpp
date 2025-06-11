@@ -13,7 +13,7 @@
 #include "cucumber/messages/scenario.hpp"
 #include "cucumber/messages/step.hpp"
 #include "cucumber/messages/tag.hpp"
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TagExpression.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"

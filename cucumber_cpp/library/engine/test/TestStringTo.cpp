@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
