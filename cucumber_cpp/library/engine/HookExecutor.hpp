@@ -24,8 +24,8 @@ namespace cucumber_cpp::library::engine
         struct StepScope;
 
         [[nodiscard]] virtual ProgramScope BeforeAll() = 0;
-        [[nodiscard]] virtual std::optional<FeatureScope> FeatureStart() = 0;
-        [[nodiscard]] virtual std::optional<ScenarioScope> ScenarioStart() = 0;
+        [[nodiscard]] virtual FeatureScope FeatureStart() = 0;
+        [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
         [[nodiscard]] virtual StepScope StepStart() = 0;
 
     private:
@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::RunnerContext& runnerContext;
         HookPair hookPair;
         const std::set<std::string, std::less<>>& tags;
-        bool executeHooks{ true };
+        // bool executeHooks{ true };
     };
 
     struct HookExecutor::ProgramScope : private ScopedHook
@@ -77,8 +77,8 @@ namespace cucumber_cpp::library::engine
 
         [[nodiscard]] ProgramScope
         BeforeAll() override;
-        [[nodiscard]] std::optional<FeatureScope> FeatureStart() override;
-        [[nodiscard]] std::optional<ScenarioScope> ScenarioStart() override;
+        [[nodiscard]] FeatureScope FeatureStart() override;
+        [[nodiscard]] ScenarioScope ScenarioStart() override;
         [[nodiscard]] StepScope StepStart() override;
 
     private:

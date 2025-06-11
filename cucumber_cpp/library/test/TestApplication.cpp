@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
 #include <CLI/Error.hpp>
 #include <array>
@@ -22,9 +23,13 @@ namespace cucumber_cpp::library
     {
         testing::internal::CaptureStdout();
 
-        EXPECT_THAT(Application{}.Run(args.size(), args.data()), testing::Eq(expectedExitCode));
+        const auto exitCode = Application{}.Run(args.size(), args.data());
 
-        return testing::internal::GetCapturedStdout();
+        const auto capturedStdout = testing::internal::GetCapturedStdout();
+
+        EXPECT_THAT(exitCode, testing::Eq(expectedExitCode));
+
+        return capturedStdout;
     }
 
     TEST_F(TestApplication, RunHelpWithoutArguments)
@@ -115,7 +120,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console" };
 
-        std::string stdoutString = RunWithArgs(args, 1);
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<engine::Result>>(engine::Result::failed));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
     }

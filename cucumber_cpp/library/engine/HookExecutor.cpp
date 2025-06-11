@@ -37,22 +37,21 @@ namespace cucumber_cpp::library::engine
         : runnerContext{ runnerContext }
         , hookPair{ hookPair }
         , tags{ tags }
-        , executeHooks{ runnerContext.InheritedExecutionStatus() == Result::passed }
+    // , executeHooks{ runnerContext.InheritedExecutionStatus() == Result::passed }
     {
-        if (executeHooks)
-            ExecuteHook(runnerContext, hookPair.before, tags);
+        // if (executeHooks)
+        ExecuteHook(runnerContext, hookPair.before, tags);
     }
 
     HookExecutor::ScopedHook::~ScopedHook()
     {
-        if (executeHooks)
-            ExecuteHook(runnerContext, hookPair.after, tags);
+        // if (executeHooks)
+        ExecuteHook(runnerContext, hookPair.after, tags);
     }
 
     HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.ProgramContext(), programHooks, {} }
-    {
-    }
+    {}
 
     HookExecutor::FeatureScope::FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.FeatureContext(), featureHooks, contextManager.FeatureContext().info.Tags() }
@@ -75,18 +74,14 @@ namespace cucumber_cpp::library::engine
         return ProgramScope{ contextManager };
     }
 
-    std::optional<HookExecutor::FeatureScope> HookExecutorImpl::FeatureStart()
+    HookExecutor::FeatureScope HookExecutorImpl::FeatureStart()
     {
-        if (contextManager.FeatureContext().InheritedExecutionStatus() != Result::passed)
-            return std::nullopt;
-        return std::make_optional<FeatureScope>(contextManager);
+        return FeatureScope{ contextManager };
     }
 
-    std::optional<HookExecutor::ScenarioScope> HookExecutorImpl::ScenarioStart()
+    HookExecutor::ScenarioScope HookExecutorImpl::ScenarioStart()
     {
-        if (contextManager.ScenarioContext().InheritedExecutionStatus() != Result::passed)
-            return std::nullopt;
-        return std::make_optional<ScenarioScope>(contextManager);
+        return ScenarioScope{ contextManager };
     }
 
     HookExecutor::StepScope HookExecutorImpl::StepStart()

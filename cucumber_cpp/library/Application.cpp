@@ -28,6 +28,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -195,13 +196,10 @@ namespace cucumber_cpp::library
 
         auto tagExpression = Join(options.tags, " ");
         engine::HookExecutorImpl hookExecution{ contextManager };
-        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, [this]() -> const engine::TestExecution::Policy&
-            {
-                if (options.dryrun)
-                    return engine::dryRunPolicy;
-                else
-                    return engine::executeRunPolicy;
-            }() };
+
+        const auto& runPolicy = (options.dryrun) ? static_cast<const engine::TestExecution::Policy&>(engine::dryRunPolicy)
+                                                 : static_cast<const engine::TestExecution::Policy&>(engine::executeRunPolicy);
+        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, runPolicy };
 
         StepRegistry stepRegistry{ parameterRegistry };
         engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
@@ -229,10 +227,8 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        if (contextManager.ProgramContext().EffectiveExecutionStatus() == engine::Result::passed)
-            return 0;
-        else
-            return 1;
+        const auto result = static_cast<std::underlying_type_t<engine::Result>>(contextManager.ProgramContext().ExecutionStatus());
+        return result - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
     }
 
 }

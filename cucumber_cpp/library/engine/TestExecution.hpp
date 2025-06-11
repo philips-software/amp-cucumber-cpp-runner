@@ -60,7 +60,7 @@ namespace cucumber_cpp::library::engine
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedFeatureContext scopedFeatureContext;
         report::ReportForwarder::FeatureScope scopedFeatureReport;
-        std::optional<HookExecutor::FeatureScope> scopedFeatureHook;
+        HookExecutor::FeatureScope scopedFeatureHook;
     };
 
     struct TestExecution::RuleScope : library::util::Immoveable
@@ -79,7 +79,7 @@ namespace cucumber_cpp::library::engine
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedScenarioContext scopedScenarioContext;
         report::ReportForwarder::ScenarioScope scopedScenarioReport;
-        std::optional<HookExecutor::ScenarioScope> scopedScenarioHook;
+        HookExecutor::ScenarioScope scopedScenarioHook;
     };
 
     struct TestExecution::Policy
