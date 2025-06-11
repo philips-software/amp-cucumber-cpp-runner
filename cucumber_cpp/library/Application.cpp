@@ -212,7 +212,7 @@ namespace cucumber_cpp::library
                   << std::flush;
     }
 
-    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
+    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
     {
 
         const auto featureFiles = GetFeatureFiles(options);
