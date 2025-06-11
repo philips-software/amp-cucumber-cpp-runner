@@ -6,11 +6,8 @@
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <functional>
-#include <optional>
 #include <set>
-#include <stdexcept>
 #include <string>
-#include <utility>
 
 namespace cucumber_cpp::library::engine
 {
@@ -37,15 +34,12 @@ namespace cucumber_cpp::library::engine
         : runnerContext{ runnerContext }
         , hookPair{ hookPair }
         , tags{ tags }
-    // , executeHooks{ runnerContext.InheritedExecutionStatus() == Result::passed }
     {
-        // if (executeHooks)
         ExecuteHook(runnerContext, hookPair.before, tags);
     }
 
     HookExecutor::ScopedHook::~ScopedHook()
     {
-        // if (executeHooks)
         ExecuteHook(runnerContext, hookPair.after, tags);
     }
 
