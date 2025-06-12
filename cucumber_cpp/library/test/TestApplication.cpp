@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
 #include <CLI/Error.hpp>
 #include <array>
@@ -6,7 +7,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
-#include <utility>
+#include <type_traits>
 
 namespace cucumber_cpp::library
 {
@@ -22,9 +23,13 @@ namespace cucumber_cpp::library
     {
         testing::internal::CaptureStdout();
 
-        EXPECT_THAT(Application{}.Run(args.size(), args.data()), testing::Eq(expectedExitCode));
+        const auto exitCode = Application{}.Run(args.size(), args.data());
 
-        return testing::internal::GetCapturedStdout();
+        const auto capturedStdout = testing::internal::GetCapturedStdout();
+
+        EXPECT_THAT(exitCode, testing::Eq(expectedExitCode));
+
+        return capturedStdout;
     }
 
     TEST_F(TestApplication, RunHelpWithoutArguments)
@@ -32,7 +37,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application" };
 
-        RunWithArgs(args, std::to_underlying(CLI::ExitCodes::RequiredError));
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
     }
 
     TEST_F(TestApplication, RunCommandWithoutArguments)
@@ -40,7 +45,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run" };
 
-        RunWithArgs(args, std::to_underlying(CLI::ExitCodes::RequiredError));
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
     }
 
     TEST_F(TestApplication, RunCommand)
@@ -48,7 +53,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", "./", "--report", "console" };
 
-        RunWithArgs(args, std::to_underlying(CLI::ExitCodes::Success));
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
     }
 
     TEST_F(TestApplication, DryRunCommand)
@@ -56,7 +61,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--dry" };
 
-        RunWithArgs(args, std::to_underlying(CLI::ExitCodes::Success));
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
     }
 
     TEST_F(TestApplication, InvalidArgument)
@@ -64,7 +69,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--doesntexist" };
 
-        RunWithArgs(args, std::to_underlying(CLI::ExitCodes::ExtrasError));
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::ExtrasError));
     }
 
     TEST_F(TestApplication, DryRunFeatureFile)
@@ -79,7 +84,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console", "--dry" };
 
-        std::string stdoutString = RunWithArgs(args, std::to_underlying(CLI::ExitCodes::Success));
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/1 passed"));
     }
@@ -96,7 +101,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console" };
 
-        std::string stdoutString = RunWithArgs(args, std::to_underlying(CLI::ExitCodes::Success));
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/1 passed"));
     }
@@ -115,7 +120,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console" };
 
-        std::string stdoutString = RunWithArgs(args, 1);
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<engine::Result>>(engine::Result::failed));
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
     }

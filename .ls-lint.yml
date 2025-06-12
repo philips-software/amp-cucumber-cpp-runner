@@ -4,9 +4,11 @@ ls:
   .cpp: PascalCase
 
 ignore:
+  - .build
   - .devcontainer
   - .git
   - .github
   - .vscode
-  - extern
+  - external
   - megalinter-reports
+  - testdata

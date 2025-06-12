@@ -16,10 +16,16 @@ namespace cucumber_cpp::library::engine
     const DryRunPolicy dryRunPolicy;
     const ExecuteRunPolicy executeRunPolicy;
 
-    TestExecution::ProgramScope::ProgramScope(report::ReportForwarder& reportHandler, HookExecutor& hookExecution)
-        : scopedProgramReport{ reportHandler.ProgramStart() }
+    TestExecution::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution)
+        : contextManager{ contextManager }
+        , scopedProgramReport{ reportHandler.ProgramStart() }
         , scopedProgramHook{ hookExecution.BeforeAll() }
     {
+    }
+
+    Result TestExecution::ProgramScope::ExecutionStatus() const
+    {
+        return contextManager.ProgramContext().ExecutionStatus();
     }
 
     TestExecution::FeatureScope::FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const cucumber_cpp::library::engine::FeatureInfo& featureInfo)
@@ -27,6 +33,11 @@ namespace cucumber_cpp::library::engine
         , scopedFeatureReport{ reportHandler.FeatureStart() }
         , scopedFeatureHook{ hookExecution.FeatureStart() }
     {
+    }
+
+    Result TestExecution::FeatureScope::ExecutionStatus() const
+    {
+        return scopedFeatureContext.CurrentContext().ExecutionStatus();
     }
 
     TestExecution::RuleScope::RuleScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, const cucumber_cpp::library::engine::RuleInfo& ruleInfo)
@@ -51,6 +62,7 @@ namespace cucumber_cpp::library::engine
     {
         const auto& stepContext = contextManager.StepContext();
         auto& scenarioContext = contextManager.ScenarioContext();
+
         stepMatch.factory(scenarioContext, stepContext.info.Table())->Execute(stepMatch.matches);
     }
 
@@ -63,7 +75,7 @@ namespace cucumber_cpp::library::engine
 
     TestExecution::ProgramScope TestExecutionImpl::StartRun()
     {
-        return ProgramScope{ reportHandler, hookExecution };
+        return ProgramScope{ contextManager, reportHandler, hookExecution };
     }
 
     TestExecution::FeatureScope TestExecutionImpl::StartFeature(const cucumber_cpp::library::engine::FeatureInfo& featureInfo)
@@ -84,8 +96,7 @@ namespace cucumber_cpp::library::engine
     void TestExecutionImpl::RunStep(const cucumber_cpp::library::engine::StepInfo& stepInfo)
     {
         auto scopedContext = contextManager.CreateStepContext(stepInfo);
-        if (contextManager.ScenarioContext().InheritedExecutionStatus() == Result::passed &&
-            contextManager.ScenarioContext().EffectiveExecutionStatus() == Result::passed)
+        if (contextManager.ScenarioContext().ExecutionStatus() == Result::passed)
         {
             const auto scopedStepReport = reportHandler.StepStart();
             const auto scopedStepHook = hookExecution.StepStart();

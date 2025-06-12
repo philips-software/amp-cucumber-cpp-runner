@@ -1,9 +1,8 @@
 #include "cucumber_cpp/library/TagExpression.hpp"
-#include "cucumber_cpp/library/InternalError.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include <functional>
 #include <regex>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 

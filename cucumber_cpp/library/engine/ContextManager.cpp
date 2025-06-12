@@ -5,7 +5,6 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -49,27 +48,9 @@ namespace cucumber_cpp::library::engine
         Start();
     }
 
-    [[nodiscard]] Result CurrentContext::InheritedExecutionStatus() const
-    {
-        if (parent == nullptr)
-            return executionStatus;
-        else
-            return std::max(executionStatus, parent->InheritedExecutionStatus());
-    }
-
-    [[nodiscard]] Result CurrentContext::EffectiveExecutionStatus() const
-    {
-        return std::max(executionStatus, nestedExecutionStatus);
-    }
-
     [[nodiscard]] Result CurrentContext::ExecutionStatus() const
     {
         return executionStatus;
-    }
-
-    [[nodiscard]] Result CurrentContext::NestedExecutionStatus() const
-    {
-        return nestedExecutionStatus;
     }
 
     void CurrentContext::Start()
@@ -88,16 +69,7 @@ namespace cucumber_cpp::library::engine
             executionStatus = result;
 
         if (parent != nullptr)
-            parent->NestedExecutionStatus(result);
-    }
-
-    void CurrentContext::NestedExecutionStatus(Result result)
-    {
-        if (result > nestedExecutionStatus)
-            nestedExecutionStatus = result;
-
-        if (parent != nullptr)
-            parent->NestedExecutionStatus(result);
+            parent->ExecutionStatus(result);
     }
 
     ProgramContext::ProgramContext(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
@@ -112,6 +84,11 @@ namespace cucumber_cpp::library::engine
     ContextManager::ScopedFeatureContext::~ScopedFeatureContext()
     {
         contextManager.DisposeFeatureContext();
+    }
+
+    const cucumber_cpp::library::engine::CurrentContext& ContextManager::ScopedFeatureContext::CurrentContext() const
+    {
+        return contextManager.FeatureContext();
     }
 
     ContextManager::ScopedRuleContext::ScopedRuleContext(ContextManager& contextManager)

@@ -7,9 +7,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <functional>
 #include <set>
-#include <stdexcept>
 #include <string>
-#include <utility>
 
 namespace cucumber_cpp::library::engine
 {
@@ -22,14 +20,13 @@ namespace cucumber_cpp::library::engine
 
         void ExecuteHook(cucumber_cpp::library::engine::RunnerContext& runnerContext, HookType hook, const std::set<std::string, std::less<>>& tags)
         {
-            if (runnerContext.InheritedExecutionStatus() == Result::passed)
-                for (const auto& match : HookRegistry::Instance().Query(hook, tags))
-                {
-                    match.factory(runnerContext)->Execute();
+            for (const auto& match : HookRegistry::Instance().Query(hook, tags))
+            {
+                match.factory(runnerContext)->Execute();
 
-                    if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
-                        return;
-                }
+                if (runnerContext.ExecutionStatus() != cucumber_cpp::library::engine::Result::passed)
+                    return;
+            }
         }
     }
 
@@ -48,8 +45,7 @@ namespace cucumber_cpp::library::engine
 
     HookExecutor::ProgramScope::ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.ProgramContext(), programHooks, {} }
-    {
-    }
+    {}
 
     HookExecutor::FeatureScope::FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager)
         : ScopedHook{ contextManager.FeatureContext(), featureHooks, contextManager.FeatureContext().info.Tags() }
