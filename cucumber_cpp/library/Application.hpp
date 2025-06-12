@@ -25,19 +25,6 @@ namespace cucumber_cpp::library
         explicit ReportHandlerValidator(const report::Reporters& reporters);
     };
 
-    struct ResultStatus
-    {
-        using Result = engine::Result;
-
-        ResultStatus& operator=(Result result);
-        explicit operator Result() const;
-
-        [[nodiscard]] bool IsSuccess() const;
-
-    private:
-        Result resultStatus{ Result::undefined };
-    };
-
     struct Application
     {
         struct Options
