@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v1.1.0...v2.0.0) (2025-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* full support for cucumber expressions ([#180](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/180))
+
+### Features
+
+* Full support for cucumber expressions ([#180](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/180)) ([f031eec](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/f031eec76e632a2701e7ed98827085e4ce75e6fe))
+
+
+### Bug Fixes
+
+* Correct spelling of ScopedFeatureContext in ContextManager and related files ([a76cdd4](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/a76cdd47a8fb0f65ef76b203cf1f791310939593))
+* **hooks:** Changed context to ScenarioContext for BEFORE/AFTER_STEP hook ([#175](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/175)) ([a76cdd4](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/a76cdd47a8fb0f65ef76b203cf1f791310939593))
+* **hooks:** Don't execute the current scope when an error occurs during a before hook ([#174](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/174)) ([1c7fcde](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/1c7fcde3dd140ce3f9c7327e66e2a73344625328))
+
 ## [1.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v1.0.0...v1.1.0) (2025-04-03)
 
 
