@@ -2,6 +2,7 @@
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
@@ -30,8 +31,9 @@ namespace cucumber_cpp::library::engine
         return *instance;
     }
 
-    TestRunnerImpl::TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution)
-        : testExecution{ testExecution }
+    TestRunnerImpl::TestRunnerImpl(FeatureTreeFactory& featureTreeFactory, cucumber_cpp::library::engine::TestExecution& testExecution)
+        : featureTreeFactory{ featureTreeFactory }
+        , testExecution{ testExecution }
     {
     }
 
@@ -39,13 +41,16 @@ namespace cucumber_cpp::library::engine
     {
         auto scope = testExecution.StartRun();
 
+        if (scope.ExecutionStatus() != Result::passed)
+            return;
+
         for (const auto& featurePtr : features)
             RunFeature(*featurePtr);
     }
 
     void TestRunnerImpl::NestedStep(StepType type, std::string step)
     {
-        const auto nestedStep = FeatureTreeFactory::CreateStepInfo(type, std::move(step), *currentScenario, 0, 0, {});
+        const auto nestedStep = featureTreeFactory.CreateStepInfo(type, std::move(step), *currentScenario, 0, 0, {});
         testExecution.RunStep(*nestedStep);
     }
 
@@ -55,6 +60,9 @@ namespace cucumber_cpp::library::engine
             return;
 
         const auto featureScope = testExecution.StartFeature(feature);
+
+        if (featureScope.ExecutionStatus() != Result::passed)
+            return;
 
         RunRules(feature.Rules());
         RunScenarios(feature.Scenarios());

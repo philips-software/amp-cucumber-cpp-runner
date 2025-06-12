@@ -1,5 +1,8 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -16,6 +19,7 @@
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
+#include <exception>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -27,6 +31,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -34,16 +39,6 @@ namespace cucumber_cpp::library
 {
     namespace
     {
-        std::string_view const_char_to_sv(const char* value)
-        {
-            return { value };
-        }
-
-        std::string_view subrange_to_sv(const auto& subrange)
-        {
-            return { std::data(subrange), std::data(subrange) + std::size(subrange) };
-        }
-
         template<class Range>
         std::string Join(const Range& range, std::string_view delim)
         {
@@ -52,26 +47,16 @@ namespace cucumber_cpp::library
 
             return std::accumulate(std::next(range.begin()), range.end(), range.front(), [&delim](const auto& lhs, const auto& rhs)
                 {
-                    std::string join;
-                    join.reserve(lhs.size() + delim.size() + rhs.size());
-                    join.append(lhs);
-                    join.append(delim);
-                    join.append(rhs);
-                    return join;
+                    return std::format("{}{}{}", lhs, delim, rhs);
                 });
         }
 
-        std::string JoinStringWithSpace(const std::string& a, const std::string& b)
-        {
-            return a + ' ' + b;
-        }
-
-        std::filesystem::path to_fs_path(const std::string_view& sv)
+        std::filesystem::path ToFileSystemPath(const std::string_view& sv)
         {
             return { sv };
         }
 
-        bool is_feature_file(const std::filesystem::directory_entry& entry)
+        bool IsFeatureFile(const std::filesystem::directory_entry& entry)
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
@@ -80,9 +65,9 @@ namespace cucumber_cpp::library
         {
             std::vector<std::filesystem::path> files;
 
-            for (const auto feature : options.features | std::views::transform(to_fs_path))
+            for (const auto feature : options.features | std::views::transform(ToFileSystemPath))
                 if (std::filesystem::is_directory(feature))
-                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(is_feature_file))
+                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
                         files.emplace_back(entry.path());
                 else
                     files.emplace_back(feature);
@@ -102,26 +87,7 @@ namespace cucumber_cpp::library
                   else
                       return std::string{};
               })
-    {
-    }
-
-    ResultStatus& ResultStatus::operator=(Result result)
-    {
-        if ((resultStatus == Result::undefined || resultStatus == Result::passed) && result != Result::undefined)
-            resultStatus = result;
-
-        return *this;
-    }
-
-    ResultStatus::operator Result() const
-    {
-        return resultStatus;
-    }
-
-    bool ResultStatus::IsSuccess() const
-    {
-        return resultStatus == Result::passed;
-    }
+    {}
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
         : contextManager{ std::move(contextStorageFactory) }
@@ -168,6 +134,35 @@ namespace cucumber_cpp::library
         {
             return cli.exit(e);
         }
+        catch (const InternalError& error)
+        {
+            std::cout << "Internal error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (const UnsupportedAsteriskError& error)
+        {
+            std::cout << "UnsupportedAsteriskError error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (const cucumber_expression::Error& error)
+        {
+            std::cout << "Cucumber Expression error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (const std::exception& error)
+        {
+            std::cout << "Generic error:\n\n";
+            std::cout << error.what() << std::endl;
+            return GetExitCode(engine::Result::failed);
+        }
+        catch (...)
+        {
+            std::cout << "Unknown error";
+            return GetExitCode(engine::Result::failed);
+        }
 
         return GetExitCode();
     }
@@ -194,24 +189,25 @@ namespace cucumber_cpp::library
 
         auto tagExpression = Join(options.tags, " ");
         engine::HookExecutorImpl hookExecution{ contextManager };
-        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, [this]() -> const engine::TestExecution::Policy&
-            {
-                if (options.dryrun)
-                    return engine::dryRunPolicy;
-                else
-                    return engine::executeRunPolicy;
-            }() };
 
-        engine::TestRunnerImpl testRunner{ testExecution };
+        const auto& runPolicy = (options.dryrun) ? static_cast<const engine::TestExecution::Policy&>(engine::dryRunPolicy)
+                                                 : static_cast<const engine::TestExecution::Policy&>(engine::executeRunPolicy);
+        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, runPolicy };
 
-        testRunner.Run(GetFeatureTree(tagExpression));
+        StepRegistry stepRegistry{ parameterRegistry };
+        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
+
+        engine::TestRunnerImpl testRunner{ featureTreeFactory, testExecution };
+
+        testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
 
         std::cout << '\n'
                   << std::flush;
     }
 
-    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(std::string_view tagExpression)
+    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
     {
+
         const auto featureFiles = GetFeatureFiles(options);
         std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
         vec.reserve(featureFiles.size());
@@ -224,10 +220,11 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        if (contextManager.ProgramContext().EffectiveExecutionStatus() == engine::Result::passed)
-            return 0;
-        else
-            return 1;
+        return GetExitCode(contextManager.ProgramContext().ExecutionStatus());
     }
 
+    int Application::GetExitCode(engine::Result result) const
+    {
+        return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
+    }
 }

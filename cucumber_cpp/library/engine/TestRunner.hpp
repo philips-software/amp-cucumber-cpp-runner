@@ -1,6 +1,7 @@
 #ifndef ENGINE_TESTRUNNER_HPP
 #define ENGINE_TESTRUNNER_HPP
 
+#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
@@ -47,7 +48,7 @@ namespace cucumber_cpp::library::engine
 
     struct TestRunnerImpl : TestRunner
     {
-        explicit TestRunnerImpl(cucumber_cpp::library::engine::TestExecution& testExecution);
+        TestRunnerImpl(FeatureTreeFactory& featureTreeFactory, TestExecution& testExecution);
         virtual ~TestRunnerImpl() = default;
 
         void Run(const std::vector<std::unique_ptr<FeatureInfo>>& feature) override;
@@ -62,7 +63,8 @@ namespace cucumber_cpp::library::engine
         void RunRules(const std::vector<std::unique_ptr<RuleInfo>>& rules);
         void RunFeature(const FeatureInfo& feature);
 
-        cucumber_cpp::library::engine::TestExecution& testExecution;
+        FeatureTreeFactory& featureTreeFactory;
+        TestExecution& testExecution;
 
         const ScenarioInfo* currentScenario = nullptr;
     };

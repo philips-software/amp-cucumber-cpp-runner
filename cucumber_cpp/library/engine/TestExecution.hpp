@@ -6,11 +6,13 @@
 #include "cucumber_cpp/library/engine/FailureHandler.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/HookExecutor.hpp"
+#include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -39,9 +41,12 @@ namespace cucumber_cpp::library::engine
 
     struct TestExecution::ProgramScope : library::util::Immoveable
     {
-        ProgramScope(report::ReportForwarder& reportHandler, HookExecutor& hookExecution);
+        ProgramScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution);
+
+        Result ExecutionStatus() const;
 
     private:
+        cucumber_cpp::library::engine::ContextManager& contextManager;
         report::ReportForwarder::ProgramScope scopedProgramReport;
         HookExecutor::ProgramScope scopedProgramHook;
     };
@@ -49,6 +54,8 @@ namespace cucumber_cpp::library::engine
     struct TestExecution::FeatureScope : library::util::Immoveable
     {
         FeatureScope(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const cucumber_cpp::library::engine::FeatureInfo& featureInfo);
+
+        Result ExecutionStatus() const;
 
     private:
         cucumber_cpp::library::engine::ContextManager::ScopedFeatureContext scopedFeatureContext;

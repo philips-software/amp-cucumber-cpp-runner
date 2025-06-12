@@ -2,6 +2,7 @@
 #define ENGINE_FEATUREFACTORY_HPP
 
 #include "cucumber/gherkin/app.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
@@ -17,12 +18,14 @@ namespace cucumber_cpp::library::engine
 {
     struct FeatureTreeFactory
     {
-        [[nodiscard]] static std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
+        explicit FeatureTreeFactory(StepRegistry& stepRegistry);
 
-        [[nodiscard]] std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression);
+        [[nodiscard]] std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table) const;
+
+        [[nodiscard]] std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression) const;
 
     private:
-        cucumber::gherkin::app gherkin;
+        StepRegistry& stepRegistry;
     };
 }
 

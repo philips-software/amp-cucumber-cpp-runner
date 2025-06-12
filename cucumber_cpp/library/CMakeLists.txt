@@ -5,18 +5,18 @@ add_library(cucumber_cpp.library STATIC ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library PRIVATE
     Application.cpp
     Application.hpp
-    BodyMacro.hpp
     Body.hpp
+    BodyMacro.hpp
     Context.hpp
+    Errors.hpp
     HookRegistry.cpp
     HookRegistry.hpp
     Hooks.hpp
-    InternalError.hpp
     Rtrim.cpp
     Rtrim.hpp
-    Steps.hpp
     StepRegistry.cpp
     StepRegistry.hpp
+    Steps.hpp
     TagExpression.cpp
     TagExpression.hpp
     TagsToSet.hpp
@@ -46,6 +46,7 @@ target_compile_options(cucumber_cpp.library
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
+add_subdirectory(cucumber_expression)
 add_subdirectory(engine)
 add_subdirectory(report)
 add_subdirectory(util)

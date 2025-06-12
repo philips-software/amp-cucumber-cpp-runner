@@ -13,6 +13,7 @@
 #include "cucumber/messages/scenario.hpp"
 #include "cucumber/messages/step.hpp"
 #include "cucumber/messages/tag.hpp"
+#include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TagExpression.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -24,12 +25,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -145,24 +148,32 @@ namespace cucumber_cpp::library::engine
             return { range.begin(), range.end() };
         }
 
-        void ConstructStep(ScenarioInfo& scenarioInfo, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep)
+        void ConstructStep(const FeatureTreeFactory& featureTreeFactory, ScenarioInfo& scenarioInfo, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep)
         {
             auto table = TableFactory(pickleStep.argument);
 
-            scenarioInfo.Children().push_back(FeatureTreeFactory::CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
+            try
+            {
+                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
+            }
+            catch (const std::out_of_range&)
+            {
+
+                throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().string(), step.location.line) };
+            }
         }
 
-        void ConstructSteps(ScenarioInfo& scenarioInfo, const FlatAst& flatAst, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
+        void ConstructSteps(const FeatureTreeFactory& featureTreeFactory, ScenarioInfo& scenarioInfo, const FlatAst& flatAst, const std::vector<cucumber::messages::pickle_step>& pickleSteps)
         {
             for (const auto& pickleStep : pickleSteps)
             {
                 const auto* astStep = std::get<const cucumber::messages::step*>(flatAst.at(pickleStep.ast_node_ids.front()));
 
-                ConstructStep(scenarioInfo, *astStep, pickleStep);
+                ConstructStep(featureTreeFactory, scenarioInfo, *astStep, pickleStep);
             }
         }
 
-        void ConstructScenario(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+        void ConstructScenario(const FeatureTreeFactory& featureTreeFactory, FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
         {
             auto tags = TagsFactory(pickle.tags);
 
@@ -177,10 +188,10 @@ namespace cucumber_cpp::library::engine
                 scenario.location.line,
                 scenario.location.column.value_or(0)));
 
-            ConstructSteps(*featureInfo.Scenarios().back(), flatAst, pickle.steps);
+            ConstructSteps(featureTreeFactory, *featureInfo.Scenarios().back(), flatAst, pickle.steps);
         }
 
-        void ConstructScenario(RuleInfo& ruleInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::set<std::string, std::less<>> tags)
+        void ConstructScenario(const FeatureTreeFactory& featureTreeFactory, RuleInfo& ruleInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::set<std::string, std::less<>> tags)
         {
             ruleInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
                 ruleInfo,
@@ -190,7 +201,7 @@ namespace cucumber_cpp::library::engine
                 scenario.location.line,
                 scenario.location.column.value_or(0)));
 
-            ConstructSteps(*ruleInfo.Scenarios().back(), flatAst, pickle.steps);
+            ConstructSteps(featureTreeFactory, *ruleInfo.Scenarios().back(), flatAst, pickle.steps);
         }
 
         RuleInfo& GetOrConstructRule(FeatureInfo& featureInfo, const cucumber::messages::rule& rule)
@@ -209,7 +220,7 @@ namespace cucumber_cpp::library::engine
             return *featureInfo.Rules().back();
         }
 
-        void ConstructScenarioWithRule(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::rule& rule, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+        void ConstructScenarioWithRule(const FeatureTreeFactory& featureTreeFactory, FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::rule& rule, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
         {
             auto tags = TagsFactory(pickle.tags);
 
@@ -218,13 +229,14 @@ namespace cucumber_cpp::library::engine
 
             auto& ruleInfo = GetOrConstructRule(featureInfo, rule);
 
-            ConstructScenario(ruleInfo, flatAst, scenario, pickle, std::move(tags));
+            ConstructScenario(featureTreeFactory, ruleInfo, flatAst, scenario, pickle, std::move(tags));
         }
 
         struct ConstructScenarioVisitor
         {
-            ConstructScenarioVisitor(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
-                : featureInfo{ featureInfo }
+            ConstructScenarioVisitor(const FeatureTreeFactory& featureTreeFactory, FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+                : featureTreeFactory{ featureTreeFactory }
+                , featureInfo{ featureInfo }
                 , flatAst{ flatAst }
                 , pickle{ pickle }
                 , tagExpression{ tagExpression }
@@ -232,12 +244,12 @@ namespace cucumber_cpp::library::engine
 
             void operator()(const cucumber::messages::scenario* scenario) const
             {
-                ConstructScenario(featureInfo, flatAst, *scenario, pickle, tagExpression);
+                ConstructScenario(featureTreeFactory, featureInfo, flatAst, *scenario, pickle, tagExpression);
             }
 
             void operator()(ScenarioWithRule ruleWithScenario) const
             {
-                ConstructScenarioWithRule(featureInfo, flatAst, *ruleWithScenario.rule, *ruleWithScenario.scenario, pickle, tagExpression);
+                ConstructScenarioWithRule(featureTreeFactory, featureInfo, flatAst, *ruleWithScenario.rule, *ruleWithScenario.scenario, pickle, tagExpression);
             }
 
             void operator()(auto /* ignore */) const
@@ -246,15 +258,16 @@ namespace cucumber_cpp::library::engine
             }
 
         private:
+            const FeatureTreeFactory& featureTreeFactory;
             FeatureInfo& featureInfo;
             const FlatAst& flatAst;
             const cucumber::messages::pickle& pickle;
             std::string_view tagExpression;
         };
 
-        void ConstructScenario(FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
+        void ConstructScenario(const FeatureTreeFactory& featureTreeFactory, FeatureInfo& featureInfo, const FlatAst& flatAst, const cucumber::messages::pickle& pickle, std::string_view tagExpression)
         {
-            ConstructScenarioVisitor visitor{ featureInfo, flatAst, pickle, tagExpression };
+            ConstructScenarioVisitor visitor{ featureTreeFactory, featureInfo, flatAst, pickle, tagExpression };
 
             std::visit(visitor, flatAst.at(pickle.ast_node_ids.front()));
         }
@@ -271,11 +284,15 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
+    FeatureTreeFactory::FeatureTreeFactory(StepRegistry& stepRegistry)
+        : stepRegistry{ stepRegistry }
+    {}
+
+    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table) const
     {
         try
         {
-            auto stepMatch = StepRegistry::Instance().Query(stepType, stepText);
+            auto stepMatch = stepRegistry.Query(stepType, stepText);
             return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(stepMatch));
         }
         catch (const StepRegistry::StepNotFoundError&)
@@ -288,7 +305,7 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    std::unique_ptr<FeatureInfo> FeatureTreeFactory::Create(const std::filesystem::path& path, std::string_view tagExpression)
+    std::unique_ptr<FeatureInfo> FeatureTreeFactory::Create(const std::filesystem::path& path, std::string_view tagExpression) const
     {
         std::unique_ptr<FeatureInfo> featureInfo;
         std::optional<FlatAst> flatAst;
@@ -299,15 +316,17 @@ namespace cucumber_cpp::library::engine
                 featureInfo = FeatureFactory(path, ast);
                 flatAst = FlattenAst(*ast.feature);
             },
-            .pickle = [&featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle)
+            .pickle = [this, &featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle)
             {
-                ConstructScenario(*featureInfo, *flatAst, pickle, tagExpression);
+                ConstructScenario(*this, *featureInfo, *flatAst, pickle, tagExpression);
             },
             .error = [](const cucumber::gherkin::parse_error& /* _ */)
             {
                 /* not handled yet */
             }
         };
+
+        cucumber::gherkin::app gherkin;
 
         gherkin.parse(cucumber::gherkin::file{ path.string() }, callbacks);
 

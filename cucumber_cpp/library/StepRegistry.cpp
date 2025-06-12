@@ -1,57 +1,26 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
+#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/Table.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <ranges>
-#include <regex>
-#include <source_location>
+#include <span>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library
 {
     namespace
     {
-        std::string ToString(std::string toString)
-        {
-            return toString;
-        }
-
-        std::vector<std::string> ToVector(const std::smatch& matchResults)
-        {
-            auto range = matchResults | std::views::drop(1) | std::views::transform(ToString);
-            return { range.begin(), range.end() };
-        }
-
-        std::string ParseCucumberExpression(std::string string)
-        {
-            if (!(string.starts_with('^') && string.ends_with('$')))
-            {
-                string = std::regex_replace(string, std::regex(R"(\(.*\))"), R"((?:$&)?)");
-
-                string = std::regex_replace(string, std::regex(R"(\{int\})"), R"((-?\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{biginteger\})"), R"((-?\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{byte\})"), R"((-?\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{short\})"), R"((-?\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{long\})"), R"((-?\d+))");
-
-                string = std::regex_replace(string, std::regex(R"(\{float\})"), R"((-?\d+\.\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{bigdecimal\})"), R"((-?\d+\.\d+))");
-                string = std::regex_replace(string, std::regex(R"(\{double\})"), R"((-?\d+\.\d+))");
-
-                string = std::regex_replace(string, std::regex(R"(\{word\})"), R"(([^\s]+))");
-                string = std::regex_replace(string, std::regex(R"(\{string\})"), R"-("+([^"]+)"+)-");
-
-                string = std::regex_replace(string, std::regex(R"(\{\})"), R"((.*))");
-
-                string = "^" + string + "$";
-            }
-
-            return string;
-        }
-
         auto TypeFilter(engine::StepType stepType)
         {
             return [stepType](const StepRegistry::Entry& entry)
@@ -61,54 +30,26 @@ namespace cucumber_cpp::library
         };
     }
 
-    RegexMatch::RegexMatch(const std::regex& regex, const std::string& expression)
+    StepRegistry::StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry)
+        : parameterRegistry{ parameterRegistry }
     {
-        std::smatch smatch;
-        matched = std::regex_search(expression, smatch, regex);
-        matches = ToVector(smatch);
+        for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
+            Register(matcher.regex, matcher.type, matcher.factory);
     }
 
-    bool RegexMatch::Matched() const
-    {
-        return matched;
-    }
-
-    std::vector<std::string> RegexMatch::Matches() const
-    {
-        return matches;
-    }
-
-    StepRegex::StepRegex(const std::string& string)
-        : string{ string }
-        , regex{ ParseCucumberExpression(string) }
-    {}
-
-    std::unique_ptr<RegexMatch> StepRegex::Match(const std::string& expression) const
-    {
-        return std::make_unique<RegexMatch>(regex, expression);
-    }
-
-    std::string StepRegex::String() const
-    {
-        return string;
-    }
-
-    StepRegistry& StepRegistry::Instance()
-    {
-        static StepRegistry instance;
-        return instance;
-    }
-
-    StepMatch StepRegistryBase::Query(engine::StepType stepType, const std::string& expression)
+    StepMatch StepRegistry::Query(engine::StepType stepType, const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
         for (Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
-            if (auto match = entry.regex.Match(expression); match->Matched())
+        {
+            auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
+            if (match)
             {
-                matches.emplace_back(entry.factory, match->Matches(), entry.regex.String());
+                matches.emplace_back(entry.factory, *match, std::visit(cucumber_expression::PatternVisitor{}, entry.regex));
                 ++entry.used;
             }
+        }
 
         if (matches.empty())
             throw StepNotFoundError{};
@@ -119,19 +60,19 @@ namespace cucumber_cpp::library
         return std::move(matches.front());
     }
 
-    std::size_t StepRegistryBase::Size() const
+    std::size_t StepRegistry::Size() const
     {
         return registry.size();
     }
 
-    std::size_t StepRegistryBase::Size(engine::StepType stepType) const
+    std::size_t StepRegistry::Size(engine::StepType stepType) const
     {
         return std::ranges::count(registry, stepType, &Entry::type);
     }
 
-    std::vector<StepRegistryBase::EntryView> StepRegistryBase::List() const
+    std::vector<StepRegistry::EntryView> StepRegistry::List() const
     {
-        std::vector<StepRegistryBase::EntryView> list;
+        std::vector<StepRegistry::EntryView> list;
 
         list.reserve(registry.size());
 
@@ -139,5 +80,29 @@ namespace cucumber_cpp::library
             list.emplace_back(entry.regex, entry.used);
 
         return list;
+    }
+
+    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+    {
+        if (matcher.starts_with('^') || matcher.ends_with('$'))
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::RegularExpression>, matcher }, factory);
+        else
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::Expression>, matcher, parameterRegistry }, factory);
+    }
+
+    StepStringRegistration& StepStringRegistration::Instance()
+    {
+        static StepStringRegistration instance;
+        return instance;
+    }
+
+    std::span<StepStringRegistration::Entry> StepStringRegistration::GetEntries()
+    {
+        return registry;
+    }
+
+    std::span<const StepStringRegistration::Entry> StepStringRegistration::GetEntries() const
+    {
+        return registry;
     }
 }

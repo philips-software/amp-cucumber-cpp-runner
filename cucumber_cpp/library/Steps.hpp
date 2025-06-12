@@ -5,7 +5,7 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
 
-#define STEP_(matcher, type, args, fixture) BODY(matcher, type, args, cucumber_cpp::library::StepRegistry::Register, fixture)
+#define STEP_(matcher, type, args, fixture) BODY(matcher, type, args, cucumber_cpp::library::StepStringRegistration::Register, fixture)
 
 #define STEP_TYPE_(fixture, type, ...)  \
     STEP_(                              \

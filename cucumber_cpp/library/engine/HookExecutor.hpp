@@ -5,6 +5,7 @@
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 
