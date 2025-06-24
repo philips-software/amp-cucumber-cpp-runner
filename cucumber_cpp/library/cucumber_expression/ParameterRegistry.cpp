@@ -69,20 +69,20 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
-        Add("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
-        Add("float", { floatRegex }, CreateStreamConverter<float>());
-        Add("word", { wordRegex }, CreateStreamConverter<std::string>());
-        Add("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
-        Add("", { ".*" }, CreateStreamConverter<std::string>());
-        Add("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
-        Add("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        Add("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        Add("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        Add("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        Add("double", { floatRegex }, CreateStreamConverter<double>());
+        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
+        AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
+        AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
+        AddParameter("", { ".*" }, CreateStreamConverter<std::string>());
+        AddParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
+        AddParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddParameter("double", { floatRegex }, CreateStreamConverter<double>());
 
         // extension
-        Add("bool", { wordRegex }, CreateStreamConverter<bool>());
+        AddParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
     }
 
     Parameter ParameterRegistry::Lookup(const std::string& name) const
@@ -92,7 +92,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return {};
     }
 
-    void ParameterRegistry::Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter)
+    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter)
     {
         if (parameters.contains(name))
         {

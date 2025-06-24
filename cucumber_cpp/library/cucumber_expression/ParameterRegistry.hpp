@@ -126,7 +126,7 @@ namespace cucumber_cpp::library::cucumber_expression
         ~ParameterRegistration() = default;
 
     public:
-        virtual void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
+        virtual void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
     };
 
     struct ParameterRegistry : ParameterRegistration
@@ -136,7 +136,7 @@ namespace cucumber_cpp::library::cucumber_expression
         virtual ~ParameterRegistry() = default;
 
         Parameter Lookup(const std::string& name) const;
-        void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
+        void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
 
     private:
         std::map<std::string, Parameter, std::less<>> parameters{};

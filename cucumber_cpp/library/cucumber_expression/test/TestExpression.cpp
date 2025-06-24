@@ -155,7 +155,7 @@ namespace cucumber_cpp::library::cucumber_expression
             std::optional<std::int64_t> number;
         };
 
-        parameterRegistry.Add("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
+        parameterRegistry.AddParameter("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
             {
                 std::optional<std::string> text{ matches[1].matched ? StringTo<std::string>(matches[1].str()) : std::optional<std::string>{ std::nullopt } };
                 std::optional<std::int64_t> number{ matches[2].matched ? StringTo<std::int64_t>(matches[2].str()) : std::optional<std::int64_t>{ std::nullopt } };
@@ -226,7 +226,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         try
         {
-            parameterRegistry.Add("", { ".*" }, [](const MatchRange& matches)
+            parameterRegistry.AddParameter("", { ".*" }, [](const MatchRange& matches)
                 {
                     return StringTo<std::string>(matches.begin()->str());
                 });
@@ -242,7 +242,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         try
         {
-            parameterRegistry.Add("word", { ".*" }, [](const MatchRange& matches)
+            parameterRegistry.AddParameter("word", { ".*" }, [](const MatchRange& matches)
                 {
                     return StringTo<std::string>(matches.begin()->str());
                 });
