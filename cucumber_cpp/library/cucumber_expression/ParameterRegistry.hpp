@@ -122,12 +122,18 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct ParameterRegistration
     {
+    protected:
+        ~ParameterRegistration() = default;
+
+    public:
         virtual void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
     };
 
     struct ParameterRegistry : ParameterRegistration
     {
         ParameterRegistry();
+
+        virtual ~ParameterRegistry() = default;
 
         Parameter Lookup(const std::string& name) const;
         void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
