@@ -124,4 +124,9 @@ namespace cucumber_cpp::library
 
         EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
     }
+
+    TEST_F(TestApplication, ExposeParameterRegistration)
+    {
+        EXPECT_THAT(&Application{}.ParameterRegistration(), testing::NotNull());
+    }
 }

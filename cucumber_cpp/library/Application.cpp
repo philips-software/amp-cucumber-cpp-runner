@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
@@ -175,6 +176,11 @@ namespace cucumber_cpp::library
     Context& Application::ProgramContext()
     {
         return contextManager.ProgramContext();
+    }
+
+    cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
+    {
+        return parameterRegistry;
     }
 
     void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
