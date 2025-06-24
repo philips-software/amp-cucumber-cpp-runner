@@ -120,12 +120,17 @@ namespace cucumber_cpp::library::cucumber_expression
         std::function<std::any(MatchRange)> converter;
     };
 
-    struct ParameterRegistry
+    struct ParameterRegistration
+    {
+        virtual void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
+    };
+
+    struct ParameterRegistry : ParameterRegistration
     {
         ParameterRegistry();
 
         Parameter Lookup(const std::string& name) const;
-        void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter);
+        void Add(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
 
     private:
         std::map<std::string, Parameter, std::less<>> parameters{};

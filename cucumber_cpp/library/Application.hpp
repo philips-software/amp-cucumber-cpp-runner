@@ -45,6 +45,7 @@ namespace cucumber_cpp::library
 
         CLI::App& CliParser();
         Context& ProgramContext();
+        cucumber_expression::ParameterRegistration& ParameterRegistration();
 
         void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
 

@@ -155,7 +155,7 @@ namespace cucumber_cpp::library::cucumber_expression
             std::optional<std::int64_t> number;
         };
 
-        parameterRegistry.AddParameter("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
+        parameterRegistry.Add("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
             {
                 std::optional<std::string> text{ matches[1].matched ? StringTo<std::string>(matches[1].str()) : std::optional<std::string>{ std::nullopt } };
                 std::optional<std::int64_t> number{ matches[2].matched ? StringTo<std::int64_t>(matches[2].str()) : std::optional<std::int64_t>{ std::nullopt } };
@@ -219,6 +219,38 @@ namespace cucumber_cpp::library::cucumber_expression
                                                  "       ^------------^\n"
                                                  "Undefined parameter type 'doesnotexist'\n"
                                                  "Please register a ParameterType for 'doesnotexist'\n"));
+        }
+    }
+
+    TEST_F(TestExpression, ThrowDuplicateAnonymousParameterError)
+    {
+        try
+        {
+            parameterRegistry.Add("", { ".*" }, [](const MatchRange& matches)
+                {
+                    return StringTo<std::string>(matches.begin()->str());
+                });
+            FAIL() << "Expected CucumberExpressionError to be thrown";
+        }
+        catch (const CucumberExpressionError& e)
+        {
+            EXPECT_THAT(e.what(), testing::StrEq("The anonymous parameter type has already been defined"));
+        }
+    }
+
+    TEST_F(TestExpression, ThrowDuplicateParameterError)
+    {
+        try
+        {
+            parameterRegistry.Add("word", { ".*" }, [](const MatchRange& matches)
+                {
+                    return StringTo<std::string>(matches.begin()->str());
+                });
+            FAIL() << "Expected CucumberExpressionError to be thrown";
+        }
+        catch (const CucumberExpressionError& e)
+        {
+            EXPECT_THAT(e.what(), testing::StrEq("There is already a parameter with name word"));
         }
     }
 }
