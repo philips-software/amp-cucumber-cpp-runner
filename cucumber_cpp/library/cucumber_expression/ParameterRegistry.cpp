@@ -38,13 +38,6 @@ namespace cucumber_cpp::library::cucumber_expression
                 return str;
             };
         }
-
-        const std::string integerNegativeRegex{ R"__(-?\d+)__" };
-        const std::string integerPositiveRegex{ R"__(\d+)__" };
-        const std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        const std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
-        const std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
-        const std::string wordRegex{ R"__([^\s]+)__" };
     }
 
     std::smatch::const_iterator MatchRange::begin() const
@@ -69,6 +62,13 @@ namespace cucumber_cpp::library::cucumber_expression
 
     ParameterRegistry::ParameterRegistry()
     {
+        const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
+        const static std::string integerPositiveRegex{ R"__(\d+)__" };
+        const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
+        const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
+        const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
+        const static std::string wordRegex{ R"__([^\s]+)__" };
+
         Add("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
         Add("float", { floatRegex }, CreateStreamConverter<float>());
         Add("word", { wordRegex }, CreateStreamConverter<std::string>());
