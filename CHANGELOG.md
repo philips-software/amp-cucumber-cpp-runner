@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v2.0.0...v2.1.0) (2025-06-30)
+
+
+### Features
+
+* Expose parameter registration interface ([#190](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/190)) ([b3655ec](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/b3655ece25faba31ef4f0d81f173d1c266abd050))
+* Improve nested step console output ([#194](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/194)) ([d64e692](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/d64e692c1351825b6e657d51b6cd89db2f0e82b0))
+
+
+### Chores
+
+* Add missing cmake dependencies ([#197](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/197)) ([c66792b](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/c66792b0d854facb3783cf971ec0bc4696e2b910))
+* Correct settings.json ([#193](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/193)) ([4a0749f](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/4a0749f89e12c707c67a31c88f80cbe64e54c4f6))
+
 ## [2.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v1.1.0...v2.0.0) (2025-06-12)
 
 
