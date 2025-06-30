@@ -19,6 +19,8 @@ namespace cucumber_cpp::library::report
 {
     struct StdOutReport : ReportHandlerV2
     {
+        StdOutReport();
+
         void FeatureStart(const engine::FeatureInfo& featureInfo) override;
         void FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration) override;
 
@@ -42,6 +44,8 @@ namespace cucumber_cpp::library::report
     private:
         std::uint32_t nrOfScenarios{ 0 };
         std::vector<const engine::ScenarioInfo*> failedScenarios;
+
+        std::size_t nestedSteps{ 1 };
     };
 }
 

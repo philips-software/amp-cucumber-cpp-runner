@@ -16,6 +16,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 #ifdef _MSC_VER
 // clang-format off
@@ -24,6 +25,7 @@
 #include <minwindef.h>
 #include <processenv.h>
 #include <WinBase.h>
+#include <winnls.h>
 // clang-format on
 #endif
 
@@ -133,6 +135,23 @@ namespace cucumber_cpp::library::report
 
             return out.str();
         }
+
+        std::string Repeat(std::string_view input, std::size_t count)
+        {
+            std::string result;
+            result.reserve(input.size() * count);
+            for (std::size_t i = 0; i < count; ++i)
+                result += input;
+            return result;
+        }
+    }
+
+    StdOutReport::StdOutReport()
+    {
+#ifdef _MSC_VER
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+#endif
     }
 
     void StdOutReport::FeatureStart(const engine::FeatureInfo& featureInfo)
@@ -163,9 +182,19 @@ namespace cucumber_cpp::library::report
                   << scenarioInfo.Title();
     }
 
-    void StdOutReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration /*duration*/)
+    void StdOutReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
     {
-        std::cout << "\n";
+
+        using enum engine::Result;
+
+        std::cout << "\n"
+                  << "\\-> ";
+
+        auto& coloured = ((result == passed) ? std::cout << TcGreen : std::cout << TcRed);
+
+        coloured << successLut.at(result)
+                 << " (" << ScaledDuration(duration) << ")"
+                 << TcDefault << '\n';
 
         if (result != engine::Result::passed)
         {
@@ -176,6 +205,7 @@ namespace cucumber_cpp::library::report
     void StdOutReport::StepSkipped(const engine::StepInfo& stepInfo)
     {
         std::cout << "\n"
+                  << Repeat("| ", nestedSteps)
                   << TcCyan;
         std::cout << successLut.at(engine::Result::skipped) << " " << stepTypeLut.at(stepInfo.Type()) << " " << stepInfo.Text();
         std::cout << TcDefault;
@@ -184,20 +214,27 @@ namespace cucumber_cpp::library::report
     void StdOutReport::StepStart(const engine::StepInfo& stepInfo)
     {
         std::cout << "\n"
+                  << Repeat("| ", nestedSteps)
                   << stepTypeLut.at(stepInfo.Type()) << " " << stepInfo.Text()
                   << std::flush;
+        ++nestedSteps;
     }
 
     void StdOutReport::StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration)
     {
+        --nestedSteps;
+
         using enum engine::Result;
+
+        std::cout << "\n"
+                  << Repeat("| ", nestedSteps) << "\\-> ";
 
         if (result == passed)
             std::cout << TcGreen;
         else
             std::cout << TcRed;
 
-        std::cout << "\n -> " << successLut.at(result);
+        std::cout << successLut.at(result);
 
         if (result != passed)
             std::cout << " " << stepInfo.ScenarioInfo().FeatureInfo().Path() << ":" << stepInfo.Line() << ":" << stepInfo.Column();
