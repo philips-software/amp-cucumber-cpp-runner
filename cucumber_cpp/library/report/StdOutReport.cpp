@@ -184,7 +184,8 @@ namespace cucumber_cpp::library::report
     void StdOutReport::StepStart(const engine::StepInfo& stepInfo)
     {
         std::cout << "\n"
-                  << stepTypeLut.at(stepInfo.Type()) << " " << stepInfo.Text();
+                  << stepTypeLut.at(stepInfo.Type()) << " " << stepInfo.Text()
+                  << std::flush;
     }
 
     void StdOutReport::StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration)

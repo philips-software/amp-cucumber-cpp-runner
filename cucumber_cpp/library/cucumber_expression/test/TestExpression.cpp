@@ -221,4 +221,36 @@ namespace cucumber_cpp::library::cucumber_expression
                                                  "Please register a ParameterType for 'doesnotexist'\n"));
         }
     }
+
+    TEST_F(TestExpression, ThrowDuplicateAnonymousParameterError)
+    {
+        try
+        {
+            parameterRegistry.AddParameter("", { ".*" }, [](const MatchRange& matches)
+                {
+                    return StringTo<std::string>(matches.begin()->str());
+                });
+            FAIL() << "Expected CucumberExpressionError to be thrown";
+        }
+        catch (const CucumberExpressionError& e)
+        {
+            EXPECT_THAT(e.what(), testing::StrEq("The anonymous parameter type has already been defined"));
+        }
+    }
+
+    TEST_F(TestExpression, ThrowDuplicateParameterError)
+    {
+        try
+        {
+            parameterRegistry.AddParameter("word", { ".*" }, [](const MatchRange& matches)
+                {
+                    return StringTo<std::string>(matches.begin()->str());
+                });
+            FAIL() << "Expected CucumberExpressionError to be thrown";
+        }
+        catch (const CucumberExpressionError& e)
+        {
+            EXPECT_THAT(e.what(), testing::StrEq("There is already a parameter with name word"));
+        }
+    }
 }

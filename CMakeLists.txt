@@ -21,16 +21,27 @@ else()
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
-option(
-      CCR_FETCH_DEPS
-      "Fetch dependencies via FetchContent."
-      On
-)
-
-option(CCR_BUILD_TESTS "Enable building the tests" ${CCR_DEFAULTOPT})
+option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." On )
+option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
+option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
+endif()
+
+if (CCR_ENABLE_COVERAGE)
+    find_program(GCOVR_PATH gcovr)
+
+    if (NOT GCOVR_PATH)
+    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
+    endif()
+
+    add_custom_target(
+        generate-coverage-report
+        COMMAND ${GCOVR_PATH} --delete --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating code coverage report in LCOV format"
+    )
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
