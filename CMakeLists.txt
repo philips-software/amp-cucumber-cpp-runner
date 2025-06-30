@@ -64,6 +64,7 @@ else()
     find_package(pugixml REQUIRED)
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
+    find_package(yaml-cpp REQUIRED)
 endif()
 
 add_subdirectory(cucumber_cpp)
