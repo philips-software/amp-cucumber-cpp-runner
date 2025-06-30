@@ -70,6 +70,14 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
         AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddParameter("int8_t", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int8_t>());
+        AddParameter("int16_t", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int16_t>());
+        AddParameter("int32_t", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddParameter("int64_t", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int64_t>());
+        AddParameter("uint8_t", { integerPositiveRegex }, CreateStreamConverter<std::uint8_t>());
+        AddParameter("uint16_t", { integerPositiveRegex }, CreateStreamConverter<std::uint16_t>());
+        AddParameter("uint32_t", { integerPositiveRegex }, CreateStreamConverter<std::uint32_t>());
+        AddParameter("uint64_t", { integerPositiveRegex }, CreateStreamConverter<std::uint64_t>());
         AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
         AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
         AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
