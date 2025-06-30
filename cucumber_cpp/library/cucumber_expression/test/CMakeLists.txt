@@ -5,6 +5,7 @@ target_link_libraries(cucumber_cpp.library.cucumber_expression.test PUBLIC
     gmock_main
     cucumber_cpp.library.cucumber_expression
     yaml-cpp::yaml-cpp
+    GTest::gmock
 )
 
 target_sources(cucumber_cpp.library.cucumber_expression.test PRIVATE
