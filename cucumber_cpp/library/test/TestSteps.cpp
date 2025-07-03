@@ -68,9 +68,6 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, GetAmbiguousStep)
     {
-        EXPECT_NO_THROW((void)stepRegistry.Query("an ambiguous step"));
-        EXPECT_NO_THROW((void)stepRegistry.Query("an ambiguous step"));
-
         EXPECT_THROW((void)stepRegistry.Query("an ambiguous step"), StepRegistry::AmbiguousStepError);
     }
 
