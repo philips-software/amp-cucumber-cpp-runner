@@ -39,6 +39,9 @@ namespace cucumber_cpp::library::report
         virtual void ScenarioStart(const engine::ScenarioInfo& scenarioInfo) = 0;
         virtual void ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration) = 0;
 
+        virtual void StepMissing(const std::string& stepText) = 0;
+        virtual void StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo) = 0;
+
         virtual void StepSkipped(const engine::StepInfo& stepInfo) = 0;
         virtual void StepStart(const engine::StepInfo& stepInfo) = 0;
         virtual void StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration) = 0;
@@ -84,6 +87,9 @@ namespace cucumber_cpp::library::report
         [[nodiscard]] virtual RuleScope RuleStart() = 0;
         [[nodiscard]] virtual ScenarioScope ScenarioStart() = 0;
         [[nodiscard]] virtual StepScope StepStart() = 0;
+
+        virtual void StepMissing(const std::string& stepText) = 0;
+        virtual void StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo) = 0;
 
         virtual void StepSkipped() = 0;
 
@@ -157,6 +163,9 @@ namespace cucumber_cpp::library::report
         [[nodiscard]] RuleScope RuleStart() override;
         [[nodiscard]] ScenarioScope ScenarioStart() override;
         [[nodiscard]] StepScope StepStart() override;
+
+        void StepMissing(const std::string& stepText) override;
+        void StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo) override;
 
         void StepSkipped() override;
 

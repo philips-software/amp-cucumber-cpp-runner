@@ -53,12 +53,12 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    void DryRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& /* contextManager */, const StepMatch& /* stepMatch */) const
+    void DryRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& /* contextManager */, const StepRegistry::StepMatch& /* stepMatch */) const
     {
         /* don't execute actual steps */
     }
 
-    void ExecuteRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const
+    void ExecuteRunPolicy::RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepRegistry::StepMatch& stepMatch) const
     {
         const auto& stepContext = contextManager.StepContext();
         auto& scenarioContext = contextManager.ScenarioContext();
@@ -119,12 +119,12 @@ namespace cucumber_cpp::library::engine
         contextManager.StepContext().ExecutionStatus(cucumber_cpp::library::engine::Result::undefined);
     }
 
-    void TestExecutionImpl::RunStepMatch(const std::vector<StepMatch>& /* not used */)
+    void TestExecutionImpl::RunStepMatch(const std::vector<StepRegistry::StepMatch>& /* not used */)
     {
         contextManager.StepContext().ExecutionStatus(cucumber_cpp::library::engine::Result::ambiguous);
     }
 
-    void TestExecutionImpl::RunStepMatch(const StepMatch& stepMatch)
+    void TestExecutionImpl::RunStepMatch(const StepRegistry::StepMatch& stepMatch)
     {
         executionPolicy.RunStep(contextManager, stepMatch);
     }

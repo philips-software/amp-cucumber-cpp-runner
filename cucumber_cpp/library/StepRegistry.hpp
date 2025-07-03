@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <source_location>
 #include <span>
 #include <string>
 #include <string_view>
@@ -27,21 +28,51 @@ namespace cucumber_cpp::library
         return std::make_unique<T>(context, table);
     }
 
-    struct StepMatch
-    {
-        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
-            : factory(factory)
-            , matches(std::move(matches))
-            , stepRegexStr(stepRegexStr)
-        {}
-
-        std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
-        std::variant<std::vector<std::string>, std::vector<std::any>> matches{};
-        std::string_view stepRegexStr{};
-    };
-
     struct StepRegistry
     {
+        struct Entry
+        {
+            Entry(engine::StepType type, cucumber_expression::Matcher regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::source_location loc)
+                : type{ type }
+                , regex{ std::move(regex) }
+                , factory{ factory }
+                , loc{ loc }
+            {}
+
+            engine::StepType type{};
+            cucumber_expression::Matcher regex;
+            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+            std::source_location loc;
+
+            std::uint32_t used{ 0 };
+        };
+
+        struct StepMatch
+        {
+            StepMatch(Entry& entry, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
+                : entry{ entry }
+                , factory{ factory }
+                , matches{ std::move(matches) }
+                , stepRegexStr{ stepRegexStr }
+            {}
+
+            Entry& entry;
+            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+            std::variant<std::vector<std::string>, std::vector<std::any>> matches{};
+            std::string_view stepRegexStr{};
+        };
+
+        struct EntryView
+        {
+            EntryView(const cucumber_expression::Matcher& stepRegex, const std::uint32_t& used)
+                : stepRegex(stepRegex)
+                , used(used)
+            {}
+
+            const cucumber_expression::Matcher& stepRegex;
+            const std::uint32_t& used;
+        };
+
         struct StepNotFoundError : std::exception
         {
             using std::exception::exception;
@@ -56,32 +87,6 @@ namespace cucumber_cpp::library
             std::vector<StepMatch> matches;
         };
 
-        struct Entry
-        {
-            Entry(engine::StepType type, cucumber_expression::Matcher regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
-                : type(type)
-                , regex(std::move(regex))
-                , factory(factory)
-            {}
-
-            engine::StepType type{};
-            cucumber_expression::Matcher regex;
-            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
-
-            std::uint32_t used{ 0 };
-        };
-
-        struct EntryView
-        {
-            EntryView(const cucumber_expression::Matcher& stepRegex, const std::uint32_t& used)
-                : stepRegex(stepRegex)
-                , used(used)
-            {}
-
-            const cucumber_expression::Matcher& stepRegex;
-            const std::uint32_t& used;
-        };
-
         explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry);
 
         [[nodiscard]] StepMatch Query(engine::StepType stepType, const std::string& expression);
@@ -92,7 +97,7 @@ namespace cucumber_cpp::library
         [[nodiscard]] std::vector<EntryView> List() const;
 
     private:
-        void Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table));
+        void Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::source_location loc);
 
         std::vector<Entry> registry;
         cucumber_expression::ParameterRegistry& parameterRegistry;
@@ -108,19 +113,21 @@ namespace cucumber_cpp::library
 
         struct Entry
         {
-            Entry(engine::StepType type, std::string regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
-                : type(type)
-                , regex(std::move(regex))
-                , factory(factory)
+            Entry(engine::StepType type, std::string regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::source_location loc)
+                : type{ type }
+                , regex{ std::move(regex) }
+                , factory{ factory }
+                , loc{ loc }
             {}
 
             engine::StepType type{};
             std::string regex;
             std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+            std::source_location loc;
         };
 
         template<class T>
-        static std::size_t Register(const std::string& matcher, engine::StepType stepType);
+        static std::size_t Register(const std::string& matcher, engine::StepType stepType, std::source_location loc = std::source_location::current());
 
         std::span<Entry> GetEntries();
         [[nodiscard]] std::span<const Entry> GetEntries() const;
@@ -134,9 +141,9 @@ namespace cucumber_cpp::library
     //////////////////////////
 
     template<class T>
-    std::size_t StepStringRegistration::Register(const std::string& matcher, engine::StepType stepType)
+    std::size_t StepStringRegistration::Register(const std::string& matcher, engine::StepType stepType, std::source_location loc)
     {
-        Instance().registry.emplace_back(stepType, matcher, StepBodyFactory<T>);
+        Instance().registry.emplace_back(stepType, matcher, StepBodyFactory<T>, loc);
 
         return Instance().registry.size();
     }

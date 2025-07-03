@@ -2,7 +2,10 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
+#include "cucumber_cpp/library/report/Report.hpp"
+#include "cucumber_cpp/library/report/test_helper/ReportForwarderMock.hpp"
 #include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -17,7 +20,10 @@ namespace cucumber_cpp::library::engine
     {
         cucumber_expression::ParameterRegistry parameterRegistry;
         StepRegistry stepRegistry{ parameterRegistry };
-        FeatureTreeFactory featureTreeFactory{ stepRegistry };
+
+        test_helper::ContextManagerInstance contextManager;
+        report::ReportForwarderImpl reportForwarderImpl{ contextManager };
+        FeatureTreeFactory featureTreeFactory{ stepRegistry, reportForwarderImpl };
     };
 
     TEST_F(TestFeatureFactory, CreateEmptyFeature)

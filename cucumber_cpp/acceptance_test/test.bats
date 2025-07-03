@@ -126,8 +126,17 @@ teardown() {
 @test "Dry run with known missing steps" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@result:UNDEFINED" --report console --dry
     assert_failure
+    assert_output --partial "Step missing: \"a missing step\""
     assert_output --partial "undefined \"cucumber_cpp/acceptance_test/features/test_scenarios.feature\""
     assert_output --partial "skipped Then a then step"
+}
+
+@test "Dry run with known ambiguous steps" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@result:AMBIGUOUS" --report console --dry
+    assert_failure
+    assert_output --partial "Ambiguous step: \"this is ambiguous\" Matches"
+    assert_output --partial "ambiguous \"cucumber_cpp/acceptance_test/features/test_ambiguous_steps.feature\""
+    assert_output --partial "skipped When a when step"
 }
 
 @test "Test the and keyword" {
