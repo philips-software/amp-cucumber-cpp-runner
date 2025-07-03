@@ -20,5 +20,5 @@ Feature: Simple feature file
   Scenario: A scenario with undefined step
     Given a given step
     When a when step
-    Then a when step
+    Then a missing step
     Then a then step
