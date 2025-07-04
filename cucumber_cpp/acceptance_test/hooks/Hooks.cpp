@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/Hooks.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "gmock/gmock.h"
 #include <iostream>
 #include <string>

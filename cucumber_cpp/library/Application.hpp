@@ -1,6 +1,9 @@
 #ifndef CUCUMBER_CPP_APPLICATION_HPP
 #define CUCUMBER_CPP_APPLICATION_HPP
 
+// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: friend cucumber_cpp/.*
+
 #include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
