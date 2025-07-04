@@ -174,8 +174,7 @@ namespace cucumber_cpp::library::report
 
     void StdOutReport::RuleStart(const engine::RuleInfo& ruleInfo)
     {
-        std::cout << "\n"
-                  << ruleInfo.Title();
+        // not required
     }
 
     void StdOutReport::RuleEnd(engine::Result result, const engine::RuleInfo& ruleInfo, TraceTime::Duration duration)
