@@ -37,32 +37,27 @@ namespace cucumber_cpp::library::report
     namespace
     {
 #ifndef _MSC_VER
-        constexpr auto redStr{ "\o{33}[1m\o{33}[31m" };
-        constexpr auto greenStr{ "\o{33}[1m\o{33}[32m" };
-        constexpr auto cyanStr{ "\o{33}[1m\o{33}[36m" };
-        constexpr auto defaultStr{ "\o{33}[0m\o{33}[39m" };
-
         inline std::ostream& TcRed(std::ostream& o)
         {
-            o << redStr;
+            o << "\o{33}[1m\o{33}[31m";
             return o;
         }
 
         inline std::ostream& TcGreen(std::ostream& o)
         {
-            o << greenStr;
+            o << "\o{33}[1m\o{33}[32m";
             return o;
         }
 
         inline std::ostream& TcCyan(std::ostream& o)
         {
-            o << cyanStr;
+            o << "\o{33}[1m\o{33}[36m";
             return o;
         }
 
         inline std::ostream& TcDefault(std::ostream& o)
         {
-            o << defaultStr;
+            o << "\o{33}[0m\o{33}[39m";
             return o;
         }
 #else
@@ -211,14 +206,16 @@ namespace cucumber_cpp::library::report
     void StdOutReport::StepMissing(const std::string& stepText)
     {
         std::cout << "\n"
-                  << std::format(R"({}Step missing: "{}")", redStr, stepText);
+                  << TcRed
+                  << std::format(R"(Step missing: "{}")", stepText);
         std::cout << TcDefault;
     }
 
     void StdOutReport::StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo)
     {
         std::cout << "\n"
-                  << std::format(R"({}Ambiguous step: "{}" Matches:)", redStr, stepText);
+                  << TcRed
+                  << std::format(R"(Ambiguous step: "{}" Matches:)", stepText);
 
         for (const auto& match : std::get<std::vector<StepRegistry::StepMatch>>(stepInfo.StepMatch()))
         {
