@@ -50,3 +50,8 @@ GIVEN("a ← tuple\\({float}, {float}, {float}, {float}\\)", (float /* unused */
 {
     // empty
 }
+
+THEN("this should be skipped")
+{
+    FAIL();
+}

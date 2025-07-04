@@ -25,30 +25,10 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, GetGivenStep)
     {
-        const auto matches = stepRegistry.Query("This is a GIVEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a GIVEN step$"));
-    }
-
-    TEST_F(TestSteps, GetWhenStep)
-    {
-        const auto matches = stepRegistry.Query("This is a WHEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a WHEN step$"));
-    }
-
-    TEST_F(TestSteps, GetThenStep)
-    {
-        const auto matches = stepRegistry.Query("This is a THEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a THEN step$"));
-    }
-
-    TEST_F(TestSteps, GetAnyStep)
-    {
-        const auto matches = stepRegistry.Query("This is a STEP step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a STEP step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a GIVEN step").stepRegexStr, testing::StrEq("^This is a GIVEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a WHEN step").stepRegexStr, testing::StrEq("^This is a WHEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a THEN step").stepRegexStr, testing::StrEq("^This is a THEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a STEP step").stepRegexStr, testing::StrEq("^This is a STEP step$"));
     }
 
     TEST_F(TestSteps, GetStepWithMatches)

@@ -18,7 +18,5 @@ Feature: Simple feature file
 
   @result:UNDEFINED
   Scenario: A scenario with undefined step
-    Given a given step
-    When a when step
-    Then a missing step
-    Then a then step
+    Given a missing step
+    Then this should be skipped
