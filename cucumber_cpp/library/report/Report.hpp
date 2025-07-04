@@ -1,6 +1,9 @@
 #ifndef REPORT_REPORT_HPP
 #define REPORT_REPORT_HPP
 
+// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: friend cucumber_cpp/.*
+
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
