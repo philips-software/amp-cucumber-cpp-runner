@@ -1,6 +1,9 @@
 #ifndef CUCUMBER_CPP_CONTEXT_HPP
 #define CUCUMBER_CPP_CONTEXT_HPP
 
+// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: friend cucumber_cpp/.*
+
 #include <algorithm>
 #include <forward_list>
 #include <iostream>

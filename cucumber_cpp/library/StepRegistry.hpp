@@ -89,10 +89,9 @@ namespace cucumber_cpp::library
 
         explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry);
 
-        [[nodiscard]] StepMatch Query(engine::StepType stepType, const std::string& expression);
+        [[nodiscard]] StepMatch Query(const std::string& expression);
 
         [[nodiscard]] std::size_t Size() const;
-        [[nodiscard]] std::size_t Size(engine::StepType stepType) const;
 
         [[nodiscard]] std::vector<EntryView> List() const;
 

@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <gmock/gmock.h>
@@ -22,43 +21,19 @@ namespace cucumber_cpp::library
     TEST_F(TestSteps, RegisterThroughPreregistration)
     {
         EXPECT_THAT(stepRegistry.Size(), testing::Ge(1));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::given), testing::Ge(1));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::when), testing::Ge(1));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::then), testing::Ge(1));
-        EXPECT_THAT(stepRegistry.Size(engine::StepType::any), testing::Ge(1));
     }
 
     TEST_F(TestSteps, GetGivenStep)
     {
-        const auto matches = stepRegistry.Query(engine::StepType::given, "This is a GIVEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a GIVEN step$"));
-    }
-
-    TEST_F(TestSteps, GetWhenStep)
-    {
-        const auto matches = stepRegistry.Query(engine::StepType::when, "This is a WHEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a WHEN step$"));
-    }
-
-    TEST_F(TestSteps, GetThenStep)
-    {
-        const auto matches = stepRegistry.Query(engine::StepType::then, "This is a THEN step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a THEN step$"));
-    }
-
-    TEST_F(TestSteps, GetAnyStep)
-    {
-        const auto matches = stepRegistry.Query(engine::StepType::given, "This is a STEP step");
-
-        EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a STEP step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a GIVEN step").stepRegexStr, testing::StrEq("^This is a GIVEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a WHEN step").stepRegexStr, testing::StrEq("^This is a WHEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a THEN step").stepRegexStr, testing::StrEq("^This is a THEN step$"));
+        EXPECT_THAT(stepRegistry.Query("This is a STEP step").stepRegexStr, testing::StrEq("^This is a STEP step$"));
     }
 
     TEST_F(TestSteps, GetStepWithMatches)
     {
-        const auto matches = stepRegistry.Query(engine::StepType::when, "This is a step with a 10s delay");
+        const auto matches = stepRegistry.Query("This is a step with a 10s delay");
 
         EXPECT_THAT(matches.stepRegexStr, testing::StrEq("^This is a step with a ([0-9]+)s delay$"));
 
@@ -68,20 +43,17 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, GetInvalidStep)
     {
-        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::when, "This step does not exist"), StepRegistry::StepNotFoundError);
+        EXPECT_THROW((void)stepRegistry.Query("This step does not exist"), StepRegistry::StepNotFoundError);
     }
 
     TEST_F(TestSteps, GetAmbiguousStep)
     {
-        EXPECT_NO_THROW((void)stepRegistry.Query(engine::StepType::given, "an ambiguous step"));
-        EXPECT_NO_THROW((void)stepRegistry.Query(engine::StepType::when, "an ambiguous step"));
-
-        EXPECT_THROW((void)stepRegistry.Query(engine::StepType::then, "an ambiguous step"), StepRegistry::AmbiguousStepError);
+        EXPECT_THROW((void)stepRegistry.Query("an ambiguous step"), StepRegistry::AmbiguousStepError);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)
     {
-        const auto matches = stepRegistry.Query(engine::StepType::when, R"(Step with cucumber expression syntax 1.5 "abcdef" 10)");
+        const auto matches = stepRegistry.Query(R"(Step with cucumber expression syntax 1.5 "abcdef" 10)");
 
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
@@ -99,16 +71,16 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, EscapedCucumberExpression)
     {
-        const auto matchesParens = stepRegistry.Query(engine::StepType::then, R"(An expression with (parenthesis) should remain as is)");
+        const auto matchesParens = stepRegistry.Query(R"(An expression with (parenthesis) should remain as is)");
         EXPECT_THAT(matchesParens.stepRegexStr, testing::StrEq(R"(^An expression with \(parenthesis\) should remain as is$)"));
 
-        const auto matchesBrace = stepRegistry.Query(engine::StepType::then, R"(An expression with {braces} should remain as is)");
+        const auto matchesBrace = stepRegistry.Query(R"(An expression with {braces} should remain as is)");
         EXPECT_THAT(matchesBrace.stepRegexStr, testing::StrEq(R"(^An expression with \{braces\} should remain as is$)"));
     }
 
     TEST_F(TestSteps, FunctionLikeStep)
     {
-        const auto matches = stepRegistry.Query(engine::StepType::then, R"(An expression that looks like a function func(1, 2) should keep its parameters)");
+        const auto matches = stepRegistry.Query(R"(An expression that looks like a function func(1, 2) should keep its parameters)");
 
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
@@ -118,7 +90,7 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, EscapedParenthesis)
     {
-        const auto matches1 = stepRegistry.Query(engine::StepType::then, R"(An expression with \(escaped parenthesis\) should keep the slash)");
-        const auto matches2 = stepRegistry.Query(engine::StepType::then, R"(An expression with \{escaped braces\} should keep the slash)");
+        const auto matches1 = stepRegistry.Query(R"(An expression with \(escaped parenthesis\) should keep the slash)");
+        const auto matches2 = stepRegistry.Query(R"(An expression with \{escaped braces\} should keep the slash)");
     }
 }

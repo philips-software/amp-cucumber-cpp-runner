@@ -7,10 +7,8 @@
 #include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
-#include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <ranges>
 #include <source_location>
 #include <span>
 #include <string>
@@ -20,17 +18,6 @@
 
 namespace cucumber_cpp::library
 {
-    namespace
-    {
-        auto TypeFilter(engine::StepType stepType)
-        {
-            return [stepType](const StepRegistry::Entry& entry)
-            {
-                return entry.type == stepType || entry.type == engine::StepType::any;
-            };
-        };
-    }
-
     StepRegistry::StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry)
         : parameterRegistry{ parameterRegistry }
     {
@@ -38,11 +25,11 @@ namespace cucumber_cpp::library
             Register(matcher.regex, matcher.type, matcher.factory, matcher.loc);
     }
 
-    StepRegistry::StepMatch StepRegistry::Query(engine::StepType stepType, const std::string& expression)
+    StepRegistry::StepMatch StepRegistry::Query(const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
-        for (Entry& entry : registry | std::views::filter(TypeFilter(stepType)))
+        for (Entry& entry : registry)
         {
             auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
             if (match)
@@ -64,11 +51,6 @@ namespace cucumber_cpp::library
     std::size_t StepRegistry::Size() const
     {
         return registry.size();
-    }
-
-    std::size_t StepRegistry::Size(engine::StepType stepType) const
-    {
-        return std::ranges::count(registry, stepType, &Entry::type);
     }
 
     std::vector<StepRegistry::EntryView> StepRegistry::List() const

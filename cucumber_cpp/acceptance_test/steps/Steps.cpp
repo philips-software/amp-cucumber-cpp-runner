@@ -1,7 +1,6 @@
-#include "cucumber_cpp/library/Steps.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -59,4 +58,9 @@ GIVEN("this is ambiguous")
 GIVEN("this is ambiguous( or not)")
 {
     // empty
+}
+
+THEN("this should be skipped")
+{
+    FAIL();
 }

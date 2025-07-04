@@ -158,7 +158,6 @@ namespace cucumber_cpp::library::engine
             }
             catch (const std::out_of_range&)
             {
-
                 throw UnsupportedAsteriskError{ std::format("{}:{}: * steps are not supported", scenarioInfo.FeatureInfo().Path().string(), step.location.line) };
             }
         }
@@ -293,7 +292,7 @@ namespace cucumber_cpp::library::engine
     {
         try
         {
-            auto stepMatch = stepRegistry.Query(stepType, stepText);
+            auto stepMatch = stepRegistry.Query(stepText);
             return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(stepMatch));
         }
         catch (const StepRegistry::StepNotFoundError&)
