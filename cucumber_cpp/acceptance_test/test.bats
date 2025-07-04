@@ -30,7 +30,7 @@ teardown() {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --tag "@result:UNDEFINED" --feature cucumber_cpp/acceptance_test/features --report console
     assert_failure
     assert_output --partial "undefined \"cucumber_cpp/acceptance_test/features/test_scenarios.feature\""
-    assert_output --partial "skipped Then a then step"
+    assert_output --partial "skipped Then this should be skipped"
 }
 
 @test "No tests" {
@@ -127,7 +127,7 @@ teardown() {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@result:UNDEFINED" --report console --dry
     assert_failure
     assert_output --partial "undefined \"cucumber_cpp/acceptance_test/features/test_scenarios.feature\""
-    assert_output --partial "skipped Then a then step"
+    assert_output --partial "skipped Then this should be skipped"
 }
 
 @test "Test the and keyword" {
