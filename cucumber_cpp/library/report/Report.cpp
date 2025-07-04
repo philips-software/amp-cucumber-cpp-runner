@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
+#include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
@@ -138,6 +139,16 @@ namespace cucumber_cpp::library::report
     ReportForwarder::StepScope ReportForwarderImpl::StepStart()
     {
         return StepScope{ contextManager.StepContext(), Storage() };
+    }
+
+    void ReportForwarderImpl::StepMissing(const std::string& stepText)
+    {
+        ForwardCall(Storage(), &ReportHandlerV2::StepMissing, stepText);
+    }
+
+    void ReportForwarderImpl::StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo)
+    {
+        ForwardCall(Storage(), &ReportHandlerV2::StepAmbiguous, stepText, stepInfo);
     }
 
     void ReportForwarderImpl::StepSkipped()

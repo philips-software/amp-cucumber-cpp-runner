@@ -13,7 +13,6 @@ namespace cucumber_cpp::library
 {
     struct TestSteps : testing::Test
     {
-
         cucumber_expression::ParameterRegistry parameterRegistry;
         StepRegistry stepRegistry{ parameterRegistry };
     };

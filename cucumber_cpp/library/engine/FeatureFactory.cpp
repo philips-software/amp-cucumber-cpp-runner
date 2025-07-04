@@ -283,8 +283,9 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    FeatureTreeFactory::FeatureTreeFactory(StepRegistry& stepRegistry)
+    FeatureTreeFactory::FeatureTreeFactory(StepRegistry& stepRegistry, report::ReportForwarder& reportHandler)
         : stepRegistry{ stepRegistry }
+        , reportHandler{ reportHandler }
     {}
 
     std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table) const
@@ -296,11 +297,15 @@ namespace cucumber_cpp::library::engine
         }
         catch (const StepRegistry::StepNotFoundError&)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table));
+            auto stepInfo = std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table));
+            reportHandler.StepMissing(stepText);
+            return stepInfo;
         }
         catch (StepRegistry::AmbiguousStepError& ase)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(ase.matches));
+            auto stepInfo = std::make_unique<StepInfo>(scenarioInfo, stepText, stepType, line, column, std::move(table), std::move(ase.matches));
+            reportHandler.StepAmbiguous(stepText, *stepInfo);
+            return stepInfo;
         }
     }
 

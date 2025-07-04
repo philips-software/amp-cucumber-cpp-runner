@@ -30,6 +30,9 @@ namespace cucumber_cpp::library::report
         void ScenarioStart(const engine::ScenarioInfo& scenarioInfo) override;
         void ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration) override;
 
+        void StepMissing(const std::string& stepText) override;
+        void StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo) override;
+
         void StepSkipped(const engine::StepInfo& stepInfo) override;
         void StepStart(const engine::StepInfo& stepInfo) override;
         void StepEnd(engine::Result result, const engine::StepInfo& stepInfo, TraceTime::Duration duration) override;

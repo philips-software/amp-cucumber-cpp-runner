@@ -84,9 +84,10 @@ namespace cucumber_cpp::library::engine
     {
         cucumber_expression::ParameterRegistry parameterRegistry;
         StepRegistry stepRegistry{ parameterRegistry };
-        FeatureTreeFactory featureTreeFactory{ stepRegistry };
-
+        report::ReportForwarderImpl reportForwarderImpl{ testExecutionMock.contextManager };
         testing::StrictMock<TestExecutionMockInstance> testExecutionMock;
+        FeatureTreeFactory featureTreeFactory{ stepRegistry, reportForwarderImpl };
+
         TestRunnerImpl runner{ featureTreeFactory, testExecutionMock };
 
         std::vector<std::unique_ptr<FeatureInfo>> features;

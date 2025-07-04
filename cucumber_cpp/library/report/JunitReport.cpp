@@ -170,6 +170,16 @@ namespace cucumber_cpp::library::report
         totalTime += duration;
     }
 
+    void JunitReport::StepMissing(const std::string& stepText)
+    {
+        /* do nothing */
+    }
+
+    void JunitReport::StepAmbiguous(const std::string& stepText, const engine::StepInfo& stepInfo)
+    {
+        /* do nothing */
+    }
+
     void JunitReport::StepSkipped(const engine::StepInfo& stepInfo)
     {
         /* do nothing */

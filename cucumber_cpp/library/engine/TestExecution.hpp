@@ -88,21 +88,21 @@ namespace cucumber_cpp::library::engine
         ~Policy() = default;
 
     public:
-        virtual void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const = 0;
+        virtual void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepRegistry::StepMatch& stepMatch) const = 0;
     };
 
     struct DryRunPolicy : TestExecution::Policy
     {
         virtual ~DryRunPolicy() = default;
 
-        void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const override;
+        void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepRegistry::StepMatch& stepMatch) const override;
     };
 
     struct ExecuteRunPolicy : TestExecution::Policy
     {
         virtual ~ExecuteRunPolicy() = default;
 
-        void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepMatch& stepMatch) const override;
+        void RunStep(cucumber_cpp::library::engine::ContextManager& contextManager, const StepRegistry::StepMatch& stepMatch) const override;
     };
 
     extern const DryRunPolicy dryRunPolicy;
@@ -122,8 +122,8 @@ namespace cucumber_cpp::library::engine
 
     private:
         void RunStepMatch(std::monostate);
-        void RunStepMatch(const std::vector<StepMatch>&);
-        void RunStepMatch(const StepMatch& stepMatch);
+        void RunStepMatch(const std::vector<StepRegistry::StepMatch>&);
+        void RunStepMatch(const StepRegistry::StepMatch& stepMatch);
 
         cucumber_cpp::library::engine::ContextManager& contextManager;
         report::ReportForwarder& reportHandler;

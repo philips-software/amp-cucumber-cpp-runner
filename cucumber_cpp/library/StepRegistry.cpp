@@ -9,6 +9,7 @@
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include <cstddef>
 #include <memory>
+#include <source_location>
 #include <span>
 #include <string>
 #include <utility>
@@ -21,10 +22,10 @@ namespace cucumber_cpp::library
         : parameterRegistry{ parameterRegistry }
     {
         for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
-            Register(matcher.regex, matcher.type, matcher.factory);
+            Register(matcher.regex, matcher.type, matcher.factory, matcher.loc);
     }
 
-    StepMatch StepRegistry::Query(const std::string& expression)
+    StepRegistry::StepMatch StepRegistry::Query(const std::string& expression)
     {
         std::vector<StepMatch> matches;
 
@@ -33,7 +34,7 @@ namespace cucumber_cpp::library
             auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
             if (match)
             {
-                matches.emplace_back(entry.factory, *match, std::visit(cucumber_expression::PatternVisitor{}, entry.regex));
+                matches.emplace_back(entry, entry.factory, *match, std::visit(cucumber_expression::PatternVisitor{}, entry.regex));
                 ++entry.used;
             }
         }
@@ -64,12 +65,12 @@ namespace cucumber_cpp::library
         return list;
     }
 
-    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::source_location loc)
     {
         if (matcher.starts_with('^') || matcher.ends_with('$'))
-            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::RegularExpression>, matcher }, factory);
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::RegularExpression>, matcher }, factory, loc);
         else
-            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::Expression>, matcher, parameterRegistry }, factory);
+            registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::Expression>, matcher, parameterRegistry }, factory, loc);
     }
 
     StepStringRegistration& StepStringRegistration::Instance()

@@ -23,12 +23,12 @@ namespace cucumber_cpp::library::engine::test_helper
     struct ContextManagerInstance : private ContextManagerInstanceStorage
         , cucumber_cpp::library::engine::ContextManager
     {
-        ContextManagerInstance(std::set<std::string, std::less<>> tags = {})
+        explicit ContextManagerInstance(std::set<std::string, std::less<>> tags = {})
             : cucumber_cpp::library::engine::ContextManager{ contextStorageFactory }
-            , feature{ tags, {}, {}, {}, {}, {} }
-            , rule{ feature, {}, {}, {}, {}, {} }
-            , scenario{ rule, tags, {}, {}, {}, {} }
-            , step{ scenario, {}, {}, {}, {}, {} }
+            , feature{ tags, "FeatureInfo", {}, {}, {}, {} }
+            , rule{ feature, {}, "RuleInfo", {}, {}, {} }
+            , scenario{ rule, tags, "ScenarioInfo", {}, {}, {} }
+            , step{ scenario, "StepInfo", {}, {}, {}, {} }
         {
         }
 
