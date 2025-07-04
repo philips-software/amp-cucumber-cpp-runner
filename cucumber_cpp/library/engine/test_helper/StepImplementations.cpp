@@ -110,3 +110,13 @@ THEN(R"(An expression with \\\{escaped braces\\} should keep the slash)")
 {
     /* do nothing */
 }
+
+GIVEN("this is ambiguous")
+{
+    // empty
+}
+
+GIVEN("this is ambiguous( or not)")
+{
+    // empty
+}

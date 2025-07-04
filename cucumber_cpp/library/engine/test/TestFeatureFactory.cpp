@@ -22,7 +22,7 @@ namespace cucumber_cpp::library::engine
         StepRegistry stepRegistry{ parameterRegistry };
 
         test_helper::ContextManagerInstance contextManager;
-        report::ReportForwarderImpl reportForwarderImpl{ contextManager };
+        report::test_helper::ReportForwarderMock reportForwarderImpl{ contextManager };
         FeatureTreeFactory featureTreeFactory{ stepRegistry, reportForwarderImpl };
     };
 
@@ -314,5 +314,31 @@ namespace cucumber_cpp::library::engine
         EXPECT_THAT(scenario1->Children()[0]->Table()[0][1].As<std::string>(), testing::StrEq("b"));
         EXPECT_THAT(scenario1->Children()[0]->Table()[1][0].As<std::string>(), testing::StrEq("c"));
         EXPECT_THAT(scenario1->Children()[0]->Table()[1][1].As<std::string>(), testing::StrEq("d"));
+    }
+
+    TEST_F(TestFeatureFactory, MissingStepsAreReported)
+    {
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given this is a missing step\n";
+
+        EXPECT_CALL(reportForwarderImpl, StepMissing);
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
+    }
+
+    TEST_F(TestFeatureFactory, AmbiguousStepsAreReported)
+    {
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given this is ambiguous\n";
+
+        EXPECT_CALL(reportForwarderImpl, StepAmbiguous);
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
     }
 }
