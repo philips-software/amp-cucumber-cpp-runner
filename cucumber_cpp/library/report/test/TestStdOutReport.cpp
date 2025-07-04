@@ -1,5 +1,8 @@
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/TraceTime.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
+#include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include "gmock/gmock.h"
@@ -137,10 +140,25 @@ namespace cucumber_cpp::library::report
 
     TEST_F(TestStdOutReport, StepAmbiguous)
     {
-        testing::internal::CaptureStdout();
-        // stdOutReport.StepAmbiguous();
-        const auto capture{ testing::internal::GetCapturedStdout() };
-        EXPECT_THAT(capture, testing::StrEq(""));
+        cucumber_expression::ParameterRegistry parameterRegistry;
+        StepRegistry stepRegistry{ parameterRegistry };
+
+        try
+        {
+            (void)stepRegistry.Query("this is ambiguous");
+        }
+        catch (const StepRegistry::AmbiguousStepError& error)
+        {
+            cucumber_cpp::library::engine::StepInfo ambiguousStepInfo{ contextManagerInstance.ScenarioContext().info, "ambiguous", {}, {}, {}, {}, error.matches };
+
+            testing::internal::CaptureStdout();
+            stdOutReport.StepAmbiguous("this is ambiguous", ambiguousStepInfo);
+            const auto capture{ testing::internal::GetCapturedStdout() };
+            EXPECT_THAT(capture, testing::HasSubstr("Ambiguous step: \"this is ambiguous\" Matches:"));
+            EXPECT_THAT(capture, testing::HasSubstr("cucumber_cpp/library/engine/test_helper/StepImplementations.cpp:"));
+            EXPECT_THAT(capture, testing::HasSubstr(":1 : this is ambiguous"));
+            EXPECT_THAT(capture, testing::HasSubstr(":1 : this is ambiguous( or not)"));
+        }
     }
 
     TEST_F(TestStdOutReport, StepSkipped)

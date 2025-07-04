@@ -7,6 +7,7 @@ target_link_libraries(cucumber_cpp.library.report.test PUBLIC
     GTest::gmock_main
 
     cucumber_cpp.library.report
+    cucumber_cpp.library.engine.test_helper.steps
 )
 
 target_sources(cucumber_cpp.library.report.test PRIVATE
