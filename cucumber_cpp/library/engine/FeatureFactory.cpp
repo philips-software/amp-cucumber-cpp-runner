@@ -166,7 +166,7 @@ namespace cucumber_cpp::library::engine
 
             try
             {
-                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table), docString));
+                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table), std::move(docString)));
             }
             catch (const std::out_of_range&)
             {
