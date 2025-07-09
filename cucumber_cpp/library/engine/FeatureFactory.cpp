@@ -124,7 +124,7 @@ namespace cucumber_cpp::library::engine
                 return table;
 
             for (const auto& dataTable = optionalPickleStepArgument.value().data_table.value();
-                 const auto& row : dataTable.rows)
+                const auto& row : dataTable.rows)
             {
                 table.emplace_back();
                 auto& back = table.back();
@@ -134,6 +134,17 @@ namespace cucumber_cpp::library::engine
             }
 
             return table;
+        }
+
+        std::string DocStringFactory(const std::optional<cucumber::messages::pickle_step_argument>& optionalPickleStepArgument)
+        {
+            if (!optionalPickleStepArgument)
+                return "";
+
+            if (!optionalPickleStepArgument.value().doc_string.has_value())
+                return "";
+
+            return optionalPickleStepArgument.value().doc_string.value().content;
         }
 
         std::set<std::string, std::less<>> TagsFactory(const std::vector<cucumber::messages::tag>& tags)
@@ -151,10 +162,11 @@ namespace cucumber_cpp::library::engine
         void ConstructStep(const FeatureTreeFactory& featureTreeFactory, ScenarioInfo& scenarioInfo, const cucumber::messages::step& step, const cucumber::messages::pickle_step& pickleStep)
         {
             auto table = TableFactory(pickleStep.argument);
+            auto docString = DocStringFactory(pickleStep.argument);
 
             try
             {
-                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table)));
+                scenarioInfo.Children().push_back(featureTreeFactory.CreateStepInfo(stepTypeLut.at(*pickleStep.type), pickleStep.text, scenarioInfo, step.location.line, step.location.column.value_or(0), std::move(table), docString));
             }
             catch (const std::out_of_range&)
             {
@@ -287,20 +299,20 @@ namespace cucumber_cpp::library::engine
         : stepRegistry{ stepRegistry }
     {}
 
-    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table) const
+    std::unique_ptr<StepInfo> FeatureTreeFactory::CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString) const
     {
         try
         {
             auto stepMatch = stepRegistry.Query(stepText);
-            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(stepMatch));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(docString), std::move(stepMatch));
         }
         catch (const StepRegistry::StepNotFoundError&)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(docString));
         }
         catch (StepRegistry::AmbiguousStepError& ase)
         {
-            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(ase.matches));
+            return std::make_unique<StepInfo>(scenarioInfo, std::move(stepText), stepType, line, column, std::move(table), std::move(docString), std::move(ase.matches));
         }
     }
 

@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::engine
     {
         explicit FeatureTreeFactory(StepRegistry& stepRegistry);
 
-        [[nodiscard]] std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table) const;
+        [[nodiscard]] std::unique_ptr<StepInfo> CreateStepInfo(StepType stepType, std::string stepText, const ScenarioInfo& scenarioInfo, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString) const;
 
         [[nodiscard]] std::unique_ptr<FeatureInfo> Create(const std::filesystem::path& path, std::string_view tagExpression) const;
 

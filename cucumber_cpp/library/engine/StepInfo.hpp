@@ -16,9 +16,9 @@ namespace cucumber_cpp::library::engine
 
     struct StepInfo
     {
-        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table);
-        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, StepMatch);
-        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::vector<StepMatch>);
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString);
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString, StepMatch);
+        StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString, std::vector<StepMatch>);
 
         [[nodiscard]] const struct ScenarioInfo& ScenarioInfo() const;
 
@@ -29,6 +29,7 @@ namespace cucumber_cpp::library::engine
         [[nodiscard]] std::size_t Column() const;
 
         [[nodiscard]] const std::vector<std::vector<TableValue>>& Table() const;
+        [[nodiscard]] const std::string& DocString() const;
         [[nodiscard]] const std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>>& StepMatch() const;
 
     private:
@@ -41,6 +42,7 @@ namespace cucumber_cpp::library::engine
         std::size_t column;
 
         std::vector<std::vector<TableValue>> table;
+        std::string docString;
         std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>> stepMatch;
     };
 

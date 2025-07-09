@@ -63,7 +63,7 @@ namespace cucumber_cpp::library::engine
         const auto& stepContext = contextManager.StepContext();
         auto& scenarioContext = contextManager.ScenarioContext();
 
-        stepMatch.factory(scenarioContext, stepContext.info.Table())->Execute(stepMatch.matches);
+        stepMatch.factory(scenarioContext, stepContext.info.Table(), stepContext.info.DocString())->Execute(stepMatch.matches);
     }
 
     TestExecutionImpl::TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy)
