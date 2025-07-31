@@ -33,10 +33,12 @@ namespace cucumber_cpp::library::engine
             std::vector{ TableValue{ "value1" }, TableValue{ "value2}" } }
         };
 
+        const std::string docString = "multiline \n string";
+
         library::engine::test_helper::ContextManagerInstance contextManager;
 
         engine::test_helper::TestRunnerMock testRunnerMock;
-        StepMock step{ contextManager.StepContext(), table };
+        StepMock step{ contextManager.StepContext(), table, docString };
     };
 
     TEST_F(TestStep, StepProvidesAccessToSetUpFunction)
