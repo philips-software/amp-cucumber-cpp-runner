@@ -2,7 +2,10 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
+#include "cucumber_cpp/library/report/Report.hpp"
+#include "cucumber_cpp/library/report/test_helper/ReportForwarderMock.hpp"
 #include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -17,7 +20,10 @@ namespace cucumber_cpp::library::engine
     {
         cucumber_expression::ParameterRegistry parameterRegistry;
         StepRegistry stepRegistry{ parameterRegistry };
-        FeatureTreeFactory featureTreeFactory{ stepRegistry };
+
+        test_helper::ContextManagerInstance contextManager;
+        report::test_helper::ReportForwarderMock reportForwarderImpl{ contextManager };
+        FeatureTreeFactory featureTreeFactory{ stepRegistry, reportForwarderImpl };
     };
 
     TEST_F(TestFeatureFactory, CreateEmptyFeature)
@@ -308,5 +314,31 @@ namespace cucumber_cpp::library::engine
         EXPECT_THAT(scenario1->Children()[0]->Table()[0][1].As<std::string>(), testing::StrEq("b"));
         EXPECT_THAT(scenario1->Children()[0]->Table()[1][0].As<std::string>(), testing::StrEq("c"));
         EXPECT_THAT(scenario1->Children()[0]->Table()[1][1].As<std::string>(), testing::StrEq("d"));
+    }
+
+    TEST_F(TestFeatureFactory, MissingStepsAreReported)
+    {
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given this is a missing step\n";
+
+        EXPECT_CALL(reportForwarderImpl, StepMissing);
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
+    }
+
+    TEST_F(TestFeatureFactory, AmbiguousStepsAreReported)
+    {
+        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given this is ambiguous\n";
+
+        EXPECT_CALL(reportForwarderImpl, StepAmbiguous);
+
+        const auto feature = featureTreeFactory.Create(tmp.Path(), "");
     }
 }

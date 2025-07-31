@@ -201,7 +201,7 @@ namespace cucumber_cpp::library
         engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, runPolicy };
 
         StepRegistry stepRegistry{ parameterRegistry };
-        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
+        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry, reporters };
 
         engine::TestRunnerImpl testRunner{ featureTreeFactory, testExecution };
 

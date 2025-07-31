@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, struct StepMatch stepMatch)
+    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, StepRegistry::StepMatch stepMatch)
         : scenarioInfo{ scenarioInfo }
         , text{ std::move(text) }
         , type{ type }
@@ -31,7 +31,7 @@ namespace cucumber_cpp::library::engine
     {
     }
 
-    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::vector<struct StepMatch> stepMatches)
+    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::vector<StepRegistry::StepMatch> stepMatches)
         : scenarioInfo{ scenarioInfo }
         , text{ std::move(text) }
         , type{ type }
@@ -72,7 +72,7 @@ namespace cucumber_cpp::library::engine
         return table;
     }
 
-    const std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>>& StepInfo::StepMatch() const
+    const std::variant<std::monostate, StepRegistry::StepMatch, std::vector<StepRegistry::StepMatch>>& StepInfo::StepMatch() const
     {
         return stepMatch;
     }

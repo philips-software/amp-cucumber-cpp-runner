@@ -50,6 +50,16 @@ GIVEN("a ← tuple\\({float}, {float}, {float}, {float}\\)", (float /* unused */
     // empty
 }
 
+GIVEN("this is ambiguous")
+{
+    // empty
+}
+
+GIVEN("this is ambiguous( or not)")
+{
+    // empty
+}
+
 THEN("this should be skipped")
 {
     FAIL();
