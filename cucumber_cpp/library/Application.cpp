@@ -217,7 +217,7 @@ namespace cucumber_cpp::library
                 return entry.used > 0;
             };
             auto unusedSteps = stepRegistry.List() | std::views::filter(std::not_fn(isUsed));
-            if (unusedSteps.empty())
+            if (std::ranges::begin(unusedSteps) == std::ranges::end(unusedSteps))
                 std::cout << "\nAll steps have been used.";
             else
             {
