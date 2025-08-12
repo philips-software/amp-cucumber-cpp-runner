@@ -40,6 +40,7 @@ namespace cucumber_cpp::library
             std::string reportfile{ "TestReport" };
 
             bool dryrun{ false };
+            bool printStepsNotUsed{ false };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
