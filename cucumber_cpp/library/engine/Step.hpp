@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::engine
             std::source_location sourceLocation;
         };
 
-        Step(Context& context, const Table& table);
+        Step(Context& context, const Table& table, const std::string& docString);
         virtual ~Step() = default;
 
         virtual void SetUp()
@@ -46,6 +46,7 @@ namespace cucumber_cpp::library::engine
 
         Context& context;
         const Table& table;
+        const std::string& docString;
     };
 }
 
