@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v2.1.0...v3.0.0) (2025-09-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* follow the Gherkin standard by not differentiating between step types ([#199](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/199))
+
+### Features
+
+* Add gherkin doc string support ([#214](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/214)) ([9a4615f](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/9a4615fbd7cfb7ab56ccb970bd1c6f6fac60553c))
+* Follow the Gherkin standard by not differentiating between step types ([#199](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/199)) ([e85ecc0](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/e85ecc0a3502229f7a438d372c3c8db60c2d764b))
+* Use IWYU pragma: private to indicate to IWYU the proper use of the library ([#201](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/201)) ([beb8065](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/beb8065d90ba4e5ec5342f6012aed7dec08b61f9))
+
 ## [2.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v2.0.0...v2.1.0) (2025-06-30)
 
 
