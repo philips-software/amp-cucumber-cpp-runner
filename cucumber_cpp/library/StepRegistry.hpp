@@ -8,7 +8,6 @@
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include <any>
-#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
@@ -22,20 +21,20 @@
 namespace cucumber_cpp::library
 {
     template<class T>
-    std::unique_ptr<Body> StepBodyFactory(Context& context, const engine::Table& table)
+    std::unique_ptr<Body> StepBodyFactory(Context& context, const engine::Table& table, const std::string& docString)
     {
-        return std::make_unique<T>(context, table);
+        return std::make_unique<T>(context, table, docString);
     }
 
     struct StepMatch
     {
-        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
+        StepMatch(std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString), std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
             : factory(factory)
             , matches(std::move(matches))
             , stepRegexStr(stepRegexStr)
         {}
 
-        std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+        std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString);
         std::variant<std::vector<std::string>, std::vector<std::any>> matches{};
         std::string_view stepRegexStr{};
     };
@@ -58,7 +57,7 @@ namespace cucumber_cpp::library
 
         struct Entry
         {
-            Entry(engine::StepType type, cucumber_expression::Matcher regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+            Entry(engine::StepType type, cucumber_expression::Matcher regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString))
                 : type(type)
                 , regex(std::move(regex))
                 , factory(factory)
@@ -66,7 +65,7 @@ namespace cucumber_cpp::library
 
             engine::StepType type{};
             cucumber_expression::Matcher regex;
-            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString);
 
             std::uint32_t used{ 0 };
         };
@@ -91,7 +90,7 @@ namespace cucumber_cpp::library
         [[nodiscard]] std::vector<EntryView> List() const;
 
     private:
-        void Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table));
+        void Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString));
 
         std::vector<Entry> registry;
         cucumber_expression::ParameterRegistry& parameterRegistry;
@@ -107,7 +106,7 @@ namespace cucumber_cpp::library
 
         struct Entry
         {
-            Entry(engine::StepType type, std::string regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+            Entry(engine::StepType type, std::string regex, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString))
                 : type(type)
                 , regex(std::move(regex))
                 , factory(factory)
@@ -115,7 +114,7 @@ namespace cucumber_cpp::library
 
             engine::StepType type{};
             std::string regex;
-            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table);
+            std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString);
         };
 
         template<class T>

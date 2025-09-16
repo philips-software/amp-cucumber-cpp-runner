@@ -10,34 +10,37 @@
 
 namespace cucumber_cpp::library::engine
 {
-    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table)
+    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString)
         : scenarioInfo{ scenarioInfo }
         , text{ std::move(text) }
         , type{ type }
         , line{ line }
         , column{ column }
         , table{ std::move(table) }
+        , docString{ std::move(docString) }
     {
     }
 
-    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, struct StepMatch stepMatch)
+    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString, struct StepMatch stepMatch)
         : scenarioInfo{ scenarioInfo }
         , text{ std::move(text) }
         , type{ type }
         , line{ line }
         , column{ column }
         , table{ std::move(table) }
+        , docString{ std::move(docString) }
         , stepMatch{ std::move(stepMatch) }
     {
     }
 
-    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::vector<struct StepMatch> stepMatches)
+    StepInfo::StepInfo(const struct ScenarioInfo& scenarioInfo, std::string text, StepType type, std::size_t line, std::size_t column, std::vector<std::vector<TableValue>> table, std::string docString, std::vector<struct StepMatch> stepMatches)
         : scenarioInfo{ scenarioInfo }
         , text{ std::move(text) }
         , type{ type }
         , line{ line }
         , column{ column }
         , table{ std::move(table) }
+        , docString{ std::move(docString) }
         , stepMatch{ std::move(stepMatches) }
     {
     }
@@ -70,6 +73,11 @@ namespace cucumber_cpp::library::engine
     [[nodiscard]] const std::vector<std::vector<TableValue>>& StepInfo::Table() const
     {
         return table;
+    }
+
+    const std::string& StepInfo::DocString() const
+    {
+        return docString;
     }
 
     const std::variant<std::monostate, struct StepMatch, std::vector<struct StepMatch>>& StepInfo::StepMatch() const

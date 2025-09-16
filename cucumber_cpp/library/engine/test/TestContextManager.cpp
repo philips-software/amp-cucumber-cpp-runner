@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::engine
         cucumber_cpp::library::engine::FeatureInfo feature{ {}, {}, {}, {}, {}, {} };
         cucumber_cpp::library::engine::RuleInfo rule{ feature, {}, {}, {}, {}, {} };
         cucumber_cpp::library::engine::ScenarioInfo scenario{ rule, {}, {}, {}, {}, {} };
-        cucumber_cpp::library::engine::StepInfo step{ scenario, {}, {}, {}, {}, {} };
+        cucumber_cpp::library::engine::StepInfo step{ scenario, {}, {}, {}, {}, {}, {} };
     };
 
     TEST_F(TestContextManager, Construct)

@@ -28,7 +28,7 @@ namespace cucumber_cpp::library::engine::test_helper
             , feature{ tags, {}, {}, {}, {}, {} }
             , rule{ feature, {}, {}, {}, {}, {} }
             , scenario{ rule, tags, {}, {}, {}, {} }
-            , step{ scenario, {}, {}, {}, {}, {} }
+            , step{ scenario, {}, {}, {}, {}, {}, {} }
         {
         }
 

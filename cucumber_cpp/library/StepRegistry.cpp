@@ -64,7 +64,7 @@ namespace cucumber_cpp::library
         return list;
     }
 
-    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table))
+    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, std::unique_ptr<Body> (&factory)(Context& context, const engine::Table& table, const std::string& docString))
     {
         if (matcher.starts_with('^') || matcher.ends_with('$'))
             registry.emplace_back(stepType, cucumber_expression::Matcher{ std::in_place_type<cucumber_expression::RegularExpression>, matcher }, factory);
