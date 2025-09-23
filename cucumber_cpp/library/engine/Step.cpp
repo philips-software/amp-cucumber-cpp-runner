@@ -8,9 +8,10 @@
 
 namespace cucumber_cpp::library::engine
 {
-    Step::Step(Context& context, const Table& table)
+    Step::Step(Context& context, const Table& table, const std::string& docString)
         : context{ context }
         , table{ table }
+        , docString{ docString }
     {}
 
     void Step::Given(const std::string& step) const

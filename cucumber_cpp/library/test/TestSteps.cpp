@@ -58,7 +58,7 @@ namespace cucumber_cpp::library
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
 
-        matches.factory(context, {})->Execute(matches.matches);
+        matches.factory(context, {}, "")->Execute(matches.matches);
 
         EXPECT_THAT(context.Contains("float"), testing::IsTrue());
         EXPECT_THAT(context.Contains("std::string"), testing::IsTrue());
@@ -85,7 +85,7 @@ namespace cucumber_cpp::library
         auto contextStorage{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorage };
 
-        matches.factory(context, {})->Execute(matches.matches);
+        matches.factory(context, {}, {})->Execute(matches.matches);
     }
 
     TEST_F(TestSteps, EscapedParenthesis)

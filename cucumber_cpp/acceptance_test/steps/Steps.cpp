@@ -55,6 +55,12 @@ THEN("this should be skipped")
     FAIL();
 }
 
+GIVEN("Next block of text enclosed in \"\"\" characters")
+{
+
+    ASSERT_THAT(docString, testing::Eq("Multiline\nDocstring"));
+}
+
 WHEN("this step is being used")
 {
     // empty
