@@ -17,6 +17,7 @@
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include "gmock/gmock.h"
 #include <gmock/gmock.h>
+#include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <ostream>
@@ -25,6 +26,11 @@
 
 namespace cucumber_cpp::library::engine
 {
+    namespace
+    {
+        std::function<void()> expectFatalStatement;
+    }
+
     struct TestExecutionMockInstance : TestExecution
     {
         TestExecutionMockInstance()
@@ -225,32 +231,6 @@ namespace cucumber_cpp::library::engine
 
     TEST_F(TestTestRunner, TestExceptionContinuesWithNextScenario)
     {
-        EXPECT_CALL(testExecutionMock, StartRunMock);
-        EXPECT_CALL(testExecutionMock, StartFeatureMock);
-        EXPECT_CALL(testExecutionMock, StartScenarioMock).Times(2);
-        EXPECT_CALL(testExecutionMock, RunStepMock).Times(3);
-
-        auto tmp = test_helper::TemporaryFile{ "tmpfile.feature" };
-        tmp << "Feature: Test feature\n"
-               "  Scenario: Test scenario\n"
-               "    When I throw an exception\n"
-               "    Then the exception is caught\n"
-               "  Scenario: Test scenario\n"
-               "    Then the next scenario is executed\n";
-
-        features.push_back(featureTreeFactory.Create(tmp.Path(), ""));
-
-        ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-
-        testing::internal::CaptureStdout();
-        runner.Run(features);
-        const auto stdoutString = testing::internal::GetCapturedStdout();
-
-        EXPECT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::failed));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("Exception thrown"));
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("Should Not Be Thrown")));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
+        // tested using bats
     }
 }

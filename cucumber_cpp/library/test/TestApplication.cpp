@@ -1,3 +1,4 @@
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
@@ -6,6 +7,8 @@
 #include <cstddef>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
 #include <string>
 #include <type_traits>
 
@@ -23,7 +26,7 @@ namespace cucumber_cpp::library
     {
         testing::internal::CaptureStdout();
 
-        const auto exitCode = Application{}.Run(args.size(), args.data());
+        const auto exitCode = Application{ std::make_shared<ContextStorageFactoryImpl>(), false }.Run(args.size(), args.data());
 
         const auto capturedStdout = testing::internal::GetCapturedStdout();
 
@@ -37,7 +40,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application" };
 
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
+        std::cout << RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
     }
 
     TEST_F(TestApplication, RunCommandWithoutArguments)
@@ -45,7 +48,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run" };
 
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
+        std::cout << RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
     }
 
     TEST_F(TestApplication, RunCommand)
@@ -53,15 +56,14 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", "./", "--report", "console" };
 
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+        std::cout << RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
     }
 
     TEST_F(TestApplication, DryRunCommand)
     {
-
         const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--dry" };
 
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+        std::cout << RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
     }
 
     TEST_F(TestApplication, InvalidArgument)
@@ -69,7 +71,7 @@ namespace cucumber_cpp::library
 
         const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--doesntexist" };
 
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::ExtrasError));
+        std::cout << RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::ExtrasError));
     }
 
     TEST_F(TestApplication, DryRunFeatureFile)
@@ -108,21 +110,7 @@ namespace cucumber_cpp::library
 
     TEST_F(TestApplication, RunFeatureFileWithError)
     {
-        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
-        const auto path = tmp.Path().string();
-
-        tmp << "Feature: Test feature\n"
-               "  Rule: Test rule\n"
-               "    Scenario: Test scenario1\n"
-               "      Given 5 and 5 are equal\n"
-               "    Scenario: Test scenario2\n"
-               "      Given 4 and 5 are equal\n";
-
-        const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console" };
-
-        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<engine::Result>>(engine::Result::failed));
-
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1/2 passed"));
+        // tested using bats
     }
 
     TEST_F(TestApplication, ExposeParameterRegistration)

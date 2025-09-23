@@ -59,12 +59,27 @@ namespace cucumber_cpp::library::engine
         reportHandler.Failure(message, relativeFilePath, line);
     }
 
-    CucumberAssertHelper::CucumberAssertHelper(testing::TestPartResult::Type type, const char* file, int line, const char* message)
-        : data(std::make_unique<CucumberAssertHelperData>(type, file, line, message))
+    // CucumberAssertHelper::CucumberAssertHelper(testing::TestPartResult::Type type, const char* file, int line, const char* message)
+    //     : data(std::make_unique<CucumberAssertHelperData>(type, file, line, message))
+    // {}
+
+    // void CucumberAssertHelper::operator=(const testing::Message& message) const // NOLINT
+    // {
+    //     TestAssertionHandler::Instance().AddAssertionError(data->file, data->line, AppendUserMessage(data->message, message));
+    // }
+
+    GoogleTestEventListener::GoogleTestEventListener(TestAssertionHandler& testAssertionHandler)
+        : testAssertionHandler(testAssertionHandler)
     {}
 
-    void CucumberAssertHelper::operator=(const testing::Message& message) const // NOLINT
+    void GoogleTestEventListener::OnTestPartResult(const testing::TestPartResult& testPartResult)
     {
-        TestAssertionHandler::Instance().AddAssertionError(data->file, data->line, AppendUserMessage(data->message, message));
+        if (testPartResult.failed())
+        {
+            TestAssertionHandler::Instance().AddAssertionError(
+                testPartResult.file_name() != nullptr ? testPartResult.file_name() : "",
+                testPartResult.line_number(),
+                testPartResult.message());
+        }
     }
 }

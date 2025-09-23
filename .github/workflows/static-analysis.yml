@@ -42,6 +42,10 @@ jobs:
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
+      - name: Run acceptance tests
+        run: |
+          bats --formatter junit cucumber_cpp/acceptance_test/coverage.bats | tee test-report.xml
+
       - name: Collect coverage
         run: |
           gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j "$(nproc)" --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.*

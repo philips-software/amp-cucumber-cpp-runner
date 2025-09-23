@@ -2,9 +2,11 @@
 #include "cucumber_cpp/library/engine/HookExecutor.hpp"
 #include "cucumber_cpp/library/engine/Result.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
+#include "cucumber_cpp/library/engine/test_helper/FailureHandlerFixture.hpp"
 #include "cucumber_cpp/library/report/test_helper/ReportForwarderMock.hpp"
 #include <functional>
 #include <gmock/gmock.h>
+#include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <optional>
 #include <set>
@@ -13,10 +15,17 @@
 
 namespace cucumber_cpp::library::engine
 {
+    namespace
+    {
+        std::function<void()> expectFatalStatement;
+    }
+
     struct TestHookExecutor : testing::Test
     {
         std::optional<test_helper::ContextManagerInstance> contextManagerInstance{ std::in_place };
         std::optional<HookExecutorImpl> hookExecutor{ *contextManagerInstance };
+
+        test_helper::FailureHandlerFixture failureHandlerFixture{ *contextManagerInstance };
     };
 
     TEST_F(TestHookExecutor, Construct)
@@ -79,8 +88,11 @@ namespace cucumber_cpp::library::engine
         report::test_helper::ReportForwarderMock reportHandler{ *contextManagerInstance };
         TestAssertionHandlerImpl assertionHandler{ *contextManagerInstance, reportHandler };
 
-        auto hook = hookExecutor->StepStart();
+        expectFatalStatement = [this]
+        {
+            auto hook = hookExecutor->StepStart();
+        };
 
-        EXPECT_THAT(contextManagerInstance->CurrentStepContext()->ExecutionStatus(), testing::Eq(Result::failed));
+        EXPECT_FATAL_FAILURE(expectFatalStatement(), "Expected: false");
     }
 }

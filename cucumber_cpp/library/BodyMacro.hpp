@@ -7,10 +7,10 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 
-#undef GTEST_MESSAGE_AT_
-#define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
-    cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
-        ::testing::Message()
+// #undef GTEST_MESSAGE_AT_
+// #define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
+//     cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
+//         ::testing::Message()
 
 #define BODY_MATCHER(matcher, ...) matcher
 #define BODY_ARGS(matcher, args, ...) args
@@ -34,7 +34,7 @@
             void Execute(const std::variant<std::vector<std::string>, std::vector<std::any>>& args) override                                 \
             {                                                                                                                                \
                 cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                                                \
-                EXPECT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));                                                 \
+                ASSERT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));                                                 \
             }                                                                                                                                \
                                                                                                                                              \
             template<class... TArgs>                                                                                                         \
