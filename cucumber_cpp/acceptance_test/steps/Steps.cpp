@@ -54,3 +54,13 @@ THEN("this should be skipped")
 {
     FAIL();
 }
+
+WHEN("this step is being used")
+{
+    // empty
+}
+
+WHEN("this step is not being used")
+{
+    // empty
+}
