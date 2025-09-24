@@ -139,7 +139,7 @@ namespace cucumber_cpp::library::engine
     struct TestExecutionImplWithoutDefaultGoogleListener : TestExecutionImpl
     {
         TestExecutionImplWithoutDefaultGoogleListener(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
-        virtual ~TestExecutionImplWithoutDefaultGoogleListener();
+        ~TestExecutionImplWithoutDefaultGoogleListener() override;
 
     private:
         testing::TestEventListener* defaultEventListener;

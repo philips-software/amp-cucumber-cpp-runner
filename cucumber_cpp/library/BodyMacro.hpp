@@ -7,11 +7,6 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 
-// #undef GTEST_MESSAGE_AT_
-// #define GTEST_MESSAGE_AT_(file, line, message, result_type)                                 \
-//     cucumber_cpp::library::engine::CucumberAssertHelper(result_type, file, line, message) = \
-//         ::testing::Message()
-
 #define BODY_MATCHER(matcher, ...) matcher
 #define BODY_ARGS(matcher, args, ...) args
 
