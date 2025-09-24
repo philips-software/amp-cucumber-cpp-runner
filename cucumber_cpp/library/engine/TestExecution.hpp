@@ -112,6 +112,10 @@ namespace cucumber_cpp::library::engine
     struct TestExecutionImpl : TestExecution
     {
         TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
+
+        TestExecutionImpl(const TestExecutionImpl&) = delete;
+        TestExecutionImpl& operator=(const TestExecutionImpl&) = delete;
+
         virtual ~TestExecutionImpl();
 
         ProgramScope StartRun() override;

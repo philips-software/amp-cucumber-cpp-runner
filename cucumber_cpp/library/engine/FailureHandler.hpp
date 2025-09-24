@@ -13,14 +13,12 @@ namespace cucumber_cpp::library::engine
     {
         virtual ~TestAssertionHandler() = default;
 
-    public:
         virtual void AddAssertionError(const char* file, int line, const std::string& message) = 0;
     };
 
     struct TestAssertionHandlerImpl : TestAssertionHandler
     {
         explicit TestAssertionHandlerImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
-        virtual ~TestAssertionHandlerImpl() = default;
 
         void AddAssertionError(const char* file, int line, const std::string& message) override;
 
