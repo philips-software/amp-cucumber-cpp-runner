@@ -16,21 +16,14 @@
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include "gmock/gmock.h"
-#include <gmock/gmock.h>
+#include <functional>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <memory>
-#include <ostream>
-#include <stdexcept>
 #include <vector>
 
 namespace cucumber_cpp::library::engine
 {
-    namespace
-    {
-        std::function<void()> expectFatalStatement;
-    }
-
     struct TestExecutionMockInstance : TestExecution
     {
         TestExecutionMockInstance()
@@ -227,10 +220,5 @@ namespace cucumber_cpp::library::engine
         runner.Run(features);
 
         ASSERT_THAT(contextManager.ProgramContext().ExecutionStatus(), testing::Eq(Result::passed));
-    }
-
-    TEST_F(TestTestRunner, TestExceptionContinuesWithNextScenario)
-    {
-        // tested using bats
     }
 }
