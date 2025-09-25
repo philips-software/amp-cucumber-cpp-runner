@@ -16,7 +16,6 @@
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include "gmock/gmock.h"
-#include <functional>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <memory>
