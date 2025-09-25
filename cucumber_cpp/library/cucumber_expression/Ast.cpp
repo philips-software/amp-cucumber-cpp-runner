@@ -115,12 +115,12 @@ namespace cucumber_cpp::library::cucumber_expression
         return end;
     }
 
-    bool Token::IsEscapeCharacter(unsigned char ch)
+    bool Token::IsEscapeCharacter(char ch)
     {
         return ch == '\\';
     }
 
-    TokenType Token::TypeOf(unsigned char ch)
+    TokenType Token::TypeOf(char ch)
     {
         if (std::isspace(ch) != 0)
             return TokenType::whiteSpace;
@@ -131,7 +131,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return TokenType::text;
     }
 
-    bool Token::CanEscape(unsigned char ch)
+    bool Token::CanEscape(char ch)
     {
         if (std::isspace(ch) != 0)
             return true;

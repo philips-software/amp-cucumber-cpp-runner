@@ -18,6 +18,8 @@ target_link_libraries(cucumber_cpp.library.engine.test_helper PUBLIC
 
 target_sources(cucumber_cpp.library.engine.test_helper PRIVATE
     ContextManagerInstance.hpp
+    FailureHandlerFixture.cpp
+    FailureHandlerFixture.hpp
     TemporaryFile.cpp
     TemporaryFile.hpp
     TestExecutionInstance.hpp

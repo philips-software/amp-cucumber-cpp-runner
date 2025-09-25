@@ -1,7 +1,9 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 GIVEN("a background step")
@@ -59,4 +61,24 @@ GIVEN("Next block of text enclosed in \"\"\" characters")
 {
 
     ASSERT_THAT(docString, testing::Eq("Multiline\nDocstring"));
+}
+
+WHEN("I throw an exception")
+{
+    throw std::runtime_error{ "Exception thrown" };
+}
+
+THEN("the exception is caught")
+{
+    throw std::runtime_error{ "Should Not Be Thrown" };
+}
+
+THEN("the next scenario is executed")
+{
+    /* do nothing */
+}
+
+GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
+{
+    EXPECT_THAT(a, testing::Eq(b));
 }

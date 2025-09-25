@@ -11,25 +11,14 @@ namespace cucumber_cpp::library::engine
 {
     struct TestAssertionHandler
     {
-    protected:
-        TestAssertionHandler();
-        ~TestAssertionHandler();
-
-    public:
-        TestAssertionHandler(const TestAssertionHandler&) = delete;
-
-        static TestAssertionHandler& Instance();
+        virtual ~TestAssertionHandler() = default;
 
         virtual void AddAssertionError(const char* file, int line, const std::string& message) = 0;
-
-    private:
-        static TestAssertionHandler* instance; // NOLINT
     };
 
     struct TestAssertionHandlerImpl : TestAssertionHandler
     {
         explicit TestAssertionHandlerImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler);
-        virtual ~TestAssertionHandlerImpl() = default;
 
         void AddAssertionError(const char* file, int line, const std::string& message) override;
 
@@ -38,40 +27,14 @@ namespace cucumber_cpp::library::engine
         report::ReportForwarder& reportHandler;
     };
 
-    class CucumberAssertHelper
+    struct GoogleTestEventListener : testing::EmptyTestEventListener
     {
-    public:
-        CucumberAssertHelper(testing::TestPartResult::Type type, const char* file, int line,
-            const char* message);
+        explicit GoogleTestEventListener(TestAssertionHandler& testAssertionHandler);
 
-        CucumberAssertHelper(const CucumberAssertHelper&) = delete;
-        CucumberAssertHelper& operator=(const CucumberAssertHelper&) = delete;
-
-        // see testing::internal::AssertHelper
-        void operator=(const testing::Message& message) const; // NOLINT
+        void OnTestPartResult(const testing::TestPartResult& testPartResult) override;
 
     private:
-        // see testing::internal::AssertHelper::AssertHelperData
-        struct CucumberAssertHelperData
-        {
-            CucumberAssertHelperData(testing::TestPartResult::Type t, const char* srcfile, int line_num,
-                const char* msg)
-                : type(t)
-                , file(srcfile)
-                , line(line_num)
-                , message(msg)
-            {}
-
-            const testing::TestPartResult::Type type;
-            const char* const file;
-            const int line;
-            const std::string message;
-
-            CucumberAssertHelperData(const CucumberAssertHelperData&) = delete;
-            CucumberAssertHelperData& operator=(const CucumberAssertHelperData&) = delete;
-        };
-
-        std::unique_ptr<const CucumberAssertHelperData> data;
+        TestAssertionHandler& testAssertionHandler;
     };
 }
 
