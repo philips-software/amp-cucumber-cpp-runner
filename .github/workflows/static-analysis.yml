@@ -50,7 +50,7 @@ jobs:
         run: |
           gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j "$(nproc)" --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.*
 
-      - uses: philips-software/sonarqube-issue-conversion@7a8d60524dafa52eea3439587b310c81b2f2f981 # v1.1.0
+      - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
         with:
           input: ${{ github.workspace }}/testresults/*.xml
           output: execution.xml
@@ -77,7 +77,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
         with:
           key: ${{ github.job }}
-      - uses: github/codeql-action/init@192325c86100d080feab897ff886c34abd4c83a3 # v3.30.3
+      - uses: github/codeql-action/init@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
         with:
           languages: cpp
       - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
@@ -85,4 +85,4 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Debug"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
-      - uses: github/codeql-action/analyze@192325c86100d080feab897ff886c34abd4c83a3 # v3.30.3
+      - uses: github/codeql-action/analyze@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
