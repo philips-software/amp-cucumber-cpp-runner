@@ -47,6 +47,7 @@ target_compile_options(cucumber_cpp.library
 )
 
 add_subdirectory(cucumber_expression)
+add_subdirectory(tag_expression)
 add_subdirectory(engine)
 add_subdirectory(report)
 add_subdirectory(util)
