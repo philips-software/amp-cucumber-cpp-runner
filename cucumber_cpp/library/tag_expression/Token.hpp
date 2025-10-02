@@ -55,11 +55,11 @@ namespace cucumber_cpp::library::tag_expression
         TokenType type;
     };
 
-    constexpr Token OR{ "or", 0, Associative::left, TokenType::operator_ };
-    constexpr Token AND{ "and", 1, Associative::left, TokenType::operator_ };
-    constexpr Token NOT{ "not", 2, Associative::right, TokenType::operator_ };
-    constexpr Token OPEN_PARENTHESIS{ "(", -2, std::nullopt };
-    constexpr Token CLOSE_PARENTHESIS{ ")", -1, std::nullopt };
+    inline const Token OR{ "or", 0, Associative::left, TokenType::operator_ };
+    inline const Token AND{ "and", 1, Associative::left, TokenType::operator_ };
+    inline const Token NOT{ "not", 2, Associative::right, TokenType::operator_ };
+    inline const Token OPEN_PARENTHESIS{ "(", -2, std::nullopt };
+    inline const Token CLOSE_PARENTHESIS{ ")", -1, std::nullopt };
 
     inline const std::map<std::string_view, const Token&> tokenMap{
         { OR.keyword, OR },

@@ -44,7 +44,7 @@ namespace cucumber_cpp::library::tag_expression
                         expressionsStr += *expr;
                     }
 
-                    throw TagExpressionError(std::format("{}: Too few operands (expressions=\{{}})", token.keyword, expressionsStr));
+                    throw TagExpressionError(std::format(R"({}: Too few operands (expressions={{{}}}))", token.keyword, expressionsStr));
                 }
             };
 
