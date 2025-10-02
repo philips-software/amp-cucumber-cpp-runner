@@ -9,7 +9,7 @@
 
 namespace cucumber_cpp::library::tag_expression
 {
-    bool TrueExpression::Evaluate(const std::set<std::string>& tags) const
+    bool TrueExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return true;
     }
@@ -23,7 +23,7 @@ namespace cucumber_cpp::library::tag_expression
         : name{ std::move(name) }
     {}
 
-    bool LiteralExpression::Evaluate(const std::set<std::string>& tags) const
+    bool LiteralExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return tags.contains(name);
     }
@@ -58,7 +58,7 @@ namespace cucumber_cpp::library::tag_expression
         , right{ std::move(right) }
     {}
 
-    bool AndExpression::Evaluate(const std::set<std::string>& tags) const
+    bool AndExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return left->Evaluate(tags) && right->Evaluate(tags);
     }
@@ -76,7 +76,7 @@ namespace cucumber_cpp::library::tag_expression
         , right{ std::move(right) }
     {}
 
-    bool OrExpression::Evaluate(const std::set<std::string>& tags) const
+    bool OrExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return left->Evaluate(tags) || right->Evaluate(tags);
     }
@@ -93,7 +93,7 @@ namespace cucumber_cpp::library::tag_expression
         : operand{ std::move(operand) }
     {}
 
-    bool NotExpression::Evaluate(const std::set<std::string>& tags) const
+    bool NotExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return !operand->Evaluate(tags);
     }

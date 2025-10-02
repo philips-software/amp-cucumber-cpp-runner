@@ -1,6 +1,7 @@
 #ifndef TAG_EXPRESSION_MODEL_HPP
 #define TAG_EXPRESSION_MODEL_HPP
 
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -9,13 +10,13 @@ namespace cucumber_cpp::library::tag_expression
 {
     struct Expression
     {
-        virtual bool Evaluate(const std::set<std::string>& tags) const = 0;
+        virtual bool Evaluate(const std::set<std::string, std::less<>>& tags) const = 0;
         virtual operator std::string() const = 0;
     };
 
     struct TrueExpression : Expression
     {
-        bool Evaluate(const std::set<std::string>& tags) const override;
+        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
         operator std::string() const override;
     };
 
@@ -23,7 +24,7 @@ namespace cucumber_cpp::library::tag_expression
     {
         LiteralExpression(std::string name);
 
-        bool Evaluate(const std::set<std::string>& tags) const override;
+        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
         operator std::string() const override;
 
     private:
@@ -34,7 +35,7 @@ namespace cucumber_cpp::library::tag_expression
     {
         AndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
-        bool Evaluate(const std::set<std::string>& tags) const override;
+        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
         operator std::string() const override;
 
     private:
@@ -46,7 +47,7 @@ namespace cucumber_cpp::library::tag_expression
     {
         OrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
-        bool Evaluate(const std::set<std::string>& tags) const override;
+        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
         operator std::string() const override;
 
     private:
@@ -58,7 +59,7 @@ namespace cucumber_cpp::library::tag_expression
     {
         NotExpression(std::unique_ptr<Expression> operand);
 
-        bool Evaluate(const std::set<std::string>& tags) const override;
+        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
         operator std::string() const override;
 
     private:

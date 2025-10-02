@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::tag_expression
             const auto tagExpression = TagExpressionParser{}.Parse(expression);
             ASSERT_THAT(tagExpression, testing::NotNull());
 
-            std::set<std::string> tags;
+            std::set<std::string, std::less<>> tags;
             for (const auto& var : variables)
                 tags.insert(var.as<std::string>());
 

@@ -3,12 +3,14 @@
 
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/tag_expression/Model.hpp"
+#include "cucumber_cpp/library/tag_expression/TagExpressionParser.hpp"
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <set>
 #include <string>
-#include <utility>
+#include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library
@@ -45,52 +47,27 @@ namespace cucumber_cpp::library
         Context& context;
     };
 
-    struct TagExpressionMatch
-    {
-        TagExpressionMatch(const std::string& tagExpression, const std::set<std::string, std::less<>>& tags);
-
-        bool Matched() const;
-
-    private:
-        bool matched;
-    };
-
-    struct HookTagExpression
-    {
-        explicit HookTagExpression(std::string tagExpression);
-
-        std::unique_ptr<TagExpressionMatch> Match(const std::set<std::string, std::less<>>& tags) const;
-        std::string TagExpression() const;
-
-    private:
-        std::string tagExpression;
-    };
-
     struct HookMatch
     {
-        HookMatch(std::unique_ptr<TagExpressionMatch> tagExpressionMatch, std::unique_ptr<Body> (&factory)(Context& context), const HookTagExpression& hookRegex)
-            : tagExpressionMatch(std::move(tagExpressionMatch))
-            , factory(factory)
-            , hookRegex(hookRegex)
+        explicit HookMatch(std::unique_ptr<Body> (&factory)(Context& context))
+            : factory(factory)
         {}
 
-        std::unique_ptr<TagExpressionMatch> tagExpressionMatch;
         std::unique_ptr<Body> (&factory)(Context& context);
-        const HookTagExpression& hookRegex;
     };
 
     struct HookRegistryBase
     {
         struct Entry
         {
-            Entry(HookType type, const HookTagExpression& hookTagExpression, std::unique_ptr<Body> (&factory)(Context& context))
+            Entry(HookType type, std::string_view expression, std::unique_ptr<Body> (&factory)(Context& context))
                 : type(type)
-                , hookTagExpression(hookTagExpression)
+                , tagExpression{ tag_expression::TagExpressionParser{}.Parse(expression) }
                 , factory(factory)
             {}
 
             HookType type;
-            HookTagExpression hookTagExpression;
+            std::unique_ptr<tag_expression::Expression> tagExpression;
             std::unique_ptr<Body> (&factory)(Context& context);
         };
 
@@ -129,7 +106,7 @@ namespace cucumber_cpp::library
     template<class T>
     std::size_t HookRegistryBase::Register(const std::string& tagExpression, HookType hookType)
     {
-        registry.emplace_back(hookType, HookTagExpression{ tagExpression }, Construct<T>);
+        registry.emplace_back(hookType, tagExpression, Construct<T>);
         return registry.size();
     }
 

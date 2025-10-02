@@ -23,42 +23,26 @@ namespace cucumber_cpp::library
                 return entry.type == hookType;
             };
         };
+
+        auto Matches(const std::set<std::string, std::less<>>& tags)
+        {
+            return [&tags](const HookRegistryBase::Entry& entry)
+            {
+                return entry.tagExpression->Evaluate(tags);
+            };
+        }
     }
 
     HookBase::HookBase(Context& context)
         : context{ context }
     {}
 
-    TagExpressionMatch::TagExpressionMatch(const std::string& tagExpression, const std::set<std::string, std::less<>>& tags)
-        : matched{ IsTagExprSelected(tagExpression, tags) }
-    {}
-
-    bool TagExpressionMatch::Matched() const
-    {
-        return matched;
-    }
-
-    HookTagExpression::HookTagExpression(std::string tagExpression)
-        : tagExpression{ std::move(tagExpression) }
-    {}
-
-    std::unique_ptr<TagExpressionMatch> HookTagExpression::Match(const std::set<std::string, std::less<>>& tags) const
-    {
-        return std::make_unique<TagExpressionMatch>(tagExpression, tags);
-    }
-
-    std::string HookTagExpression::TagExpression() const
-    {
-        return tagExpression;
-    }
-
     std::vector<HookMatch> HookRegistryBase::Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const
     {
         std::vector<HookMatch> matches;
 
-        for (const Entry& entry : registry | std::views::filter(TypeFilter(hookType)))
-            if (auto match = entry.hookTagExpression.Match(tags); match->Matched())
-                matches.emplace_back(std::move(match), entry.factory, entry.hookTagExpression);
+        for (const Entry& entry : registry | std::views::filter(TypeFilter(hookType)) | std::views::filter(Matches(tags)))
+            matches.emplace_back(entry.factory);
 
         return matches;
     }

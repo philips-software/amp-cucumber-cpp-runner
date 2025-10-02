@@ -34,6 +34,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_gherkin_lib
     cucumber_cpp.library.report
     cucumber_cpp.library.engine
+    cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
     CLI11
 )
