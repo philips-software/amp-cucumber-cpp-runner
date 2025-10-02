@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionParser.hpp"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"

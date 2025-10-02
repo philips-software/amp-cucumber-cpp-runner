@@ -34,6 +34,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_gherkin_lib
     cucumber_cpp.library.report
     cucumber_cpp.library.engine
+    cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
     CLI11
 )
@@ -47,6 +48,7 @@ target_compile_options(cucumber_cpp.library
 )
 
 add_subdirectory(cucumber_expression)
+add_subdirectory(tag_expression)
 add_subdirectory(engine)
 add_subdirectory(report)
 add_subdirectory(util)
