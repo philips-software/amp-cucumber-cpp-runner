@@ -3,7 +3,6 @@
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
-#include "gtest/gtest.h"
 #include <cstdlib>
 #include <filesystem>
 #include <format>
@@ -22,7 +21,6 @@ namespace cucumber_cpp::library::tag_expression
     };
 
     struct TestEvaluations : TestEvaluationsFixture
-
     {
         TestEvaluations(std::string_view expression, YAML::Node variables, bool result)
             : expression{ expression }

@@ -10,6 +10,8 @@ namespace cucumber_cpp::library::tag_expression
 {
     struct Expression
     {
+        virtual ~Expression() = default;
+
         virtual bool Evaluate(const std::set<std::string, std::less<>>& tags) const = 0;
         virtual operator std::string() const = 0;
     };
