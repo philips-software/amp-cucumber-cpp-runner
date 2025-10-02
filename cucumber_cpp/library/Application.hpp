@@ -58,7 +58,7 @@ namespace cucumber_cpp::library
         void DryRunFeatures();
         void RunFeatures();
         [[nodiscard]] engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
-        void PrintStepsNotUsed(StepRegistry& stepRegistry);
+        void PrintStepsNotUsed(const StepRegistry& stepRegistry) const;
         [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);
 
         [[nodiscard]] int GetExitCode() const;

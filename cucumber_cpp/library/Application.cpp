@@ -223,7 +223,7 @@ namespace cucumber_cpp::library
                   << std::flush;
     }
 
-    void Application::PrintStepsNotUsed(StepRegistry& stepRegistry)
+    void Application::PrintStepsNotUsed(const StepRegistry& stepRegistry) const
     {
         auto isUnused = [](const StepRegistry::EntryView& entry)
         {
