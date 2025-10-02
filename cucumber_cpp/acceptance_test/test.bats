@@ -192,3 +192,16 @@ teardown() {
     assert_success
     assert_output --partial "tests   : 1/1 passed"
 }
+
+@test "Test unused step reporting" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@unused_steps" --report console --unused 
+    assert_success
+    assert_output --regexp ".*The following steps have not been used:.*this step is not being used.*"
+    refute_output --regexp ".*The following steps have not been used:.*this step is being used.*"
+}
+
+@test "Test unused steps by default not reported" {
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@unused_steps" --report console
+    assert_success
+    refute_output --partial "The following steps have not been used:"
+}

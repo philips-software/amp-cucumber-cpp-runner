@@ -1,6 +1,7 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
+#include "gmock/gmock.h"
 #include <CLI/Error.hpp>
 #include <array>
 #include <cstddef>
@@ -109,5 +110,34 @@ namespace cucumber_cpp::library
     TEST_F(TestApplication, ExposeParameterRegistration)
     {
         EXPECT_THAT(&Application{}.ParameterRegistration(), testing::NotNull());
+    }
+
+    TEST_F(TestApplication, UnusedParameters)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Rule: Test rule\n"
+               "    Scenario: Test scenario1\n"
+               "      Given 5 and 5 are equal\n"
+               "      And This is a GIVEN step\n"
+               "      And This is a WHEN step\n"
+               "      And This is a THEN step\n"
+               "      And This is a STEP step\n";
+
+        const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console", "--unused" };
+
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+
+        EXPECT_THAT(stdoutString, testing::HasSubstr("The following steps have not been used:"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("^This is a step with a ([0-9]+)s delay$"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("Step with cucumber expression syntax {float} {string} {int}"));
+
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("{int} and {int} are equal")));
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a GIVEN step")));
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a WHEN step")));
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a THEN step")));
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a STEP step")));
     }
 }
