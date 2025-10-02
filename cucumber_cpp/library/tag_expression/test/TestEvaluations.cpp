@@ -1,12 +1,15 @@
+#include "cucumber_cpp/library/tag_expression/TagExpressionParser.hpp"
 #include "yaml-cpp/node/emit.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
+#include "gtest/gtest.h"
 #include <cstdlib>
 #include <filesystem>
 #include <format>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <iostream>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -21,7 +24,7 @@ namespace cucumber_cpp::library::tag_expression
     struct TestEvaluations : TestEvaluationsFixture
 
     {
-        TestEvaluations(std::string_view expression, YAML::Node variables, std::string_view result)
+        TestEvaluations(std::string_view expression, YAML::Node variables, bool result)
             : expression{ expression }
             , variables{ variables }
             , result{ result }
@@ -29,11 +32,20 @@ namespace cucumber_cpp::library::tag_expression
 
         void TestBody() override
         {
+            const auto tagExpression = TagExpressionParser{}.Parse(expression);
+            ASSERT_THAT(tagExpression, testing::NotNull());
+
+            std::set<std::string> tags;
+            for (const auto& var : variables)
+                tags.insert(var.as<std::string>());
+
+            EXPECT_THAT(tagExpression->Evaluate(tags), testing::Eq(result));
         }
 
+    private:
         std::string expression;
         YAML::Node variables;
-        std::string result;
+        bool result;
     };
 
     namespace
@@ -67,7 +79,7 @@ namespace cucumber_cpp::library::tag_expression
                     {
                         auto factory = [node = node, test = test]() -> TestEvaluationsFixture*
                         {
-                            return new TestEvaluations(node["expression"].as<std::string>(), test["variables"], test["result"].as<std::string>());
+                            return new TestEvaluations(node["expression"].as<std::string>(), test["variables"], test["result"].as<bool>());
                         };
 
                         auto* testInfo = testing::RegisterTest("TestEvaluations", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.c_str(), lineNumber, factory);
