@@ -12,6 +12,7 @@
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/util/Immoveable.hpp"
+#include <gtest/gtest.h>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -111,7 +112,11 @@ namespace cucumber_cpp::library::engine
     struct TestExecutionImpl : TestExecution
     {
         TestExecutionImpl(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
-        virtual ~TestExecutionImpl() = default;
+
+        TestExecutionImpl(const TestExecutionImpl&) = delete;
+        TestExecutionImpl& operator=(const TestExecutionImpl&) = delete;
+
+        virtual ~TestExecutionImpl();
 
         ProgramScope StartRun() override;
         FeatureScope StartFeature(const cucumber_cpp::library::engine::FeatureInfo& featureInfo) override;
@@ -132,6 +137,16 @@ namespace cucumber_cpp::library::engine
         const Policy& executionPolicy;
 
         TestAssertionHandlerImpl testAssertionHandler{ contextManager, reportHandler };
+        GoogleTestEventListener googleTestEventListener{ testAssertionHandler };
+    };
+
+    struct TestExecutionImplWithoutDefaultGoogleListener : TestExecutionImpl
+    {
+        TestExecutionImplWithoutDefaultGoogleListener(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy = executeRunPolicy);
+        ~TestExecutionImplWithoutDefaultGoogleListener() override;
+
+    private:
+        testing::TestEventListener* defaultEventListener;
     };
 }
 

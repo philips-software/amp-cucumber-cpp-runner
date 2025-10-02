@@ -12,6 +12,7 @@ target_sources(cucumber_cpp.library.cucumber_expression.test PRIVATE
     TestExpression.cpp
     TestExpressionParser.cpp
     TestExpressionTokenizer.cpp
+    TestTransformation.cpp
 )
 
 add_custom_command(

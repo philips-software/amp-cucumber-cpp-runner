@@ -92,10 +92,11 @@ namespace cucumber_cpp::library
               })
     {}
 
-    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory)
+    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
         : contextManager{ std::move(contextStorageFactory) }
         , reporters{ contextManager }
         , reportHandlerValidator{ reporters }
+        , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
 
     {
         gherkin.include_source(false);
@@ -201,12 +202,17 @@ namespace cucumber_cpp::library
 
         const auto& runPolicy = (options.dryrun) ? static_cast<const engine::TestExecution::Policy&>(engine::dryRunPolicy)
                                                  : static_cast<const engine::TestExecution::Policy&>(engine::executeRunPolicy);
-        engine::TestExecutionImpl testExecution{ contextManager, reporters, hookExecution, runPolicy };
+
+        std::unique_ptr<engine::TestExecutionImpl> testExecution;
+        if (removeDefaultGoogleTestListener)
+            testExecution = std::make_unique<engine::TestExecutionImplWithoutDefaultGoogleListener>(contextManager, reporters, hookExecution, runPolicy);
+        else
+            testExecution = std::make_unique<engine::TestExecutionImpl>(contextManager, reporters, hookExecution, runPolicy);
 
         StepRegistry stepRegistry{ parameterRegistry };
         engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
 
-        engine::TestRunnerImpl testRunner{ featureTreeFactory, testExecution };
+        engine::TestRunnerImpl testRunner{ featureTreeFactory, *testExecution };
 
         testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
 

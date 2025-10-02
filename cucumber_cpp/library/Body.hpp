@@ -2,7 +2,6 @@
 #define CUCUMBER_CPP_BODY_HPP
 
 #include <any>
-#include <concepts>
 #include <string>
 #include <variant>
 #include <vector>

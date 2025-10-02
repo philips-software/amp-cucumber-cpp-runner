@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
+#include "gtest/gtest.h"
 #include <memory>
 #include <variant>
 #include <vector>
@@ -71,7 +72,16 @@ namespace cucumber_cpp::library::engine
         , reportHandler{ reportHandler }
         , hookExecution{ hookExecution }
         , executionPolicy{ executionPolicy }
-    {}
+    {
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        listeners.Append(&googleTestEventListener);
+    }
+
+    TestExecutionImpl::~TestExecutionImpl()
+    {
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        listeners.Release(&googleTestEventListener);
+    }
 
     TestExecution::ProgramScope TestExecutionImpl::StartRun()
     {
@@ -127,5 +137,18 @@ namespace cucumber_cpp::library::engine
     void TestExecutionImpl::RunStepMatch(const StepMatch& stepMatch)
     {
         executionPolicy.RunStep(contextManager, stepMatch);
+    }
+
+    TestExecutionImplWithoutDefaultGoogleListener::TestExecutionImplWithoutDefaultGoogleListener(cucumber_cpp::library::engine::ContextManager& contextManager, report::ReportForwarder& reportHandler, HookExecutor& hookExecution, const Policy& executionPolicy)
+        : TestExecutionImpl{ contextManager, reportHandler, hookExecution, executionPolicy }
+    {
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        defaultEventListener = listeners.Release(listeners.default_result_printer());
+    }
+
+    TestExecutionImplWithoutDefaultGoogleListener::~TestExecutionImplWithoutDefaultGoogleListener()
+    {
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        listeners.Append(defaultEventListener);
     }
 }

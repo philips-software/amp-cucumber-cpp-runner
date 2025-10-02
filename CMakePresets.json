@@ -1,133 +1,138 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 24,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "defaults",
-      "hidden": true,
-      "binaryDir": "${sourceDir}/.build/${presetName}",
-      "installDir": "${sourceDir}/.install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
-      }
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 24,
+        "patch": 0
     },
-    {
-      "name": "Coverage",
-      "inherits": "defaults",
-      "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CCR_ENABLE_COVERAGE": "On"
-      }
-    },
-    {
-      "name": "Host",
-      "inherits": "defaults",
-      "generator": "Ninja Multi-Config"
-    },
-    {
-      "name": "host-single-Debug",
-      "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
-      "inherits": "defaults",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "Host-Iwyu",
-      "inherits": "defaults",
-      "cacheVariables": {
-        "CMAKE_CXX_INCLUDE_WHAT_YOU_USE": "include-what-you-use;-Wno-unknown-warning-option;-Xiwyu;--no_comments;-Xiwyu;--cxx17ns;-Xiwyu;--no_fwd_decls"
-      },
-      "generator": "Ninja Multi-Config"
-    },
-    {
-      "name": "Windows",
-      "inherits": "defaults",
-      "toolchainFile": "${sourceDir}/cmake/toolchain-clang-x86_64-pc-windows-msvc.cmake",
-      "environment": {
-        "CCACHE_DEPEND": "true",
-        "CCACHE_COMPILERTYPE": "clang-cl"
-      },
-      "generator": "Ninja Multi-Config"
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "Coverage",
-      "configurePreset": "Coverage"
-    },
-    {
-      "name": "Host-Release",
-      "configuration": "Release",
-      "configurePreset": "Host"
-    },
-    {
-      "name": "Host-Debug",
-      "configuration": "Debug",
-      "configurePreset": "Host"
-    },
-    {
-      "name": "Host-Iwyu-Debug",
-      "configuration": "Debug",
-      "configurePreset": "Host-Iwyu"
-    },
-    {
-      "name": "host-single-Debug",
-      "configuration": "Debug",
-      "configurePreset": "host-single-Debug"
-    },
-    {
-      "name": "Windows-Release",
-      "configuration": "Release",
-      "configurePreset": "Windows"
-    },
-    {
-      "name": "Windows-RelWithDebInfo",
-      "configuration": "RelWithDebInfo",
-      "configurePreset": "Windows"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "defaults",
-      "hidden": true,
-      "output": {
-        "outputOnFailure": true
-      },
-      "execution": {
-        "noTestsAction": "error",
-        "stopOnFailure": true
-      }
-    },
-    {
-      "name": "Coverage",
-      "configurePreset": "Coverage",
-      "configuration": "Debug",
-      "inherits": "defaults"
-    },
-    {
-      "name": "Host-Debug",
-      "configurePreset": "Host",
-      "configuration": "Debug",
-      "inherits": "defaults"
-    },
-    {
-      "name": "Host-Release",
-      "configurePreset": "Host",
-      "configuration": "Release",
-      "inherits": "defaults"
-    },
-    {
-      "name": "host-single-Debug",
-      "configurePreset": "host-single-Debug",
-      "configuration": "Debug",
-      "inherits": "defaults"
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "defaults",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/.build/${presetName}",
+            "installDir": "${sourceDir}/.install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Release"
+            }
+        },
+        {
+            "name": "Coverage",
+            "inherits": "defaults",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CCR_ENABLE_COVERAGE": "On"
+            }
+        },
+        {
+            "name": "Host",
+            "inherits": "defaults",
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "host-single-Debug",
+            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
+            "inherits": "defaults",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "Host-Iwyu",
+            "inherits": "defaults",
+            "cacheVariables": {
+                "CMAKE_CXX_INCLUDE_WHAT_YOU_USE": "include-what-you-use;-Wno-unknown-warning-option;-Xiwyu;--no_comments;-Xiwyu;--cxx17ns;-Xiwyu;--no_fwd_decls"
+            },
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "Windows",
+            "inherits": "defaults",
+            "toolchainFile": "${sourceDir}/cmake/toolchain-clang-x86_64-pc-windows-msvc.cmake",
+            "environment": {
+                "CCACHE_DEPEND": "true",
+                "CCACHE_COMPILERTYPE": "clang-cl"
+            },
+            "generator": "Ninja Multi-Config"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Coverage",
+            "configurePreset": "Coverage"
+        },
+        {
+            "name": "Host-Release",
+            "configuration": "Release",
+            "configurePreset": "Host"
+        },
+        {
+            "name": "Host-Debug",
+            "configuration": "Debug",
+            "configurePreset": "Host"
+        },
+        {
+            "name": "Host-Iwyu-Debug",
+            "configuration": "Debug",
+            "configurePreset": "Host-Iwyu"
+        },
+        {
+            "name": "host-single-Debug",
+            "configuration": "Debug",
+            "configurePreset": "host-single-Debug"
+        },
+        {
+            "name": "Windows-Release",
+            "configuration": "Release",
+            "configurePreset": "Windows"
+        },
+        {
+            "name": "Windows-RelWithDebInfo",
+            "configuration": "RelWithDebInfo",
+            "configurePreset": "Windows"
+        },
+        {
+            "name": "Windows-Debug",
+            "configuration": "Debug",
+            "configurePreset": "Windows"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "defaults",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "Coverage",
+            "configurePreset": "Coverage",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "Host-Debug",
+            "configurePreset": "Host",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "Host-Release",
+            "configurePreset": "Host",
+            "configuration": "Release",
+            "inherits": "defaults"
+        },
+        {
+            "name": "host-single-Debug",
+            "configurePreset": "host-single-Debug",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        }
+    ]
 }

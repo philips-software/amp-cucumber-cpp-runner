@@ -42,6 +42,10 @@ jobs:
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
+      - name: Run acceptance tests
+        run: |
+          bats --formatter junit cucumber_cpp/acceptance_test/coverage.bats | tee test-report.xml
+
       - name: Collect coverage
         run: |
           gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j "$(nproc)" --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.*
@@ -56,7 +60,7 @@ jobs:
         run: |
           cp .build/Coverage/compile_commands.json compile_commands.json
 
-      - uses: sonarsource/sonarqube-scan-action@1a6d90ebcb0e6a6b1d87e37ba693fe453195ae25 # v5.3.1
+      - uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

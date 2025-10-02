@@ -43,7 +43,7 @@ namespace cucumber_cpp::library
             bool printStepsNotUsed{ false };
         };
 
-        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>());
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
 
         int Run(int argc, const char* const* argv);
 
@@ -73,6 +73,7 @@ namespace cucumber_cpp::library
         cucumber::gherkin::app gherkin;
 
         cucumber_expression::ParameterRegistry parameterRegistry;
+        bool removeDefaultGoogleTestListener;
     };
 }
 
