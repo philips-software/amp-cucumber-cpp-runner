@@ -69,7 +69,7 @@ namespace cucumber_cpp::library::tag_expression
                         return new TestParsingFixture(node["expression"].as<std::string>(), node["formatted"].as<std::string>());
                     };
 
-                    auto* testInfo = testing::RegisterTest("TestParsing", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.c_str(), lineNumber, factory);
+                    auto* testInfo = testing::RegisterTest("TestParsing", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
 
                     tests.push_back(testInfo);
 

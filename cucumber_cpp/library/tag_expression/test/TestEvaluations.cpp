@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::tag_expression
                             return new TestEvaluations(node["expression"].as<std::string>(), test["variables"], test["result"].as<bool>());
                         };
 
-                        auto* testInfo = testing::RegisterTest("TestEvaluations", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.c_str(), lineNumber, factory);
+                        auto* testInfo = testing::RegisterTest("TestEvaluations", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
 
                         tests.push_back(testInfo);
 
