@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::tag_expression
         void EnsureExpectedTokenType(TokenType tokenType, TokenType expected, std::string_view lastPart)
         {
             if (tokenType != expected)
-                throw Error(std::format(R"(Syntax error. Expected {} after {})", tokenTypeMap.at(expected), lastPart));
+                throw Error(std::format(R"(Syntax error. Expected {} after {})", TokenTypeMap().at(expected), lastPart));
         }
 
         void RequireArgCount(const Token& token, std::deque<std::unique_ptr<Expression>>& expressions, std::size_t number)
@@ -116,10 +116,10 @@ namespace cucumber_cpp::library::tag_expression
 
         const Token* SelectToken(std::string_view expression)
         {
-            if (!tokenMap.contains(expression))
+            if (!TokenMap().contains(expression))
                 return nullptr;
 
-            return &tokenMap.at(expression);
+            return &TokenMap().at(expression);
         }
     }
 

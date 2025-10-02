@@ -16,20 +16,19 @@ namespace cucumber_cpp::library::tag_expression
         right
     };
 
-    inline const std::map<Associative, std::string_view> associativeMap{
-        { Associative::left, "left" },
-        { Associative::right, "right" },
-    };
-
     enum struct TokenType
     {
         operand,
         operator_
     };
 
-    inline const std::map<TokenType, std::string_view> tokenTypeMap{
-        { TokenType::operand, "operand" },
-        { TokenType::operator_, "operator" },
+    inline const std::map<TokenType, std::string_view>& TokenTypeMap()
+    {
+        static std::map<TokenType, std::string_view> map{
+            { TokenType::operand, "operand" },
+            { TokenType::operator_, "operator" },
+        };
+        return map;
     };
 
     struct Token
@@ -60,12 +59,16 @@ namespace cucumber_cpp::library::tag_expression
     inline const Token OPEN_PARENTHESIS{ "(", -2, std::nullopt };
     inline const Token CLOSE_PARENTHESIS{ ")", -1, std::nullopt };
 
-    inline const std::map<std::string_view, const Token&> tokenMap{
-        { OR.keyword, OR },
-        { AND.keyword, AND },
-        { NOT.keyword, NOT },
-        { OPEN_PARENTHESIS.keyword, OPEN_PARENTHESIS },
-        { CLOSE_PARENTHESIS.keyword, CLOSE_PARENTHESIS }
+    inline const std::map<std::string_view, const Token&>& TokenMap()
+    {
+        static std::map<std::string_view, const Token&> map{
+            { OR.keyword, OR },
+            { AND.keyword, AND },
+            { NOT.keyword, NOT },
+            { OPEN_PARENTHESIS.keyword, OPEN_PARENTHESIS },
+            { CLOSE_PARENTHESIS.keyword, CLOSE_PARENTHESIS }
+        };
+        return map;
     };
 }
 
