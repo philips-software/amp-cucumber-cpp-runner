@@ -117,7 +117,7 @@ namespace cucumber_cpp::library
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
         runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
-        runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used")->default_val(false);
+        runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
 
         reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
@@ -217,24 +217,29 @@ namespace cucumber_cpp::library
         testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
 
         if (options.printStepsNotUsed)
-        {
-            auto isUsed = [](const StepRegistry::EntryView& entry)
-            {
-                return entry.used > 0;
-            };
-            auto unusedSteps = stepRegistry.List() | std::views::filter(std::not_fn(isUsed));
-            if (std::ranges::begin(unusedSteps) == std::ranges::end(unusedSteps))
-                std::cout << "\nAll steps have been used.";
-            else
-            {
-                std::cout << "\nThe following steps have not been used:";
-                for (const auto& entry : unusedSteps)
-                    std::cout << "\n - " << std::visit(cucumber_expression::PatternVisitor{}, entry.stepRegex);
-            }
-        }
+            PrintStepsNotUsed(stepRegistry);
 
         std::cout << '\n'
                   << std::flush;
+    }
+
+    void Application::PrintStepsNotUsed(StepRegistry& stepRegistry)
+    {
+        auto isUnused = [](const StepRegistry::EntryView& entry)
+        {
+            return entry.used == 0;
+        };
+
+        auto unusedSteps = stepRegistry.List() | std::views::filter(isUnused);
+
+        if (std::ranges::empty(unusedSteps))
+            std::cout << "\nAll steps have been used.";
+        else
+        {
+            std::cout << "\nThe following steps have not been used:";
+            for (const auto& entry : unusedSteps)
+                std::cout << "\n - " << std::visit(cucumber_expression::SourceVisitor{}, entry.stepRegex);
+        }
     }
 
     std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
