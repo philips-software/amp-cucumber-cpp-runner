@@ -42,7 +42,6 @@ namespace cucumber_cpp::library::tag_expression
         {}
 
         bool IsOperation() const;
-        bool IsBinary() const;
         bool IsUnary() const;
 
         bool HasLowerPrecedenceThan(const Token& other) const;

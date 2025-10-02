@@ -7,11 +7,6 @@ namespace cucumber_cpp::library::tag_expression
         return type == TokenType::operator_;
     }
 
-    bool Token::IsBinary() const
-    {
-        return *this == OR || *this == AND;
-    }
-
     bool Token::IsUnary() const
     {
         return *this == NOT;

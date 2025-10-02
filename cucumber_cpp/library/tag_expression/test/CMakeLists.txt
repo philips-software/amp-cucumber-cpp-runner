@@ -12,6 +12,7 @@ target_sources(cucumber_cpp.library.tag_expression.test PRIVATE
     TestErrors.cpp
     TestEvaluations.cpp
     TestParsing.cpp
+    TestToken.cpp
 )
 
 add_custom_command(
