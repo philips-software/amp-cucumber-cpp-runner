@@ -5,10 +5,10 @@ add_library(cucumber_cpp.library.tag_expression STATIC ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.tag_expression PRIVATE
     Model.cpp
     Model.hpp
-    TagExpressionError.cpp
-    TagExpressionError.hpp
-    TagExpressionParser.cpp
-    TagExpressionParser.hpp
+    Error.cpp
+    Error.hpp
+    Parser.cpp
+    Parser.hpp
     Token.cpp
     Token.hpp
 )

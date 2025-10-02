@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/tag_expression/TagExpressionParser.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "yaml-cpp/node/emit.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::tag_expression
 
         void TestBody() override
         {
-            const auto tagExpression = TagExpressionParser{}.Parse(expression);
+            const auto tagExpression = Parse(expression);
             ASSERT_THAT(tagExpression, testing::NotNull());
 
             std::set<std::string, std::less<>> tags;

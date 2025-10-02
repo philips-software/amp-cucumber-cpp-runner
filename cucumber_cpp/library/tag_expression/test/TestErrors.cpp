@@ -1,5 +1,5 @@
-#include "cucumber_cpp/library/tag_expression/TagExpressionError.hpp"
-#include "cucumber_cpp/library/tag_expression/TagExpressionParser.hpp"
+#include "cucumber_cpp/library/tag_expression/Error.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <string_view>
@@ -10,11 +10,11 @@ namespace cucumber_cpp::library::tag_expression
     {
         void ExpectError(std::string_view expression, std::string_view error)
         {
-            ASSERT_THROW(try { TagExpressionParser{}.Parse(expression); } catch (const TagExpressionError& ex) {
+            ASSERT_THROW(try { Parse(expression); } catch (const Error& ex) {
                 std::cout << "expected: " << error << "\n";
                 std::cout << "actual  : " << ex.what() << "\n";
                 EXPECT_THAT(ex.what(), testing::HasSubstr(error));
-                throw; }, TagExpressionError);
+                throw; }, Error);
         }
     };
 

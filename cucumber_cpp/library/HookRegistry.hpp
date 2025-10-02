@@ -4,7 +4,7 @@
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
-#include "cucumber_cpp/library/tag_expression/TagExpressionParser.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -62,7 +62,7 @@ namespace cucumber_cpp::library
         {
             Entry(HookType type, std::string_view expression, std::unique_ptr<Body> (&factory)(Context& context))
                 : type(type)
-                , tagExpression{ tag_expression::TagExpressionParser{}.Parse(expression) }
+                , tagExpression{ tag_expression::Parse(expression) }
                 , factory(factory)
             {}
 

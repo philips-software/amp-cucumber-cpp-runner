@@ -13,21 +13,21 @@ namespace cucumber_cpp::library::tag_expression
         virtual ~Expression() = default;
 
         virtual bool Evaluate(const std::set<std::string, std::less<>>& tags) const = 0;
-        virtual operator std::string() const = 0;
+        virtual explicit operator std::string() const = 0;
     };
 
     struct TrueExpression : Expression
     {
         bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
-        operator std::string() const override;
+        explicit operator std::string() const override;
     };
 
     struct LiteralExpression : Expression
     {
-        LiteralExpression(std::string name);
+        explicit LiteralExpression(std::string name);
 
         bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
-        operator std::string() const override;
+        explicit operator std::string() const override;
 
     private:
         std::string name;
@@ -38,7 +38,7 @@ namespace cucumber_cpp::library::tag_expression
         AndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
         bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
-        operator std::string() const override;
+        explicit operator std::string() const override;
 
     private:
         std::unique_ptr<Expression> left;
@@ -50,7 +50,7 @@ namespace cucumber_cpp::library::tag_expression
         OrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
         bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
-        operator std::string() const override;
+        explicit operator std::string() const override;
 
     private:
         std::unique_ptr<Expression> left;
@@ -59,10 +59,10 @@ namespace cucumber_cpp::library::tag_expression
 
     struct NotExpression : Expression
     {
-        NotExpression(std::unique_ptr<Expression> operand);
+        explicit NotExpression(std::unique_ptr<Expression> operand);
 
         bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
-        operator std::string() const override;
+        explicit operator std::string() const override;
 
     private:
         std::unique_ptr<Expression> operand;

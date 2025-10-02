@@ -1,10 +1,12 @@
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include <cstddef>
 #include <format>
+#include <functional>
 #include <memory>
 #include <regex>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::tag_expression
@@ -30,7 +32,7 @@ namespace cucumber_cpp::library::tag_expression
 
     LiteralExpression::operator std::string() const
     {
-        auto replaceAll = [](std::string& str, const std::string& from, const std::string& to)
+        auto replaceAll = [](std::string& str, std::string_view from, std::string_view to)
         {
             if (from.empty())
                 return;
@@ -44,9 +46,9 @@ namespace cucumber_cpp::library::tag_expression
 
         auto copy = name;
 
-        replaceAll(copy, "\\", "\\\\");
-        replaceAll(copy, "(", "\\(");
-        replaceAll(copy, ")", "\\)");
+        replaceAll(copy, "\\", R"(\\)");
+        replaceAll(copy, "(", R"(\()");
+        replaceAll(copy, ")", R"(\))");
 
         copy = std::regex_replace(copy, std::regex(R"((\s))"), R"(\$&)");
 
