@@ -13,6 +13,7 @@
 #include "cucumber_cpp/library/engine/TestExecution.hpp"
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include "cucumber_cpp/library/report/JunitReport.hpp"
+#include "cucumber_cpp/library/report/NdjsonReport.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include <CLI/Error.hpp>
@@ -121,6 +122,7 @@ namespace cucumber_cpp::library
 
         reporters.Add("console", std::make_unique<report::StdOutReport>());
         reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
+        reporters.Add("ndjson", std::make_unique<report::NdjsonReport>(options.outputfolder, options.reportfile));
 
         ProgramContext().InsertRef(options);
     }
