@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.0.0...v3.1.0) (2025-10-02)
+
+
+### Features
+
+* Replace custom CucumberAssertHelper with custom EmptyTestEventListener implementation ([#220](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/220)) ([1331877](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/1331877f14802808468846945fdb50a7a15a75b8))
+* Replace string-replace based tag parsing with official cucumber tag parsing ([#226](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/226)) ([f5e0631](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/f5e0631c3e6ae97f952564e64da3a5149f0acaea))
+
 ## [3.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v2.1.0...v3.0.0) (2025-09-16)
 
 
