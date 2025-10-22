@@ -6,6 +6,7 @@
 
 #include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ContextManager.hpp"
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
@@ -40,6 +41,7 @@ namespace cucumber_cpp::library
             std::string reportfile{ "TestReport" };
 
             bool dryrun{ false };
+            bool printStepsNotUsed{ false };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
@@ -53,12 +55,14 @@ namespace cucumber_cpp::library
         void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
 
     private:
-        [[nodiscard]] int GetExitCode() const;
-        [[nodiscard]] int GetExitCode(engine::Result result) const;
         void DryRunFeatures();
         void RunFeatures();
-        [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);
         [[nodiscard]] engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
+        void PrintStepsNotUsed(const StepRegistry& stepRegistry) const;
+        [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);
+
+        [[nodiscard]] int GetExitCode() const;
+        [[nodiscard]] int GetExitCode(engine::Result result) const;
 
         Options options;
         CLI::App cli;

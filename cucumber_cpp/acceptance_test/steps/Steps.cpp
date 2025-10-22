@@ -63,6 +63,16 @@ GIVEN("Next block of text enclosed in \"\"\" characters")
     ASSERT_THAT(docString, testing::Eq("Multiline\nDocstring"));
 }
 
+WHEN("this step is being used")
+{
+    // empty
+}
+
+WHEN("this step is not being used")
+{
+    // empty
+}
+
 WHEN("I throw an exception")
 {
     throw std::runtime_error{ "Exception thrown" };
