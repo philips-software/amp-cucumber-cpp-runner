@@ -24,15 +24,6 @@ namespace cucumber_cpp::library::report
     {
         constexpr double precision = 0.0000001;
 
-        const std::map<engine::Result, std::string> successLut{
-            { engine::Result::passed, "done" },
-            { engine::Result::skipped, "skipped" },
-            { engine::Result::failed, "failed" },
-            { engine::Result::pending, "pending" },
-            { engine::Result::ambiguous, "ambiguous" },
-            { engine::Result::undefined, "undefined" },
-        };
-
         std::string RoundTo(double value, double roundToPrecision)
         {
             const auto d = std::round(value / roundToPrecision) * roundToPrecision;
