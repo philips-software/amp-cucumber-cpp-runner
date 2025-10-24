@@ -1,4 +1,5 @@
 #include "NdjsonReport.hpp"
+#include <fstream>
 
 namespace cucumber_cpp::library::report
 {
@@ -7,13 +8,40 @@ namespace cucumber_cpp::library::report
 
     }
 
-    NdjsonReport::NdjsonReport(const std::string& outputfolder, const std::string& reportfile)
+    NdjsonReport::NdjsonReport(const std::string& outputFolder, const std::string& reportFile)
+        : outputFolder(outputFolder)
+        , reportFile(reportFile)
     {
-
     }
 
     NdjsonReport::~NdjsonReport()
-    = default;
+    {
+        try
+        {
+            if (!std::filesystem::exists(outputFolder))
+            {
+                std::filesystem::create_directories(outputFolder);
+
+                const std::filesystem::path outputFile = std::filesystem::path{ outputFolder }.append(reportFile + ".ndjson");
+                std::ofstream out(outputFile);
+                for (nlohmann::json& jsonEvent : docs)
+                {
+                    out << jsonEvent;
+                }
+
+                out.close();
+            }
+        }
+        catch (const std::filesystem::filesystem_error& ex)
+        {
+            std::cout << "\nwhat():  " << ex.what() << '\n'
+                      << "path1(): " << ex.path1() << '\n'
+                      << "path2(): " << ex.path2() << '\n'
+                      << "code().value():    " << ex.code().value() << '\n'
+                      << "code().message():  " << ex.code().message() << '\n'
+                      << "code().category(): " << ex.code().category().name() << '\n';
+        }
+    }
 
     void NdjsonReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {

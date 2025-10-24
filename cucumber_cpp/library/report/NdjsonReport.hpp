@@ -1,11 +1,12 @@
 #pragma once
 #include "Report.hpp"
+#include <nlohmann/json.hpp>
 
 namespace cucumber_cpp::library::report
 {
     struct NdjsonReport : ReportHandlerV2
     {
-        NdjsonReport(const std::string& outputfolder, const std::string& reportfile);
+        NdjsonReport(const std::string& outputFolder, const std::string& reportFile);
         ~NdjsonReport() override;
 
         void FeatureStart(const engine::FeatureInfo& featureInfo) override;
@@ -21,6 +22,12 @@ namespace cucumber_cpp::library::report
         void Error(const std::string& error, std::optional<std::filesystem::path> path, std::optional<std::size_t> line, std::optional<std::size_t> column) override;
         void Trace(const std::string& trace) override;
         void Summary(TraceTime::Duration duration) override;
+
+    private:
+        const std::string& outputFolder;
+        const std::string& reportFile;
+
+        std::vector<nlohmann::json> docs;
     };
 
 }
