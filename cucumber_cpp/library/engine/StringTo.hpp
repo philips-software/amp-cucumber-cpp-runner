@@ -1,6 +1,9 @@
 #ifndef ENGINE_STRINGTO_HPP
 #define ENGINE_STRINGTO_HPP
 
+// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: friend cucumber_cpp/.*
+
 #include "cucumber_cpp/library/Errors.hpp"
 #include <algorithm>
 #include <any>

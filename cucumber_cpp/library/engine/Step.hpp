@@ -1,6 +1,9 @@
 #ifndef ENGINE_STEP_HPP
 #define ENGINE_STEP_HPP
 
+// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: friend cucumber_cpp/.*
+
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include <exception>
