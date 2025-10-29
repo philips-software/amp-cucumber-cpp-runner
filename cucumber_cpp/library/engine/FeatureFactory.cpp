@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
+#include "SourceInfo.hpp"
 #include "cucumber/gherkin/app.hpp"
 #include "cucumber/gherkin/file.hpp"
 #include "cucumber/gherkin/parse_error.hpp"
@@ -283,13 +284,13 @@ namespace cucumber_cpp::library::engine
             std::visit(visitor, flatAst.at(pickle.ast_node_ids.front()));
         }
 
-        std::unique_ptr<FeatureInfo> FeatureFactory(std::filesystem::path path, const cucumber::gherkin::app::parser_result& ast)
+        std::unique_ptr<FeatureInfo> FeatureFactory(std::unique_ptr<SourceInfo> sourceInfo, const cucumber::gherkin::app::parser_result& ast)
         {
             return std::make_unique<FeatureInfo>(
                 TagsFactory(ast.feature->tags),
                 ast.feature->name,
                 ast.feature->description,
-                std::move(path),
+                std::move(sourceInfo),
                 ast.feature->location.line,
                 ast.feature->location.column.value_or(0));
         }
@@ -319,12 +320,17 @@ namespace cucumber_cpp::library::engine
     std::unique_ptr<FeatureInfo> FeatureTreeFactory::Create(const std::filesystem::path& path, std::string_view tagExpression) const
     {
         std::unique_ptr<FeatureInfo> featureInfo;
+        std::unique_ptr<SourceInfo> sourceInfo;
         std::optional<FlatAst> flatAst;
 
         cucumber::gherkin::app::callbacks callbacks{
-            .ast = [&path, &flatAst, &featureInfo](const cucumber::gherkin::app::parser_result& ast)
+            .source = [&sourceInfo, &path](const cucumber::messages::source& source)
             {
-                featureInfo = FeatureFactory(path, ast);
+                sourceInfo = std::make_unique<SourceInfo>(std::move(path), source);
+            },
+            .ast = [&sourceInfo, &flatAst, &featureInfo](const cucumber::gherkin::app::parser_result& ast)
+            {
+                featureInfo = FeatureFactory(std::move(sourceInfo), ast);
                 flatAst = FlattenAst(*ast.feature);
             },
             .pickle = [this, &featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle)

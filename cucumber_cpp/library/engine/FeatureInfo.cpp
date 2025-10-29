@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "SourceInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include <cstddef>
@@ -12,15 +13,21 @@
 
 namespace cucumber_cpp::library::engine
 {
-    FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column)
+    FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::unique_ptr<struct SourceInfo> sourceInfo, std::size_t line, std::size_t column)
         : tags{ std::move(tags) }
         , title{ std::move(title) }
         , description{ std::move(description) }
-        , path{ std::move(path) }
+        , sourceInfo{ std::move(sourceInfo) }
         , line{ line }
         , column{ column }
     {
     }
+
+    SourceInfo* FeatureInfo::SourceInfo() const
+    {
+        return sourceInfo.get();
+    }
+
 
     const std::set<std::string, std::less<>>& FeatureInfo::Tags() const
     {
@@ -39,7 +46,7 @@ namespace cucumber_cpp::library::engine
 
     const std::filesystem::path& FeatureInfo::Path() const
     {
-        return path;
+        return sourceInfo->Path();
     }
 
     std::size_t FeatureInfo::Line() const
