@@ -13,6 +13,8 @@ target_sources(cucumber_cpp.library.engine PRIVATE
     RuleInfo.hpp
     ScenarioInfo.cpp
     ScenarioInfo.hpp
+    SourceInfo.cpp
+    SourceInfo.hpp
     Step.cpp
     Step.hpp
     StepInfo.cpp

@@ -3,6 +3,7 @@
 
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
+#include "SourceInfo.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -15,7 +16,9 @@ namespace cucumber_cpp::library::engine
 {
     struct FeatureInfo
     {
-        FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column);
+        FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::unique_ptr<struct SourceInfo>, std::size_t line, std::size_t column);
+
+        [[nodiscard]] SourceInfo* SourceInfo() const;
 
         [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
         [[nodiscard]] const std::string& Title() const;
@@ -37,7 +40,7 @@ namespace cucumber_cpp::library::engine
         std::string title;
         std::string description;
 
-        std::filesystem::path path;
+        std::unique_ptr<struct SourceInfo> sourceInfo;
 
         std::size_t line;
         std::size_t column;

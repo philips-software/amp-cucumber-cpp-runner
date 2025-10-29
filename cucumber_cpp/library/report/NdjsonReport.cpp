@@ -1,4 +1,5 @@
 #include "NdjsonReport.hpp"
+#include <cucumber_cpp/library/engine/SourceInfo.hpp>
 #include <fstream>
 
 namespace cucumber_cpp::library::report
@@ -45,7 +46,11 @@ namespace cucumber_cpp::library::report
 
     void NdjsonReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
-
+        engine::SourceInfo* sourceInfo = featureInfo.SourceInfo();
+        const std::filesystem::path& path = sourceInfo->Path();
+        std::string stringPath = path.string();
+        std::string sourceJson = featureInfo.SourceInfo()->ToJson();
+        // gherkinDocument from featureInfo
     }
 
     void NdjsonReport::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)

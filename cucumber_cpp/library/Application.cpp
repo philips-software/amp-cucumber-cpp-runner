@@ -100,7 +100,7 @@ namespace cucumber_cpp::library
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
 
     {
-        gherkin.include_source(false);
+        gherkin.include_source(true);
         gherkin.include_ast(true);
         gherkin.include_pickles(true);
 
