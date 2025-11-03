@@ -1,6 +1,6 @@
 #pragma once
 #include "Report.hpp"
-#include <nlohmann/json.hpp>
+#include <fstream>
 
 namespace cucumber_cpp::library::report
 {
@@ -27,7 +27,9 @@ namespace cucumber_cpp::library::report
         const std::string& outputFolder;
         const std::string& reportFile;
 
-        std::vector<nlohmann::json> docs;
+        std::ofstream outStream;
+        void InitReportDirectory();
+
     };
 
 }

@@ -17,21 +17,26 @@ namespace cucumber_cpp::library::report
 
     NdjsonReport::~NdjsonReport()
     {
+        outStream.close();
+    }
+
+
+    /*
+     * Unlike XML reporter, where a single document is built up over time and then has to be flushed out in the end all at once,
+     * NDJSON is a series of individual json objects appended one after another as the test run progresses.
+     * Therefore, need to prepare a stream on first call to the reporter
+     */
+    void NdjsonReport::InitReportDirectory()
+    {
         try
         {
             if (!std::filesystem::exists(outputFolder))
             {
                 std::filesystem::create_directories(outputFolder);
-
-                const std::filesystem::path outputFile = std::filesystem::path{ outputFolder }.append(reportFile + ".ndjson");
-                std::ofstream out(outputFile);
-                for (nlohmann::json& jsonEvent : docs)
-                {
-                    out << jsonEvent;
-                }
-
-                out.close();
             }
+
+            const std::filesystem::path outputFile = std::filesystem::path{ outputFolder }.append(reportFile + ".ndjson");
+            outStream.open(outputFile, std::ios::trunc);
         }
         catch (const std::filesystem::filesystem_error& ex)
         {
@@ -44,17 +49,20 @@ namespace cucumber_cpp::library::report
         }
     }
 
+
     void NdjsonReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
-        engine::SourceInfo* sourceInfo = featureInfo.SourceInfo();
-        const std::filesystem::path& path = sourceInfo->Path();
-        std::string stringPath = path.string();
-        std::string sourceJson = featureInfo.SourceInfo()->ToJson();
-        // gherkinDocument from featureInfo
+        InitReportDirectory();
+        // TODO find a place to record first meta line.
+        outStream << "{\"source\":" << featureInfo.SourceInfo()->ToJson() << "}\n";
+        outStream << "{\"gherkinDocument\":" << featureInfo.ToJson() << "}\n";
+        // TODO find where pickle definition is coming from
+        // TODO testRunStarted
     }
 
     void NdjsonReport::FeatureEnd(engine::Result result, const engine::FeatureInfo& featureInfo, TraceTime::Duration duration)
     {
+        // TODO testRunFinished
     }
 
     void NdjsonReport::RuleStart(const engine::RuleInfo& ruleInfo)
