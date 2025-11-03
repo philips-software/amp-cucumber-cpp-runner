@@ -26,15 +26,15 @@ namespace cucumber_cpp::library::report
         }
     }
 
-    void Reporters::Add(const std::string& name, std::unique_ptr<ReportHandlerV2> reporter)
+    void Reporters::Add(const std::string& name, std::function<std::unique_ptr<report::ReportHandlerV2>()> reporterFactory)
     {
-        availableReporters[name] = std::move(reporter);
+        availableReporters[name] = std::move(reporterFactory);
     }
 
     void Reporters::Use(const std::string& name)
     {
         if (availableReporters[name])
-            Add(std::move(availableReporters[name]));
+            Add(std::move(availableReporters[name]()));
     }
 
     void Reporters::Add(std::unique_ptr<ReportHandlerV2> report)
