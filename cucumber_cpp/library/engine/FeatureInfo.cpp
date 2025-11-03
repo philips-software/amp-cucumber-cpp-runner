@@ -13,13 +13,9 @@
 
 namespace cucumber_cpp::library::engine
 {
-    FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::unique_ptr<struct SourceInfo> sourceInfo, std::size_t line, std::size_t column)
-        : tags{ std::move(tags) }
-        , title{ std::move(title) }
-        , description{ std::move(description) }
+    FeatureInfo::FeatureInfo(cucumber::messages::feature feature, std::unique_ptr<struct SourceInfo> sourceInfo)
+        : feature{ std::move(feature) }
         , sourceInfo{ std::move(sourceInfo) }
-        , line{ line }
-        , column{ column }
     {
     }
 
@@ -28,20 +24,20 @@ namespace cucumber_cpp::library::engine
         return sourceInfo.get();
     }
 
-
-    const std::set<std::string, std::less<>>& FeatureInfo::Tags() const
+    std::set<std::string, std::less<>> FeatureInfo::Tags() const
     {
-        return tags;
+        const auto range = feature.tags | std::views::transform(&cucumber::messages::tag::name);
+        return { range.begin(), range.end() };
     }
 
     const std::string& FeatureInfo::Title() const
     {
-        return title;
+        return feature.name;
     }
 
     const std::string& FeatureInfo::Description() const
     {
-        return description;
+        return feature.description;
     }
 
     const std::filesystem::path& FeatureInfo::Path() const
@@ -51,12 +47,12 @@ namespace cucumber_cpp::library::engine
 
     std::size_t FeatureInfo::Line() const
     {
-        return line;
+        return feature.location.line;
     }
 
     std::size_t FeatureInfo::Column() const
     {
-        return column;
+        return feature.location.column.value_or(0);
     }
 
     std::vector<std::unique_ptr<RuleInfo>>& FeatureInfo::Rules()
@@ -78,5 +74,11 @@ namespace cucumber_cpp::library::engine
     {
         return scenarios;
     }
+
+    std::string FeatureInfo::ToJson() const
+    {
+        return feature.to_json();
+    }
+
 
 }
