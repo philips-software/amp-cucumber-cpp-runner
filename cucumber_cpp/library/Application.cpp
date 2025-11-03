@@ -117,9 +117,9 @@ namespace cucumber_cpp::library
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
         runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
 
-        reporters.Add("console", std::make_unique<report::StdOutReport>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
-        reporters.Add("ndjson", std::make_unique<report::NdjsonReport>(options.outputfolder, options.reportfile));
+        reporters.Add("console", [] { return std::make_unique<report::StdOutReport>();});
+        reporters.Add("junit-xml", [this] { return std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile); });
+        reporters.Add("ndjson", [this] { return std::make_unique<report::NdjsonReport>(options.outputfolder, options.reportfile); });
 
         ProgramContext().InsertRef(options);
     }
@@ -184,11 +184,6 @@ namespace cucumber_cpp::library
     cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
     {
         return parameterRegistry;
-    }
-
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
-    {
-        reporters.Add(name, std::move(reporter));
     }
 
     void Application::RunFeatures()

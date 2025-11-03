@@ -50,8 +50,6 @@ namespace cucumber_cpp::library
         Context& ProgramContext();
         cucumber_expression::ParameterRegistration& ParameterRegistration();
 
-        void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
-
     private:
         [[nodiscard]] int GetExitCode() const;
         [[nodiscard]] int GetExitCode(engine::Result result) const;
