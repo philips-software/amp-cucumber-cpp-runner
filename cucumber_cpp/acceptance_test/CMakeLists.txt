@@ -21,5 +21,17 @@ target_link_libraries(cucumber_cpp.acceptance_test.custom PRIVATE
     cucumber_cpp.acceptance_test.steps
 )
 
+add_executable(cucumber_cpp.acceptance_test.ndjson_assertion ${CCR_EXCLUDE_FROMALL})
+
+target_sources(cucumber_cpp.acceptance_test.ndjson_assertion PRIVATE
+    MainNdjsonAssertion.cpp
+)
+
+target_link_libraries(cucumber_cpp.acceptance_test.ndjson_assertion PRIVATE
+    cucumber_cpp.acceptance_test.util
+    CLI11
+)
+
 add_subdirectory(hooks)
 add_subdirectory(steps)
+add_subdirectory(util)
