@@ -120,6 +120,11 @@ namespace cucumber_cpp::library
         runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
         runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
 
+        // Some IDEs have hardcoded parameters in test runner. Can either allow and ignore all additional unknown parameters, or individually allow them as they get discovered
+        // runCommand->allow_extras();  // This will break one of the tests
+        runCommand->add_option("--gtest_color");
+        runCommand->add_option("--gtest_filter");
+
         reporters.Add("console", [] { return std::make_unique<report::StdOutReport>();});
         reporters.Add("junit-xml", [this] { return std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile); });
         reporters.Add("ndjson", [this] { return std::make_unique<report::NdjsonReport>(options.outputfolder, options.reportfile); });

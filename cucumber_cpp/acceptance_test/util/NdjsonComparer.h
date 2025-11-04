@@ -1,0 +1,10 @@
+#ifndef CUCUMBER_CPP_RUNNER_NDJSONCOMPARER_H
+#define CUCUMBER_CPP_RUNNER_NDJSONCOMPARER_H
+
+#include <nlohmann/json.hpp>
+
+class NdjsonComparer
+{
+};
+
+#endif // CUCUMBER_CPP_RUNNER_NDJSONCOMPARER_H
