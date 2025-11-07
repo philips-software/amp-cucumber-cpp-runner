@@ -1,3 +1,4 @@
+#include "util/NdjsonComparer.h"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
@@ -13,4 +14,10 @@ int main(const int argc, char**argv)
     app.add_option("-a,--actual", pathActual, "Path to ndjson report to be validated")->required();
 
     CLI11_PARSE(app, argc, argv);
+
+    NdjsonComparer comparer;
+    const bool areEquivalent = comparer.AreEquivalent(pathExpected, pathActual);
+
+    std::cout << (areEquivalent ? "true" : "false");
+
 }
