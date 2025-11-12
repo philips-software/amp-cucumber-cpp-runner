@@ -15,8 +15,7 @@ int main(const int argc, char**argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    NdjsonComparer comparer;
-    const bool areEquivalent = comparer.AreEquivalent(pathExpected, pathActual);
+    const bool areEquivalent = NdjsonComparer::AreEquivalent(pathExpected, pathActual);
 
     std::cout << (areEquivalent ? "true" : "false");
 

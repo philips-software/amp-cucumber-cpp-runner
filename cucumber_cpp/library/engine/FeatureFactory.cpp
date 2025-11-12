@@ -187,9 +187,9 @@ namespace cucumber_cpp::library::engine
                 return;
 
             featureInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
+                pickle,
                 featureInfo,
                 std::move(tags),
-                pickle.name,
                 scenario.description,
                 scenario.location.line,
                 scenario.location.column.value_or(0)));
@@ -200,9 +200,9 @@ namespace cucumber_cpp::library::engine
         void ConstructScenario(const FeatureTreeFactory& featureTreeFactory, RuleInfo& ruleInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::set<std::string, std::less<>> tags)
         {
             ruleInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
+                pickle,
                 ruleInfo,
                 std::move(tags),
-                pickle.name,
                 scenario.description,
                 scenario.location.line,
                 scenario.location.column.value_or(0)));

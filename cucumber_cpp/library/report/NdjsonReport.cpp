@@ -56,7 +56,6 @@ namespace cucumber_cpp::library::report
         // TODO find a place to record first meta line.
         outStream << "{\"source\":" << featureInfo.SourceInfo()->ToJson() << "}\n";
         outStream << "{\"gherkinDocument\":" << featureInfo.ToJson() << "}\n";
-        // TODO find where pickle definition is coming from
         // TODO testRunStarted
     }
 
@@ -75,6 +74,8 @@ namespace cucumber_cpp::library::report
 
     void NdjsonReport::ScenarioStart(const engine::ScenarioInfo& scenarioInfo)
     {
+        // each scenario is a pickle
+        outStream << "{\"pickle\":" << scenarioInfo.ToJson() << "}\n";
     }
 
     void NdjsonReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
