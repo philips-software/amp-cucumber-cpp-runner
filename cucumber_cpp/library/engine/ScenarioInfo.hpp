@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/StepInfo.hpp"
 #include <cstddef>
+#include <cucumber/messages/pickle.hpp>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -19,8 +20,8 @@ namespace cucumber_cpp::library::engine
 
     struct ScenarioInfo
     {
-        ScenarioInfo(const RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column);
-        ScenarioInfo(const FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column);
+        ScenarioInfo(cucumber::messages::pickle pickle, const RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string description, std::size_t line, std::size_t column);
+        ScenarioInfo(cucumber::messages::pickle pickle, const FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string description, std::size_t line, std::size_t column);
 
         [[nodiscard]] const struct FeatureInfo& FeatureInfo() const;
         [[nodiscard]] std::optional<std::reference_wrapper<const struct RuleInfo>> RuleInfo() const;
@@ -37,11 +38,13 @@ namespace cucumber_cpp::library::engine
         [[nodiscard]] std::vector<std::unique_ptr<StepInfo>>& Children();
         [[nodiscard]] const std::vector<std::unique_ptr<StepInfo>>& Children() const;
 
+        [[nodiscard]] std::string ToJson() const;
+
     private:
+        const cucumber::messages::pickle pickle;
         std::variant<const struct FeatureInfo*, const struct RuleInfo*> parentInfo;
 
         std::set<std::string, std::less<>> tags;
-        std::string title;
         std::string description;
 
         std::size_t line;

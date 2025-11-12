@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/engine/FeatureInfo.hpp"
+#include "SourceInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
 #include <cstddef>
@@ -12,44 +13,46 @@
 
 namespace cucumber_cpp::library::engine
 {
-    FeatureInfo::FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column)
-        : tags{ std::move(tags) }
-        , title{ std::move(title) }
-        , description{ std::move(description) }
-        , path{ std::move(path) }
-        , line{ line }
-        , column{ column }
+    FeatureInfo::FeatureInfo(cucumber::messages::feature feature, std::unique_ptr<struct SourceInfo> sourceInfo)
+        : feature{ std::move(feature) }
+        , sourceInfo{ std::move(sourceInfo) }
     {
     }
 
-    const std::set<std::string, std::less<>>& FeatureInfo::Tags() const
+    SourceInfo* FeatureInfo::SourceInfo() const
     {
-        return tags;
+        return sourceInfo.get();
+    }
+
+    std::set<std::string, std::less<>> FeatureInfo::Tags() const
+    {
+        const auto range = feature.tags | std::views::transform(&cucumber::messages::tag::name);
+        return { range.begin(), range.end() };
     }
 
     const std::string& FeatureInfo::Title() const
     {
-        return title;
+        return feature.name;
     }
 
     const std::string& FeatureInfo::Description() const
     {
-        return description;
+        return feature.description;
     }
 
     const std::filesystem::path& FeatureInfo::Path() const
     {
-        return path;
+        return sourceInfo->Path();
     }
 
     std::size_t FeatureInfo::Line() const
     {
-        return line;
+        return feature.location.line;
     }
 
     std::size_t FeatureInfo::Column() const
     {
-        return column;
+        return feature.location.column.value_or(0);
     }
 
     std::vector<std::unique_ptr<RuleInfo>>& FeatureInfo::Rules()
@@ -71,5 +74,11 @@ namespace cucumber_cpp::library::engine
     {
         return scenarios;
     }
+
+    std::string FeatureInfo::ToJson() const
+    {
+        return feature.to_json();
+    }
+
 
 }

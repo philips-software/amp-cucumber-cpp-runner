@@ -16,19 +16,19 @@
 
 namespace cucumber_cpp::library::engine
 {
-    ScenarioInfo::ScenarioInfo(const struct RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column)
-        : parentInfo{ &ruleInfo }
+    ScenarioInfo::ScenarioInfo(cucumber::messages::pickle pickle, const struct RuleInfo& ruleInfo, std::set<std::string, std::less<>> tags, std::string description, std::size_t line, std::size_t column)
+        : pickle(std::move(pickle))
+        , parentInfo{ &ruleInfo }
         , tags{ std::move(tags) }
-        , title{ std::move(title) }
         , description{ std::move(description) }
         , line{ line }
         , column{ column }
     {}
 
-    ScenarioInfo::ScenarioInfo(const struct FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string title, std::string description, std::size_t line, std::size_t column)
-        : parentInfo{ &featureInfo }
+    ScenarioInfo::ScenarioInfo(cucumber::messages::pickle pickle, const struct FeatureInfo& featureInfo, std::set<std::string, std::less<>> tags, std::string description, std::size_t line, std::size_t column)
+        : pickle(std::move(pickle))
+        , parentInfo{ &featureInfo }
         , tags{ std::move(tags) }
-        , title{ std::move(title) }
         , description{ std::move(description) }
         , line{ line }
         , column{ column }
@@ -61,7 +61,7 @@ namespace cucumber_cpp::library::engine
 
     const std::string& ScenarioInfo::Title() const
     {
-        return title;
+        return pickle.name;
     }
 
     const std::string& ScenarioInfo::Description() const
@@ -93,4 +93,10 @@ namespace cucumber_cpp::library::engine
     {
         return children;
     }
+
+    std::string ScenarioInfo::ToJson() const
+    {
+        return pickle.to_json();
+    }
+
 }

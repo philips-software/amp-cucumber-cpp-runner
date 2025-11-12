@@ -1,8 +1,10 @@
 #ifndef ENGINE_FEATUREINFO_HPP
 #define ENGINE_FEATUREINFO_HPP
 
+#include "SourceInfo.hpp"
 #include "cucumber_cpp/library/engine/RuleInfo.hpp"
 #include "cucumber_cpp/library/engine/ScenarioInfo.hpp"
+#include "cucumber/messages/feature.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -15,9 +17,11 @@ namespace cucumber_cpp::library::engine
 {
     struct FeatureInfo
     {
-        FeatureInfo(std::set<std::string, std::less<>> tags, std::string title, std::string description, std::filesystem::path path, std::size_t line, std::size_t column);
+        FeatureInfo(cucumber::messages::feature, std::unique_ptr<struct SourceInfo>);
 
-        [[nodiscard]] const std::set<std::string, std::less<>>& Tags() const;
+        [[nodiscard]] SourceInfo* SourceInfo() const;
+
+        [[nodiscard]] std::set<std::string, std::less<>> Tags() const;
         [[nodiscard]] const std::string& Title() const;
         [[nodiscard]] const std::string& Description() const;
 
@@ -32,15 +36,12 @@ namespace cucumber_cpp::library::engine
         [[nodiscard]] std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios();
         [[nodiscard]] const std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios() const;
 
+        [[nodiscard]] std::string ToJson() const;
+
     private:
-        std::set<std::string, std::less<>> tags;
-        std::string title;
-        std::string description;
 
-        std::filesystem::path path;
-
-        std::size_t line;
-        std::size_t column;
+        cucumber::messages::feature feature;
+        std::unique_ptr<struct SourceInfo> sourceInfo;
 
         std::vector<std::unique_ptr<RuleInfo>> rules;
         std::vector<std::unique_ptr<ScenarioInfo>> scenarios;
