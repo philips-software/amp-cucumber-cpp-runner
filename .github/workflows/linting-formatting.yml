@@ -32,7 +32,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: git diff
-      - uses: github/codeql-action/upload-sarif@8a06050a8c0348fb4738f28e0cfbb6727cf054ce # v4.31.2
+      - uses: github/codeql-action/upload-sarif@85f1517bb46a9e4d5e1ad15a6ef251b3124ba42b # v4.31.2
         if: ${{ success() || failure() }}
         with:
           sarif_file: megalinter-reports/megalinter-report.sarif
