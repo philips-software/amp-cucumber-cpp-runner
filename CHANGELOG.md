@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.0.0...v3.1.0) (2025-11-17)
+
+
+### Features
+
+* Add option to print steps that have not been used ([#227](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/227)) ([8554d3b](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/8554d3ba78470bdb6f4c230fb00c287d1c276348))
+* Replace custom CucumberAssertHelper with custom EmptyTestEventListener implementation ([#220](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/220)) ([1331877](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/1331877f14802808468846945fdb50a7a15a75b8))
+* Replace string-replace based tag parsing with official cucumber tag parsing ([#226](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/226)) ([f5e0631](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/f5e0631c3e6ae97f952564e64da3a5149f0acaea))
+
+
+### Chores
+
+* Add IWYU directives to engine/Step.hpp and engine/StringTo.hpp ([#238](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/238)) ([f5e3ffd](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/f5e3ffdcedcd8cb93e3808a4b79d20d32d8142b6))
+* Use correct hash for codeql-action v4.31.2 ([#245](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/245)) ([42a2338](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/42a2338d85fcccdb6890b576426878a831f3019e))
+
 ## [3.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v2.1.0...v3.0.0) (2025-09-16)
 
 
