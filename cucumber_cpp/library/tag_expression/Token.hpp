@@ -33,8 +33,8 @@ namespace cucumber_cpp::library::tag_expression
 
     struct Token
     {
-        constexpr Token(std::string keyword, std::int32_t precedence, std::optional<Associative> associative, TokenType type = TokenType::operand)
-            : keyword{ std::move(keyword) }
+        constexpr Token(std::string_view keyword, std::int32_t precedence, std::optional<Associative> associative, TokenType type = TokenType::operand)
+            : keyword{ keyword }
             , precedence{ precedence }
             , associative{ associative }
             , type{ type }
@@ -47,17 +47,17 @@ namespace cucumber_cpp::library::tag_expression
 
         bool operator==(const Token& other) const = default;
 
-        std::string keyword;
+        std::string_view keyword;
         std::int32_t precedence;
         std::optional<Associative> associative;
         TokenType type;
     };
 
-    inline const Token OR{ "or", 0, Associative::left, TokenType::operator_ };
-    inline const Token AND{ "and", 1, Associative::left, TokenType::operator_ };
-    inline const Token NOT{ "not", 2, Associative::right, TokenType::operator_ };
-    inline const Token OPEN_PARENTHESIS{ "(", -2, std::nullopt };
-    inline const Token CLOSE_PARENTHESIS{ ")", -1, std::nullopt };
+    static constexpr Token OR{ "or", 0, Associative::left, TokenType::operator_ };
+    static constexpr Token AND{ "and", 1, Associative::left, TokenType::operator_ };
+    static constexpr Token NOT{ "not", 2, Associative::right, TokenType::operator_ };
+    static constexpr Token OPEN_PARENTHESIS{ "(", -2, std::nullopt };
+    static constexpr Token CLOSE_PARENTHESIS{ ")", -1, std::nullopt };
 
     inline const std::map<std::string_view, const Token&>& TokenMap()
     {
