@@ -34,7 +34,7 @@ namespace cucumber_cpp::library::tag_expression
     struct Token
     {
         constexpr Token(std::string_view keyword, std::int32_t precedence, std::optional<Associative> associative, TokenType type = TokenType::operand)
-            : keyword{ std::move(keyword) }
+            : keyword{ keyword }
             , precedence{ precedence }
             , associative{ associative }
             , type{ type }
