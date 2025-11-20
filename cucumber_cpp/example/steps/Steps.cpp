@@ -50,7 +50,7 @@ THEN(R"(I should have ([0-9]+) cucumbers left)", (std::uint32_t num))
     ASSERT_THAT(actual, testing::Eq(num));
 }
 
-STEP(R"(a data table with a single cell)", (int i, double d))
+STEP(R"(a data table with a single cell)")
 {
     /* no body, example only */
 }
