@@ -122,7 +122,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     TokenType Token::TypeOf(char ch)
     {
-        if (std::isspace(ch) != 0)
+        if (std::isspace(static_cast<unsigned char>(ch)) != 0)
             return TokenType::whiteSpace;
 
         if (DemarcationMap().contains(ch))
@@ -133,7 +133,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     bool Token::CanEscape(char ch)
     {
-        if (std::isspace(ch) != 0)
+        if (std::isspace(static_cast<unsigned char>(ch)) != 0)
             return true;
 
         return ch == '\\' || DemarcationMap().contains(ch);
