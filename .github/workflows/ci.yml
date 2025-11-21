@@ -49,16 +49,21 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-unit-test-artifacts
-          path: |
-              ./.build/Windows/output/*.test.exe
+          path: ./.build/Windows/output/*.test.exe
           retention-days: 1
           if-no-files-found: error
       - name: Upload testdata artifacts
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: testdata-artifacts
-          path: |
-              ./testdata/*
+          path: ./testdata/*
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload .build directory
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: build-directory
+          path: .build
           retention-days: 1
           if-no-files-found: error
 
@@ -79,8 +84,7 @@ jobs:
           path: ./testdata/
       - run: dir .
       - run: dir testdata
-      - run: |
-          forfiles /S /M *.exe /C "cmd /c @file"
+      - run: forfiles /S /M *.exe /C "cmd /c @file"
 
   build-linux:
     name: Linux Host Build
