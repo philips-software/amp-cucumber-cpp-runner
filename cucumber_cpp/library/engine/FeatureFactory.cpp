@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/engine/FeatureFactory.hpp"
+#include "SourceInfo.hpp"
 #include "cucumber/gherkin/app.hpp"
 #include "cucumber/gherkin/file.hpp"
 #include "cucumber/gherkin/parse_error.hpp"
@@ -147,12 +148,6 @@ namespace cucumber_cpp::library::engine
             return optionalPickleStepArgument.value().doc_string.value().content;
         }
 
-        std::set<std::string, std::less<>> TagsFactory(const std::vector<cucumber::messages::tag>& tags)
-        {
-            const auto range = tags | std::views::transform(&cucumber::messages::tag::name);
-            return { range.begin(), range.end() };
-        }
-
         std::set<std::string, std::less<>> TagsFactory(const std::vector<cucumber::messages::pickle_tag>& tags)
         {
             const auto range = tags | std::views::transform(&cucumber::messages::pickle_tag::name);
@@ -192,9 +187,9 @@ namespace cucumber_cpp::library::engine
                 return;
 
             featureInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
+                pickle,
                 featureInfo,
                 std::move(tags),
-                pickle.name,
                 scenario.description,
                 scenario.location.line,
                 scenario.location.column.value_or(0)));
@@ -205,9 +200,9 @@ namespace cucumber_cpp::library::engine
         void ConstructScenario(const FeatureTreeFactory& featureTreeFactory, RuleInfo& ruleInfo, const FlatAst& flatAst, const cucumber::messages::scenario& scenario, const cucumber::messages::pickle& pickle, std::set<std::string, std::less<>> tags)
         {
             ruleInfo.Scenarios().push_back(std::make_unique<ScenarioInfo>(
+                pickle,
                 ruleInfo,
                 std::move(tags),
-                pickle.name,
                 scenario.description,
                 scenario.location.line,
                 scenario.location.column.value_or(0)));
@@ -283,15 +278,12 @@ namespace cucumber_cpp::library::engine
             std::visit(visitor, flatAst.at(pickle.ast_node_ids.front()));
         }
 
-        std::unique_ptr<FeatureInfo> FeatureFactory(std::filesystem::path path, const cucumber::gherkin::app::parser_result& ast)
+        std::unique_ptr<FeatureInfo> FeatureFactory(std::unique_ptr<SourceInfo> sourceInfo, const cucumber::gherkin::app::parser_result& ast)
         {
             return std::make_unique<FeatureInfo>(
-                TagsFactory(ast.feature->tags),
-                ast.feature->name,
-                ast.feature->description,
-                std::move(path),
-                ast.feature->location.line,
-                ast.feature->location.column.value_or(0));
+                ast.feature.value(),
+                std::move(sourceInfo)
+                );
         }
     }
 
@@ -319,19 +311,24 @@ namespace cucumber_cpp::library::engine
     std::unique_ptr<FeatureInfo> FeatureTreeFactory::Create(const std::filesystem::path& path, std::string_view tagExpression) const
     {
         std::unique_ptr<FeatureInfo> featureInfo;
+        std::unique_ptr<SourceInfo> sourceInfo;
         std::optional<FlatAst> flatAst;
 
-        cucumber::gherkin::app::callbacks callbacks{
-            .ast = [&path, &flatAst, &featureInfo](const cucumber::gherkin::app::parser_result& ast)
+        const cucumber::gherkin::app::callbacks callbacks{
+            .source = [&sourceInfo, &path](const cucumber::messages::source& source) -> void
             {
-                featureInfo = FeatureFactory(path, ast);
+                sourceInfo = std::make_unique<SourceInfo>(path, source);
+            },
+            .ast = [&sourceInfo, &flatAst, &featureInfo](const cucumber::gherkin::app::parser_result& ast) -> void
+            {
+                featureInfo = FeatureFactory(std::move(sourceInfo), ast);
                 flatAst = FlattenAst(*ast.feature);
             },
-            .pickle = [this, &featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle)
+            .pickle = [this, &featureInfo, &flatAst, &tagExpression](const cucumber::messages::pickle& pickle) -> void
             {
                 ConstructScenario(*this, *featureInfo, *flatAst, pickle, tagExpression);
             },
-            .error = [](const cucumber::gherkin::parse_error& /* _ */)
+            .error = [](const cucumber::gherkin::parse_error& /* _ */) -> void
             {
                 /* not handled yet */
             }

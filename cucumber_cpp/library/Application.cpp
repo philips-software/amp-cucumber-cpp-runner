@@ -13,6 +13,7 @@
 #include "cucumber_cpp/library/engine/TestExecution.hpp"
 #include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include "cucumber_cpp/library/report/JunitReport.hpp"
+#include "cucumber_cpp/library/report/NdjsonReport.hpp"
 #include "cucumber_cpp/library/report/Report.hpp"
 #include "cucumber_cpp/library/report/StdOutReport.hpp"
 #include <CLI/Error.hpp>
@@ -99,7 +100,7 @@ namespace cucumber_cpp::library
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
 
     {
-        gherkin.include_source(false);
+        gherkin.include_source(true);
         gherkin.include_ast(true);
         gherkin.include_pickles(true);
 
@@ -119,8 +120,14 @@ namespace cucumber_cpp::library
         runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
         runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
 
-        reporters.Add("console", std::make_unique<report::StdOutReport>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
+        // Some IDEs have hardcoded parameters in test runner. Can either allow and ignore all additional unknown parameters, or individually allow them as they get discovered
+        // runCommand->allow_extras();  // This will break one of the tests
+        runCommand->add_option("--gtest_color");
+        runCommand->add_option("--gtest_filter");
+
+        reporters.Add("console", [] { return std::make_unique<report::StdOutReport>();});
+        reporters.Add("junit-xml", [this] { return std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile); });
+        reporters.Add("ndjson", [this] { return std::make_unique<report::NdjsonReport>(options.outputfolder, options.reportfile); });
 
         ProgramContext().InsertRef(options);
     }
@@ -185,11 +192,6 @@ namespace cucumber_cpp::library
     cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
     {
         return parameterRegistry;
-    }
-
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
-    {
-        reporters.Add(name, std::move(reporter));
     }
 
     void Application::RunFeatures()
