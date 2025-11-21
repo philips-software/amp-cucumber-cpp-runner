@@ -73,11 +73,13 @@ jobs:
         with:
           name: windows-unit-test-artifacts
           path: ./
-      - name: Download unit test artifacts
+      - name: Download testdata artifacts
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: testdata-artifacts
           path: ./testdata/
+      - run: dir .
+      - run: dir testdata
       - run: |
           forfiles /S /M *.exe /C "cmd /c @file"
 
