@@ -49,7 +49,17 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-unit-test-artifacts
-          path: .build/Windows/output/*.test.exe
+          path: |
+              ./.build/Windows/output/*.test.exe
+              ./testdata/*
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload testdata artifacts
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: testdata-artifacts
+          path: |
+              ./testdata/*
           retention-days: 1
           if-no-files-found: error
 
@@ -62,9 +72,13 @@ jobs:
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: windows-unit-test-artifacts
-          path: ./unit-test-artifacts
+          path: ./
+      - name: Download unit test artifacts
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: testdata-artifacts
+          path: ./testdata/
       - run: |
-          cd ./unit-test-artifacts
           forfiles /S /M *.exe /C "cmd /c @file"
 
   build-linux:
