@@ -44,7 +44,7 @@ jobs:
           buildPreset: "Windows-Release"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - name: Collect unit test artifacts
-        run: mkdir -p .build/Windows/output && cp .build/Windows/**/*.test.exe .build/Windows/output/ || true
+        run: mkdir -p .build/Windows/output && find .build/Windows/cucumber_cpp -name '*.test.exe' -exec cp "{}" .build/Windows/output  \;
       - name: Upload unit test artifacts
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
