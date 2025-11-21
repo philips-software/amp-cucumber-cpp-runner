@@ -43,11 +43,13 @@ jobs:
           configurePreset: "Windows"
           buildPreset: "Windows-Release"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+      - name: Collect unit test artifacts
+        run: mkdir -p .build/Windows/output && cp .build/Windows/output/**/*.test.exe .build/Windows/output/ || true
       - name: Upload unit test artifacts
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-unit-test-artifacts
-          path: .build/Windows/**/*.test.exe
+          path: .build/Windows/output/*.test.exe
           retention-days: 1
           if-no-files-found: error
 
@@ -61,7 +63,9 @@ jobs:
         with:
           name: windows-unit-test-artifacts
           path: ./unit-test-artifacts
-      - run: ls -la ./unit-test-artifacts
+      - run: |
+          cd ./unit-test-artifacts
+          forfiles /S /M *.exe /C "cmd /c @file"
 
   build-linux:
     name: Linux Host Build
