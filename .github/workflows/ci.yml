@@ -43,6 +43,25 @@ jobs:
           configurePreset: "Windows"
           buildPreset: "Windows-Release"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+          #  upload executables to be used in the next job
+      - name: Upload unit test artifacts
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: windows-unit-test-artifacts
+          path: build/Windows/**/*.test.exe
+          retention-days: 1
+
+  test-windows:
+    name: Windows Host Test
+    runs-on: [windows-latest]
+    needs: build-windows
+    steps:
+      - name: Download unit test artifacts
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: windows-unit-test-artifacts
+          path: ./unit-test-artifacts
+      - run: ls -la ./unit-test-artifacts
 
   build-linux:
     name: Linux Host Build
