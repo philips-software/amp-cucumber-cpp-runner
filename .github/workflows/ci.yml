@@ -51,7 +51,6 @@ jobs:
           name: windows-unit-test-artifacts
           path: |
               ./.build/Windows/output/*.test.exe
-              ./testdata/*
           retention-days: 1
           if-no-files-found: error
       - name: Upload testdata artifacts
