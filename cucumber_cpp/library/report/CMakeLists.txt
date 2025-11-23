@@ -1,5 +1,10 @@
 add_library(cucumber_cpp.library.report STATIC ${CCR_EXCLUDE_FROM_ALL})
 
+configure_file(
+    Environment.h.in
+    "${CMAKE_CURRENT_BINARY_DIR}/g/Environment.h"
+)
+
 target_sources(cucumber_cpp.library.report PRIVATE
     JunitReport.cpp
     JunitReport.hpp
@@ -10,6 +15,8 @@ target_sources(cucumber_cpp.library.report PRIVATE
     StdOutReport.cpp
     StdOutReport.hpp
 )
+
+target_include_directories(cucumber_cpp.library.report PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/g")
 
 target_include_directories(cucumber_cpp.library.report PUBLIC
     ../../..

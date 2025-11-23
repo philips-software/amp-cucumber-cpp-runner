@@ -29,6 +29,7 @@ namespace cucumber_cpp::library::report
 
         std::ofstream outStream;
         void InitReportDirectory();
+        static void CreateMeta() ;
 
     };
 

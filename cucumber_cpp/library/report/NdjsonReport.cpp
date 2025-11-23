@@ -1,4 +1,6 @@
 #include "NdjsonReport.hpp"
+#include "Environment.h"
+#include <cucumber/messages/meta.hpp>
 #include <cucumber_cpp/library/engine/SourceInfo.hpp>
 #include <fstream>
 
@@ -49,11 +51,18 @@ namespace cucumber_cpp::library::report
         }
     }
 
+    void NdjsonReport::CreateMeta()
+    {
+        // Makeup own metadata since https://github.com/cucumber/ci-environment does not have c++ version (yet)
+        cucumber::messages::meta meta (MESSAGES_PROTOCOL_VERSION);
+    }
+
 
     void NdjsonReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
         InitReportDirectory();
-        // TODO find a place to record first meta line.
+        CreateMeta();
+
         outStream << "{\"source\":" << featureInfo.SourceInfo()->ToJson() << "}\n";
         outStream << "{\"gherkinDocument\":" << featureInfo.ToJson() << "}\n";
         // TODO testRunStarted
