@@ -75,9 +75,9 @@ namespace cucumber_cpp::library::engine
         return scenarios;
     }
 
-    std::string FeatureInfo::ToJson() const
+    const cucumber::messages::feature& FeatureInfo::Pickle() const
     {
-        return feature.to_json();
+        return feature;
     }
 
 

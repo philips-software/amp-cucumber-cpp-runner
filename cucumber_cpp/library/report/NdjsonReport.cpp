@@ -1,5 +1,6 @@
 #include "NdjsonReport.hpp"
 #include "Environment.h"
+#include <cucumber/messages/gherkin_document.hpp>
 #include <cucumber/messages/meta.hpp>
 #include <cucumber_cpp/library/engine/SourceInfo.hpp>
 #include <fstream>
@@ -21,7 +22,6 @@ namespace cucumber_cpp::library::report
     {
         outStream.close();
     }
-
 
     /*
      * Unlike XML reporter, where a single document is built up over time and then has to be flushed out in the end all at once,
@@ -51,20 +51,27 @@ namespace cucumber_cpp::library::report
         }
     }
 
-    void NdjsonReport::CreateMeta()
+    void NdjsonReport::RecordMeta()
     {
         // Makeup own metadata since https://github.com/cucumber/ci-environment does not have c++ version (yet)
         cucumber::messages::meta meta (MESSAGES_PROTOCOL_VERSION);
+        meta.ci = cucumber::messages::ci("name", "url", "build_number");
+        meta.ci->git = cucumber::messages::git("remote", "revision", "branch", "tag");
+        outStream << "{\"meta\":" << meta.to_json() << "}\n";
     }
 
 
     void NdjsonReport::FeatureStart(const engine::FeatureInfo& featureInfo)
     {
         InitReportDirectory();
-        CreateMeta();
+        RecordMeta();
 
         outStream << "{\"source\":" << featureInfo.SourceInfo()->ToJson() << "}\n";
-        outStream << "{\"gherkinDocument\":" << featureInfo.ToJson() << "}\n";
+
+        cucumber::messages::gherkin_document gherkinDocument;
+        gherkinDocument.feature = featureInfo.Pickle();
+
+        outStream << "{\"gherkinDocument\":" << gherkinDocument.to_json() << "}\n";
         // TODO testRunStarted
     }
 

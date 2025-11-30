@@ -36,7 +36,7 @@ namespace cucumber_cpp::library::engine
         [[nodiscard]] std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios();
         [[nodiscard]] const std::vector<std::unique_ptr<ScenarioInfo>>& Scenarios() const;
 
-        [[nodiscard]] std::string ToJson() const;
+        [[nodiscard]] const cucumber::messages::feature& Pickle() const;
 
     private:
 
