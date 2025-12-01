@@ -1,5 +1,7 @@
 #include "NdjsonComparer.h"
+#include <format>
 #include <fstream>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -15,36 +17,51 @@ bool NdjsonComparer::AreEquivalent(const std::string& pathExpected, const std::s
 
     std::ifstream actual(pathActual);
     std::vector<json> actualJsonObjects;
+    int lineNumber = 1;
+    bool hasEmptyLine = false;
     while (std::getline(actual, jsonLine))
     {
-        actualJsonObjects.push_back(json::parse(jsonLine));
-    }
-
-    if (expectedJsonObjects.size() != actualJsonObjects.size())
-    {
-        return false;
-    }
-
-    for (size_t i = 0; i < expectedJsonObjects.size(); i++)
-    {
-        json expectedJson = expectedJsonObjects[i];
-        json actualJson = actualJsonObjects[i];
-
-        if (expectedJson.size() != actualJson.size())
+        if (hasEmptyLine)
         {
+            std::cerr << std::format("\nFailure: output contains unexpected empty line number {}.", lineNumber);
             return false;
         }
-
-        const json::iterator expectedIterator = expectedJson.begin();
-        const json::iterator actualIterator = actualJson.begin();
-
-        while (expectedIterator != expectedJson.end())
+        if (jsonLine.empty())
         {
-            // TODO this will most definitely fail without predictable sorting
-            if (expectedIterator.key() != actualIterator.key() ||
-                expectedIterator.value() != actualIterator.value())
+            hasEmptyLine = true;
+            continue;
+        }
+
+        try
+        {
+            actualJsonObjects.push_back(json::parse(jsonLine));
+        } catch (json::exception& e)
+        {
+            std::cerr << std::format("\nFailure: line {} contains invalid json. {}", lineNumber, e.what());
+        }
+        lineNumber++;
+    }
+
+    for (int i = 0; i < expectedJsonObjects.size(); i++)
+    {
+        if (i > actualJsonObjects.size() - 1)
+        {
+            std::cerr << std::format("\nFailure: Unexpectedly reached the end of generated output. Expected {} but received {} objects.", expectedJsonObjects.size(), actualJsonObjects.size());
+            return false;
+        }
+        // Missing of the keys at the first level implies that the entire event is missing
+        json::iterator topLevelKeyIterator = expectedJsonObjects[i].begin();
+        while (topLevelKeyIterator != expectedJsonObjects[i].end())
+        {
+            const json& actualJson = actualJsonObjects[i];
+            const std::string& expectedKey = topLevelKeyIterator.key();
+            if (actualJson.contains(expectedKey))
             {
-                // TODO dynamic values such as timestamps and paths will need special handling
+                // TODO Perform event data assertions. Dynamic values, such as timestamps and paths, will need special handling
+                ++topLevelKeyIterator;
+            } else {
+                std::cerr << std::format("\nFailure: Event \"{}\" is missing on line {}. Found \"{}\" instead.", expectedKey, i, actualJson.begin().key());
+
                 return false;
             }
         }
