@@ -27,7 +27,7 @@ namespace cucumber_cpp::library::engine
     {
         TestExecutionMockInstance()
         {
-            reporters.Add("console", std::make_unique<report::StdOutReport>());
+            reporters.Add("console", [] { return std::make_unique<report::StdOutReport>();});
             reporters.Use("console");
         }
 

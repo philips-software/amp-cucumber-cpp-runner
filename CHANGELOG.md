@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.1.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.1.0...v3.1.1) (2025-11-21)
+
+
+### Bug Fixes
+
+* Resolve runtime static initialization order dependencies ([#254](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/254)) ([#258](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/258)) ([a45c85d](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/a45c85d95cfe07d8c87b0ed5107c15982e86fe0d))
+* Revert IsEscapeCharacter signed char change ([#253](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/253)) ([52d8a5d](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/52d8a5d51d76535848499a98e4b75fbe4396e665))
+
+
+### Chores
+
+* Remove unused arguments in example app ([#255](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/255)) ([410b33c](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/410b33c71d98a2fb5f6efe0c2dcf65c76f5d7eb7))
+
 ## [3.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.0.0...v3.1.0) (2025-11-17)
 
 

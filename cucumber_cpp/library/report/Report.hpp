@@ -56,7 +56,7 @@ namespace cucumber_cpp::library::report
 
     struct Reporters
     {
-        void Add(const std::string& name, std::unique_ptr<ReportHandlerV2> reporter);
+        void Add(const std::string& name, std::function<std::unique_ptr<report::ReportHandlerV2>()> reporterFactory);
         void Use(const std::string& name);
 
         [[nodiscard]] std::vector<std::string> AvailableReporters() const;
@@ -66,7 +66,7 @@ namespace cucumber_cpp::library::report
         std::vector<std::unique_ptr<ReportHandlerV2>>& Storage();
 
     private:
-        std::map<std::string, std::unique_ptr<ReportHandlerV2>, std::less<>> availableReporters;
+        std::map<std::string, std::function<std::unique_ptr<ReportHandlerV2>()>, std::less<>> availableReporters;
         std::vector<std::unique_ptr<ReportHandlerV2>> reporters;
     };
 

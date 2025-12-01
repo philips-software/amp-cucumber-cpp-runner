@@ -25,9 +25,9 @@ namespace cucumber_cpp::library::engine::test_helper
     {
         ContextManagerInstance(std::set<std::string, std::less<>> tags = {})
             : cucumber_cpp::library::engine::ContextManager{ contextStorageFactory }
-            , feature{ tags, {}, {}, {}, {}, {} }
+            , feature{{}, {}}
             , rule{ feature, {}, {}, {}, {}, {} }
-            , scenario{ rule, tags, {}, {}, {}, {} }
+            , scenario{ {}, rule, tags, {}, {}, {} }
             , step{ scenario, {}, {}, {}, {}, {}, {} }
         {
         }
