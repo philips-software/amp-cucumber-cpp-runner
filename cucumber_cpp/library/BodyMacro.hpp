@@ -2,7 +2,6 @@
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
 #include "cucumber_cpp/library/Body.hpp"
-#include "cucumber_cpp/library/engine/FailureHandler.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -29,7 +28,8 @@
             void Execute(const std::variant<std::vector<std::string>, std::vector<std::any>>& args) override                                 \
             {                                                                                                                                \
                 cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                                                \
-                ASSERT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));                                                 \
+                /*   ASSERT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));   */                                       \
+                ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr));                                                                  \
             }                                                                                                                                \
                                                                                                                                              \
             template<class... TArgs>                                                                                                         \

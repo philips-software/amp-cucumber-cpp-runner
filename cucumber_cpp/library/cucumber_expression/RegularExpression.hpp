@@ -1,6 +1,8 @@
 #ifndef CUCUMBER_EXPRESSION_REGULAREXPRESSION_HPP
 #define CUCUMBER_EXPRESSION_REGULAREXPRESSION_HPP
 
+#include "cucumber/messages/group.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include <optional>
 #include <ranges>
 #include <regex>
@@ -39,6 +41,21 @@ namespace cucumber_cpp::library::cucumber_expression
 
             for (const auto& match : smatch | std::views::drop(1))
                 result.emplace_back(match.str());
+
+            return result;
+        }
+
+        std::optional<cucumber::messages::step_match_arguments_list> MatchArguments(const std::string& text) const
+        {
+            std::smatch smatch;
+            if (!std::regex_search(text, smatch, regex))
+                return {};
+
+            cucumber::messages::step_match_arguments_list result{};
+            result.step_match_arguments.reserve(smatch.size() - 1);
+
+            for (const auto& match : smatch | std::views::drop(1))
+                result.step_match_arguments.emplace_back(cucumber::messages::group{ .value = match.str() });
 
             return result;
         }

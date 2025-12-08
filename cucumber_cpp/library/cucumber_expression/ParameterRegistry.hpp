@@ -1,6 +1,8 @@
 #ifndef CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
+#include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include <algorithm>
 #include <any>
 #include <cctype>
@@ -9,14 +11,11 @@
 #include <cstdlib>
 #include <format>
 #include <functional>
-#include <iostream>
 #include <map>
-#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -95,29 +94,26 @@ namespace cucumber_cpp::library::cucumber_expression
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
     }
 
-    struct MatchRange : std::pair<std::smatch::const_iterator, std::smatch::const_iterator>
+    struct ParameterConversion
     {
-        using std::pair<std::smatch::const_iterator, std::smatch::const_iterator>::pair;
-
-        std::smatch::const_iterator begin() const;
-        std::smatch::const_iterator end() const;
-
-        const std::ssub_match& operator[](std::size_t index) const;
+        std::function<cucumber::messages::group(MatchRange)> toStrings;
+        std::function<std::any(const cucumber::messages::group&)> toAny;
     };
 
     struct Converter
     {
-        Converter(std::size_t matches, std::function<std::any(MatchRange)> converter);
+        Converter(std::size_t matches, ParameterConversion converter, std::string name);
 
+        std::string name;
         std::size_t matches;
-        std::function<std::any(MatchRange)> converter;
+        ParameterConversion converter;
     };
 
     struct Parameter
     {
         std::string name;
         std::vector<std::string> regex;
-        std::function<std::any(MatchRange)> converter;
+        ParameterConversion converter;
     };
 
     struct ParameterRegistration
@@ -126,7 +122,7 @@ namespace cucumber_cpp::library::cucumber_expression
         ~ParameterRegistration() = default;
 
     public:
-        virtual void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
+        virtual void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter) = 0;
     };
 
     struct ParameterRegistry : ParameterRegistration
@@ -135,11 +131,14 @@ namespace cucumber_cpp::library::cucumber_expression
 
         virtual ~ParameterRegistry() = default;
 
-        Parameter Lookup(const std::string& name) const;
-        void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
+        const std::map<std::string, const Parameter>& GetParameters() const;
+
+        const Parameter& Lookup(const std::string& name) const;
+
+        void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter) override;
 
     private:
-        std::map<std::string, Parameter, std::less<>> parameters{};
+        std::map<std::string, const Parameter> parametersByName;
     };
 }
 

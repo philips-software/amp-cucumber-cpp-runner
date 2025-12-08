@@ -1,12 +1,12 @@
 #ifndef CUCUMBER_EXPRESSION_EXPRESSION_HPP
 #define CUCUMBER_EXPRESSION_EXPRESSION_HPP
 
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <any>
 #include <cctype>
 #include <cstdlib>
-#include <functional>
 #include <optional>
 #include <ranges>
 #include <regex>
@@ -24,8 +24,11 @@ namespace cucumber_cpp::library::cucumber_expression
         std::string_view Pattern() const;
         std::optional<std::vector<std::any>> Match(const std::string& text) const;
 
+        std::optional<cucumber::messages::step_match_arguments_list> MatchArguments(const std::string& text) const;
+
     private:
-        std::string RewriteToRegex(const Node& node);
+        std::string
+        RewriteToRegex(const Node& node);
         std::string EscapeRegex(std::string_view text) const;
         std::string RewriteOptional(const Node& node);
         std::string RewriteAlternation(const Node& node);

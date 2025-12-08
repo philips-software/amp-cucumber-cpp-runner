@@ -17,6 +17,10 @@ target_include_directories(cucumber_cpp.library.tag_expression PUBLIC
     ../../..
 )
 
+target_link_libraries(cucumber_cpp.library.tag_expression PUBLIC
+    cucumber_gherkin_lib
+)
+
 if (CCR_BUILD_TESTS)
     add_subdirectory(test)
 endif()

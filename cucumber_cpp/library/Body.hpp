@@ -1,18 +1,52 @@
 #ifndef CUCUMBER_CPP_BODY_HPP
 #define CUCUMBER_CPP_BODY_HPP
 
+#include "cucumber/messages/exception.hpp"
+#include "cucumber/messages/test_step_result.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber_cpp/library/TraceTime.hpp"
 #include <any>
+#include <chrono>
+#include <concepts>
+#include <cstddef>
+#include <exception>
+#include <format>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <ostream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library
 {
+    using ExecuteArgs = std::variant<std::vector<std::string>, std::vector<std::any>>;
+
+    struct FatalError : std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
+    struct EventListener : testing::EmptyTestEventListener
+    {
+        explicit EventListener(cucumber::messages::test_step_result& testStepResult);
+        ~EventListener();
+
+        void OnTestPartResult(const testing::TestPartResult& testPartResult) override;
+
+    private:
+        cucumber::messages::test_step_result& testStepResult;
+    };
+
     struct Body
     {
         virtual ~Body() = default;
 
-        virtual void Execute(const std::variant<std::vector<std::string>, std::vector<std::any>>& args = {}) = 0;
+        cucumber::messages::test_step_result ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
+
+    protected:
+        virtual void Execute(const ExecuteArgs& args) = 0;
     };
 
     template<typename T>

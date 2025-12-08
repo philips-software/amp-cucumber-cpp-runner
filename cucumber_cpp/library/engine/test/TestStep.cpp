@@ -3,8 +3,8 @@
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
 #include "cucumber_cpp/library/engine/test_helper/ContextManagerInstance.hpp"
-#include "cucumber_cpp/library/engine/test_helper/TestRunnerMock.hpp"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
@@ -37,7 +37,6 @@ namespace cucumber_cpp::library::engine
 
         library::engine::test_helper::ContextManagerInstance contextManager;
 
-        engine::test_helper::TestRunnerMock testRunnerMock;
         StepMock step{ contextManager.StepContext(), table, docString };
     };
 
@@ -74,4 +73,36 @@ namespace cucumber_cpp::library::engine
     {
         ASSERT_THROW(step.Pending("message"), Step::StepPending);
     }
+
+    /////////////////////////////////////////
+    class FooTest : public testing::TestWithParam<std::string_view>
+    {
+        // You can implement all the usual fixture class members here.
+        // To access the test parameter, call GetParam() from class
+        // TestWithParam<T>.
+    };
+
+    // Or, when you want to add parameters to a pre-existing fixture class:
+    class BaseTest : public testing::Test
+    {
+    };
+
+    class BarTest : public BaseTest
+        , public testing::WithParamInterface<std::string_view>
+    {
+    };
+
+    TEST_P(FooTest, DoesBlah)
+    {
+        // Inside a test, access the test parameter with the GetParam() method
+        // of the TestWithParam<T> class:
+    }
+
+    TEST_P(FooTest, HasBlahBlah)
+    {
+    }
+
+    INSTANTIATE_TEST_SUITE_P(MeenyMinyMoe,
+        FooTest,
+        testing::Values("meeny", "miny", "moe"));
 }

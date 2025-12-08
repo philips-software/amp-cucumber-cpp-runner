@@ -15,22 +15,23 @@ teardown() {
 }
 
 @test "Parse tag expression" {
-    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --tag @smoke @result:OK --feature cucumber_cpp/acceptance_test/features --report console
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --tag "@smoke and @result:OK" --feature cucumber_cpp/acceptance_test/features --report console
     assert_success
 }
 
 @test "Failed tests" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --tag "@result:FAILED" --feature cucumber_cpp/acceptance_test/features --report console
     assert_failure
-    assert_output --partial "failed \"cucumber_cpp/acceptance_test/features/test_scenarios.feature\""
+    assert_output --partial "[  FAILED  ] Simple feature file/3.A failing scenario"
     assert_output --partial "skipped Then a then step"
 }
 
 @test "Undefined tests" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --tag "@result:UNDEFINED" --feature cucumber_cpp/acceptance_test/features --report console
     assert_failure
-    assert_output --partial "undefined \"cucumber_cpp/acceptance_test/features/test_scenarios.feature\""
+    assert_output --partial "missing Given a missing step"
     assert_output --partial "skipped Then this should be skipped"
+    assert_output --partial "[  FAILED  ] Simple feature file/3.A scenario with undefined step"
 }
 
 @test "No tests" {
@@ -144,57 +145,59 @@ teardown() {
     assert_output --partial "--but--"
 }
 
-@test "Test the asterisk keyword - will fail" {
+@test "Test the asterisk keyword" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@keyword-asterisk" --report console
-    assert_failure
+    assert_output --partial "print: --when--"
+    assert_output --partial "print: --asterisk--"
+    assert_success
 }
 
 @test "Test passing scenario after failed scenario reports feature as failed" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_feature" --report console
     assert_failure
-    assert_output --partial "tests   : 1/2 passed"
+    assert_output --partial "[==========] Running 2 tests from 1 test suite."
+    assert_output --partial "1 FAILED TEST"
 }
 
 @test "Test failing hook before results in error" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_scenariohook_before" --report console
     assert_failure
-    assert_output --partial "skipped Given a given step"
-    assert_output --partial "tests   : 0/1 passed"
+    assert_output --partial "[  PASSED  ] 0 tests"
+    assert_output --partial "[  FAILED  ] Test scenario and step hook bindings.Run failing Scenario hooks before"
 }
 
 @test "Test failing hook after results in error" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@fail_scenariohook_after" --report console
     assert_failure
-    assert_output --partial "Given a given step"
-    assert_output --partial "done"
-    assert_output --partial "failed"
-    assert_output --partial "tests   : 0/1 passed"
+    assert_output --partial "[  PASSED  ] 0 tests"
+    assert_output --partial "[  FAILED  ] Test scenario and step hook bindings.Run failing Scenario hooks after"
 }
 
 @test "Test throwing hook results in error" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@throw_scenariohook" --report console
     assert_failure
-    assert_output --partial "skipped Given a given step"
-    assert_output --partial "tests   : 0/1 passed"
+    assert_output --partial "[  PASSED  ] 0 tests"
+    assert_output --partial "[  FAILED  ] Test scenario and step hook bindings.Run throwing Scenario hooks"
 }
 
 
 @test "Test error program hook results in error and skipped steps" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test.custom run --feature cucumber_cpp/acceptance_test/features  --tag "@smoke and @result:OK" --report console --required --failprogramhook
     assert_failure
-    refute_output --partial "skipped Given a given step"
-    refute_output --partial "should not be executed"
-    assert_output --partial "tests   : 0/0 passed"
+    assert_output --partial "[  PASSED  ] 0 tests"
+    assert_output --partial "[  SKIPPED ] 1 test, listed below:"
+    assert_output --partial "[  SKIPPED ] Simple feature file.An OK scenario"
+    assert_output --partial "[  FAILED  ] 0 tests, listed below:"
 }
 
 @test "Test unicode" {
     run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features  --tag "@unicode" --report console
     assert_success
-    assert_output --partial "tests   : 1/1 passed"
+    assert_output --partial "[       OK ] Test for unicode characters.Can match unicode characters"
 }
 
 @test "Test unused step reporting" {
-    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@unused_steps" --report console --unused 
+    run .build/Host/cucumber_cpp/acceptance_test/Debug/cucumber_cpp.acceptance_test run --feature cucumber_cpp/acceptance_test/features --tag "@unused_steps" --report console --unused
     assert_success
     assert_output --regexp ".*The following steps have not been used:.*this step is not being used.*"
     refute_output --regexp ".*The following steps have not been used:.*this step is being used.*"

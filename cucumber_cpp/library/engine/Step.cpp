@@ -1,8 +1,8 @@
 #include "cucumber_cpp/library/engine/Step.hpp"
+#include "cucumber/messages/pickle_step_type.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/engine/Table.hpp"
-#include "cucumber_cpp/library/engine/TestRunner.hpp"
 #include <source_location>
 #include <string>
 
@@ -16,17 +16,17 @@ namespace cucumber_cpp::library::engine
 
     void Step::Given(const std::string& step) const
     {
-        TestRunner::Instance().NestedStep(StepType::given, step);
+        // CucumberTestServer::Instance()->RunStep(step, cucumber::messages::pickle_step_type::CONTEXT);
     }
 
     void Step::When(const std::string& step) const
     {
-        TestRunner::Instance().NestedStep(StepType::when, step);
+        // CucumberTestServer::Instance()->RunStep(step, cucumber::messages::pickle_step_type::ACTION);
     }
 
     void Step::Then(const std::string& step) const
     {
-        TestRunner::Instance().NestedStep(StepType::then, step);
+        // CucumberTestServer::Instance()->RunStep(step, cucumber::messages::pickle_step_type::OUTCOME);
     }
 
     void Step::Pending(const std::string& message, std::source_location current) noexcept(false)

@@ -24,7 +24,10 @@
             "type": "pickString",
             "options": [
                 "cucumber_cpp/example/features",
-                "cucumber_cpp/acceptance_test/features"
+                "cucumber_cpp/example/features/rule.feature",
+                "cucumber_cpp/example/features/substep.feature",
+                "cucumber_cpp/acceptance_test/features",
+                "cucumber_cpp/devkit/empty/features"
             ]
         }
     ],
@@ -40,12 +43,41 @@
                 "${input:features}",
                 "--report",
                 "console",
-                "junit-xml",
-                // "--com",
-                // "COMx",
-                // "--nordic",
+                // "junit-xml",
+                "--com",
+                "COMx",
+                "--nordic",
                 "--tag",
                 "${input:tag}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch - no tags",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "run",
+                "--feature",
+                "${input:features}",
+                "--report",
+                "console",
+                // "junit-xml",
+                "--com",
+                "COMx",
+                "--nordic"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

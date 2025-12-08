@@ -16,5 +16,4 @@ target_sources(cucumber_cpp.library.engine.test PRIVATE
     TestHookExecutorHooks.cpp
     TestStep.cpp
     TestStringTo.cpp
-    TestTestRunner.cpp
 )

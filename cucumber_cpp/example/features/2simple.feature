@@ -32,6 +32,10 @@ Feature: Simple feature file
       | 10 | 4 | 5 |
       | 11 | 3 | 6 |
 
+  @result:FAILED
+  Scenario: Assert and Expect
+    Given expect and assert
+
   @result:UNDEFINED
   Scenario: a scenario with a missing step
     Given there are <x> cucumbers

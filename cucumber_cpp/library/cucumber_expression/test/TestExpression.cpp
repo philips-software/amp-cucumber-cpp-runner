@@ -1,6 +1,8 @@
 
+#include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
+#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
@@ -12,11 +14,9 @@
 #include <cstdlib>
 #include <filesystem>
 #include <format>
-#include <functional>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <iterator>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <regex>
 #include <string>
@@ -78,7 +78,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
                     ASSERT_THAT(matchOpt, testing::IsTrue()) << FormatMessage(testdata, expression);
 
-                    const auto match = *matchOpt;
+                    const auto& match = *matchOpt;
                     for (std::size_t i = 0; i < testdata["expected_args"].size(); ++i)
                     {
                         if (match[i].type() == typeid(std::string))
@@ -155,13 +155,20 @@ namespace cucumber_cpp::library::cucumber_expression
             std::optional<std::int64_t> number;
         };
 
-        parameterRegistry.AddParameter("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" }, [](MatchRange matches) -> std::any
-            {
-                std::optional<std::string> text{ matches[1].matched ? StringTo<std::string>(matches[1].str()) : std::optional<std::string>{ std::nullopt } };
-                std::optional<std::int64_t> number{ matches[2].matched ? StringTo<std::int64_t>(matches[2].str()) : std::optional<std::int64_t>{ std::nullopt } };
+        parameterRegistry.AddParameter("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" },
+            { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
+                {
+                    std::optional<std::string> text{ matches[1].matched ? matches[1].str() : std::optional<std::string>{ std::nullopt } };
+                    std::optional<std::string> number{ matches[2].matched ? matches[2].str() : std::optional<std::string>{ std::nullopt } };
 
-                return CustomType{ text, number };
-            });
+                    return { .children = { cucumber::messages::group{ .value = text }, cucumber::messages::group{ .value = number } } };
+                },
+                .toAny = [](const cucumber::messages::group& matches) -> std::any
+                {
+                    std::optional<std::string> text{ matches.children[0].value };
+                    std::optional<std::int64_t> number{ matches.children[1].value ? StringTo<std::int64_t>(matches.children[1].value.value()) : std::optional<std::int64_t>{ std::nullopt } };
+                    return CustomType{ text, number };
+                } });
 
         auto matchString{ Match(R"__({textAndOrNumber})__", R"__(ABC)__") };
         EXPECT_THAT(matchString, testing::IsTrue());
@@ -226,10 +233,15 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         try
         {
-            parameterRegistry.AddParameter("", { ".*" }, [](const MatchRange& matches)
-                {
-                    return StringTo<std::string>(matches.begin()->str());
-                });
+            parameterRegistry.AddParameter("", { ".*" },
+                { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
+                    {
+                        return { .value = matches.begin()->str() };
+                    },
+                    .toAny = [](const cucumber::messages::group& matches) -> std::any
+                    {
+                        return matches.value.value();
+                    } });
             FAIL() << "Expected CucumberExpressionError to be thrown";
         }
         catch (const CucumberExpressionError& e)
@@ -242,10 +254,15 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         try
         {
-            parameterRegistry.AddParameter("word", { ".*" }, [](const MatchRange& matches)
-                {
-                    return StringTo<std::string>(matches.begin()->str());
-                });
+            parameterRegistry.AddParameter("word", { ".*" },
+                { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
+                    {
+                        return { .value = matches.begin()->str() };
+                    },
+                    .toAny = [](const cucumber::messages::group& matches) -> std::any
+                    {
+                        return matches.value.value();
+                    } });
             FAIL() << "Expected CucumberExpressionError to be thrown";
         }
         catch (const CucumberExpressionError& e)

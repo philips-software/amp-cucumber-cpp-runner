@@ -184,7 +184,6 @@ namespace cucumber_cpp::library::report
 
     void StdOutReport::ScenarioEnd(engine::Result result, const engine::ScenarioInfo& scenarioInfo, TraceTime::Duration duration)
     {
-
         using enum engine::Result;
 
         std::cout << "\n"

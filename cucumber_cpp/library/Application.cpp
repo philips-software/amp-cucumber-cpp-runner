@@ -1,40 +1,36 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
+#include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
-#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
-#include "cucumber_cpp/library/engine/FeatureInfo.hpp"
-#include "cucumber_cpp/library/engine/HookExecutor.hpp"
-#include "cucumber_cpp/library/engine/Result.hpp"
-#include "cucumber_cpp/library/engine/TestExecution.hpp"
-#include "cucumber_cpp/library/engine/TestRunner.hpp"
-#include "cucumber_cpp/library/report/JunitReport.hpp"
-#include "cucumber_cpp/library/report/Report.hpp"
-#include "cucumber_cpp/library/report/StdOutReport.hpp"
+#include "cucumber_cpp/library/engine/NewRuntime.hpp"
+#include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
+#include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <CLI/Error.hpp>
 #include <CLI/Option.hpp>
 #include <CLI/Validators.hpp>
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
-#include <algorithm>
 #include <exception>
 #include <filesystem>
+#include <format>
 #include <functional>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <optional>
 #include <ostream>
 #include <ranges>
 #include <string>
 #include <string_view>
-#include <type_traits>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -79,30 +75,23 @@ namespace cucumber_cpp::library
         }
     }
 
-    ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
-        : CLI::Validator("ReportHandler", [&reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
-              {
-                  if (!cachedAvailableReporters)
-                      cachedAvailableReporters = reporters.AvailableReporters();
+    // ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
+    //     : CLI::Validator("ReportHandler", [&reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
+    //           {
+    //               if (!cachedAvailableReporters)
+    //                   cachedAvailableReporters = reporters.AvailableReporters();
 
-                  if (std::ranges::find(*cachedAvailableReporters, str) == cachedAvailableReporters->end())
-                      return std::string{ "'" + str + "' is not a reporter" };
-                  else
-                      return std::string{};
-              })
-    {}
+    //               if (std::ranges::find(*cachedAvailableReporters, str) == cachedAvailableReporters->end())
+    //                   return std::string{ "'" + str + "' is not a reporter" };
+    //               else
+    //                   return std::string{};
+    //           })
+    // {}
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
-        : contextManager{ std::move(contextStorageFactory) }
-        , reporters{ contextManager }
-        , reportHandlerValidator{ reporters }
+        : contextStorageFactory{ contextStorageFactory }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
-
     {
-        gherkin.include_source(false);
-        gherkin.include_ast(true);
-        gherkin.include_pickles(true);
-
         cli.require_subcommand(1);
 
         runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
@@ -113,14 +102,14 @@ namespace cucumber_cpp::library
         runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
         runCommand->add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required()->check(CLI::ExistingPath);
 
-        runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation")->check(reportHandlerValidator);
+        runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation"); //->check(reportHandlerValidator);
         runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
         runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
         runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
         runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
 
-        reporters.Add("console", std::make_unique<report::StdOutReport>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
+        // reporters.Add("console", std::make_unique<report::StdOutReport>());
+        // reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
 
         ProgramContext().InsertRef(options);
     }
@@ -130,7 +119,7 @@ namespace cucumber_cpp::library
         try
         {
             const auto reportDescription = runCommand->get_option("--report")->get_description();
-            const auto joinedReporters = reportDescription + Join(reporters.AvailableReporters(), ", ");
+            const auto joinedReporters = reportDescription; // + Join(reporters.AvailableReporters(), ", ");
 
             runCommand->get_option("--report")->description(joinedReporters);
             cli.parse(argc, argv);
@@ -141,32 +130,23 @@ namespace cucumber_cpp::library
         }
         catch (const InternalError& error)
         {
-            std::cout << "Internal error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
-        }
-        catch (const UnsupportedAsteriskError& error)
-        {
-            std::cout << "UnsupportedAsteriskError error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << std::format("InternalError error:\n{}\n", error.what());
+            return 1;
         }
         catch (const cucumber_expression::Error& error)
         {
-            std::cout << "Cucumber Expression error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << std::format("Cucumber Expression error:\n{}\n", error.what());
+            return 1;
         }
         catch (const std::exception& error)
         {
-            std::cout << "Generic error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << std::format("Generic error:\n{}\n", error.what());
+            return 1;
         }
         catch (...)
         {
             std::cout << "Unknown error";
-            return GetExitCode(engine::Result::failed);
+            return 1;
         }
 
         return GetExitCode();
@@ -179,7 +159,7 @@ namespace cucumber_cpp::library
 
     Context& Application::ProgramContext()
     {
-        return contextManager.ProgramContext();
+        return programContextRef;
     }
 
     cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
@@ -187,37 +167,58 @@ namespace cucumber_cpp::library
         return parameterRegistry;
     }
 
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
-    {
-        reporters.Add(name, std::move(reporter));
-    }
+    // void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
+    // {
+    //     reporters.Add(name, std::move(reporter));
+    // }
 
     void Application::RunFeatures()
     {
-        for (const auto& selectedReporter : options.reporters)
-            reporters.Use(selectedReporter);
+        struct BroadcastListener
+        {
+            explicit BroadcastListener(util::Broadcaster& broadcaster)
+                : listener(broadcaster, [this](const cucumber::messages::envelope& envelope)
+                      {
+                          OnEvent(envelope);
+                      })
+            {}
 
-        auto tagExpression = Join(options.tags, " ");
-        engine::HookExecutorImpl hookExecution{ contextManager };
+            void OnEvent(const cucumber::messages::envelope& envelope)
+            {
+                std::cout << envelope.to_json() << "\n";
+            }
 
-        const auto& runPolicy = (options.dryrun) ? static_cast<const engine::TestExecution::Policy&>(engine::dryRunPolicy)
-                                                 : static_cast<const engine::TestExecution::Policy&>(engine::executeRunPolicy);
+        private:
+            util::Listener listener;
+        };
 
-        std::unique_ptr<engine::TestExecutionImpl> testExecution;
-        if (removeDefaultGoogleTestListener)
-            testExecution = std::make_unique<engine::TestExecutionImplWithoutDefaultGoogleListener>(contextManager, reporters, hookExecution, runPolicy);
-        else
-            testExecution = std::make_unique<engine::TestExecutionImpl>(contextManager, reporters, hookExecution, runPolicy);
+        // BroadcastListener broadcastListener{ broadcaster };
 
-        StepRegistry stepRegistry{ parameterRegistry };
-        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
+        // for (const auto& selectedReporter : options.reporters)
+        //     reporters.Use(selectedReporter);
 
-        engine::TestRunnerImpl testRunner{ featureTreeFactory, *testExecution };
+        const auto tagExpression = Join(options.tags, " ");
+        const auto featureFiles = GetFeatureFiles(options);
 
-        testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
+        support::RunOptions runOptions{
+            .sources = {
+                .paths = featureFiles,
+                .tagExpression = tagExpression,
+            },
+            .runtime = {
+                .retry = 1,
+            },
+        };
 
-        if (options.printStepsNotUsed)
-            PrintStepsNotUsed(stepRegistry);
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
+
+        api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
+
+        listeners.Append(defaultEventListener);
+
+        // if (options.printStepsNotUsed)
+        //     PrintStepsNotUsed(stepRegistry);
 
         std::cout << '\n'
                   << std::flush;
@@ -242,26 +243,16 @@ namespace cucumber_cpp::library
         }
     }
 
-    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
-    {
-
-        const auto featureFiles = GetFeatureFiles(options);
-        std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
-        vec.reserve(featureFiles.size());
-
-        for (const auto& featurePath : featureFiles)
-            vec.push_back(featureTreeFactory.Create(featurePath, tagExpression));
-
-        return vec;
-    }
-
     int Application::GetExitCode() const
     {
-        return GetExitCode(contextManager.ProgramContext().ExecutionStatus());
+        return 0;
+        // if (testing::UnitTest::GetInstance()->Failed())
+        //     return GetExitCode(engine::Result::failed);
+        // return GetExitCode(engine::Result::passed);
     }
 
-    int Application::GetExitCode(engine::Result result) const
-    {
-        return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
-    }
+    // int Application::GetExitCode(engine::Result result) const
+    // {
+    //     return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
+    // }
 }

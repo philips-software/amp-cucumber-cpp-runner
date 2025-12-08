@@ -7,7 +7,7 @@
 #include "cucumber_cpp/library/BodyMacro.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 
-#define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::HookRegistry::Register, cucumber_cpp::library::HookBase)
+#define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::HookRegistration::Register, cucumber_cpp::library::HookBase)
 
 #define HOOK_BEFORE_ALL() \
     HOOK_(                \

@@ -18,3 +18,5 @@ target_include_directories(cucumber_cpp INTERFACE
 target_link_libraries(cucumber_cpp INTERFACE
     cucumber_cpp.library
 )
+
+add_subdirectory(devkit)
