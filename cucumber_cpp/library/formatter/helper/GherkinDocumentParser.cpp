@@ -3,6 +3,7 @@
 #include "cucumber/messages/feature_child.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/location.hpp"
+#include "cucumber/messages/rule.hpp"
 #include "cucumber/messages/rule_child.hpp"
 #include "cucumber/messages/scenario.hpp"
 #include "cucumber/messages/step.hpp"
@@ -29,6 +30,13 @@ namespace cucumber_cpp::library::formatter::helper
         {
             if (child.scenario)
                 return { *child.scenario };
+            return {};
+        }
+
+        std::vector<cucumber::messages::rule> ExtractRulesFeatureChild(const cucumber::messages::feature_child& child)
+        {
+            if (child.rule)
+                return { *child.rule };
             return {};
         }
 
@@ -80,6 +88,22 @@ namespace cucumber_cpp::library::formatter::helper
 
         for (const auto& step : steps)
             map.emplace(step.id, step);
+
+        return map;
+    }
+
+    GherkinScenarioRuleMap GetGherkinScenarioRuleMap(const cucumber::messages::gherkin_document& gherkinDocument)
+    {
+        auto rules = gherkinDocument.feature->children | std::views::transform(ExtractRulesFeatureChild) | std::views::join;
+
+        GherkinScenarioRuleMap map;
+
+        for (const auto& rule : rules)
+        {
+            auto scenarios = rule.children | std::views::transform(ExtractScenarioFromRuleChild) | std::views::join;
+            for (const auto& scenario : scenarios)
+                map.emplace(scenario.id, rule);
+        }
 
         return map;
     }

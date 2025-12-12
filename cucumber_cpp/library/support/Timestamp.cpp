@@ -21,10 +21,30 @@ namespace cucumber_cpp::library::support
         }
     }
 
-    cucumber::messages::timestamp TimestampNow()
+    TimestampGenerator::TimestampGenerator()
+    {
+        instance = this;
+    }
+
+    TimestampGenerator::~TimestampGenerator()
+    {
+        instance = nullptr;
+    }
+
+    TimestampGenerator& TimestampGenerator::Instance()
+    {
+        return *instance;
+    }
+
+    std::chrono::milliseconds TimestampGeneratorSystemClock::Now()
     {
         const auto now = std::chrono::system_clock::now().time_since_epoch();
-        const auto nowMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now);
+    }
+
+    cucumber::messages::timestamp TimestampNow()
+    {
+        const auto nowMillis = TimestampGenerator::Instance().Now().count();
         const auto seconds = nowMillis / millisecondsPerSecond;
         const auto nanos = (nowMillis % millisecondsPerSecond) * nanosecondsPerMillisecond;
         return cucumber::messages::timestamp{

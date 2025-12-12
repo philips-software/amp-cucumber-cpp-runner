@@ -24,6 +24,27 @@ namespace cucumber_cpp::library::support
         }
     }
 
+    Stopwatch::Stopwatch()
+    {
+        Stopwatch::instance = this;
+    }
+
+    Stopwatch& Stopwatch::Instance()
+    {
+        return *instance;
+    }
+
+    void StopWatchHighResolutionClock::Start()
+    {
+        timeStart = std::chrono::high_resolution_clock::now();
+    }
+
+    std::chrono::nanoseconds StopWatchHighResolutionClock::Duration()
+    {
+        const auto timeStop = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(timeStop - timeStart);
+    }
+
     cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis)
     {
         return ToDuration(millis);

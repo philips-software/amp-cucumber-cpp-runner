@@ -8,7 +8,6 @@
 
 GIVEN(R"(a background step)")
 {
-    std::cout << "this is a background step\n";
 }
 
 GIVEN(R"(a simple data table)")
@@ -76,17 +75,35 @@ STEP(R"(a data table with comments and newlines inside)")
     /* no body, example only */
 }
 
-STEP(R"(a step)")
+STEP(R"(^a step$)")
 {
-    std::cout << "--a step--\n";
+    context.EmplaceAt<std::string>("substep", "was executed");
 }
 
-STEP(R"(call another step)")
+STEP(R"(^a step calls another step$)")
 {
     Given(R"(a step)");
+}
+
+STEP(R"(^the called step is executed$)")
+{
+    ASSERT_THAT(context.Contains("substep"), testing::IsTrue());
+    ASSERT_THAT(context.Get<std::string>("substep"), testing::Eq("was executed"));
 }
 
 STEP("this step should be skipped")
 {
     /* no body, example only */
+}
+
+STEP(R"(a step stores the value at row {int} and column {int} from the table:)", (std::int32_t row, std::int32_t column))
+{
+    context.EmplaceAt<std::string>("cell", table.value()[row].cells[column].value);
+}
+
+STEP(R"(the value should be {string})", (const std::string& expected_value))
+{
+    const auto& actual = context.Get<std::string>("cell");
+
+    ASSERT_THAT(actual, testing::StrEq(expected_value));
 }

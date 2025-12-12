@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
@@ -16,6 +17,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <gtest/gtest.h>
 #include <memory>
 #include <ranges>
 #include <vector>
@@ -28,6 +30,9 @@ namespace cucumber_cpp::library::api
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
+                if (parameter.isBuiltin)
+                    continue;
+
                 broadcaster.BroadcastEvent({ .parameter_type = cucumber::messages::parameter_type{
                                                  .name = parameter.name,
                                                  .regular_expressions = parameter.regex,
@@ -38,6 +43,8 @@ namespace cucumber_cpp::library::api
 
         void EmitStepDefinitions(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
+            supportCodeLibrary.stepRegistry.LoadSteps();
+
             for (const auto& [name, stepDefinition] : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
                 broadcaster.BroadcastEvent({ .step_definition = cucumber::messages::step_definition{
@@ -45,6 +52,12 @@ namespace cucumber_cpp::library::api
                                                  .pattern = cucumber::messages::step_definition_pattern{
                                                      .source = stepDefinition.pattern,
                                                      .type = stepDefinition.patternType,
+                                                 },
+                                                 .source_reference = {
+                                                     .uri = stepDefinition.uri,
+                                                     .location = cucumber::messages::location{
+                                                         .line = stepDefinition.line,
+                                                     },
                                                  },
                                              } });
             }
@@ -87,6 +100,13 @@ namespace cucumber_cpp::library::api
 
         auto runtime = runtime::MakeRuntime(options.runtime, broadcaster, filteredPickles, supportCodeLibrary, idGenerator, programContext);
 
-        return runtime->Run();
+        auto& listeners = testing::UnitTest::GetInstance()->listeners();
+        auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
+
+        auto result = runtime->Run();
+
+        listeners.Append(defaultEventListener);
+
+        return result;
     }
 }

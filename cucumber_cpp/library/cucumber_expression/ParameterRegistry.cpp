@@ -64,20 +64,20 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
-        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
-        AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
-        AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
-        AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
-        AddParameter("", { ".*" }, CreateStreamConverter<std::string>());
-        AddParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
-        AddParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("double", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
+        AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
+        AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("double", { floatRegex }, CreateStreamConverter<double>());
 
         // extension
-        AddParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+        AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
     }
 
     const std::map<std::string, const Parameter>& ParameterRegistry::GetParameters() const
@@ -92,6 +92,17 @@ namespace cucumber_cpp::library::cucumber_expression
 
     void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter)
     {
+        AddParameter(name, regex, converter, false);
+    }
+
+    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter)
+    {
+        AddParameter(name, regex, converter, true);
+    }
+
+    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter, bool isBuiltin)
+    {
+
         if (parametersByName.contains(name))
         {
             if (name.empty())
@@ -100,7 +111,6 @@ namespace cucumber_cpp::library::cucumber_expression
                 throw CucumberExpressionError{ std::format("There is already a parameter with name {}", name) };
         }
 
-        parametersByName.emplace(name, Parameter{ name, regex, converter });
+        parametersByName.emplace(name, Parameter{ name, regex, converter, isBuiltin });
     }
-
 }

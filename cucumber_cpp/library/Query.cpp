@@ -6,6 +6,7 @@
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/hook.hpp"
+#include "cucumber/messages/location.hpp"
 #include "cucumber/messages/meta.hpp"
 #include "cucumber/messages/parameter_type.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -182,9 +183,20 @@ namespace cucumber_cpp::library
         return parameterTypeByName.contains(name);
     }
 
+    const cucumber::messages::test_case& Query::FindTestCaseBy(const cucumber::messages::test_case_started& testCaseStarted) const
+    {
+        return testCaseById.at(testCaseStarted.test_case_id);
+    }
+
     const cucumber::messages::test_case& Query::FindTestCaseById(const std::string& id) const
     {
         return testCaseById.at(id);
+    }
+
+    const cucumber::messages::pickle& Query::FindPickleBy(const cucumber::messages::test_case_started& testCaseStarted) const
+    {
+        const auto& testCase = FindTestCaseById(testCaseStarted.test_case_id);
+        return FindPickleById(testCase.pickle_id);
     }
 
     const cucumber::messages::pickle& Query::FindPickleById(const std::string& id) const
@@ -192,14 +204,38 @@ namespace cucumber_cpp::library
         return pickleById.at(id);
     }
 
+    const cucumber::messages::pickle_step* Query::FindPickleStepBy(const cucumber::messages::test_step& testStep) const
+    {
+        if (!testStep.pickle_step_id.has_value())
+            return nullptr;
+        return &pickleStepById.at(testStep.pickle_step_id.value());
+    }
+
     const cucumber::messages::pickle_step& Query::FindPickleStepById(const std::string& id) const
     {
         return pickleStepById.at(id);
     }
 
+    const cucumber::messages::test_step& Query::FindTestStepBy(const cucumber::messages::test_step_finished& testStepFinished) const
+    {
+        return testStepById.at(testStepFinished.test_step_id);
+    }
+
+    const cucumber::messages::step& Query::FindStepBy(const cucumber::messages::pickle_step& pickleStep) const
+    {
+        return stepById.at(pickleStep.ast_node_ids[0]);
+    }
+
     const cucumber::messages::step_definition& Query::FindStepDefinitionById(const std::string& id) const
     {
         return stepDefinitionById.at(id);
+    }
+
+    const cucumber::messages::location& Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
+    {
+        const auto& lineage = FindLineageByUri(pickle.uri);
+        // if (lineage.examples)
+        return lineage.scenario->location;
     }
 
     const std::map<std::string, cucumber::messages::test_case_started>& Query::TestCaseStarted() const

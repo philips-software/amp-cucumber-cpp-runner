@@ -5,6 +5,7 @@
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
+#include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber/messages/suggestion.hpp"
 #include "cucumber/messages/test_case.hpp"
@@ -21,6 +22,7 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -28,6 +30,7 @@
 #include <algorithm>
 #include <any>
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -41,16 +44,16 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        cucumber::messages::duration operator+=(cucumber::messages::duration durationA, cucumber::messages::duration durationB)
-        {
-            const auto seconds = durationA.seconds + durationB.seconds;
-            const auto nanos = durationA.nanos + durationB.nanos;
+        // cucumber::messages::duration operator+=(cucumber::messages::duration durationA, cucumber::messages::duration durationB)
+        // {
+        //     const auto seconds = durationA.seconds + durationB.seconds;
+        //     const auto nanos = durationA.nanos + durationB.nanos;
 
-            if (nanos >= support::nanosecondsPerSecond)
-                return { seconds + 1, nanos - support::nanosecondsPerSecond };
-            else
-                return { seconds, nanos };
-        }
+        //     if (nanos >= support::nanosecondsPerSecond)
+        //         return { seconds + 1, nanos - support::nanosecondsPerSecond };
+        //     else
+        //         return { seconds, nanos };
+        // }
 
         std::vector<std::any> BuildExpressionParameters(std::span<const cucumber::messages::step_match_argument> arguments, cucumber_expression::ParameterRegistry& parameterRegistry)
         {
@@ -247,7 +250,14 @@ namespace cucumber_cpp::library::runtime
                     parameters = BuildRegularParameters(testStep.step_match_arguments_lists->front().step_match_arguments);
             }
 
-            const auto result = InvokeStep(definition.factory(testCaseContext, {}, {}), parameters);
+            const auto toOptionalTable = [](const cucumber::messages::pickle_step& pickleStep) -> std::optional<std::span<const cucumber::messages::pickle_table_row>>
+            {
+                if (pickleStep.argument && pickleStep.argument->data_table)
+                    return pickleStep.argument->data_table->rows;
+                return std::nullopt;
+            };
+
+            const auto result = InvokeStep(definition.factory(testCaseContext, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), parameters);
             stepResults.push_back(result);
         }
 
@@ -256,11 +266,12 @@ namespace cucumber_cpp::library::runtime
         stepResults.insert(stepResults.end(), afterStepHookResults.begin(), afterStepHookResults.end());
 
         auto finalStepResult = util::GetWorstTestStepResult(stepResults);
-        for (const auto& stepResult : stepResults)
-        {
-            finalStepResult.duration += stepResult.duration;
-        }
 
+        cucumber::messages::duration finalDuration{};
+        for (const auto& stepResult : stepResults)
+            finalDuration += stepResult.duration;
+
+        finalStepResult.duration = finalDuration;
         return finalStepResult;
     }
 

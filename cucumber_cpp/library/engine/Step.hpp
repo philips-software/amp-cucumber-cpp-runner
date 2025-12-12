@@ -4,10 +4,14 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include "cucumber/messages/pickle_doc_string.hpp"
+#include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/engine/Table.hpp"
 #include <exception>
+#include <functional>
+#include <optional>
 #include <source_location>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -27,7 +31,7 @@ namespace cucumber_cpp::library::engine
             std::source_location sourceLocation;
         };
 
-        Step(Context& context, const Table& table, const std::string& docString);
+        Step(Context& context, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString);
         virtual ~Step() = default;
 
         virtual void SetUp()
@@ -48,8 +52,8 @@ namespace cucumber_cpp::library::engine
         [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
         Context& context;
-        const Table& table;
-        const std::string& docString;
+        std::optional<std::span<const cucumber::messages::pickle_table_row>> table;
+        const std::optional<cucumber::messages::pickle_doc_string>& docString;
     };
 }
 

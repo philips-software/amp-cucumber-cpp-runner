@@ -114,6 +114,7 @@ namespace cucumber_cpp::library::cucumber_expression
         std::string name;
         std::vector<std::string> regex;
         ParameterConversion converter;
+        bool isBuiltin{ false };
     };
 
     struct ParameterRegistration
@@ -138,6 +139,9 @@ namespace cucumber_cpp::library::cucumber_expression
         void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter) override;
 
     private:
+        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter);
+        void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter, bool isBuiltin);
+
         std::map<std::string, const Parameter> parametersByName;
     };
 }

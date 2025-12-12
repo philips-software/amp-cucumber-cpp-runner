@@ -13,6 +13,13 @@ Feature: Simple feature file
     When I eat <y> cucumbers
     Then I should have <z> cucumbers
 
+    @ex:1
+    Examples:
+      | x  | y | z |
+      | 10 | 5 | 5 |
+      | 11 | 3 | 8 |
+
+    @ex:2
     Examples:
       | x  | y | z |
       | 10 | 5 | 5 |

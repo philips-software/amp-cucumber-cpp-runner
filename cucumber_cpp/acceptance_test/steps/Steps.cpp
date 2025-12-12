@@ -60,8 +60,8 @@ THEN("this should be skipped")
 
 GIVEN("Next block of text enclosed in \"\"\" characters")
 {
-
-    ASSERT_THAT(docString, testing::Eq("Multiline\nDocstring"));
+    ASSERT_THAT(docString, testing::IsTrue());
+    ASSERT_THAT(docString->content, testing::StrEq("Multiline\nDocstring"));
 }
 
 WHEN("this step is being used")

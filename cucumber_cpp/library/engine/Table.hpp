@@ -1,7 +1,10 @@
 #ifndef ENGINE_TABLE_HPP
 #define ENGINE_TABLE_HPP
 
+#include "cucumber/messages/pickle_table_cell.hpp"
+#include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>

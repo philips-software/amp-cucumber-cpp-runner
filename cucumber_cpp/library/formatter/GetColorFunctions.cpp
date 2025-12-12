@@ -70,16 +70,4 @@ namespace cucumber_cpp::library::formatter
     {
         return ColorString<Term::Color::Name::Gray>(sv);
     }
-
-    ColorFunctions GetColorFunctions(bool useColors)
-    {
-        std::string str;
-
-        str += Term::color_fg(Term::Color::Name::Red);
-        str += "test";
-
-        // str += rang::fg::red;
-
-        return {};
-    }
 }

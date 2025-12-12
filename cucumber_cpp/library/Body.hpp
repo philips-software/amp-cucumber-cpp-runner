@@ -4,7 +4,6 @@
 #include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/TraceTime.hpp"
 #include <any>
 #include <chrono>
 #include <concepts>

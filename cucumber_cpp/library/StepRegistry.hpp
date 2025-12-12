@@ -2,16 +2,15 @@
 #define CUCUMBER_CPP_STEPREGISTRY_HPP
 
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/step_definition.hpp"
+#include "cucumber/messages/pickle_doc_string.hpp"
+#include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
-#include "cucumber_cpp/library/engine/Table.hpp"
 #include <any>
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +18,7 @@
 #include <filesystem>
 #include <map>
 #include <memory>
+#include <optional>
 #include <source_location>
 #include <span>
 #include <string>
@@ -30,10 +30,10 @@
 namespace cucumber_cpp::library
 {
 
-    using StepFactory = std::unique_ptr<Body> (&)(Context&, const engine::Table&, const std::string&);
+    using StepFactory = std::unique_ptr<Body> (&)(Context&, std::optional<std::span<const cucumber::messages::pickle_table_row>>, const std::optional<cucumber::messages::pickle_doc_string>&);
 
     template<class T>
-    std::unique_ptr<Body> StepBodyFactory(Context& context, const engine::Table& table, const std::string& docString)
+    std::unique_ptr<Body> StepBodyFactory(Context& context, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString)
     {
         return std::make_unique<T>(context, table, docString);
     }
@@ -97,6 +97,8 @@ namespace cucumber_cpp::library
         };
 
         explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, cucumber::gherkin::id_generator_ptr idGenerator);
+
+        void LoadSteps();
 
         [[nodiscard]] StepMatch Query(const std::string& expression);
         [[nodiscard]] std::pair<std::vector<std::string>, std::vector<cucumber::messages::step_match_arguments_list>> FindDefinitions(const std::string& expression);

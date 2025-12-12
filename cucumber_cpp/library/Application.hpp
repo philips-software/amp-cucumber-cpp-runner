@@ -7,6 +7,8 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
@@ -68,6 +70,8 @@ namespace cucumber_cpp::library
 
         cucumber_expression::ParameterRegistry parameterRegistry{};
         bool removeDefaultGoogleTestListener;
+        support::StopWatchHighResolutionClock stopwatchHighResolutionClock;
+        support::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
     };
 }
 

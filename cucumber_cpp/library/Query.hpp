@@ -7,6 +7,7 @@
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/hook.hpp"
+#include "cucumber/messages/location.hpp"
 #include "cucumber/messages/meta.hpp"
 #include "cucumber/messages/parameter_type.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -82,12 +83,23 @@ namespace cucumber_cpp::library
         const cucumber::messages::parameter_type& FindParameterTypeByName(const std::string& name) const;
         bool ContainsParameterTypeByName(const std::string& name) const;
 
+        const cucumber::messages::test_case& FindTestCaseBy(const cucumber::messages::test_case_started& testCaseStarted) const;
         const cucumber::messages::test_case& FindTestCaseById(const std::string& id) const;
 
+        const cucumber::messages::pickle& FindPickleBy(const cucumber::messages::test_case_started& testCaseStarted) const;
         const cucumber::messages::pickle& FindPickleById(const std::string& id) const;
+
+        const cucumber::messages::pickle_step* FindPickleStepBy(const cucumber::messages::test_step& testStep) const;
         const cucumber::messages::pickle_step& FindPickleStepById(const std::string& id) const;
 
+        const cucumber::messages::test_step& FindTestStepBy(const cucumber::messages::test_step_finished& testStepFinished) const;
+
+        const cucumber::messages::step&
+        FindStepBy(const cucumber::messages::pickle_step& pickleStep) const;
+
         const cucumber::messages::step_definition& FindStepDefinitionById(const std::string& id) const;
+
+        const cucumber::messages::location& FindLocationOf(const cucumber::messages::pickle& pickle) const;
 
         const std::map<std::string, cucumber::messages::test_case_started>& TestCaseStarted() const;
         const std::map<std::string, cucumber::messages::test_case_finished>& TestCaseFinishedByTestCaseStartedId() const;

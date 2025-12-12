@@ -32,11 +32,17 @@ namespace cucumber_cpp::library::assemble
 
         for (const auto& pickleSource : sourcedPickles)
         {
-            std::vector<cucumber::messages::test_step> allSteps;
-            allSteps.reserve(pickleSource.pickle->steps.size() * 2); // steps + hooks
+            cucumber::messages::test_case testCase{
+                .id = idGenerator->next_id(),
+                .pickle_id = pickleSource.pickle->id,
+                .test_steps = {},
+                .test_run_started_id = std::make_optional<std::string>(testRunStartedId)
+            };
+
+            testCase.test_steps.reserve(pickleSource.pickle->steps.size() * 2); // steps + hooks
 
             for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::before, pickleSource.pickle->tags))
-                allSteps.emplace_back(hookId, idGenerator->next_id());
+                testCase.test_steps.emplace_back(hookId, idGenerator->next_id());
 
             for (const auto& step : pickleSource.pickle->steps)
             {
@@ -57,7 +63,7 @@ namespace cucumber_cpp::library::assemble
                     }
                 }
 
-                allSteps.emplace_back(
+                testCase.test_steps.emplace_back(
                     std::nullopt,
                     idGenerator->next_id(),
                     step.id,
@@ -66,14 +72,7 @@ namespace cucumber_cpp::library::assemble
             }
 
             for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags))
-                allSteps.emplace_back(hookId, idGenerator->next_id());
-
-            cucumber::messages::test_case testCase{
-                .id = idGenerator->next_id(),
-                .pickle_id = pickleSource.pickle->id,
-                .test_steps = std::move(allSteps),
-                .test_run_started_id = std::make_optional<std::string>(testRunStartedId)
-            };
+                testCase.test_steps.emplace_back(hookId, idGenerator->next_id());
 
             broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case = testCase });
 

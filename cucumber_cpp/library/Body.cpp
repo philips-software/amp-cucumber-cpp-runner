@@ -2,7 +2,7 @@
 #include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/TraceTime.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <cstddef>
@@ -46,13 +46,12 @@ namespace cucumber_cpp::library
 
     cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
     {
-        TraceTime traceTime;
         cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
         EventListener eventListener{ testStepResult };
 
         try
         {
-            traceTime.Start();
+            support::Stopwatch::Instance().Start();
             Execute(args);
         }
         catch (const FatalError& error)
@@ -76,8 +75,7 @@ namespace cucumber_cpp::library
             };
         }
 
-        auto delta = traceTime.Delta();
-        auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(delta);
+        auto nanoseconds = support::Stopwatch::Instance().Duration();
         static constexpr std::size_t nanosecondsPerSecond = 1e9;
         testStepResult.duration = {
             .seconds = static_cast<std::size_t>(nanoseconds.count() / static_cast<std::size_t>(nanosecondsPerSecond)),
