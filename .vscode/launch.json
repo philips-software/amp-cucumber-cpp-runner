@@ -15,7 +15,11 @@
                 "@result:UNDEFINED",
                 "@result:FAILED",
                 "@result:OK",
-                "@fail_feature"
+                "@fail_feature",
+                "@ex:2",
+                "@substep",
+                "@table_argument",
+                "@thishasarule"
             ]
         },
         {
@@ -52,7 +56,12 @@
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [
+                {
+                    "name": "ASAN_OPTIONS",
+                    "value": "detect_leaks=0"
+                }
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
