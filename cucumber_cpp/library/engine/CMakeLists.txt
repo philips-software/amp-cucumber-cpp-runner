@@ -1,15 +1,10 @@
 add_library(cucumber_cpp.library.engine STATIC ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.engine PRIVATE
-    NewRuntime.cpp
-    NewRuntime.hpp
-    Result.hpp
     Step.cpp
     Step.hpp
     StepType.hpp
     StringTo.hpp
-    Table.cpp
-    Table.hpp
 )
 
 target_include_directories(cucumber_cpp.library.engine PUBLIC
