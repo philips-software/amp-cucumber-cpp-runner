@@ -20,7 +20,6 @@ target_link_libraries(cucumber_cpp.library.formatter PUBLIC
     # cucumber_cpp.library.util
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.formatter.helper
-    rang
     cpp-terminal
 )
 

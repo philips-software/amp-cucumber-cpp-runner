@@ -2,7 +2,6 @@
 #include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
 #include "cpp-terminal/color.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "rang.hpp"
 #include <format>
 #include <functional>
 #include <string>

@@ -11,4 +11,9 @@ add_compile_options(
     -Wno-unused-but-set-variable
 )
 
+set(CPPTERMINAL_BUILD_EXAMPLES Off)
+set(CPPTERMINAL_ENABLE_INSTALL Off)
+set(CPPTERMINAL_ENABLE_TESTING Off)
+set(CPPTERMINAL_ENABLE_DOCS Off)
+
 FetchContent_MakeAvailable(cpp-terminal)
