@@ -9,7 +9,6 @@
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/NewRuntime.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -174,33 +173,10 @@ namespace cucumber_cpp::library
 
     void Application::RunFeatures()
     {
-        struct BroadcastListener
-        {
-            explicit BroadcastListener(util::Broadcaster& broadcaster)
-                : listener(broadcaster, [this](const cucumber::messages::envelope& envelope)
-                      {
-                          OnEvent(envelope);
-                      })
-            {}
-
-            void OnEvent(const cucumber::messages::envelope& envelope)
-            {
-                std::cout << envelope.to_json() << "\n";
-            }
-
-        private:
-            util::Listener listener;
-        };
-
-        // BroadcastListener broadcastListener{ broadcaster };
-
-        // for (const auto& selectedReporter : options.reporters)
-        //     reporters.Use(selectedReporter);
-
         const auto tagExpression = Join(options.tags, " ");
         const auto featureFiles = GetFeatureFiles(options);
 
-        support::RunOptions runOptions{
+        const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = featureFiles,
                 .tagExpression = tagExpression,
@@ -213,15 +189,12 @@ namespace cucumber_cpp::library
         auto& listeners = testing::UnitTest::GetInstance()->listeners();
         auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
 
-        api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
+        runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
 
         listeners.Append(defaultEventListener);
 
         // if (options.printStepsNotUsed)
         //     PrintStepsNotUsed(stepRegistry);
-
-        std::cout << '\n'
-                  << std::flush;
     }
 
     void Application::PrintStepsNotUsed(const StepRegistry& stepRegistry) const
@@ -245,14 +218,6 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        return 0;
-        // if (testing::UnitTest::GetInstance()->Failed())
-        //     return GetExitCode(engine::Result::failed);
-        // return GetExitCode(engine::Result::passed);
+        return runPassed ? 0 : 1;
     }
-
-    // int Application::GetExitCode(engine::Result result) const
-    // {
-    //     return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
-    // }
 }

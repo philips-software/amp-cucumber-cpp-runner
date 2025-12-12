@@ -72,6 +72,8 @@ namespace cucumber_cpp::library
         bool removeDefaultGoogleTestListener;
         support::StopWatchHighResolutionClock stopwatchHighResolutionClock;
         support::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
+
+        bool runPassed{ false };
     };
 }
 
