@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <format>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <regex>
@@ -37,14 +38,24 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             return { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
                 {
-                    std::string str = matches[1].matched ? matches[1].str() : matches[3].str();
-                    str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
-                    str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
-                    return { .value = str };
+                    return {
+                        .children = {
+                            matches[1].matched ? cucumber::messages::group{ .value = matches[1].str() } : cucumber::messages::group{},
+                            matches[3].matched ? cucumber::messages::group{ .value = matches[3].str() } : cucumber::messages::group{},
+                        },
+                        .value = matches[0].str(),
+                    };
                 },
                 .toAny = [](const cucumber::messages::group& matches) -> std::any
                 {
-                    return matches.value.value();
+                    std::string str = matches.children.front().value.has_value()
+                                          ? matches.children.front().value.value()
+                                          : matches.children.back().value.value();
+
+                    str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
+                    str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
+
+                    return str;
                 } };
         }
     }
