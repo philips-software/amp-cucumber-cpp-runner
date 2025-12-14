@@ -8,6 +8,8 @@
 #include "library/support/Duration.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -63,12 +65,27 @@ namespace compatibility
             for (auto& [key, value] : json.items())
             {
                 if (value.is_object())
+                {
                     SanitizeExpectedJson(value);
+                    if (value.size() == 0)
+                        json.erase(key);
+                }
                 else if (value.is_array())
                 {
+                    auto idx = 0;
                     for (auto& item : value)
+                    {
                         if (item.is_object())
                             SanitizeExpectedJson(item);
+
+                        if (item.size() == 0)
+                            value.erase(idx);
+
+                        ++idx;
+                    }
+
+                    if (value.size() == 0)
+                        json.erase(key);
                 }
                 else if (key == "uri")
                 {
@@ -87,12 +104,27 @@ namespace compatibility
             for (auto& [key, value] : json.items())
             {
                 if (value.is_object())
+                {
                     SanitizeActualJson(value);
+                    if (value.size() == 0)
+                        json.erase(key);
+                }
                 else if (value.is_array())
                 {
+                    auto idx = 0;
                     for (auto& item : value)
+                    {
                         if (item.is_object())
                             SanitizeActualJson(item);
+
+                        if (item.size() == 0)
+                            value.erase(idx);
+
+                        ++idx;
+                    }
+
+                    if (value.size() == 0)
+                        json.erase(key);
                 }
                 else if (key == "line")
                     json.erase(key);
@@ -101,13 +133,14 @@ namespace compatibility
 
         struct BroadcastListener
         {
-            BroadcastListener(std::filesystem::path ndjsonin, std::filesystem::path ndout, cucumber_cpp::library::util::Broadcaster& broadcaster)
+            BroadcastListener(std::filesystem::path ndjsonin, std::filesystem::path expectedndjson, std::filesystem::path ndout, cucumber_cpp::library::util::Broadcaster& broadcaster)
                 : listener(broadcaster, [this](const cucumber::messages::envelope& envelope)
                       {
                           OnEvent(envelope);
                       })
                 , ndjsonin{ std::move(ndjsonin) }
-                , ndout(std::move(ndout))
+                , expectedndjson{ std::move(expectedndjson) }
+                , actualndjson(std::move(ndout))
             {
                 while (!ifs.eof())
                 {
@@ -133,8 +166,6 @@ namespace compatibility
                 nlohmann::json actualJson{};
                 to_json(actualJson, envelope);
 
-                ofs << envelope.to_json() << "\n";
-
                 if (expectedEnvelopes.empty())
                 {
                     std::cerr << "Unexpected envelope: " << actualJson.dump() << "\n\n";
@@ -146,27 +177,31 @@ namespace compatibility
                 const auto expectedJson = expectedEnvelopes.front();
                 expectedEnvelopes.pop_front();
 
+                expectedOfs << expectedJson.dump() << "\n";
+                actualOfs << actualJson.dump() << "\n";
+
                 const auto expectedMessage = expectedJson.items().begin().key();
 
                 const auto diff = nlohmann::json::diff(expectedJson, actualJson);
 
-                if (actualJson.contains(expectedMessage))
-                {
-                    if (actualJson[expectedMessage] == expectedJson[expectedMessage])
-                    {
-                        std::cout << "matching!!!! " << expectedMessage << "\n\n";
-                    }
-                    else
-                    {
-                        std::cerr << std::format("Mismatch {}: {}\n", expectedMessage, diff.dump());
-                        std::cerr << "expected: " << expectedJson[expectedMessage] << "\n";
-                        std::cerr << "actual  : " << actualJson[expectedMessage] << "\n\n";
-                    }
-                }
-                else
-                {
-                    std::cerr << std::format("Missing {}: {}\n", expectedMessage, diff.dump());
-                }
+                EXPECT_THAT(actualJson, testing::Eq(expectedJson));
+                // if (actualJson.contains(expectedMessage))
+                // {
+                //     if (actualJson[expectedMessage] == expectedJson[expectedMessage])
+                //     {
+                //         std::cout << "matching!!!! " << expectedMessage << "\n\n";
+                //     }
+                //     else
+                //     {
+                //         std::cerr << std::format("Mismatch {}: {}\n", expectedMessage, diff.dump());
+                //         std::cerr << "expected: " << expectedJson[expectedMessage] << "\n";
+                //         std::cerr << "actual  : " << actualJson[expectedMessage] << "\n\n";
+                //     }
+                // }
+                // else
+                // {
+                //     std::cerr << std::format("Missing {}: {}\n", expectedMessage, diff.dump());
+                // }
             }
 
         private:
@@ -174,8 +209,11 @@ namespace compatibility
             std::filesystem::path ndjsonin;
             std::ifstream ifs{ ndjsonin };
 
-            std::filesystem::path ndout;
-            std::ofstream ofs{ ndout };
+            std::filesystem::path expectedndjson;
+            std::ofstream expectedOfs{ expectedndjson };
+
+            std::filesystem::path actualndjson;
+            std::ofstream actualOfs{ actualndjson };
 
             std::list<nlohmann::json> expectedEnvelopes;
         };
@@ -248,7 +286,7 @@ namespace compatibility
 
             cucumber_cpp::library::util::Broadcaster broadcaster;
 
-            BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "out.ndjson", broadcaster };
+            BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
 
             cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
             // EXPECT_NONFATAL_FAILURE(cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster), "");
