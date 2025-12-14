@@ -25,7 +25,7 @@ option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." On )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 
-set(BUILD_SHARED_LIBS OFF)
+set(BUILD_SHARED_LIBS  Off CACHE STRING "")
 
 add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
