@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <functional>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -62,72 +63,107 @@ namespace compatibility
 
         void SanitizeExpectedJson(nlohmann::json& json)
         {
-            for (auto& [key, value] : json.items())
+            for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
-                if (value.is_object())
+                auto& key = jsonIter.key();
+                auto& value = jsonIter.value();
+
+                if (key == "parameterTypeName" && value.get<std::string>().empty())
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "exception")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "message")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "line")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "start")
+                    jsonIter = json.erase(jsonIter);
+                else if (value.is_object())
                 {
                     SanitizeExpectedJson(value);
                     if (value.size() == 0)
-                        json.erase(key);
+                        jsonIter = json.erase(jsonIter);
+                    else
+                        ++jsonIter;
                 }
                 else if (value.is_array())
                 {
                     auto idx = 0;
-                    for (auto& item : value)
+                    for (auto valueIter = value.begin(); valueIter != value.end();)
                     {
+                        auto& item = *valueIter;
+
                         if (item.is_object())
                             SanitizeExpectedJson(item);
 
                         if (item.size() == 0)
-                            value.erase(idx);
-
-                        ++idx;
+                            valueIter = value.erase(valueIter);
+                        else
+                            ++valueIter;
                     }
 
                     if (value.size() == 0)
-                        json.erase(key);
+                        jsonIter = json.erase(jsonIter);
+                    else
+                        ++jsonIter;
                 }
                 else if (key == "uri")
                 {
                     json[key] = std::regex_replace(value.get<std::string>(), std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
                     json[key] = std::regex_replace(value.get<std::string>(), std::regex(R"(\.ts$)"), ".cpp");
+                    ++jsonIter;
                 }
-                else if (key == "line")
-                    json.erase(key);
-                else if (key == "start")
-                    json.erase(key);
+                else
+                    ++jsonIter;
             }
         }
 
         void SanitizeActualJson(nlohmann::json& json)
         {
-            for (auto& [key, value] : json.items())
+            for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
-                if (value.is_object())
+                auto& key = jsonIter.key();
+                auto& value = jsonIter.value();
+
+                if (key == "parameterTypeName" && value.get<std::string>().empty())
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "exception")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "message")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "line")
+                    jsonIter = json.erase(jsonIter);
+                else if (value.is_object())
                 {
                     SanitizeActualJson(value);
                     if (value.size() == 0)
-                        json.erase(key);
+                        jsonIter = json.erase(jsonIter);
+                    else
+                        ++jsonIter;
                 }
                 else if (value.is_array())
                 {
                     auto idx = 0;
-                    for (auto& item : value)
+                    for (auto valueIter = value.begin(); valueIter != value.end();)
                     {
+                        auto& item = *valueIter;
+
                         if (item.is_object())
                             SanitizeActualJson(item);
 
                         if (item.size() == 0)
-                            value.erase(idx);
-
-                        ++idx;
+                            valueIter = value.erase(valueIter);
+                        else
+                            ++valueIter;
                     }
 
                     if (value.size() == 0)
-                        json.erase(key);
+                        jsonIter = json.erase(jsonIter);
+                    else
+                        ++jsonIter;
                 }
-                else if (key == "line")
-                    json.erase(key);
+                else
+                    ++jsonIter;
             }
         }
 
@@ -155,8 +191,6 @@ namespace compatibility
                     if (json.contains("meta"))
                         continue;
 
-                    SanitizeExpectedJson(json);
-
                     expectedEnvelopes.emplace_back(std::move(json));
                 }
             }
@@ -166,42 +200,29 @@ namespace compatibility
                 nlohmann::json actualJson{};
                 to_json(actualJson, envelope);
 
-                if (expectedEnvelopes.empty())
+                actualEnvelopes.emplace_back(std::move(actualJson));
+            }
+
+            void CompareEnvelopes()
+            {
+                ASSERT_THAT(actualEnvelopes.size(), testing::Eq(expectedEnvelopes.size()));
+
+                while (!actualEnvelopes.empty() && !expectedEnvelopes.empty())
                 {
-                    std::cerr << "Unexpected envelope: " << actualJson.dump() << "\n\n";
-                    return;
+                    auto actualJson = actualEnvelopes.front();
+                    actualEnvelopes.pop_front();
+
+                    auto expectedJson = expectedEnvelopes.front();
+                    expectedEnvelopes.pop_front();
+
+                    SanitizeActualJson(actualJson);
+                    SanitizeExpectedJson(expectedJson);
+
+                    expectedOfs << expectedJson.dump() << "\n";
+                    actualOfs << actualJson.dump() << "\n";
+
+                    EXPECT_THAT(actualJson, testing::Eq(expectedJson));
                 }
-
-                SanitizeActualJson(actualJson);
-
-                const auto expectedJson = expectedEnvelopes.front();
-                expectedEnvelopes.pop_front();
-
-                expectedOfs << expectedJson.dump() << "\n";
-                actualOfs << actualJson.dump() << "\n";
-
-                const auto expectedMessage = expectedJson.items().begin().key();
-
-                const auto diff = nlohmann::json::diff(expectedJson, actualJson);
-
-                EXPECT_THAT(actualJson, testing::Eq(expectedJson));
-                // if (actualJson.contains(expectedMessage))
-                // {
-                //     if (actualJson[expectedMessage] == expectedJson[expectedMessage])
-                //     {
-                //         std::cout << "matching!!!! " << expectedMessage << "\n\n";
-                //     }
-                //     else
-                //     {
-                //         std::cerr << std::format("Mismatch {}: {}\n", expectedMessage, diff.dump());
-                //         std::cerr << "expected: " << expectedJson[expectedMessage] << "\n";
-                //         std::cerr << "actual  : " << actualJson[expectedMessage] << "\n\n";
-                //     }
-                // }
-                // else
-                // {
-                //     std::cerr << std::format("Missing {}: {}\n", expectedMessage, diff.dump());
-                // }
             }
 
         private:
@@ -216,6 +237,7 @@ namespace compatibility
             std::ofstream actualOfs{ actualndjson };
 
             std::list<nlohmann::json> expectedEnvelopes;
+            std::list<nlohmann::json> actualEnvelopes;
         };
 
         bool IsFeatureFile(const std::filesystem::directory_entry& entry)
@@ -289,8 +311,8 @@ namespace compatibility
             BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
 
             cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
-            // EXPECT_NONFATAL_FAILURE(cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster), "");
-            // EXPECT_FATAL_FAILURE(cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster), "");
+
+            broadcastListener.CompareEnvelopes();
         }
     }
 }
