@@ -9,45 +9,48 @@
 #include <exception>
 #include <filesystem>
 #include <format>
+#include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ostream>
+#include <src/gtest-internal-inl.h>
 
 namespace cucumber_cpp::library
 {
-    EventListener::EventListener(cucumber::messages::test_step_result& testStepResult)
-        : testStepResult{ testStepResult }
+    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
     {
-        testing::UnitTest::GetInstance()->listeners().Append(this);
-    }
-
-    EventListener::~EventListener()
-    {
-        testing::UnitTest::GetInstance()->listeners().Release(this);
-    }
-
-    void EventListener::OnTestPartResult(const testing::TestPartResult& testPartResult)
-    {
-        if (testPartResult.failed())
+        explicit CucumberResultReporter(cucumber::messages::test_step_result& testStepResult)
+            : testing::ScopedFakeTestPartResultReporter{ nullptr }
+            , testStepResult{ testStepResult }
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
-
-            auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
-
-            if (testStepResult.message)
-                testStepResult.message = std::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
-            else
-                testStepResult.message = std::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
         }
 
-        if (testPartResult.fatally_failed())
-            throw FatalError{ testPartResult.message() };
-    }
+        void ReportTestPartResult(const testing::TestPartResult& testPartResult)
+        {
+            if (testPartResult.failed())
+            {
+                testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
+
+                auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
+
+                if (testStepResult.message)
+                    testStepResult.message = std::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
+                else
+                    testStepResult.message = std::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
+            }
+
+            if (testPartResult.fatally_failed())
+                throw FatalError{ testPartResult.message() };
+        }
+
+    private:
+        cucumber::messages::test_step_result& testStepResult;
+    };
 
     cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
     {
         cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
-        EventListener eventListener{ testStepResult };
+        CucumberResultReporter reportListener{ testStepResult };
 
         try
         {

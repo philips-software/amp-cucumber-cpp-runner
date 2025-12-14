@@ -27,17 +27,6 @@ namespace cucumber_cpp::library
         using std::runtime_error::runtime_error;
     };
 
-    struct EventListener : testing::EmptyTestEventListener
-    {
-        explicit EventListener(cucumber::messages::test_step_result& testStepResult);
-        ~EventListener();
-
-        void OnTestPartResult(const testing::TestPartResult& testPartResult) override;
-
-    private:
-        cucumber::messages::test_step_result& testStepResult;
-    };
-
     struct Body
     {
         virtual ~Body() = default;
