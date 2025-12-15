@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::engine
         void Attach(std::string data, OptionsOrMediaType mediaType);
         void Attach(std::istream& data, OptionsOrMediaType mediaType);
         void Log(std::string text);
-        void Link(std::string url, std::optional<std::string> title);
+        void Link(std::string url, std::optional<std::string> title = std::nullopt);
 
         Context& context;
 
