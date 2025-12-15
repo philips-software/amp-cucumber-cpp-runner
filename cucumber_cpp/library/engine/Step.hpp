@@ -7,8 +7,9 @@
 #include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <exception>
-#include <functional>
 #include <optional>
 #include <source_location>
 #include <span>
@@ -17,7 +18,7 @@
 
 namespace cucumber_cpp::library::engine
 {
-    struct Step
+    struct Step : ExecutionContext
     {
         struct StepPending : std::exception
         {
@@ -31,7 +32,7 @@ namespace cucumber_cpp::library::engine
             std::source_location sourceLocation;
         };
 
-        Step(Context& context, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString);
+        Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString);
         virtual ~Step() = default;
 
         virtual void SetUp()
@@ -51,7 +52,6 @@ namespace cucumber_cpp::library::engine
 
         [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
-        Context& context;
         std::optional<std::span<const cucumber::messages::pickle_table_row>> table;
         const std::optional<cucumber::messages::pickle_doc_string>& docString;
     };

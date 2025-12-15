@@ -1,9 +1,10 @@
 #include "cucumber_cpp/library/engine/Step.hpp"
-#include "cucumber/messages/doc_string.hpp"
+#include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include <functional>
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <optional>
 #include <source_location>
 #include <span>
@@ -11,8 +12,8 @@
 
 namespace cucumber_cpp::library::engine
 {
-    Step::Step(Context& context, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString)
-        : context{ context }
+    Step::Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString)
+        : ExecutionContext{ broadCaster, context, stepOrHookStarted }
         , table{ table }
         , docString{ docString }
     {}

@@ -9,6 +9,7 @@
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
@@ -40,7 +41,7 @@ namespace cucumber_cpp::library::runtime
 
         std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext);
 
-        cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext);
+        cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
         cucumber::messages::test_step_result InvokeStep(std::unique_ptr<Body> body, const ExecuteArgs& args = {});
         cucumber::messages::test_step_result GetWorstStepResult() const;

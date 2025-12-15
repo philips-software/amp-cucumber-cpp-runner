@@ -133,11 +133,12 @@ namespace cucumber_cpp::library::runtime
 
         for (const auto& testStep : testCase.test_steps)
         {
-            broadcaster.BroadcastEvent({ .test_step_started = cucumber::messages::test_step_started{
-                                             .test_case_started_id = currentTestCaseStartedId,
-                                             .test_step_id = testStep.id,
-                                             .timestamp = support::TimestampNow(),
-                                         } });
+            auto testStepStarted = cucumber::messages::test_step_started{
+                .test_case_started_id = currentTestCaseStartedId,
+                .test_step_id = testStep.id,
+                .timestamp = support::TimestampNow(),
+            };
+            broadcaster.BroadcastEvent({ .test_step_started = testStepStarted });
 
             cucumber::messages::test_step_result testStepResult;
 
@@ -148,7 +149,7 @@ namespace cucumber_cpp::library::runtime
             else
             {
                 auto pickleStepIter = std::ranges::find(pickle.steps, testStep.pickle_step_id.value(), &cucumber::messages::pickle_step::id);
-                testStepResult = RunStep(*pickleStepIter, testStep, testCaseContext);
+                testStepResult = RunStep(*pickleStepIter, testStep, testCaseContext, testStepStarted);
                 seenSteps = true;
             }
             testStepResults.emplace_back(testStepResult);
@@ -198,7 +199,7 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext)
+    cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
         auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([&](const std::string& id)
                                                                      {
@@ -257,7 +258,7 @@ namespace cucumber_cpp::library::runtime
                 return std::nullopt;
             };
 
-            const auto result = InvokeStep(definition.factory(testCaseContext, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), parameters);
+            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), parameters);
             stepResults.push_back(result);
         }
 
