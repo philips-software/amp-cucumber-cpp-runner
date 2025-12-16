@@ -1,7 +1,9 @@
 #ifndef CUCUMBER_CPP_HOOKREGISTRY_HPP
 #define CUCUMBER_CPP_HOOKREGISTRY_HPP
 
+#include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/hook.hpp"
+#include "cucumber/messages/hook_type.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/source_reference.hpp"
@@ -14,6 +16,8 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ranges>
 #include <source_location>
 #include <span>
 #include <string>
@@ -76,21 +80,7 @@ namespace cucumber_cpp::library
     {
         struct Definition
         {
-            Definition(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
-                : type{ type }
-                , tagExpression{ tag_expression::Parse(expression) }
-                , factory{ factory }
-                , hook{
-                    .id = id,
-                    .source_reference = cucumber::messages::source_reference{
-                        .uri = sourceLocation.file_name(),
-                        .location = cucumber::messages::location{
-                            .line = sourceLocation.line(),
-                        },
-                    },
-                    .tag_expression = std::string{ expression },
-                }
-            {}
+            Definition(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation);
 
             HookType type;
             std::unique_ptr<tag_expression::Expression> tagExpression;
@@ -98,10 +88,28 @@ namespace cucumber_cpp::library
             cucumber::messages::hook hook;
         };
 
-        explicit HookRegistry();
+        explicit HookRegistry(cucumber::gherkin::id_generator_ptr idGenerator);
+
+        void LoadHooks();
 
         std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags = {}) const;
         std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::tag> tags) const;
+
+        std::vector<cucumber::messages::hook> HooksByType(HookType hookType) const
+        {
+            auto filtered = registry |
+                            std::views::values |
+                            std::views::filter([hookType](const Definition& definition)
+                                {
+                                    return definition.type == hookType;
+                                }) |
+                            std::views::transform([](const Definition& definition)
+                                {
+                                    return definition.hook;
+                                });
+
+            return { filtered.begin(), filtered.end() };
+        }
 
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(HookType hookType) const;
@@ -110,10 +118,23 @@ namespace cucumber_cpp::library
         const Definition& GetDefinitionById(std::string id) const;
 
     private:
-        void Register(HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation);
+        void Register(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation);
 
-        std::uint32_t nextId{ 1 };
+        cucumber::gherkin::id_generator_ptr idGenerator;
         std::map<std::string, Definition> registry;
+    };
+
+    struct GlobalHook
+    {
+        std::string_view name{ "anonymous" };
+        std::int32_t order{ 0 };
+    };
+
+    struct Hook
+    {
+        std::string_view tagExpression{ "" };
+        std::string_view name{ "anonymous" };
+        std::int32_t order{ 0 };
     };
 
     struct HookRegistration
@@ -141,10 +162,15 @@ namespace cucumber_cpp::library
             std::string_view expression;
             HookFactory factory;
             std::source_location sourceLocation;
+            std::string id{ "unassigned" };
         };
 
         template<class T>
         static std::size_t Register(std::string_view tagExpression, HookType hookType, std::source_location sourceLocation = std::source_location::current());
+        template<class T>
+        static std::size_t Register(Hook hook, HookType hookType, std::source_location sourceLocation = std::source_location::current());
+        template<class T>
+        static std::size_t Register(GlobalHook hook, HookType hookType, std::source_location sourceLocation = std::source_location::current());
 
         std::span<Entry> GetEntries();
         [[nodiscard]] std::span<const Entry> GetEntries() const;
@@ -161,6 +187,20 @@ namespace cucumber_cpp::library
     std::size_t HookRegistration::Register(std::string_view tagExpression, HookType hookType, std::source_location sourceLocation)
     {
         Instance().registry.emplace_back(hookType, tagExpression, HookBodyFactory<T>, sourceLocation);
+        return Instance().registry.size();
+    }
+
+    template<class T>
+    std::size_t HookRegistration::Register(Hook hook, HookType hookType, std::source_location sourceLocation)
+    {
+        Instance().registry.emplace_back(hookType, hook.tagExpression, HookBodyFactory<T>, sourceLocation);
+        return Instance().registry.size();
+    }
+
+    template<class T>
+    std::size_t HookRegistration::Register(GlobalHook hook, HookType hookType, std::source_location sourceLocation)
+    {
+        Instance().registry.emplace_back(hookType, "", HookBodyFactory<T>, sourceLocation);
         return Instance().registry.size();
     }
 }

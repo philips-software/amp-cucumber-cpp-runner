@@ -12,7 +12,14 @@ HOOK_BEFORE_ALL()
         context.Emplace<NordicBleFixture>();
 }
 
-HOOK_BEFORE_SCENARIO("@dingus")
+HOOK_BEFORE_ALL(.name = "Initialize something") // does NOT have a .tagExpression
+{}
+
+HOOK_BEFORE_SCENARIO(.name = "explicit name only")
+{
+}
+
+HOOK_BEFORE_SCENARIO("@dingus", "name", 10)
 {
 }
 

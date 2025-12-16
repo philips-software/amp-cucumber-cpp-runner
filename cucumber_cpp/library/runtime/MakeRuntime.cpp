@@ -12,12 +12,13 @@
 
 namespace cucumber_cpp::library::runtime
 {
-    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, support::SupportCodeLibrary supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
+    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, std::span<const support::PickleSource> sourcedPickles, support::SupportCodeLibrary supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
     {
         return std::make_unique<runtime::SerialRuntimeAdapter>(
             testRunStartedId,
             broadcaster,
             idGenerator,
+            sourcedPickles,
             options,
             supportCodeLibrary,
             programContext);
@@ -30,8 +31,7 @@ namespace cucumber_cpp::library::runtime
             testRunStartedId,
             broadcaster,
             idGenerator,
-            sourcedPickles,
-            MakeAdapter(options, testRunStartedId, broadcaster, supportCodeLibrary, idGenerator, programContext),
+            MakeAdapter(options, testRunStartedId, broadcaster, sourcedPickles, supportCodeLibrary, idGenerator, programContext),
             supportCodeLibrary);
     }
 }

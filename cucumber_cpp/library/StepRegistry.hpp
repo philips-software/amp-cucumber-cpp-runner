@@ -114,7 +114,7 @@ namespace cucumber_cpp::library
         const std::map<std::string, Definition>& StepDefinitions() const;
 
     private:
-        void Register(const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
+        void Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
 
         cucumber_expression::ParameterRegistry& parameterRegistry;
         cucumber::gherkin::id_generator_ptr idGenerator;
@@ -143,6 +143,7 @@ namespace cucumber_cpp::library
             std::string regex;
             StepFactory factory;
             std::source_location sourceLocation;
+            std::string id{ "unassigned" };
         };
 
         template<class T>

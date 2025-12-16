@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <cstddef>
 #include <map>
 #include <optional>
@@ -27,8 +28,9 @@ namespace cucumber_cpp::library
 
     void StepRegistry::LoadSteps()
     {
-        for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
-            Register(matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
+        for (const auto& matcher : support::DefinitionRegistration::Instance().GetSteps())
+            // for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
+            Register(matcher.id, matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
     }
 
     StepMatch StepRegistry::Query(const std::string& expression)
@@ -102,10 +104,8 @@ namespace cucumber_cpp::library
         return registry;
     }
 
-    void StepRegistry::Register(const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
+    void StepRegistry::Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
     {
-        auto id = idGenerator->next_id();
-
         if (matcher.starts_with('^') || matcher.ends_with('$'))
         {
             registry.emplace(id, Definition{

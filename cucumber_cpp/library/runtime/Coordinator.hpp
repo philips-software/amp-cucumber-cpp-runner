@@ -16,7 +16,6 @@ namespace cucumber_cpp::library::runtime
         Coordinator(std::string testRunStartedId,
             util::Broadcaster& broadcaster,
             cucumber::gherkin::id_generator_ptr idGenerator,
-            std::span<const support::PickleSource> sourcedPickles,
             std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
             support::SupportCodeLibrary supportCodeLibrary);
 
@@ -26,8 +25,6 @@ namespace cucumber_cpp::library::runtime
         std::string testRunStartedId;
         util::Broadcaster& broadcaster;
         cucumber::gherkin::id_generator_ptr idGenerator;
-
-        std::span<const support::PickleSource> sourcedPickles;
         std::unique_ptr<support::RuntimeAdapter> runtimeAdapter;
         support::SupportCodeLibrary supportCodeLibrary;
     };

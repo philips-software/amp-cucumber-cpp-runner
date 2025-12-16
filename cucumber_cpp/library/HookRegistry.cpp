@@ -1,15 +1,24 @@
 
 #include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/hook_type.hpp"
+#include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
+#include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/tag.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <map>
+#include <optional>
 #include <ranges>
 #include <source_location>
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library
@@ -39,16 +48,51 @@ namespace cucumber_cpp::library
                 return keyValue.second.tagExpression->Evaluate(tags);
             };
         }
+
+        std::map<HookType, cucumber::messages::hook_type> HookTypeMap{
+            { HookType::beforeAll, cucumber::messages::hook_type::BEFORE_TEST_RUN },
+            { HookType::afterAll, cucumber::messages::hook_type::AFTER_TEST_RUN },
+            // { HookType::beforeFeature, cucumber::messages::hook_type::BEFORE_TEST_CASE },
+            // { HookType::afterFeature, cucumber::messages::hook_type::AFTER_TEST_CASE },
+            { HookType::before, cucumber::messages::hook_type::BEFORE_TEST_CASE },
+            { HookType::after, cucumber::messages::hook_type::AFTER_TEST_CASE },
+            { HookType::beforeStep, cucumber::messages::hook_type::BEFORE_TEST_STEP },
+            { HookType::afterStep, cucumber::messages::hook_type::AFTER_TEST_STEP },
+        };
     }
 
     HookBase::HookBase(Context& context)
         : context{ context }
     {}
 
-    HookRegistry::HookRegistry()
+    HookRegistry::Definition::Definition(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
+        : type{ type }
+        , tagExpression{ tag_expression::Parse(expression) }
+        , factory{ factory }
+        , hook{
+            .id = id,
+            .source_reference = cucumber::messages::source_reference{
+                .uri = sourceLocation.file_name(),
+                .location = cucumber::messages::location{
+                    .line = sourceLocation.line(),
+                },
+            },
+            .tag_expression = !expression.empty() ? std::make_optional(std::string{ expression }) : std::nullopt,
+            .type = HookTypeMap.contains(type) ? std::make_optional(HookTypeMap.at(type)) : std::nullopt,
+        }
+    {}
+
+    HookRegistry::HookRegistry(cucumber::gherkin::id_generator_ptr idGenerator)
+        : idGenerator{ std::move(idGenerator) }
     {
-        for (const auto& matcher : HookRegistration::Instance().GetEntries())
-            Register(matcher.type, matcher.expression, matcher.factory, matcher.sourceLocation);
+    }
+
+    void HookRegistry::LoadHooks()
+    {
+
+        for (const auto& matcher : support::DefinitionRegistration::Instance().GetHooks())
+            // for (const auto& matcher : HookRegistration::Instance().GetEntries())
+            Register(matcher.id, matcher.type, matcher.expression, matcher.factory, matcher.sourceLocation);
     }
 
     std::vector<std::string> HookRegistry::FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags) const
@@ -83,9 +127,8 @@ namespace cucumber_cpp::library
         return registry.at(id);
     }
 
-    void HookRegistry::Register(HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
+    void HookRegistry::Register(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
     {
-        auto id = std::to_string(nextId++);
         registry.emplace(id, Definition{ id, type, expression, factory, sourceLocation });
     }
 

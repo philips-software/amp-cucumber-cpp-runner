@@ -5,6 +5,7 @@ target_sources(cucumber_cpp.library.support PRIVATE
     Duration.cpp
     Join.cpp
     Join.hpp
+    SupportCodeLibrary.cpp
     SupportCodeLibrary.hpp
     Timestamp.cpp
     Timestamp.hpp

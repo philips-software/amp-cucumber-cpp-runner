@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::api
@@ -63,13 +64,30 @@ namespace cucumber_cpp::library::api
             }
         }
 
+        void EmitTestRunHooks(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        {
+            supportCodeLibrary.hookRegistry.LoadHooks();
+
+            const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
+
+            for (const auto& hook : beforeAllHooks)
+                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+
+            const auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::afterAll);
+
+            for (const auto& hook : afterAllHooks)
+                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+        }
+
         void EmitSupportCodeMessages(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
+            support::DefinitionRegistration::Instance().LoadIds(idGenerator);
+
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
             // undefined parameters
             EmitStepDefinitions(supportCodeLibrary, broadcaster, idGenerator);
             // test case hooks
-            // test run hooks
+            EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }
     }
 
@@ -78,7 +96,7 @@ namespace cucumber_cpp::library::api
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
         StepRegistry stepRegistry{ parameterRegistry, idGenerator };
-        HookRegistry hookRegistry{};
+        HookRegistry hookRegistry{ idGenerator };
 
         support::SupportCodeLibrary supportCodeLibrary{ .hookRegistry = hookRegistry, .stepRegistry = stepRegistry, .parameterRegistry = parameterRegistry };
 

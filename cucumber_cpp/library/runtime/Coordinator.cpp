@@ -17,13 +17,11 @@ namespace cucumber_cpp::library::runtime
     Coordinator::Coordinator(std::string testRunStartedId,
         util::Broadcaster& broadcaster,
         cucumber::gherkin::id_generator_ptr idGenerator,
-        std::span<const support::PickleSource> sourcedPickles,
         std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
         support::SupportCodeLibrary supportCodeLibrary)
         : testRunStartedId{ testRunStartedId }
         , broadcaster{ broadcaster }
         , idGenerator{ idGenerator }
-        , sourcedPickles{ sourcedPickles }
         , runtimeAdapter{ std::move(runtimeAdapter) }
         , supportCodeLibrary{ supportCodeLibrary }
     {}
@@ -35,8 +33,7 @@ namespace cucumber_cpp::library::runtime
                                          .id = std::string{ testRunStartedId },
                                      } });
 
-        const auto assembledTestCases = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
-        const auto success = runtimeAdapter->Run(assembledTestCases);
+        const auto success = runtimeAdapter->Run();
 
         broadcaster.BroadcastEvent({ .test_run_finished = cucumber::messages::test_run_finished{
                                          .success = success,

@@ -53,7 +53,7 @@ namespace cucumber_cpp::library::support
     struct RuntimeAdapter
     {
         virtual ~RuntimeAdapter() = default;
-        virtual bool Run(std::span<const assemble::AssembledTestSuite> assembledTestSuites) = 0;
+        virtual bool Run() = 0;
     };
 
 }

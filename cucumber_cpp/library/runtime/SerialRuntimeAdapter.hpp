@@ -17,16 +17,18 @@ namespace cucumber_cpp::library::runtime
         SerialRuntimeAdapter(std::string testRunStartedId,
             util::Broadcaster& broadcaster,
             cucumber::gherkin::id_generator_ptr idGenerator,
+            std::span<const support::PickleSource> sourcedPickles,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary supportCodeLibrary,
             Context& programContext);
 
-        bool Run(std::span<const assemble::AssembledTestSuite> assembledTestSuites) override;
+        bool Run() override;
 
     private:
         std::string testRunStartedId;
         util::Broadcaster& broadcaster;
         cucumber::gherkin::id_generator_ptr idGenerator;
+        std::span<const support::PickleSource> sourcedPickles;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary supportCodeLibrary;
         Context& programContext;

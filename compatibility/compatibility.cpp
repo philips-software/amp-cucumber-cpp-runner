@@ -78,6 +78,8 @@ namespace compatibility
                     jsonIter = json.erase(jsonIter);
                 else if (key == "start")
                     jsonIter = json.erase(jsonIter);
+                else if (key == "snippets")
+                    jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
                     SanitizeExpectedJson(value);
@@ -132,6 +134,8 @@ namespace compatibility
                 else if (key == "message")
                     jsonIter = json.erase(jsonIter);
                 else if (key == "line")
+                    jsonIter = json.erase(jsonIter);
+                else if (key == "snippets")
                     jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
