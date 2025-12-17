@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <exception>
 #include <filesystem>
+#include <list>
 #include <map>
 #include <memory>
 #include <optional>
@@ -68,16 +69,13 @@ namespace cucumber_cpp::library
             std::vector<StepMatch> matches;
         };
 
-        struct StepDefinition
+        struct Definition
         {
             StepFactory factory;
             std::string id;
             std::size_t line;
             std::filesystem::path uri;
-        };
 
-        struct Definition : StepDefinition
-        {
             engine::StepType type;
             std::string pattern;
             cucumber_expression::Matcher regex;
@@ -111,7 +109,7 @@ namespace cucumber_cpp::library
         StepFactory GetFactoryById(std::string id) const;
         Definition GetDefinitionById(std::string id) const;
 
-        const std::map<std::string, Definition>& StepDefinitions() const;
+        const std::list<Definition>& StepDefinitions() const;
 
     private:
         void Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
@@ -119,7 +117,8 @@ namespace cucumber_cpp::library
         cucumber_expression::ParameterRegistry& parameterRegistry;
         cucumber::gherkin::id_generator_ptr idGenerator;
 
-        std::map<std::string, Definition> registry;
+        std::list<Definition> registry;
+        std::map<std::string, std::list<Definition>::iterator> idToDefinitionMap;
     };
 
     struct StepStringRegistration

@@ -144,7 +144,7 @@ namespace cucumber_cpp::library::runtime
 
             if (testStep.hook_id)
             {
-                testStepResult = RunHook(supportCodeLibrary.hookRegistry.GetDefinitionById(testStep.hook_id.value()), !seenSteps, testCaseContext);
+                testStepResult = RunHook(supportCodeLibrary.hookRegistry.GetDefinitionById(testStep.hook_id.value()), !seenSteps, testCaseContext, testStepStarted);
             }
             else
             {
@@ -173,7 +173,7 @@ namespace cucumber_cpp::library::runtime
         return willRetry;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext)
+    cucumber::messages::test_step_result TestCaseRunner::RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
         if (ShouldSkipHook(isBeforeHook))
             return {
@@ -181,10 +181,10 @@ namespace cucumber_cpp::library::runtime
                 .status = cucumber::messages::test_step_result_status::SKIPPED,
             };
 
-        return InvokeStep(hookDefinition.factory(testCaseContext));
+        return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, testStepStarted));
     }
 
-    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext)
+    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
         auto ids = supportCodeLibrary.hookRegistry.FindIds(hookType, pickle.tags);
         std::vector<cucumber::messages::test_step_result> results;
@@ -193,7 +193,7 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
         {
             const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
-            results.emplace_back(InvokeStep(definition.factory(testCaseContext)));
+            results.emplace_back(InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted)));
         }
 
         return results;
@@ -203,7 +203,7 @@ namespace cucumber_cpp::library::runtime
     {
         auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([&](const std::string& id)
                                                                      {
-                                                                         return supportCodeLibrary.stepRegistry.StepDefinitions().at(id);
+                                                                         return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                      });
 
         if (const auto count = testStep.step_definition_ids->size(); count == 0)
@@ -235,7 +235,7 @@ namespace cucumber_cpp::library::runtime
             };
         }
 
-        auto stepResults = RunStepHooks(pickleStep, HookType::beforeStep, testCaseContext);
+        auto stepResults = RunStepHooks(pickleStep, HookType::beforeStep, testCaseContext, testStepStarted);
 
         if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::test_step_result_status::FAILED)
         {
@@ -262,7 +262,7 @@ namespace cucumber_cpp::library::runtime
             stepResults.push_back(result);
         }
 
-        const auto afterStepHookResults = RunStepHooks(pickleStep, HookType::afterStep, testCaseContext);
+        const auto afterStepHookResults = RunStepHooks(pickleStep, HookType::afterStep, testCaseContext, testStepStarted);
         stepResults.reserve(stepResults.size() + afterStepHookResults.size());
         stepResults.insert(stepResults.end(), afterStepHookResults.begin(), afterStepHookResults.end());
 

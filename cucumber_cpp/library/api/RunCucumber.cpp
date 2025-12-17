@@ -44,9 +44,7 @@ namespace cucumber_cpp::library::api
 
         void EmitStepDefinitions(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
-            supportCodeLibrary.stepRegistry.LoadSteps();
-
-            for (const auto& [name, stepDefinition] : supportCodeLibrary.stepRegistry.StepDefinitions())
+            for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
                 broadcaster.BroadcastEvent({ .step_definition = cucumber::messages::step_definition{
                                                  .id = stepDefinition.id,
@@ -64,10 +62,21 @@ namespace cucumber_cpp::library::api
             }
         }
 
+        void EmitTestCaseHooks(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        {
+            const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
+
+            for (const auto& hook : beforeAllHooks)
+                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+
+            const auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::after);
+
+            for (const auto& hook : afterAllHooks)
+                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+        }
+
         void EmitTestRunHooks(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            supportCodeLibrary.hookRegistry.LoadHooks();
-
             const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
 
             for (const auto& hook : beforeAllHooks)
@@ -85,8 +94,12 @@ namespace cucumber_cpp::library::api
 
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
             // undefined parameters
+
+            supportCodeLibrary.stepRegistry.LoadSteps();
             EmitStepDefinitions(supportCodeLibrary, broadcaster, idGenerator);
-            // test case hooks
+
+            supportCodeLibrary.hookRegistry.LoadHooks();
+            EmitTestCaseHooks(supportCodeLibrary, broadcaster);
             EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }
     }

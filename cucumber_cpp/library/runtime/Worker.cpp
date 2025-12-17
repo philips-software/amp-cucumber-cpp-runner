@@ -17,6 +17,7 @@
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -55,13 +56,6 @@ namespace cucumber_cpp::library::runtime
             return to_underlying(a.status) < to_underlying(b.status);
         };
 
-        cucumber::messages::test_step_result GetWorstTestStepResult(std::span<const cucumber::messages::test_step_result> testStepResults)
-        {
-            if (testStepResults.empty())
-                return { .status = cucumber::messages::test_step_result_status::PASSED };
-            return *std::ranges::max_element(testStepResults, compare);
-        }
-
         inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
             cucumber::messages::test_step_result_status::AMBIGUOUS,
             cucumber::messages::test_step_result_status::FAILED,
@@ -90,9 +84,6 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, programContext)));
 
-        if (GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
-            throw std::runtime_error("Failed before all hook");
-
         return results;
     }
 
@@ -102,9 +93,6 @@ namespace cucumber_cpp::library::runtime
         auto ids = supportCodeLibrary.hookRegistry.FindIds(HookType::afterAll);
         for (const auto& id : ids | std::views::reverse)
             results.emplace_back(std::move(RunTestHook(id, programContext)));
-
-        if (GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
-            throw std::runtime_error("Failed after all hook");
 
         return results;
     }
@@ -150,7 +138,7 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, context)));
 
-        if (GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
+        if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
             throw std::runtime_error("Failed before feature hook");
 
         return results;
@@ -163,7 +151,7 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, context)));
 
-        if (GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
+        if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
             throw std::runtime_error("Failed after feature hook");
 
         return results;
@@ -174,14 +162,16 @@ namespace cucumber_cpp::library::runtime
         const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
         const auto testRunHookStartedid = idGenerator->next_id();
 
-        broadcaster.BroadcastEvent({ .test_run_hook_started = cucumber::messages::test_run_hook_started{
-                                         .id = testRunHookStartedid,
-                                         .test_run_started_id = std::string{ testRunStartedId },
-                                         .hook_id = definition.hook.id,
-                                         .timestamp = support::TimestampNow(),
-                                     } });
+        const auto testRunHookStarted = cucumber::messages::test_run_hook_started{
+            .id = testRunHookStartedid,
+            .test_run_started_id = std::string{ testRunStartedId },
+            .hook_id = definition.hook.id,
+            .timestamp = support::TimestampNow(),
+        };
 
-        auto result = definition.factory(context)->ExecuteAndCatchExceptions();
+        broadcaster.BroadcastEvent({ .test_run_hook_started = testRunHookStarted });
+
+        auto result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
 
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
                                          .test_run_hook_started_id = testRunHookStartedid,

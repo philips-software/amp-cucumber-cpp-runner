@@ -3,20 +3,17 @@
 
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/hook.hpp"
-#include "cucumber/messages/hook_type.hpp"
-#include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
-#include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/tag.hpp"
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <optional>
 #include <ranges>
 #include <source_location>
 #include <span>
@@ -26,12 +23,6 @@
 
 namespace cucumber_cpp::library
 {
-
-    template<class T>
-    std::unique_ptr<Body> HookBodyFactory(Context& context)
-    {
-        return std::make_unique<T>(context);
-    }
 
     enum struct HookType
     {
@@ -45,9 +36,9 @@ namespace cucumber_cpp::library
         afterStep,
     };
 
-    struct HookBase
+    struct HookBase : engine::ExecutionContext
     {
-        explicit HookBase(Context& context);
+        HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
 
         virtual ~HookBase() = default;
 
@@ -60,12 +51,15 @@ namespace cucumber_cpp::library
         {
             /* nothing to do */
         }
-
-    protected:
-        Context& context;
     };
 
-    using HookFactory = std::unique_ptr<Body> (&)(Context& context);
+    using HookFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
+
+    template<class T>
+    std::unique_ptr<Body> HookBodyFactory(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
+    {
+        return std::make_unique<T>(broadCaster, context, stepOrHookStarted);
+    }
 
     struct HookMatch
     {

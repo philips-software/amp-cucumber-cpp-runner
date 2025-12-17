@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
@@ -7,7 +8,9 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include <span>
+#include <stdexcept>
 #include <string>
 
 namespace cucumber_cpp::library::runtime
@@ -33,25 +36,34 @@ namespace cucumber_cpp::library::runtime
         bool failing = false;
         runtime::Worker worker{ testRunStartedId, broadcaster, idGenerator, options, supportCodeLibrary, programContext };
 
-        worker.RunBeforeAllHooks();
+        const auto beforeHookResults = worker.RunBeforeAllHooks();
 
-        auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
+        if (util::GetWorstTestStepResult(beforeHookResults).status != cucumber::messages::test_step_result_status::PASSED)
+            failing = true;
 
-        for (const auto& assembledTestSuite : assembledTestSuites)
+        if (!failing)
         {
-            try
+            auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
+
+            for (const auto& assembledTestSuite : assembledTestSuites)
             {
-                const auto success = worker.RunTestSuite(assembledTestSuite, failing);
-                if (!success)
+                try
+                {
+                    const auto success = worker.RunTestSuite(assembledTestSuite, failing);
+                    if (!success)
+                        failing = true;
+                }
+                catch (...)
+                {
                     failing = true;
-            }
-            catch (...)
-            {
-                failing = true;
+                }
             }
         }
 
-        worker.RunAfterAllHooks();
+        const auto afterHookResults = worker.RunAfterAllHooks();
+
+        if (util::GetWorstTestStepResult(afterHookResults).status != cucumber::messages::test_step_result_status::PASSED)
+            failing = true;
 
         return !failing;
     }

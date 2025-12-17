@@ -37,9 +37,9 @@ namespace cucumber_cpp::library::runtime
 
         bool RunAttempt(std::size_t attempt, bool moreAttemptsAvailable);
 
-        cucumber::messages::test_step_result RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext);
+        cucumber::messages::test_step_result RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
-        std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext);
+        std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
         cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 

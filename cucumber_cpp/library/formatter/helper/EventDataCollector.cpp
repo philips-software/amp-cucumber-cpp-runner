@@ -98,8 +98,11 @@ namespace cucumber_cpp::library::formatter::helper
 
     void EventDataCollector::StoreAttachment(const cucumber::messages::attachment& attachment)
     {
-        auto& testCaseAttemptData = testCaseAttemptDataMap.at(*attachment.test_case_started_id);
-        testCaseAttemptData.stepAttachments[*attachment.test_step_id].emplace_back(attachment);
+        if (attachment.test_case_started_id && attachment.test_step_id)
+        {
+            auto& testCaseAttemptData = testCaseAttemptDataMap.at(*attachment.test_case_started_id);
+            testCaseAttemptData.stepAttachments[*attachment.test_step_id].emplace_back(attachment);
+        }
     }
 
     void EventDataCollector::StoreTestStepResult(const cucumber::messages::test_step_finished& testStepFinished)

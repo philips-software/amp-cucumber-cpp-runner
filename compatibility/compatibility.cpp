@@ -209,7 +209,19 @@ namespace compatibility
 
             void CompareEnvelopes()
             {
-                ASSERT_THAT(actualEnvelopes.size(), testing::Eq(expectedEnvelopes.size()));
+                EXPECT_THAT(actualEnvelopes.size(), testing::Eq(expectedEnvelopes.size()));
+
+                for (auto& json : actualEnvelopes)
+                {
+                    SanitizeActualJson(json);
+                    actualOfs << json.dump() << "\n";
+                }
+
+                for (auto& json : expectedEnvelopes)
+                {
+                    SanitizeExpectedJson(json);
+                    expectedOfs << json.dump() << "\n";
+                }
 
                 while (!actualEnvelopes.empty() && !expectedEnvelopes.empty())
                 {
@@ -218,12 +230,6 @@ namespace compatibility
 
                     auto expectedJson = expectedEnvelopes.front();
                     expectedEnvelopes.pop_front();
-
-                    SanitizeActualJson(actualJson);
-                    SanitizeExpectedJson(expectedJson);
-
-                    expectedOfs << expectedJson.dump() << "\n";
-                    actualOfs << actualJson.dump() << "\n";
 
                     EXPECT_THAT(actualJson, testing::Eq(expectedJson));
                 }

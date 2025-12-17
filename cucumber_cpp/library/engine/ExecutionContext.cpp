@@ -14,6 +14,28 @@
 #include <utility>
 #include <variant>
 
+/*
+
+std::optional<std::string> read_file( std::istream & is ) {
+  if( not is.seekg( 0, std::ios_base::seek_dir::end ) ) {
+    return std::nullopt;
+  }
+  auto const sz = is.tellg( );
+  if( not is.seekg( 0 ) ) {
+    return std::nullopt;
+  }
+  auto result = std::string( '\0', static_cast<std::size_t>( sz ) );
+  if( not is.read( result.data( ), sz ) ) {
+    return std::nullopt;
+  }
+  if( sz != is.gcount( ) ) {
+    return std::nullopt;
+  }
+  return result;
+}
+
+*/
+
 namespace cucumber_cpp::library::engine
 {
     namespace
@@ -31,20 +53,15 @@ namespace cucumber_cpp::library::engine
                 };
             }
 
-            return {};
+            return { std::nullopt, std::nullopt };
         }
 
-        std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestRunHookStartedIds(StepOrHookStarted stepOrHookStarted)
+        std::optional<std::string> ReadTestRunHookStartedIds(StepOrHookStarted stepOrHookStarted)
         {
             if (std::holds_alternative<cucumber::messages::test_run_hook_started>(stepOrHookStarted))
-            {
-                return {
-                    std::get<cucumber::messages::test_run_hook_started>(stepOrHookStarted).test_run_started_id,
-                    std::get<cucumber::messages::test_run_hook_started>(stepOrHookStarted).id,
-                };
-            }
+                return std::get<cucumber::messages::test_run_hook_started>(stepOrHookStarted).id;
 
-            return {};
+            return std::nullopt;
         }
     }
 
@@ -88,7 +105,7 @@ namespace cucumber_cpp::library::engine
                                  : std::get<AttachOptions>(mediaType);
 
         auto [test_case_started_id, test_step_id] = ReadTestStepStartedIds(stepOrHookStarted);
-        auto [test_run_started_id, test_run_hook_started_id] = ReadTestRunHookStartedIds(stepOrHookStarted);
+        auto test_run_hook_started_id = ReadTestRunHookStartedIds(stepOrHookStarted);
 
         broadCaster.BroadcastEvent({
             .attachment = cucumber::messages::attachment{
@@ -98,7 +115,6 @@ namespace cucumber_cpp::library::engine
                 .media_type = std::move(options.mediaType),
                 .test_case_started_id = std::move(test_case_started_id),
                 .test_step_id = std::move(test_step_id),
-                .test_run_started_id = std::move(test_run_started_id),
                 .test_run_hook_started_id = std::move(test_run_hook_started_id),
                 .timestamp = support::TimestampNow(),
             },

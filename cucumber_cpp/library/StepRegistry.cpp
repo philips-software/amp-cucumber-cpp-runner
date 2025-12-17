@@ -9,6 +9,8 @@
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <cstddef>
+#include <iterator>
+#include <list>
 #include <map>
 #include <optional>
 #include <source_location>
@@ -29,7 +31,6 @@ namespace cucumber_cpp::library
     void StepRegistry::LoadSteps()
     {
         for (const auto& matcher : support::DefinitionRegistration::Instance().GetSteps())
-            // for (const auto& matcher : StepStringRegistration::Instance().GetEntries())
             Register(matcher.id, matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
     }
 
@@ -37,13 +38,13 @@ namespace cucumber_cpp::library
     {
         std::vector<StepMatch> matches;
 
-        for (auto& [id, entry] : registry)
+        for (auto& [id, iter] : idToDefinitionMap)
         {
-            auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
+            auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, iter->regex);
             if (match)
             {
-                matches.emplace_back(entry.factory, *match, std::visit(cucumber_expression::PatternVisitor{}, entry.regex));
-                ++entry.used;
+                matches.emplace_back(iter->factory, *match, std::visit(cucumber_expression::PatternVisitor{}, iter->regex));
+                ++iter->used;
             }
         }
 
@@ -60,13 +61,11 @@ namespace cucumber_cpp::library
     {
         std::pair<std::vector<std::string>, std::vector<cucumber::messages::step_match_arguments_list>> result;
 
-        for (auto& [id, entry] : registry)
+        for (auto& [id, iter] : idToDefinitionMap)
         {
-            const auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, entry.regex);
+            const auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, iter->regex);
             if (match)
-            {
                 result.first.push_back(id);
-            }
         }
 
         return result;
@@ -83,7 +82,7 @@ namespace cucumber_cpp::library
 
         list.reserve(registry.size());
 
-        for (const auto& [id, entry] : registry)
+        for (const auto& entry : registry)
             list.emplace_back(entry.regex, entry.used);
 
         return list;
@@ -91,54 +90,46 @@ namespace cucumber_cpp::library
 
     StepFactory StepRegistry::GetFactoryById(std::string id) const
     {
-        return registry.at(id).factory;
+        return idToDefinitionMap.at(id)->factory;
     }
 
     StepRegistry::Definition StepRegistry::GetDefinitionById(std::string id) const
     {
-        return registry.at(id);
+        return *idToDefinitionMap.at(id);
     }
 
-    const std::map<std::string, StepRegistry::Definition>& StepRegistry::StepDefinitions() const
+    const std::list<StepRegistry::Definition>& StepRegistry::StepDefinitions() const
     {
         return registry;
     }
 
     void StepRegistry::Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
     {
-        if (matcher.starts_with('^') || matcher.ends_with('$'))
-        {
-            registry.emplace(id, Definition{
-                                     factory,
-                                     id,
-                                     sourceLocation.line(),
-                                     sourceLocation.file_name(),
-                                     stepType,
-                                     matcher,
-                                     cucumber_expression::Matcher{
+        auto cucumberMatcher = (matcher.starts_with('^') || matcher.ends_with('$'))
+                                   ? cucumber_expression::Matcher{
                                          std::in_place_type<cucumber_expression::RegularExpression>,
                                          matcher,
-                                     },
-                                     cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION,
-                                 });
-        }
-        else
-        {
-            registry.emplace(id, Definition{
-                                     factory,
-                                     id,
-                                     sourceLocation.line(),
-                                     sourceLocation.file_name(),
-                                     stepType,
-                                     matcher,
-                                     cucumber_expression::Matcher{
+                                     }
+                                   : cucumber_expression::Matcher{
                                          std::in_place_type<cucumber_expression::Expression>,
                                          matcher,
                                          parameterRegistry,
-                                     },
-                                     cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION,
-                                 });
-        }
+
+                                     };
+        auto cucumberMatcherType = std::holds_alternative<cucumber_expression::RegularExpression>(cucumberMatcher)
+                                       ? cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION
+                                       : cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION;
+
+        registry.emplace_back(factory,
+            id,
+            sourceLocation.line(),
+            sourceLocation.file_name(),
+            stepType,
+            matcher,
+            cucumberMatcher,
+            cucumberMatcherType);
+
+        idToDefinitionMap[id] = std::prev(registry.end());
     }
 
     StepStringRegistration& StepStringRegistration::Instance()

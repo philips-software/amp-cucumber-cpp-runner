@@ -7,8 +7,10 @@
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/tag.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <map>
@@ -61,8 +63,8 @@ namespace cucumber_cpp::library
         };
     }
 
-    HookBase::HookBase(Context& context)
-        : context{ context }
+    HookBase::HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
+        : engine::ExecutionContext{ broadCaster, context, stepOrHookStarted }
     {}
 
     HookRegistry::Definition::Definition(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
@@ -89,9 +91,7 @@ namespace cucumber_cpp::library
 
     void HookRegistry::LoadHooks()
     {
-
         for (const auto& matcher : support::DefinitionRegistration::Instance().GetHooks())
-            // for (const auto& matcher : HookRegistration::Instance().GetEntries())
             Register(matcher.id, matcher.type, matcher.expression, matcher.factory, matcher.sourceLocation);
     }
 

@@ -52,13 +52,13 @@ namespace cucumber_cpp::library::assemble
                 std::vector<std::string> stepDefinitionIds;
                 std::vector<cucumber::messages::step_match_arguments_list> stepMatchArgumentsLists;
 
-                for (const auto& [id, definition] : stepDefinitions)
+                for (const auto& definition : stepDefinitions)
                 {
                     auto optionalStepMatchArgumentsList = std::visit(cucumber_expression::MatchArgumentsVisitor{ step.text }, definition.regex);
 
                     if (optionalStepMatchArgumentsList)
                     {
-                        stepDefinitionIds.push_back(id);
+                        stepDefinitionIds.push_back(definition.id);
                         stepMatchArgumentsLists.push_back(*optionalStepMatchArgumentsList);
                     }
                 }
