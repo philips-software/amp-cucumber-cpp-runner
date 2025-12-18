@@ -17,8 +17,13 @@ function(add_compatibility_kit name)
 
     target_sources(${libname} PRIVATE
         compatibility.cpp
-        ${name}/${name}.cpp
     )
+
+    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/${name}/${name}.cpp)
+        target_sources(${libname} PRIVATE
+            ${name}/${name}.cpp
+        )
+    endif()
 
     string(REPLACE "-" "_" KITNAME ${name})
 
@@ -32,9 +37,7 @@ endfunction()
 file(GLOB kits RELATIVE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/*)
 foreach(kit ${kits})
     if (IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${kit})
-        if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/${kit}/${kit}.cpp)
-            message(STATUS "Adding compatibility kit: ${kit}")
-            add_compatibility_kit(${kit})
-        endif()
+        message(STATUS "Adding compatibility kit: ${kit}")
+        add_compatibility_kit(${kit})
     endif()
 endforeach()
