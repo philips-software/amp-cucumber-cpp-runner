@@ -10,11 +10,9 @@
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <functional>
 #include <gtest/gtest-spi.h>
@@ -24,10 +22,9 @@
 #include <memory>
 #include <ranges>
 #include <regex>
+#include <set>
 #include <string>
-#include <system_error>
 #include <utility>
-#include <vector>
 
 #ifndef KIT_FOLDER
 #error KIT_FOLDER is not defined
@@ -45,7 +42,7 @@ namespace compatibility
     {
         struct Devkit
         {
-            std::vector<std::filesystem::path> paths;
+            std::set<std::filesystem::path> paths;
             std::string tagExpression;
             std::size_t retry;
             std::filesystem::path ndjsonFile;
@@ -255,16 +252,19 @@ namespace compatibility
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::vector<std::filesystem::path> GetFeatureFiles(std::vector<std::filesystem::path> paths)
+        std::set<std::filesystem::path> GetFeatureFiles(std::set<std::filesystem::path> paths)
         {
-            std::vector<std::filesystem::path> files;
+            std::set<std::filesystem::path> files;
 
             for (const auto feature : paths)
                 if (std::filesystem::is_directory(feature))
                     for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
-                        files.emplace_back(entry.path());
+                    {
+                        std::cout << " found feature file: " << entry.path() << "\n";
+                        files.insert(entry.path());
+                    }
                 else
-                    files.emplace_back(feature);
+                    files.insert(feature);
 
             return files;
         }
@@ -300,11 +300,13 @@ namespace compatibility
         void RunDevkit(Devkit devkit)
         {
             devkit.paths = GetFeatureFiles(devkit.paths);
+            const auto isReversed = std::string{ KIT_STRING }.ends_with("-reversed");
 
             cucumber_cpp::library::support::RunOptions runOptions{
                 .sources = {
                     .paths = devkit.paths,
                     .tagExpression = devkit.tagExpression,
+                    .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
                 },
                 .runtime = {
                     .retry = devkit.retry,
@@ -329,8 +331,9 @@ namespace compatibility
 
 TEST(CompatibilityTest, KIT_NAME)
 {
-    if (std::string{ KIT_FOLDER }.ends_with("markdown"))
-        GTEST_SKIP();
+#ifdef SKIP_TEST
+    GTEST_SKIP();
+#endif
 
     compatibility::StopwatchIncremental stopwatch;
     compatibility::TimestampGeneratorIncremental timestampGenerator;

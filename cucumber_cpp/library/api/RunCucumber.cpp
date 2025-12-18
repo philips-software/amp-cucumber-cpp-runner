@@ -18,10 +18,10 @@
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <gtest/gtest.h>
+#include <list>
 #include <memory>
 #include <ranges>
 #include <utility>
-#include <vector>
 
 namespace cucumber_cpp::library::api
 {
@@ -125,11 +125,23 @@ namespace cucumber_cpp::library::api
             return tagExpression->Evaluate(pickle.pickle->tags);
         };
         auto filteredPicklesView = pickleSources | std::views::filter(pickleFilter);
-        std::vector<support::PickleSource> filteredPickles(filteredPicklesView.begin(), filteredPicklesView.end());
+
+        const auto createOrderedPickleList = [](auto ordered) -> std::list<support::PickleSource>
+        {
+            return { ordered.begin(), ordered.end() };
+        };
+        const auto orderPickles = [&](auto pickles) -> std::list<support::PickleSource>
+        {
+            if (options.sources.ordering == support::RunOptions::Ordering::defined)
+                return createOrderedPickleList(pickles);
+            else
+                return createOrderedPickleList(pickles | std::views::reverse);
+        };
+        std::list<support::PickleSource> orderedPickles = orderPickles(filteredPicklesView);
 
         EmitSupportCodeMessages(supportCodeLibrary, broadcaster, idGenerator);
 
-        auto runtime = runtime::MakeRuntime(options.runtime, broadcaster, filteredPickles, supportCodeLibrary, idGenerator, programContext);
+        auto runtime = runtime::MakeRuntime(options.runtime, broadcaster, orderedPickles, supportCodeLibrary, idGenerator, programContext);
 
         auto& listeners = testing::UnitTest::GetInstance()->listeners();
         auto* defaultEventListener = listeners.Release(listeners.default_result_printer());

@@ -3,13 +3,13 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_case.hpp"
-#include "cucumber/messages/test_step.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <list>
 #include <map>
 #include <optional>
 #include <ranges>
@@ -25,9 +25,10 @@ namespace cucumber_cpp::library::assemble
     std::vector<AssembledTestSuite> AssembleTestSuites(support::SupportCodeLibrary supportCodeLibrary,
         std::string_view testRunStartedId,
         util::Broadcaster& broadcaster,
-        std::span<const support::PickleSource> sourcedPickles,
+        const std::list<support::PickleSource>& sourcedPickles,
         cucumber::gherkin::id_generator_ptr idGenerator)
     {
+        std::vector<std::string> testUris;
         std::map<std::string, AssembledTestSuite> assembledTestSuiteMap;
 
         for (const auto& pickleSource : sourcedPickles)
@@ -77,7 +78,10 @@ namespace cucumber_cpp::library::assemble
             broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case = testCase });
 
             if (!assembledTestSuiteMap.contains(pickleSource.gherkinDocument->uri.value()))
+            {
+                testUris.emplace_back(pickleSource.gherkinDocument->uri.value());
                 assembledTestSuiteMap.emplace(pickleSource.gherkinDocument->uri.value(), *pickleSource.gherkinDocument);
+            }
 
             assembledTestSuiteMap.at(pickleSource.gherkinDocument->uri.value()).testCases.emplace_back(*pickleSource.pickle, testCase);
         }
@@ -85,8 +89,8 @@ namespace cucumber_cpp::library::assemble
         std::vector<AssembledTestSuite> assembledTestSuites;
         assembledTestSuites.reserve(assembledTestSuiteMap.size());
 
-        for (auto assembledTestSuiteValues : assembledTestSuiteMap | std::views::values)
-            assembledTestSuites.emplace_back(std::move(assembledTestSuiteValues));
+        for (auto uri : testUris)
+            assembledTestSuites.emplace_back(std::move(assembledTestSuiteMap.at(uri)));
 
         return assembledTestSuites;
     }

@@ -6,7 +6,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <span>
+#include <list>
 #include <string_view>
 #include <vector>
 
@@ -16,7 +16,7 @@ namespace cucumber_cpp::library::assemble
         support::SupportCodeLibrary supportCodeLibrary,
         std::string_view testRunStartedId,
         util::Broadcaster& broadcaster,
-        std::span<const support::PickleSource> sourcedPickles,
+        const std::list<support::PickleSource>& sourcedPickles,
         cucumber::gherkin::id_generator_ptr idGenerator);
 }
 

@@ -3,14 +3,14 @@
 
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
-#include <vector>
+#include <list>
 
 namespace cucumber_cpp::library::assemble
 {
     struct AssembledTestSuite
     {
         const cucumber::messages::gherkin_document& gherkinDocument;
-        std::vector<AssembledTestCase> testCases;
+        std::list<AssembledTestCase> testCases;
     };
 }
 

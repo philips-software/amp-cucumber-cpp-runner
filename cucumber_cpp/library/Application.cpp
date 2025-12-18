@@ -1,17 +1,12 @@
 #include "cucumber_cpp/library/Application.hpp"
-#include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
-#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <CLI/Error.hpp>
 #include <CLI/Option.hpp>
 #include <CLI/Validators.hpp>
@@ -28,10 +23,10 @@
 #include <numeric>
 #include <ostream>
 #include <ranges>
+#include <set>
 #include <string>
 #include <string_view>
 #include <variant>
-#include <vector>
 
 namespace cucumber_cpp::library
 {
@@ -59,16 +54,16 @@ namespace cucumber_cpp::library
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::vector<std::filesystem::path> GetFeatureFiles(Application::Options& options)
+        std::set<std::filesystem::path> GetFeatureFiles(Application::Options& options)
         {
-            std::vector<std::filesystem::path> files;
+            std::set<std::filesystem::path> files;
 
             for (const auto feature : options.features | std::views::transform(ToFileSystemPath))
                 if (std::filesystem::is_directory(feature))
                     for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
-                        files.emplace_back(entry.path());
+                        files.emplace(entry.path());
                 else
-                    files.emplace_back(feature);
+                    files.emplace(feature);
 
             return files;
         }

@@ -4,11 +4,11 @@
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle.hpp"
-#include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <set>
 #include <span>
 #include <string_view>
 
@@ -16,10 +16,18 @@ namespace cucumber_cpp::library::support
 {
     struct RunOptions
     {
+        enum class Ordering
+        {
+            defined,
+            reverse,
+        };
+
         struct Sources
         {
-            std::span<const std::filesystem::path> paths;
+            std::set<std::filesystem::path> paths;
             std::string_view tagExpression;
+            Ordering ordering;
+
         } sources;
 
         struct Runtime

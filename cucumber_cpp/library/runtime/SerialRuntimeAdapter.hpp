@@ -3,11 +3,10 @@
 
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
-#include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <span>
+#include <list>
 #include <string>
 
 namespace cucumber_cpp::library::runtime
@@ -17,7 +16,7 @@ namespace cucumber_cpp::library::runtime
         SerialRuntimeAdapter(std::string testRunStartedId,
             util::Broadcaster& broadcaster,
             cucumber::gherkin::id_generator_ptr idGenerator,
-            std::span<const support::PickleSource> sourcedPickles,
+            const std::list<support::PickleSource>& sourcedPickles,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary supportCodeLibrary,
             Context& programContext);
@@ -28,7 +27,7 @@ namespace cucumber_cpp::library::runtime
         std::string testRunStartedId;
         util::Broadcaster& broadcaster;
         cucumber::gherkin::id_generator_ptr idGenerator;
-        std::span<const support::PickleSource> sourcedPickles;
+        const std::list<support::PickleSource>& sourcedPickles;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary supportCodeLibrary;
         Context& programContext;

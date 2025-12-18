@@ -11,14 +11,14 @@
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <list>
 #include <memory>
-#include <vector>
 
 namespace cucumber_cpp::library::api
 {
-    std::vector<support::PickleSource> CollectPickles(const support::RunOptions::Sources& sources, cucumber::gherkin::id_generator_ptr idGenerator, util::Broadcaster& broadcaster)
+    std::list<support::PickleSource> CollectPickles(const support::RunOptions::Sources& sources, cucumber::gherkin::id_generator_ptr idGenerator, util::Broadcaster& broadcaster)
     {
-        std::vector<support::PickleSource> pickleSources;
+        std::list<support::PickleSource> pickleSources;
 
         cucumber::gherkin::parser<> parser{ idGenerator };
 
