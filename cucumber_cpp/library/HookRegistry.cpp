@@ -67,19 +67,20 @@ namespace cucumber_cpp::library
         : engine::ExecutionContext{ broadCaster, context, stepOrHookStarted }
     {}
 
-    HookRegistry::Definition::Definition(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
+    HookRegistry::Definition::Definition(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
         : type{ type }
-        , tagExpression{ tag_expression::Parse(expression) }
+        , tagExpression{ tag_expression::Parse(expression.value_or("")) }
         , factory{ factory }
         , hook{
             .id = id,
+            .name = name.has_value() ? std::make_optional<std::string>(name.value()) : std::nullopt,
             .source_reference = cucumber::messages::source_reference{
                 .uri = sourceLocation.file_name(),
                 .location = cucumber::messages::location{
                     .line = sourceLocation.line(),
                 },
             },
-            .tag_expression = !expression.empty() ? std::make_optional(std::string{ expression }) : std::nullopt,
+            .tag_expression = expression.has_value() ? std::make_optional<std::string>(expression.value()) : std::nullopt,
             .type = HookTypeMap.contains(type) ? std::make_optional(HookTypeMap.at(type)) : std::nullopt,
         }
     {}
@@ -92,7 +93,7 @@ namespace cucumber_cpp::library
     void HookRegistry::LoadHooks()
     {
         for (const auto& matcher : support::DefinitionRegistration::Instance().GetHooks())
-            Register(matcher.id, matcher.type, matcher.expression, matcher.factory, matcher.sourceLocation);
+            Register(matcher.id, matcher.type, matcher.expression, matcher.name, matcher.factory, matcher.sourceLocation);
     }
 
     std::vector<std::string> HookRegistry::FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags) const
@@ -127,18 +128,18 @@ namespace cucumber_cpp::library
         return registry.at(id);
     }
 
-    void HookRegistry::Register(std::string id, HookType type, std::string_view expression, HookFactory factory, std::source_location sourceLocation)
+    void HookRegistry::Register(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(id, Definition{ id, type, expression, factory, sourceLocation });
+        registry.emplace(id, Definition{ id, type, expression, name, factory, sourceLocation });
     }
 
-    std::span<HookRegistration::Entry> HookRegistration::GetEntries()
-    {
-        return registry;
-    }
+    // std::span<HookEntry> HookRegistration::GetEntries()
+    // {
+    //     return registry;
+    // }
 
-    std::span<const HookRegistration::Entry> HookRegistration::GetEntries() const
-    {
-        return registry;
-    }
+    // std::span<const HookEntry> HookRegistration::GetEntries() const
+    // {
+    //     return registry;
+    // }
 }

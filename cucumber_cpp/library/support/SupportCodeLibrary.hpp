@@ -8,21 +8,64 @@
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include <compare>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
+#include <optional>
 #include <source_location>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::library
-{
-    std::strong_ordering operator<=>(const HookRegistration::Entry& left, const HookRegistration::Entry& right);
-    std::strong_ordering operator<=>(const StepStringRegistration::Entry& left, const StepStringRegistration::Entry& right);
-}
-
 namespace cucumber_cpp::library::support
 {
+    struct GlobalHook
+
+    {
+        std::string_view name{};
+        std::int32_t order{ 0 };
+    };
+
+    struct Hook
+    {
+        std::string_view expression{ "" };
+        std::string_view name{};
+        std::int32_t order{ 0 };
+    };
+
+    struct HookEntry
+    {
+        HookEntry(HookType type, GlobalHook hook, HookFactory factory, std::source_location sourceLocation)
+            : type{ type }
+            , expression{ std::nullopt }
+            , name{ hook.name.empty() ? std::nullopt : std::make_optional(hook.name) }
+            , order{ hook.order }
+            , factory{ factory }
+            , sourceLocation{ sourceLocation }
+        {}
+
+        HookEntry(HookType type, Hook hook, HookFactory factory, std::source_location sourceLocation)
+            : type{ type }
+            , expression{ hook.expression.empty() ? std::nullopt : std::make_optional(hook.expression) }
+            , name{ hook.name.empty() ? std::nullopt : std::make_optional(hook.name) }
+            , order{ hook.order }
+            , factory{ factory }
+            , sourceLocation{ sourceLocation }
+        {}
+
+        HookType type;
+        std::optional<std::string_view> expression;
+        std::optional<std::string_view> name;
+        std::int32_t order;
+        HookFactory factory;
+        std::source_location sourceLocation;
+        std::string id{ "unassigned" };
+    };
+
+    std::strong_ordering operator<=>(const HookEntry& left, const HookEntry& right);
+    std::strong_ordering operator<=>(const StepStringRegistration::Entry& left, const StepStringRegistration::Entry& right);
+
     struct SupportCodeLibrary
     {
         HookRegistry& hookRegistry;
@@ -30,7 +73,7 @@ namespace cucumber_cpp::library::support
         cucumber_expression::ParameterRegistry& parameterRegistry;
     };
 
-    using Entry = std::variant<HookRegistration::Entry, StepStringRegistration::Entry>;
+    using Entry = std::variant<HookEntry, StepStringRegistration::Entry>;
 
     std::strong_ordering operator<=>(const Entry& left, const Entry& right);
 
@@ -45,7 +88,7 @@ namespace cucumber_cpp::library::support
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 
         std::vector<StepStringRegistration::Entry> GetSteps();
-        std::vector<HookRegistration::Entry> GetHooks();
+        std::vector<HookEntry> GetHooks();
 
         template<class T>
         static std::size_t Register(Hook hook, HookType hookType, std::source_location sourceLocation = std::source_location::current());

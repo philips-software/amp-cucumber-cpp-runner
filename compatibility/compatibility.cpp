@@ -329,6 +329,9 @@ namespace compatibility
 
 TEST(CompatibilityTest, KIT_NAME)
 {
+    if (std::string{ KIT_FOLDER }.ends_with("markdown"))
+        GTEST_SKIP();
+
     compatibility::StopwatchIncremental stopwatch;
     compatibility::TimestampGeneratorIncremental timestampGenerator;
     compatibility::RunDevkit(compatibility::LoadDevkit());

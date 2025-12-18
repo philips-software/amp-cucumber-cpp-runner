@@ -32,9 +32,4 @@ namespace cucumber_cpp::library::engine
     {
         // CucumberTestServer::Instance()->RunStep(step, cucumber::messages::pickle_step_type::OUTCOME);
     }
-
-    void Step::Pending(const std::string& message, std::source_location current) noexcept(false)
-    {
-        throw StepPending{ message, current };
-    }
 }

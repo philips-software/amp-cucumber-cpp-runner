@@ -10,6 +10,7 @@
 #include <istream>
 #include <iterator>
 #include <optional>
+#include <source_location>
 #include <string>
 #include <utility>
 #include <variant>
@@ -96,6 +97,16 @@ namespace cucumber_cpp::library::engine
                                    .mediaType = LinkMediaType,
                                    .fileName = std::move(title),
                                });
+    }
+
+    void ExecutionContext::Skipped(const std::string& message, std::source_location current) noexcept(false)
+    {
+        throw StepSkipped{ message, current };
+    }
+
+    void ExecutionContext::Pending(const std::string& message, std::source_location current) noexcept(false)
+    {
+        throw StepPending{ message, current };
     }
 
     void ExecutionContext::Attach(std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType)

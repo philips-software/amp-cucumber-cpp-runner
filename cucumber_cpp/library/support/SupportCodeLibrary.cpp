@@ -21,9 +21,10 @@ namespace std
     }
 }
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
-    std::strong_ordering operator<=>(const HookRegistration::Entry& left, const HookRegistration::Entry& right)
+
+    std::strong_ordering operator<=>(const HookEntry& left, const HookEntry& right)
     {
         return left.sourceLocation <=> right.sourceLocation;
     }
@@ -32,10 +33,7 @@ namespace cucumber_cpp::library
     {
         return left.sourceLocation <=> right.sourceLocation;
     }
-}
 
-namespace cucumber_cpp::library::support
-{
     std::strong_ordering operator<=>(const Entry& left, const Entry& right)
     {
         constexpr static auto sourceLocationVisitor = [](const auto& entry)
@@ -79,28 +77,28 @@ namespace cucumber_cpp::library::support
         return { allSteps.begin(), allSteps.end() };
     }
 
-    std::vector<HookRegistration::Entry> DefinitionRegistration::GetHooks()
+    std::vector<HookEntry> DefinitionRegistration::GetHooks()
     {
         auto allSteps = registry | std::views::values | std::views::filter([](const Entry& entry)
                                                             {
-                                                                return std::holds_alternative<HookRegistration::Entry>(entry);
+                                                                return std::holds_alternative<HookEntry>(entry);
                                                             }) |
                         std::views::transform([](const Entry& entry)
                             {
-                                return std::get<HookRegistration::Entry>(entry);
+                                return std::get<HookEntry>(entry);
                             });
         return { allSteps.begin(), allSteps.end() };
     }
 
     std::size_t DefinitionRegistration::Register(Hook hook, HookType hookType, HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(sourceLocation, HookRegistration::Entry{ hookType, hook.tagExpression, factory, sourceLocation });
+        registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
         return registry.size();
     }
 
     std::size_t DefinitionRegistration::Register(GlobalHook hook, HookType hookType, HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(sourceLocation, HookRegistration::Entry{ hookType, "", factory, sourceLocation });
+        registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
         return registry.size();
     }
 

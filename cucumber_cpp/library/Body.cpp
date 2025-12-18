@@ -2,6 +2,7 @@
 #include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "gtest/gtest.h"
 #include <chrono>
@@ -56,6 +57,18 @@ namespace cucumber_cpp::library
         {
             support::Stopwatch::Instance().Start();
             Execute(args);
+        }
+        catch (const engine::StepSkipped& e)
+        {
+            testStepResult.status = cucumber::messages::test_step_result_status::SKIPPED;
+            if (!e.message.empty())
+                testStepResult.message = e.message;
+        }
+        catch (const engine::StepPending& e)
+        {
+            testStepResult.status = cucumber::messages::test_step_result_status::PENDING;
+            if (!e.message.empty())
+                testStepResult.message = e.message;
         }
         catch (const FatalError& error)
         {

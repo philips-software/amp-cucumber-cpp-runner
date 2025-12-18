@@ -71,7 +71,7 @@ namespace cucumber_cpp::library::assemble
                     stepMatchArgumentsLists);
             }
 
-            for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags))
+            for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags) | std::views::reverse)
                 testCase.test_steps.emplace_back(hookId, idGenerator->next_id());
 
             broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case = testCase });

@@ -20,18 +20,6 @@ namespace cucumber_cpp::library::engine
 {
     struct Step : ExecutionContext
     {
-        struct StepPending : std::exception
-        {
-            StepPending(std::string message, std::source_location sourceLocation)
-                : message{ std::move(message) }
-                , sourceLocation{ sourceLocation }
-            {
-            }
-
-            std::string message;
-            std::source_location sourceLocation;
-        };
-
         Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString);
         virtual ~Step() = default;
 
@@ -49,8 +37,6 @@ namespace cucumber_cpp::library::engine
         void Given(const std::string& step) const;
         void When(const std::string& step) const;
         void Then(const std::string& step) const;
-
-        [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
 
         std::optional<std::span<const cucumber::messages::pickle_table_row>> table;
         const std::optional<cucumber::messages::pickle_doc_string>& docString;
