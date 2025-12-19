@@ -26,7 +26,7 @@ set(BUILD_SHARED_LIBS  Off CACHE STRING "")
 message(STATUS "CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX_SIMULATE_ID: ${CMAKE_CXX_SIMULATE_ID}")
 
-if (NOT CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
+if (NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND NOT CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
     add_compile_options(-fsanitize=address)
     add_link_options(-fsanitize=address)
 endif()
