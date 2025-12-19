@@ -6,10 +6,12 @@ FetchContent_Declare(
 
 set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL On)
 
-add_compile_options(
-    -Wno-unused-variable
-    -Wno-unused-but-set-variable
-)
+if (NOT CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
+    add_compile_options(
+        -Wno-unused-variable
+        -Wno-unused-but-set-variable
+    )
+endif()
 
 set(CPPTERMINAL_BUILD_EXAMPLES Off CACHE STRING "")
 set(CPPTERMINAL_ENABLE_INSTALL Off CACHE STRING "")
