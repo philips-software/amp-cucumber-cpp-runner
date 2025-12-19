@@ -6,7 +6,7 @@ FetchContent_Declare(
 
 set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL On)
 
-if (NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND NOT CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
+if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
     add_compile_options(
         -Wno-unused-variable
         -Wno-unused-but-set-variable
