@@ -28,7 +28,7 @@ namespace cucumber_cpp::library::api
         {
             envelope.source = {
                 .uri = path.string(),
-                .data = cucumber::gherkin::slurp(path),
+                .data = cucumber::gherkin::slurp(path.string()),
             };
 
             broadcaster.BroadcastEvent(envelope);

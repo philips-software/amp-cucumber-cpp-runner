@@ -11,13 +11,9 @@ endif()
 
 if (CCR_STANDALONE)
     set(CCR_DEFAULTOPT On)
-else()
-    set(CCR_DEFAULTOPT Off)
-endif()
-
-if (CCR_STANDALONE)
     set(CCR_EXCLUDE_FROM_ALL "")
 else()
+    set(CCR_DEFAULTOPT Off)
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
@@ -27,8 +23,13 @@ option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements
 
 set(BUILD_SHARED_LIBS  Off CACHE STRING "")
 
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+message(STATUS "CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CXX_SIMULATE_ID: ${CMAKE_CXX_SIMULATE_ID}")
+
+if (NOT CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
 
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()

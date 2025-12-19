@@ -16,7 +16,7 @@ namespace cucumber_cpp::library::formatter::helper
     namespace
     {
         // to be moved tyo LocationHelpers.hpp
-        std::string FormatLocation(LineAndUri obj, std::optional<std::string> cwd = std::nullopt)
+        std::string FormatLocation(LineAndUri obj, std::optional<std::filesystem::path> cwd = std::nullopt)
         {
             std::string uri = obj.uri;
             if (cwd)

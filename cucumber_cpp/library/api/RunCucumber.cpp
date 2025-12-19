@@ -53,7 +53,7 @@ namespace cucumber_cpp::library::api
                                                      .type = stepDefinition.patternType,
                                                  },
                                                  .source_reference = {
-                                                     .uri = stepDefinition.uri,
+                                                     .uri = stepDefinition.uri.string(),
                                                      .location = cucumber::messages::location{
                                                          .line = stepDefinition.line,
                                                      },

@@ -54,7 +54,7 @@ namespace cucumber_cpp::library::formatter::helper
             {
                 const auto& definition = supportCode.stepRegistry.GetDefinitionById(testStep.step_definition_ids->front());
                 parsedTestStep.actionLocation = {
-                    .uri = definition.uri,
+                    .uri = definition.uri.string(),
                     .line = definition.line,
                 };
             }
@@ -62,7 +62,7 @@ namespace cucumber_cpp::library::formatter::helper
             if (testStep.pickle_step_id)
             {
                 parsedTestStep.location = {
-                    .uri = pickleUri,
+                    .uri = pickleUri.string(),
                     .line = gherkinStepMap.at(pickleStep.ast_node_ids.front()).location.line
                 };
                 parsedTestStep.text = pickleStep.text;
