@@ -98,50 +98,42 @@ namespace cucumber_cpp::library::cucumber_expression
                         const auto actualValue = argument.Name() == "string" ? argument.GetValue<std::string>() : argument.Group().value.value();
                         const auto expectedValue = testdata["expected_args"][i].as<std::string>();
 
-                        if (argument.Name() == "int")
+                        if (argument.Name() == "")
+                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
+
+                        else if (argument.Name() == "int")
                             EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "float")
+                        else if (argument.Name() == "float")
                             EXPECT_THAT(argument.GetValue<float>(), testdata["expected_args"][i].as<float>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "word")
+                        else if (argument.Name() == "word")
                             EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "string")
+                        else if (argument.Name() == "string")
                             EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "bigdecimal")
+                        else if (argument.Name() == "bigdecimal")
                             EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "biginteger")
+                        else if (argument.Name() == "biginteger")
                             EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "byte")
+                        else if (argument.Name() == "byte")
                             EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "short")
+                        else if (argument.Name() == "short")
                             EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "long")
+                        else if (argument.Name() == "long")
                             EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(file, testdata, expression);
 
-                        if (argument.Name() == "double")
+                        else if (argument.Name() == "double")
                             EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatMessage(file, testdata, expression);
 
-                        // if (match[i].type() == typeid(std::string))
-                        //     ASSERT_THAT(std::any_cast<std::string>(match[i]), testdata["expected_args"][i].as<std::string>())
-                        //         << FormatMessage(testdata, expression);
-                        // else if (match[i].type() == typeid(std::int32_t))
-                        //     ASSERT_THAT(std::any_cast<std::int32_t>(match[i]), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(testdata, expression);
-                        // else if (match[i].type() == typeid(std::int64_t))
-                        //     ASSERT_THAT(std::any_cast<std::int64_t>(match[i]), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(testdata, expression);
-                        // else if (match[i].type() == typeid(float))
-                        //     ASSERT_THAT(std::any_cast<float>(match[i]), testdata["expected_args"][i].as<float>()) << FormatMessage(testdata, expression);
-                        // else if (match[i].type() == typeid(double))
-                        //     ASSERT_THAT(std::any_cast<double>(match[i]), testdata["expected_args"][i].as<double>()) << FormatMessage(testdata, expression);
-                        // else
-                        //     FAIL() << "Unknown type: " << match[i].type().name() << " for:\n"
-                        //            << FormatMessage(testdata, expression);
+                        else
+                            FAIL() << "Unknown type: " << argument.Name() << " for:\n"
+                                   << FormatMessage(file, testdata, expression);
                     }
                 }
             }
