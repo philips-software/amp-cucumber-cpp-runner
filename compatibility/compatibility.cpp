@@ -65,25 +65,18 @@ namespace compatibility
                 auto& key = jsonIter.key();
                 auto& value = jsonIter.value();
 
-                if (key == "parameterTypeName" && value.get<std::string>().empty())
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "exception")
+                if (key == "exception")
                     jsonIter = json.erase(jsonIter);
                 else if (key == "message")
                     jsonIter = json.erase(jsonIter);
                 else if (key == "line")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "start")
                     jsonIter = json.erase(jsonIter);
                 else if (key == "snippets")
                     jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
                     SanitizeExpectedJson(value);
-                    if (value.size() == 0)
-                        jsonIter = json.erase(jsonIter);
-                    else
-                        ++jsonIter;
+                    ++jsonIter;
                 }
                 else if (value.is_array())
                 {
@@ -95,16 +88,10 @@ namespace compatibility
                         if (item.is_object())
                             SanitizeExpectedJson(item);
 
-                        if (item.size() == 0)
-                            valueIter = value.erase(valueIter);
-                        else
-                            ++valueIter;
+                        ++valueIter;
                     }
 
-                    if (value.size() == 0)
-                        jsonIter = json.erase(jsonIter);
-                    else
-                        ++jsonIter;
+                    ++jsonIter;
                 }
                 else if (key == "uri")
                 {
@@ -124,9 +111,7 @@ namespace compatibility
                 auto& key = jsonIter.key();
                 auto& value = jsonIter.value();
 
-                if (key == "parameterTypeName" && value.get<std::string>().empty())
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "exception")
+                if (key == "exception")
                     jsonIter = json.erase(jsonIter);
                 else if (key == "message")
                     jsonIter = json.erase(jsonIter);
@@ -137,10 +122,7 @@ namespace compatibility
                 else if (value.is_object())
                 {
                     SanitizeActualJson(value);
-                    if (value.size() == 0)
-                        jsonIter = json.erase(jsonIter);
-                    else
-                        ++jsonIter;
+                    ++jsonIter;
                 }
                 else if (value.is_array())
                 {
@@ -152,16 +134,10 @@ namespace compatibility
                         if (item.is_object())
                             SanitizeActualJson(item);
 
-                        if (item.size() == 0)
-                            valueIter = value.erase(valueIter);
-                        else
-                            ++valueIter;
+                        ++valueIter;
                     }
 
-                    if (value.size() == 0)
-                        jsonIter = json.erase(jsonIter);
-                    else
-                        ++jsonIter;
+                    ++jsonIter;
                 }
                 else
                     ++jsonIter;

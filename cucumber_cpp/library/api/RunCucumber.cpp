@@ -15,6 +15,7 @@
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <gtest/gtest.h>
@@ -49,6 +50,12 @@ namespace cucumber_cpp::library::api
                     },
                 });
             }
+        }
+
+        void EmitUndefinedParameters(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        {
+            for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
+                broadcaster.BroadcastEvent({ .undefined_parameter_type = parameter });
         }
 
         void EmitStepDefinitions(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
@@ -100,11 +107,11 @@ namespace cucumber_cpp::library::api
         void EmitSupportCodeMessages(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
-            // undefined parameters
 
             support::DefinitionRegistration::Instance().LoadIds(idGenerator);
-
             supportCodeLibrary.stepRegistry.LoadSteps();
+
+            EmitUndefinedParameters(supportCodeLibrary, broadcaster);
             EmitStepDefinitions(supportCodeLibrary, broadcaster, idGenerator);
 
             supportCodeLibrary.hookRegistry.LoadHooks();
@@ -117,10 +124,16 @@ namespace cucumber_cpp::library::api
     {
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
-        StepRegistry stepRegistry{ parameterRegistry, idGenerator };
+        support::UndefinedParameters undefinedParameters;
+        StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
         HookRegistry hookRegistry{ idGenerator };
 
-        support::SupportCodeLibrary supportCodeLibrary{ .hookRegistry = hookRegistry, .stepRegistry = stepRegistry, .parameterRegistry = parameterRegistry };
+        support::SupportCodeLibrary supportCodeLibrary{
+            .hookRegistry = hookRegistry,
+            .stepRegistry = stepRegistry,
+            .parameterRegistry = parameterRegistry,
+            .undefinedParameters = undefinedParameters,
+        };
 
         formatter::helper::EventDataCollector eventDataCollector{ broadcaster };
         formatter::PrettyPrinter prettyPrinter{ supportCodeLibrary, broadcaster, eventDataCollector };

@@ -75,7 +75,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         return {
             .children = std::vector<cucumber::messages::group>(children.begin(), children.end()),
-            // .start = value.first - match.prefix().first,
+            .start = match[groupIndex].matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
             .value = value,
         };
     }

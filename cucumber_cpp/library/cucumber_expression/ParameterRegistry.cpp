@@ -52,15 +52,12 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        // const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
-        // const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
-        const static std::string stringRegex{ R"__("([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)')__" };
+        const static std::string stringRegex{ R"__("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
         AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
         AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
         AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
-        // AddBuiltinParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
         AddBuiltinParameter("string", { stringRegex }, CreateStringConverter());
         AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
         AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());

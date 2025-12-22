@@ -6,6 +6,7 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include <compare>
 #include <cstddef>
 #include <cstdint>
@@ -71,6 +72,7 @@ namespace cucumber_cpp::library::support
         HookRegistry& hookRegistry;
         StepRegistry& stepRegistry;
         cucumber_expression::ParameterRegistry& parameterRegistry;
+        UndefinedParameters& undefinedParameters;
     };
 
     using Entry = std::variant<HookEntry, StepStringRegistration::Entry>;

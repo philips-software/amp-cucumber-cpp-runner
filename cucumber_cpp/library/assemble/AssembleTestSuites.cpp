@@ -61,7 +61,7 @@ namespace cucumber_cpp::library::assemble
                         stepDefinitionIds.push_back(definition.id);
                         auto& argumentList = stepMatchArgumentsLists.emplace_back();
                         for (const auto& result : *match)
-                            argumentList.step_match_arguments.emplace_back(result.Group(), result.Name());
+                            argumentList.step_match_arguments.emplace_back(result.Group(), result.Name().empty() ? std::nullopt : std::make_optional(result.Name()));
                     }
                 }
 

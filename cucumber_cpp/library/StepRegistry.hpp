@@ -12,6 +12,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <any>
 #include <cstddef>
@@ -95,7 +96,7 @@ namespace cucumber_cpp::library
             const std::uint32_t& used;
         };
 
-        explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, cucumber::gherkin::id_generator_ptr idGenerator);
+        explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::id_generator_ptr idGenerator);
 
         void LoadSteps();
 
@@ -114,6 +115,7 @@ namespace cucumber_cpp::library
         void Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
 
         cucumber_expression::ParameterRegistry& parameterRegistry;
+        support::UndefinedParameters& undefinedParameters;
         cucumber::gherkin::id_generator_ptr idGenerator;
 
         std::list<Definition> registry;

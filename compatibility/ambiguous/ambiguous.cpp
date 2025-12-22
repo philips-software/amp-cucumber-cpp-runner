@@ -6,7 +6,7 @@ STEP(R"(^a (.*?) with (.*?)$)", (const std::string& arg1, const std::string& arg
     // no-op
 }
 
-STEP(R"(^a step with (.*)$)", (const std::string& arg1))
+STEP(R"(^a step with (.*?)$)", (const std::string& arg1))
 {
     // no-op
 }
