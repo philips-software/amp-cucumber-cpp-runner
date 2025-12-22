@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::cucumber_expression
         static std::vector<Argument> BuildArguments(const cucumber::messages::group& group, std::span<const Parameter> parameters);
 
         template<class T>
-        T GetValue()
+        T GetValue() const
         {
             return ConverterTypeMap<T>::Instance().at(parameter.name)(group);
         }

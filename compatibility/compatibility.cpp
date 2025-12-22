@@ -310,6 +310,7 @@ namespace compatibility
                 },
                 .runtime = {
                     .retry = devkit.retry,
+                    .strict = true,
                 },
             };
 

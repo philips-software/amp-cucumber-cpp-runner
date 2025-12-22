@@ -23,26 +23,28 @@ namespace cucumber_cpp::library::cucumber_expression
         template<class T>
         std::function<T(const cucumber::messages::group&)> CreateStreamConverter()
         {
-            return [](const cucumber::messages::group& matches)
+            return [](const cucumber::messages::group& matches) -> T
             {
-                return StringTo<T>(matches.value.value());
+                if (matches.value.has_value())
+                    return StringTo<T>(matches.value.value());
+                return {};
             };
         };
-    }
 
-    std::function<std::string(const cucumber::messages::group&)> CreateStringConverter()
-    {
-        return [](const cucumber::messages::group& matches)
+        std::function<std::string(const cucumber::messages::group&)> CreateStringConverter()
         {
-            std::string str = matches.children.front().value.has_value()
-                                  ? matches.children.front().value.value()
-                                  : matches.children.back().value.value();
+            return [](const cucumber::messages::group& matches)
+            {
+                std::string str = matches.children.front().value.has_value()
+                                      ? matches.children.front().value.value()
+                                      : matches.children.back().value.value();
 
-            str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
-            str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
+                str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
+                str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
 
-            return str;
-        };
+                return str;
+            };
+        }
     }
 
     ParameterRegistry::ParameterRegistry()
@@ -50,14 +52,16 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
-        const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
+        // const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
+        // const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
+        const static std::string stringRegex{ R"__("([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
         AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
         AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
         AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
-        AddBuiltinParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
+        // AddBuiltinParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
+        AddBuiltinParameter("string", { stringRegex }, CreateStringConverter());
         AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
         AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
         AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
