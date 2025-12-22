@@ -91,12 +91,7 @@ namespace cucumber_cpp::library::cucumber_expression
                     const auto& match = *matchOpt;
                     for (std::size_t i = 0; i < testdata["expected_args"].size(); ++i)
                     {
-                        if (file.ends_with("matches-single-quoted-empty-string-as-empty-string.yaml"))
-                            std::cout << "testme";
-
                         const auto& argument = match[i];
-                        const auto actualValue = argument.Name() == "string" ? argument.GetValue<std::string>() : argument.Group().value.value();
-                        const auto expectedValue = testdata["expected_args"][i].as<std::string>();
 
                         if (argument.Name() == "")
                             EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
