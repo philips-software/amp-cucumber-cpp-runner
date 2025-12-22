@@ -1,15 +1,12 @@
 
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
-#include "cucumber/messages/step_match_arguments_list.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionParser.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <algorithm>
-#include <any>
 #include <format>
-#include <functional>
-#include <iterator>
 #include <optional>
 #include <ranges>
 #include <regex>
@@ -25,8 +22,9 @@ namespace cucumber_cpp::library::cucumber_expression
         : expression{ std::move(expression) }
         , parameterRegistry{ parameterRegistry }
         , pattern{ RewriteToRegex(ExpressionParser{}.Parse(this->expression)) }
-        , regex{ pattern }
-    {}
+        , treeRegexp{ pattern }
+    {
+    }
 
     std::string_view Expression::Source() const
     {
@@ -38,53 +36,13 @@ namespace cucumber_cpp::library::cucumber_expression
         return pattern;
     }
 
-    std::optional<std::vector<std::any>> Expression::Match(const std::string& text) const
+    std::optional<std::vector<Argument>> Expression::MatchToArguments(const std::string& text) const
     {
-        std::smatch smatch;
-        if (!std::regex_search(text, smatch, regex))
+        auto group = treeRegexp.MatchToGroup(text);
+        if (!group.has_value())
             return std::nullopt;
 
-        std::vector<std::any> result;
-        result.reserve(converters.size());
-
-        auto converterIter = converters.begin();
-        auto matchIter = smatch.begin() + 1;
-
-        while (matchIter != smatch.end() && converterIter != converters.end())
-        {
-            const auto stringArgs = converterIter->converter.toStrings({ matchIter, matchIter + converterIter->matches });
-            result.emplace_back(converterIter->converter.toAny(stringArgs));
-            matchIter = std::next(matchIter, converterIter->matches);
-            converterIter = std::next(converterIter);
-        }
-
-        return result;
-    }
-
-    std::optional<cucumber::messages::step_match_arguments_list> Expression::MatchArguments(const std::string& text) const
-    {
-        std::smatch smatch;
-        if (!std::regex_search(text, smatch, regex))
-            return std::nullopt;
-
-        cucumber::messages::step_match_arguments_list result;
-        result.step_match_arguments.reserve(converters.size());
-
-        auto converterIter = converters.begin();
-        auto matchIter = smatch.begin() + 1;
-
-        while (matchIter != smatch.end() && converterIter != converters.end())
-        {
-            auto groups = converterIter->converter.toStrings({ matchIter, matchIter + converterIter->matches });
-            result.step_match_arguments.emplace_back(
-                groups,
-                converterIter->name);
-
-            matchIter = std::next(matchIter, converterIter->matches);
-            converterIter = std::next(converterIter);
-        }
-
-        return result;
+        return Argument::BuildArguments(group.value(), parameters);
     }
 
     std::string Expression::RewriteToRegex(const Node& node)
@@ -181,7 +139,7 @@ namespace cucumber_cpp::library::cucumber_expression
             if (parameter.regex.empty())
                 throw UndefinedParameterTypeError(node, expression, node.Text());
 
-            auto& converter = converters.emplace_back(0u, parameter.converter, parameter.name);
+            parameters.push_back(parameter);
 
             std::string partialRegex{};
             if (parameter.regex.size() == 1)
@@ -193,8 +151,6 @@ namespace cucumber_cpp::library::cucumber_expression
                     partialRegex += R"()|(?:)" + parameterRegex;
                 partialRegex = std::format(R"(((?:{})))", partialRegex);
             }
-
-            converter.matches += std::regex{ partialRegex }.mark_count();
             return partialRegex;
         }
         catch (const std::out_of_range&)

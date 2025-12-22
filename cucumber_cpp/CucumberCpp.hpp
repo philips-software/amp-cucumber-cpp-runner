@@ -4,8 +4,10 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Hooks.hpp"
+#include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/Steps.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "library/cucumber_expression/MatchRange.hpp"
 
 namespace cucumber_cpp
 {

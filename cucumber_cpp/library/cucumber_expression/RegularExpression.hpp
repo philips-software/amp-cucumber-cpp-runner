@@ -3,6 +3,9 @@
 
 #include "cucumber/messages/group.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include <optional>
 #include <ranges>
 #include <regex>
@@ -15,10 +18,18 @@ namespace cucumber_cpp::library::cucumber_expression
 {
     struct RegularExpression
     {
-        explicit RegularExpression(std::string expression)
+        explicit RegularExpression(std::string expression, ParameterRegistry& parameterRegistry)
             : expression{ std::move(expression) }
             , regex{ this->expression }
-        {}
+            , treeRegexp{ this->expression }
+        {
+            auto parameterIters = treeRegexp.RootBuilder().Children() | std::views::transform([&parameterRegistry](const GroupBuilder& groupBuilder) -> Parameter
+                                                                            {
+                                                                                return parameterRegistry.Lookup("");
+                                                                            });
+
+            parameters = { parameterIters.begin(), parameterIters.end() };
+        }
 
         std::string_view Source() const
         {
@@ -30,39 +41,21 @@ namespace cucumber_cpp::library::cucumber_expression
             return expression;
         }
 
-        std::optional<std::vector<std::string>> Match(const std::string& text) const
+        std::optional<std::vector<Argument>> MatchToArguments(const std::string& text) const
         {
-            std::smatch smatch;
-            if (!std::regex_search(text, smatch, regex))
+            auto group = treeRegexp.MatchToGroup(text);
+            if (!group.has_value())
                 return std::nullopt;
 
-            std::vector<std::string> result{};
-            result.reserve(smatch.size() - 1);
-
-            for (const auto& match : smatch | std::views::drop(1))
-                result.emplace_back(match.str());
-
-            return result;
-        }
-
-        std::optional<cucumber::messages::step_match_arguments_list> MatchArguments(const std::string& text) const
-        {
-            std::smatch smatch;
-            if (!std::regex_search(text, smatch, regex))
-                return {};
-
-            cucumber::messages::step_match_arguments_list result{};
-            result.step_match_arguments.reserve(smatch.size() - 1);
-
-            for (const auto& match : smatch | std::views::drop(1))
-                result.step_match_arguments.emplace_back(cucumber::messages::group{ .value = match.str() });
-
-            return result;
+            return Argument::BuildArguments(group.value(), parameters);
         }
 
     private:
         std::string expression;
         std::regex regex;
+
+        TreeRegexp treeRegexp;
+        std::vector<Parameter> parameters;
     };
 }
 

@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber/messages/exception.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
@@ -48,7 +49,7 @@ namespace cucumber_cpp::library
         cucumber::messages::test_step_result& testStepResult;
     };
 
-    cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
+    cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const cucumber::messages::step_match_arguments_list& args)
     {
         cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
         CucumberResultReporter reportListener{ testStepResult };

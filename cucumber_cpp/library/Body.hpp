@@ -2,6 +2,7 @@
 #define CUCUMBER_CPP_BODY_HPP
 
 #include "cucumber/messages/exception.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include <any>
@@ -31,10 +32,10 @@ namespace cucumber_cpp::library
     {
         virtual ~Body() = default;
 
-        cucumber::messages::test_step_result ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
+        cucumber::messages::test_step_result ExecuteAndCatchExceptions(const cucumber::messages::step_match_arguments_list& args = {});
 
     protected:
-        virtual void Execute(const ExecuteArgs& args) = 0;
+        virtual void Execute(const cucumber::messages::step_match_arguments_list& args) = 0;
     };
 
     template<typename T>

@@ -34,11 +34,20 @@ namespace cucumber_cpp::library::api
                 if (parameter.isBuiltin)
                     continue;
 
-                broadcaster.BroadcastEvent({ .parameter_type = cucumber::messages::parameter_type{
-                                                 .name = parameter.name,
-                                                 .regular_expressions = parameter.regex,
-                                                 .id = idGenerator->next_id(),
-                                             } });
+                broadcaster.BroadcastEvent({
+                    .parameter_type = cucumber::messages::parameter_type{
+                        .name = parameter.name,
+                        .regular_expressions = parameter.regex,
+                        .use_for_snippets = parameter.useForSnippets,
+                        .id = idGenerator->next_id(),
+                        .source_reference = cucumber::messages::source_reference{
+                            .uri = parameter.location.file_name(),
+                            .location = cucumber::messages::location{
+                                .line = parameter.location.line(),
+                            },
+                        },
+                    },
+                });
             }
         }
 
@@ -90,10 +99,10 @@ namespace cucumber_cpp::library::api
 
         void EmitSupportCodeMessages(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
-            support::DefinitionRegistration::Instance().LoadIds(idGenerator);
-
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
             // undefined parameters
+
+            support::DefinitionRegistration::Instance().LoadIds(idGenerator);
 
             supportCodeLibrary.stepRegistry.LoadSteps();
             EmitStepDefinitions(supportCodeLibrary, broadcaster, idGenerator);

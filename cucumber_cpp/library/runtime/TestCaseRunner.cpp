@@ -7,6 +7,7 @@
 #include "cucumber/messages/pickle_step.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_match_argument.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/suggestion.hpp"
 #include "cucumber/messages/test_case.hpp"
 #include "cucumber/messages/test_case_finished.hpp"
@@ -55,27 +56,6 @@ namespace cucumber_cpp::library::runtime
         //         return { seconds, nanos };
         // }
 
-        std::vector<std::any> BuildExpressionParameters(std::span<const cucumber::messages::step_match_argument> arguments, cucumber_expression::ParameterRegistry& parameterRegistry)
-        {
-            std::vector<std::any> parameters;
-
-            for (const auto& argument : arguments)
-            {
-                const auto parameter = parameterRegistry.Lookup(*argument.parameter_type_name);
-                parameters.push_back(parameter.converter.toAny(argument.group));
-            }
-
-            return parameters;
-        }
-
-        std::vector<std::string> BuildRegularParameters(std::span<const cucumber::messages::step_match_argument> arguments)
-        {
-            const auto transformedArguments = arguments | std::views::transform([](const auto& argument)
-                                                              {
-                                                                  return argument.group.value.value();
-                                                              });
-            return { transformedArguments.begin(), transformedArguments.end() };
-        }
     }
 
     TestCaseRunner::TestCaseRunner(util::Broadcaster& broadcaster,
@@ -241,16 +221,6 @@ namespace cucumber_cpp::library::runtime
         {
             const auto& definition = stepDefinitions.front();
 
-            std::variant<std::vector<std::string>, std::vector<std::any>> parameters{};
-
-            if (!testStep.step_match_arguments_lists->empty())
-            {
-                if (std::holds_alternative<cucumber_expression::Expression>(definition.regex))
-                    parameters = BuildExpressionParameters(testStep.step_match_arguments_lists->front().step_match_arguments, supportCodeLibrary.parameterRegistry);
-                else
-                    parameters = BuildRegularParameters(testStep.step_match_arguments_lists->front().step_match_arguments);
-            }
-
             const auto toOptionalTable = [](const cucumber::messages::pickle_step& pickleStep) -> std::optional<std::span<const cucumber::messages::pickle_table_row>>
             {
                 if (pickleStep.argument && pickleStep.argument->data_table)
@@ -258,7 +228,7 @@ namespace cucumber_cpp::library::runtime
                 return std::nullopt;
             };
 
-            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), parameters);
+            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), testStep.step_match_arguments_lists->front());
             stepResults.push_back(result);
         }
 
@@ -276,7 +246,7 @@ namespace cucumber_cpp::library::runtime
         return finalStepResult;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<Body> body, const ExecuteArgs& args)
+    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<Body> body, const cucumber::messages::step_match_arguments_list& args)
     {
         return body->ExecuteAndCatchExceptions(args);
     }

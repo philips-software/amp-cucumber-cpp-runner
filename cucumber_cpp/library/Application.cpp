@@ -156,7 +156,7 @@ namespace cucumber_cpp::library
         return programContextRef;
     }
 
-    cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
+    cucumber_expression::ParameterRegistry& Application::ParameterRegistration()
     {
         return parameterRegistry;
     }

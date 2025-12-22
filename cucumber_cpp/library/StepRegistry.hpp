@@ -5,9 +5,9 @@
 #include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
-#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
@@ -99,8 +99,7 @@ namespace cucumber_cpp::library
 
         void LoadSteps();
 
-        [[nodiscard]] StepMatch Query(const std::string& expression);
-        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<cucumber::messages::step_match_arguments_list>> FindDefinitions(const std::string& expression);
+        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> FindDefinitions(const std::string& expression);
 
         [[nodiscard]] std::size_t Size() const;
 

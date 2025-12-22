@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::assemble
 
             for (const auto& step : pickleSource.pickle->steps)
             {
-                auto definitions = supportCodeLibrary.stepRegistry.FindDefinitions(step.text);
+                // auto definitions = supportCodeLibrary.stepRegistry.FindDefinitions(step.text);
                 const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
 
                 std::vector<std::string> stepDefinitionIds;
@@ -55,12 +55,13 @@ namespace cucumber_cpp::library::assemble
 
                 for (const auto& definition : stepDefinitions)
                 {
-                    auto optionalStepMatchArgumentsList = std::visit(cucumber_expression::MatchArgumentsVisitor{ step.text }, definition.regex);
-
-                    if (optionalStepMatchArgumentsList)
+                    const auto match = std::visit(cucumber_expression::MatchVisitor{ step.text }, definition.regex);
+                    if (match)
                     {
                         stepDefinitionIds.push_back(definition.id);
-                        stepMatchArgumentsLists.push_back(*optionalStepMatchArgumentsList);
+                        auto& argumentList = stepMatchArgumentsLists.emplace_back();
+                        for (const auto& result : *match)
+                            argumentList.step_match_arguments.emplace_back(result.Group(), result.Name());
                     }
                 }
 

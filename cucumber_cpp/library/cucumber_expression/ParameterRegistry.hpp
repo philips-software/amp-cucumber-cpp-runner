@@ -2,6 +2,7 @@
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
 #include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include <algorithm>
 #include <any>
@@ -12,6 +13,8 @@
 #include <format>
 #include <functional>
 #include <map>
+#include <optional>
+#include <source_location>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -94,39 +97,32 @@ namespace cucumber_cpp::library::cucumber_expression
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
     }
 
-    struct ParameterConversion
+    template<class T>
+    using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
+
+    template<class T>
+    struct ConverterTypeMap
     {
-        std::function<cucumber::messages::group(MatchRange)> toStrings;
-        std::function<std::any(const cucumber::messages::group&)> toAny;
+        static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
     };
 
-    struct Converter
+    template<class T>
+    std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
     {
-        Converter(std::size_t matches, ParameterConversion converter, std::string name);
-
-        std::string name;
-        std::size_t matches;
-        ParameterConversion converter;
-    };
+        static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
+        return typeMap;
+    }
 
     struct Parameter
     {
         std::string name;
         std::vector<std::string> regex;
-        ParameterConversion converter;
         bool isBuiltin{ false };
+        bool useForSnippets{ false };
+        std::source_location location;
     };
 
-    struct ParameterRegistration
-    {
-    protected:
-        ~ParameterRegistration() = default;
-
-    public:
-        virtual void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter) = 0;
-    };
-
-    struct ParameterRegistry : ParameterRegistration
+    struct ParameterRegistry
     {
         ParameterRegistry();
 
@@ -136,14 +132,44 @@ namespace cucumber_cpp::library::cucumber_expression
 
         const Parameter& Lookup(const std::string& name) const;
 
-        void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter) override;
+        template<class T>
+        void AddParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location = std::source_location::current());
+
+        void AssertParameterIsUnique(const std::string& name) const;
 
     private:
-        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter);
-        void AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter, bool isBuiltin);
+        void AddParameter(Parameter parameter);
+
+        template<class T>
+        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location = std::source_location::current());
+
+        template<class T>
+        void AddParameter(Parameter parameter, std::function<T(const cucumber::messages::group&)> converter);
 
         std::map<std::string, const Parameter> parametersByName;
     };
+
+    template<class T>
+    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
+    {
+        AddParameter(Parameter{ name, regex, false, false, location }, converter);
+    }
+
+    template<class T>
+    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
+    {
+        AddParameter(Parameter{ name, regex, true, false, location }, converter);
+    }
+
+    template<class T>
+    void ParameterRegistry::AddParameter(Parameter parameter, std::function<T(const cucumber::messages::group&)> converter)
+    {
+        AssertParameterIsUnique(parameter.name);
+
+        AddParameter(parameter);
+
+        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+    }
 }
 
 #endif

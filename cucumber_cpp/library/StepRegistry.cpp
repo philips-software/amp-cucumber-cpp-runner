@@ -2,6 +2,7 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
@@ -34,38 +35,20 @@ namespace cucumber_cpp::library
             Register(matcher.id, matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
     }
 
-    StepMatch StepRegistry::Query(const std::string& expression)
+    [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> StepRegistry::FindDefinitions(const std::string& expression)
     {
-        std::vector<StepMatch> matches;
-
-        for (auto& [id, iter] : idToDefinitionMap)
-        {
-            auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, iter->regex);
-            if (match)
-            {
-                matches.emplace_back(iter->factory, *match, std::visit(cucumber_expression::PatternVisitor{}, iter->regex));
-                ++iter->used;
-            }
-        }
-
-        if (matches.empty())
-            throw StepNotFoundError{};
-
-        if (matches.size() > 1)
-            throw AmbiguousStepError{ std::move(matches) };
-
-        return std::move(matches.front());
-    }
-
-    [[nodiscard]] std::pair<std::vector<std::string>, std::vector<cucumber::messages::step_match_arguments_list>> StepRegistry::FindDefinitions(const std::string& expression)
-    {
-        std::pair<std::vector<std::string>, std::vector<cucumber::messages::step_match_arguments_list>> result;
+        std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> result;
+        result.first.reserve(idToDefinitionMap.size());
+        result.second.reserve(idToDefinitionMap.size());
 
         for (auto& [id, iter] : idToDefinitionMap)
         {
             const auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, iter->regex);
             if (match)
+            {
                 result.first.push_back(id);
+                result.second.push_back(match.value());
+            }
         }
 
         return result;
@@ -109,12 +92,12 @@ namespace cucumber_cpp::library
                                    ? cucumber_expression::Matcher{
                                          std::in_place_type<cucumber_expression::RegularExpression>,
                                          matcher,
+                                         parameterRegistry,
                                      }
                                    : cucumber_expression::Matcher{
                                          std::in_place_type<cucumber_expression::Expression>,
                                          matcher,
                                          parameterRegistry,
-
                                      };
         auto cucumberMatcherType = std::holds_alternative<cucumber_expression::RegularExpression>(cucumberMatcher)
                                        ? cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION

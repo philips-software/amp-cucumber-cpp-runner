@@ -1,18 +1,17 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
-#include <any>
 #include <cctype>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <format>
-#include <iostream>
+#include <functional>
 #include <map>
 #include <optional>
 #include <regex>
+#include <source_location>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,49 +21,29 @@ namespace cucumber_cpp::library::cucumber_expression
     namespace
     {
         template<class T>
-        ParameterConversion CreateStreamConverter()
+        std::function<T(const cucumber::messages::group&)> CreateStreamConverter()
         {
-            return { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
-                {
-                    return { .value = matches.begin()->str() };
-                },
-                .toAny = [](const cucumber::messages::group& matches) -> std::any
-                {
-                    return StringTo<T>(matches.value.value());
-                } };
-        }
-
-        ParameterConversion CreateStringConverter()
-        {
-            return { .toStrings = [](const MatchRange& matches) -> cucumber::messages::group
-                {
-                    return {
-                        .children = {
-                            matches[1].matched ? cucumber::messages::group{ .value = matches[1].str() } : cucumber::messages::group{},
-                            matches[3].matched ? cucumber::messages::group{ .value = matches[3].str() } : cucumber::messages::group{},
-                        },
-                        .value = matches[0].str(),
-                    };
-                },
-                .toAny = [](const cucumber::messages::group& matches) -> std::any
-                {
-                    std::string str = matches.children.front().value.has_value()
-                                          ? matches.children.front().value.value()
-                                          : matches.children.back().value.value();
-
-                    str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
-                    str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
-
-                    return str;
-                } };
-        }
+            return [](const cucumber::messages::group& matches)
+            {
+                return StringTo<T>(matches.value.value());
+            };
+        };
     }
 
-    Converter::Converter(std::size_t matches, ParameterConversion converter, std::string name)
-        : matches{ matches }
-        , converter{ std::move(converter) }
-        , name{ std::move(name) }
-    {}
+    std::function<std::string(const cucumber::messages::group&)> CreateStringConverter()
+    {
+        return [](const cucumber::messages::group& matches)
+        {
+            std::string str = matches.children.front().value.has_value()
+                                  ? matches.children.front().value.value()
+                                  : matches.children.back().value.value();
+
+            str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
+            str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
+
+            return str;
+        };
+    }
 
     ParameterRegistry::ParameterRegistry()
     {
@@ -89,6 +68,10 @@ namespace cucumber_cpp::library::cucumber_expression
 
         // extension
         AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+
+        const auto& parameterRegistration = cucumber_cpp::library::ParameterRegistration::Instance();
+        for (const auto& parameter : parameterRegistration.GetRegisteredParameters())
+            AddParameter(Parameter{ parameter.params.name, { std::string(parameter.params.regex) }, false, parameter.params.useForSnippets, parameter.location });
     }
 
     const std::map<std::string, const Parameter>& ParameterRegistry::GetParameters() const
@@ -101,19 +84,8 @@ namespace cucumber_cpp::library::cucumber_expression
         return parametersByName.at(name);
     }
 
-    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter)
+    void ParameterRegistry::AssertParameterIsUnique(const std::string& name) const
     {
-        AddParameter(name, regex, converter, false);
-    }
-
-    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter)
-    {
-        AddParameter(name, regex, converter, true);
-    }
-
-    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ParameterConversion converter, bool isBuiltin)
-    {
-
         if (parametersByName.contains(name))
         {
             if (name.empty())
@@ -121,7 +93,12 @@ namespace cucumber_cpp::library::cucumber_expression
             else
                 throw CucumberExpressionError{ std::format("There is already a parameter with name {}", name) };
         }
+    }
 
-        parametersByName.emplace(name, Parameter{ name, regex, converter, isBuiltin });
+    void ParameterRegistry::AddParameter(Parameter parameter)
+    {
+        AssertParameterIsUnique(parameter.name);
+
+        parametersByName.emplace(parameter.name, parameter);
     }
 }

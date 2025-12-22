@@ -5,6 +5,7 @@
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_case.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
@@ -43,7 +44,7 @@ namespace cucumber_cpp::library::runtime
 
         cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
-        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<Body> body, const ExecuteArgs& args = {});
+        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<Body> body, const cucumber::messages::step_match_arguments_list& args = {});
         cucumber::messages::test_step_result GetWorstStepResult() const;
 
         bool ShouldSkipHook(bool isBeforeHook);
