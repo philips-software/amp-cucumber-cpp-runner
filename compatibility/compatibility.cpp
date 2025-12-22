@@ -309,7 +309,7 @@ namespace compatibility
                     .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
                 },
                 .runtime = {
-                    .retry = devkit.retry,
+                    .retry = std::string{ KIT_STRING }.starts_with("retry") ? 2u : 0u,
                     .strict = true,
                 },
             };
