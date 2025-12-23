@@ -19,7 +19,7 @@ namespace cucumber_cpp::library::runtime
         cucumber::gherkin::id_generator_ptr idGenerator,
         const std::list<support::PickleSource>& sourcedPickles,
         const support::RunOptions::Runtime& options,
-        support::SupportCodeLibrary supportCodeLibrary,
+        support::SupportCodeLibrary& supportCodeLibrary,
         Context& programContext)
         : testRunStartedId{ testRunStartedId }
         , broadcaster{ broadcaster }

@@ -74,7 +74,7 @@ namespace cucumber_cpp::library::runtime
             util::Broadcaster& broadcaster,
             cucumber::gherkin::id_generator_ptr idGenerator,
             const support::RunOptions::Runtime& options,
-            support::SupportCodeLibrary supportCodeLibrary,
+            support::SupportCodeLibrary& supportCodeLibrary,
             Context& programContext);
 
         std::vector<cucumber::messages::test_step_result> RunBeforeAllHooks();
@@ -95,7 +95,7 @@ namespace cucumber_cpp::library::runtime
         util::Broadcaster& broadcaster;
         cucumber::gherkin::id_generator_ptr idGenerator;
         const support::RunOptions::Runtime& options;
-        support::SupportCodeLibrary supportCodeLibrary;
+        support::SupportCodeLibrary& supportCodeLibrary;
         Context& programContext;
     };
 }

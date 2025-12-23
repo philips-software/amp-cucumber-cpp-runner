@@ -8,7 +8,7 @@
 
 namespace cucumber_cpp::library::formatter
 {
-    Formatter::Formatter(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, const helper::EventDataCollector& eventDataCollector, std::ostream& outputStream)
+    Formatter::Formatter(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const helper::EventDataCollector& eventDataCollector, std::ostream& outputStream)
         : util::Listener{ broadcaster, [this](const cucumber::messages::envelope& envelope)
             {
                 OnEnvelope(envelope);

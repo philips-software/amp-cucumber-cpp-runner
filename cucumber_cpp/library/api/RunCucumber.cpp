@@ -2,6 +2,7 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
+#include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
@@ -28,7 +29,7 @@ namespace cucumber_cpp::library::api
 {
     namespace
     {
-        void EmitParameters(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitParameters(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
@@ -52,13 +53,13 @@ namespace cucumber_cpp::library::api
             }
         }
 
-        void EmitUndefinedParameters(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitUndefinedParameters(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
                 broadcaster.BroadcastEvent({ .undefined_parameter_type = parameter });
         }
 
-        void EmitStepDefinitions(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitStepDefinitions(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
@@ -78,7 +79,7 @@ namespace cucumber_cpp::library::api
             }
         }
 
-        void EmitTestCaseHooks(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestCaseHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
 
@@ -91,7 +92,7 @@ namespace cucumber_cpp::library::api
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
-        void EmitTestRunHooks(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestRunHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
 
@@ -104,7 +105,7 @@ namespace cucumber_cpp::library::api
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
-        void EmitSupportCodeMessages(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitSupportCodeMessages(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
 
@@ -112,7 +113,7 @@ namespace cucumber_cpp::library::api
             supportCodeLibrary.stepRegistry.LoadSteps();
 
             EmitUndefinedParameters(supportCodeLibrary, broadcaster);
-            EmitStepDefinitions(supportCodeLibrary, broadcaster, idGenerator);
+            EmitStepDefinitions(supportCodeLibrary, broadcaster);
 
             supportCodeLibrary.hookRegistry.LoadHooks();
             EmitTestCaseHooks(supportCodeLibrary, broadcaster);

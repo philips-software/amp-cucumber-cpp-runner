@@ -14,13 +14,13 @@ namespace cucumber_cpp::library::formatter
     struct Formatter
         : util::Listener
     {
-        Formatter(support::SupportCodeLibrary supportCodeLibrary, util::Broadcaster& broadcaster, const helper::EventDataCollector& eventDataCollector, std::ostream& outputStream = std::cout);
+        Formatter(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const helper::EventDataCollector& eventDataCollector, std::ostream& outputStream = std::cout);
         virtual ~Formatter() = default;
 
     protected:
         virtual void OnEnvelope(const cucumber::messages::envelope& envelope) = 0;
 
-        support::SupportCodeLibrary supportCodeLibrary;
+        support::SupportCodeLibrary& supportCodeLibrary;
         util::Broadcaster& broadcaster;
         const helper::EventDataCollector& eventDataCollector;
         std::ostream& outputStream;

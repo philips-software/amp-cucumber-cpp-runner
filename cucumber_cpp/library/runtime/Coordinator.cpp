@@ -18,7 +18,7 @@ namespace cucumber_cpp::library::runtime
         util::Broadcaster& broadcaster,
         cucumber::gherkin::id_generator_ptr idGenerator,
         std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
-        support::SupportCodeLibrary supportCodeLibrary)
+        support::SupportCodeLibrary& supportCodeLibrary)
         : testRunStartedId{ testRunStartedId }
         , broadcaster{ broadcaster }
         , idGenerator{ idGenerator }

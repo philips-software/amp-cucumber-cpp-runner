@@ -40,19 +40,19 @@ namespace cucumber_cpp::library::assemble
             return pair.second.has_value();
         }
 
-        void AssembleBeforeHooks(support::SupportCodeLibrary supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
+        void AssembleBeforeHooks(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::before, pickleSource.pickle->tags))
                 testCase.test_steps.emplace_back(hookId, idGenerator->next_id());
         }
 
-        void AssembleAfterHooks(support::SupportCodeLibrary supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
+        void AssembleAfterHooks(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags) | std::views::reverse)
                 testCase.test_steps.emplace_back(hookId, idGenerator->next_id());
         }
 
-        void AssembleSteps(support::SupportCodeLibrary supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
+        void AssembleSteps(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& step : pickleSource.pickle->steps)
             {
@@ -77,7 +77,7 @@ namespace cucumber_cpp::library::assemble
             }
         }
 
-        void AssembleTestSteps(support::SupportCodeLibrary supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
+        void AssembleTestSteps(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             AssembleBeforeHooks(supportCodeLibrary, pickleSource, testCase, idGenerator);
             AssembleSteps(supportCodeLibrary, pickleSource, testCase, idGenerator);
@@ -85,7 +85,7 @@ namespace cucumber_cpp::library::assemble
         }
     }
 
-    std::vector<AssembledTestSuite> AssembleTestSuites(support::SupportCodeLibrary supportCodeLibrary,
+    std::vector<AssembledTestSuite> AssembleTestSuites(support::SupportCodeLibrary& supportCodeLibrary,
         std::string_view testRunStartedId,
         util::Broadcaster& broadcaster,
         const std::list<support::PickleSource>& sourcedPickles,

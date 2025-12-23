@@ -12,9 +12,9 @@
 
 namespace cucumber_cpp::library::runtime
 {
-    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, support::SupportCodeLibrary supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext);
+    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext);
 
-    std::unique_ptr<support::Runtime> MakeRuntime(const support::RunOptions::Runtime& options, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext);
+    std::unique_ptr<support::Runtime> MakeRuntime(const support::RunOptions::Runtime& options, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext);
 }
 
 #endif

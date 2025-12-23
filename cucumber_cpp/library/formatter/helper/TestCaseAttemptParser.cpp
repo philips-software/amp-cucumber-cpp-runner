@@ -77,7 +77,7 @@ namespace cucumber_cpp::library::formatter::helper
         }
     }
 
-    ParsedTestCaseAttempt ParseTestCaseAttempt(support::SupportCodeLibrary supportCodeLibrary, const TestCaseAttempt& testCaseAttempt)
+    ParsedTestCaseAttempt ParseTestCaseAttempt(support::SupportCodeLibrary& supportCodeLibrary, const TestCaseAttempt& testCaseAttempt)
     {
         const auto& testCase = testCaseAttempt.testCase;
         const auto& pickle = testCaseAttempt.pickle;

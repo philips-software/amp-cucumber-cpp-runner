@@ -31,7 +31,7 @@ namespace cucumber_cpp::library::runtime
             const cucumber::messages::test_case& testCase,
             std::size_t retries,
             bool skip,
-            support::SupportCodeLibrary supportCodeLibrary,
+            support::SupportCodeLibrary& supportCodeLibrary,
             Context& testSuiteContext);
 
         cucumber::messages::test_step_result_status Run();
@@ -58,7 +58,7 @@ namespace cucumber_cpp::library::runtime
         const cucumber::messages::test_case& testCase;
         std::size_t maximumAttempts;
         bool skip;
-        support::SupportCodeLibrary supportCodeLibrary;
+        support::SupportCodeLibrary& supportCodeLibrary;
         Context& testSuiteContext;
 
         std::vector<cucumber::messages::test_step_result> testStepResults;

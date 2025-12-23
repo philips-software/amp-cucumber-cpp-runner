@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::runtime
             util::Broadcaster& broadcaster,
             cucumber::gherkin::id_generator_ptr idGenerator,
             std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
-            support::SupportCodeLibrary supportCodeLibrary);
+            support::SupportCodeLibrary& supportCodeLibrary);
 
         bool Run() override;
 
@@ -26,7 +26,7 @@ namespace cucumber_cpp::library::runtime
         util::Broadcaster& broadcaster;
         cucumber::gherkin::id_generator_ptr idGenerator;
         std::unique_ptr<support::RuntimeAdapter> runtimeAdapter;
-        support::SupportCodeLibrary supportCodeLibrary;
+        support::SupportCodeLibrary& supportCodeLibrary;
     };
 }
 

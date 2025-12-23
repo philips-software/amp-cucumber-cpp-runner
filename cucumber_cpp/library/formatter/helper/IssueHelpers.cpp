@@ -16,7 +16,7 @@
 
 namespace cucumber_cpp::library::formatter::helper
 {
-    std::ostream& FormatIssue(std::ostream& outputStream, std::size_t number, const TestCaseAttempt& testCaseAttempt, support::SupportCodeLibrary supportCodeLibrary, bool printAttachments)
+    std::ostream& FormatIssue(std::ostream& outputStream, std::size_t number, const TestCaseAttempt& testCaseAttempt, support::SupportCodeLibrary& supportCodeLibrary, bool printAttachments)
     {
         using std::operator""sv;
 

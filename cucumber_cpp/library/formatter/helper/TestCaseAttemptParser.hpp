@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::formatter::helper
         std::vector<ParsedTestStep> parsedTestSteps;
     };
 
-    ParsedTestCaseAttempt ParseTestCaseAttempt(support::SupportCodeLibrary supportCodeLibrary, const TestCaseAttempt& testCaseAttempt);
+    ParsedTestCaseAttempt ParseTestCaseAttempt(support::SupportCodeLibrary& supportCodeLibrary, const TestCaseAttempt& testCaseAttempt);
 }
 
 #endif

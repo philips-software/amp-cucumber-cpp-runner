@@ -65,7 +65,7 @@ namespace cucumber_cpp::library::runtime
         const cucumber::messages::test_case& testCase,
         std::size_t retries,
         bool skip,
-        support::SupportCodeLibrary supportCodeLibrary,
+        support::SupportCodeLibrary& supportCodeLibrary,
         Context& testSuiteContext)
         : broadcaster{ broadcaster }
         , idGenerator{ idGenerator }

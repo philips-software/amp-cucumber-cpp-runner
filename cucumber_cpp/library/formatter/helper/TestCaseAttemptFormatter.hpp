@@ -7,7 +7,7 @@
 
 namespace cucumber_cpp::library::formatter::helper
 {
-    std::string FormatTestCaseAttempt(support::SupportCodeLibrary supportCodeLibrary, const TestCaseAttempt& testCaseAttempt, bool printAttachments);
+    std::string FormatTestCaseAttempt(support::SupportCodeLibrary& supportCodeLibrary, const TestCaseAttempt& testCaseAttempt, bool printAttachments);
 }
 
 #endif
