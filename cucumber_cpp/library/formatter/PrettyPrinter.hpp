@@ -19,7 +19,6 @@
 #include "cucumber_cpp/library/formatter/helper/GherkinDocumentParser.hpp"
 #include <cstddef>
 #include <functional>
-#include <gtest/gtest.h>
 #include <map>
 #include <optional>
 #include <set>

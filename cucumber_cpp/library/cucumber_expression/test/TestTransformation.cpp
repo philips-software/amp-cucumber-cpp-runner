@@ -1,4 +1,3 @@
-
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "yaml-cpp/node/node.h"
@@ -10,7 +9,6 @@
 #include <filesystem>
 #include <format>
 #include <gtest/gtest.h>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
