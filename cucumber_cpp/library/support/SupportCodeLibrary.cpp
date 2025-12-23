@@ -55,7 +55,7 @@ namespace cucumber_cpp::library::support
 
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
     {
-        static auto assignGenerator = [&idGenerator](auto& entry)
+        const auto assignGenerator = [&idGenerator](auto& entry)
         {
             entry.id = idGenerator->next_id();
         };
