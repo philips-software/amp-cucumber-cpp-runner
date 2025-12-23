@@ -60,9 +60,10 @@ namespace compatibility
 
         void RemoveIncompatibilities(nlohmann::json& json)
         {
-            for (auto jsonIter = json.begin(); jsonIter != json.end();)
+
+            for (auto jsonIter = json.begin(); jsonIter != json.end(); ++jsonIter)
             {
-                auto& key = jsonIter.key();
+                const auto& key = jsonIter.key();
                 auto& value = jsonIter.value();
 
                 if (key == "exception")
@@ -76,7 +77,6 @@ namespace compatibility
                 else if (value.is_object())
                 {
                     RemoveIncompatibilities(value);
-                    ++jsonIter;
                 }
                 else if (value.is_array())
                 {
@@ -90,8 +90,6 @@ namespace compatibility
 
                         ++valueIter;
                     }
-
-                    ++jsonIter;
                 }
                 else if (key == "data")
                 {
@@ -105,11 +103,7 @@ namespace compatibility
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
                     json[key] = std::filesystem::canonical(uri).string();
-
-                    ++jsonIter;
                 }
-                else
-                    ++jsonIter;
             }
         }
 
