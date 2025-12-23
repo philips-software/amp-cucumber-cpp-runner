@@ -56,7 +56,6 @@ add_subdirectory(cucumber_expression)
 add_subdirectory(formatter)
 add_subdirectory(tag_expression)
 add_subdirectory(engine)
-# add_subdirectory(report)
 add_subdirectory(util)
 
 if (CCR_BUILD_TESTS)
