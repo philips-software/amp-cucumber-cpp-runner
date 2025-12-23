@@ -8,15 +8,16 @@
 
 GIVEN(R"(a background step)")
 {
+    /* no body, example only */
 }
 
 GIVEN(R"(a simple data table)")
 {
-    // std::cout << "row0.col0: " << table[0][0].As<std::string>() << "\n";
-    // std::cout << "row0.col1: " << table[0][1].As<std::string>() << "\n";
+    [[maybe_unused]] const auto row0col0 = table.value()[0].cells[0].value;
+    [[maybe_unused]] const auto row0col1 = table.value()[0].cells[1].value;
 
-    // std::cout << "row1.col0: " << table[1][0].As<std::string>() << "\n";
-    // std::cout << "row1.col1: " << table[1][1].As<std::string>() << "\n";
+    [[maybe_unused]] const auto row1col0 = table.value()[1].cells[0].value;
+    [[maybe_unused]] const auto row1col1 = table.value()[1].cells[1].value;
 }
 
 GIVEN(R"(there are {int} cucumbers)", (std::int32_t num))

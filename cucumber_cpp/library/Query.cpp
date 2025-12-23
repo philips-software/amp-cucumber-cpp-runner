@@ -30,6 +30,7 @@
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include <cstdint>
 #include <format>
+#include <functional>
 #include <map>
 #include <memory>
 #include <span>
@@ -163,7 +164,7 @@ namespace cucumber_cpp::library
         return lineageById.at(pickle.ast_node_ids[0]);
     }
 
-    const Lineage& Query::FindLineageByUri(std::string uri) const
+    const Lineage& Query::FindLineageByUri(const std::string& uri) const
     {
         return lineageByUri.at(uri);
     }
@@ -238,12 +239,12 @@ namespace cucumber_cpp::library
         return lineage.scenario->location;
     }
 
-    const std::map<std::string, cucumber::messages::test_case_started>& Query::TestCaseStarted() const
+    const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& Query::TestCaseStarted() const
     {
         return testCaseStartedById;
     }
 
-    const std::map<std::string, cucumber::messages::test_case_finished>& Query::TestCaseFinishedByTestCaseStartedId() const
+    const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& Query::TestCaseFinishedByTestCaseStartedId() const
     {
         return testCaseFinishedByTestCaseStartedId;
     }
@@ -257,19 +258,19 @@ namespace cucumber_cpp::library
 
     void Query::operator+=(const cucumber::messages::pickle& pickle)
     {
-        pickleById.emplace(pickle.id, pickle);
+        pickleById.try_emplace(pickle.id, pickle);
         for (const auto& pickleStep : pickle.steps)
-            pickleStepById.emplace(pickleStep.id, pickleStep);
+            pickleStepById.try_emplace(pickleStep.id, pickleStep);
     }
 
     void Query::operator+=(const cucumber::messages::hook& hook)
     {
-        hooksById.emplace(hook.id, hook);
+        hooksById.try_emplace(hook.id, hook);
     }
 
     void Query::operator+=(const cucumber::messages::step_definition& stepDefinition)
     {
-        stepDefinitionById.emplace(stepDefinition.id, stepDefinition);
+        stepDefinitionById.try_emplace(stepDefinition.id, stepDefinition);
     }
 
     void Query::operator+=(const cucumber::messages::test_run_started& testRunStarted)
@@ -279,23 +280,23 @@ namespace cucumber_cpp::library
 
     void Query::operator+=(const cucumber::messages::test_run_hook_started& testRunHookStarted)
     {
-        testRunHookStartedById.emplace(testRunHookStarted.id, testRunHookStarted);
+        testRunHookStartedById.try_emplace(testRunHookStarted.id, testRunHookStarted);
     }
 
     void Query::operator+=(const cucumber::messages::test_run_hook_finished& testRunHookFinished)
     {
-        testRunHookFinishedByTestRunHookStartedId.emplace(testRunHookFinished.test_run_hook_started_id, testRunHookFinished);
+        testRunHookFinishedByTestRunHookStartedId.try_emplace(testRunHookFinished.test_run_hook_started_id, testRunHookFinished);
     }
 
     void Query::operator+=(const cucumber::messages::test_case& testCase)
     {
-        auto& testCaseRef = testCaseById.emplace(testCase.id, testCase).first->second;
-        testCaseByPickleId.emplace(testCase.pickle_id, testCaseRef);
+        auto& testCaseRef = testCaseById.try_emplace(testCase.id, testCase).first->second;
+        testCaseByPickleId.try_emplace(testCase.pickle_id, testCaseRef);
 
         for (const auto& testStep : testCase.test_steps)
         {
-            testStepById.emplace(testStep.id, testStep);
-            pickleIdByTestStepId.emplace(testStep.id, testCase.pickle_id);
+            testStepById.try_emplace(testStep.id, testStep);
+            pickleIdByTestStepId.try_emplace(testStep.id, testCase.pickle_id);
 
             if (testStep.pickle_step_id)
             {
@@ -310,7 +311,7 @@ namespace cucumber_cpp::library
 
     void Query::operator+=(const cucumber::messages::test_case_started& testCaseStarted)
     {
-        testCaseStartedById.emplace(testCaseStarted.id, testCaseStarted);
+        testCaseStartedById.try_emplace(testCaseStarted.id, testCaseStarted);
 
         /* reset data? https://github.dev/cucumber/query/blob/f31732e5972c1815614f1d83928a7065e3080dc4/javascript/src/Query.ts#L249 */
     }
@@ -346,7 +347,7 @@ namespace cucumber_cpp::library
 
     void Query::operator+=(const cucumber::messages::test_case_finished& testCaseFinished)
     {
-        testCaseFinishedByTestCaseStartedId.emplace(testCaseFinished.test_case_started_id, testCaseFinished);
+        testCaseFinishedByTestCaseStartedId.try_emplace(testCaseFinished.test_case_started_id, testCaseFinished);
     }
 
     void Query::operator+=(const cucumber::messages::test_run_finished& testRunFinished)
@@ -429,12 +430,12 @@ namespace cucumber_cpp::library
     void Query::operator+=(std::span<const cucumber::messages::step> steps)
     {
         for (const auto& step : steps)
-            stepById.emplace(step.id, step);
+            stepById.try_emplace(step.id, step);
     }
 
     void Query::operator+=(const cucumber::messages::parameter_type& parameterType)
     {
-        auto& ref = parameterTypeById.emplace(parameterType.id, parameterType).first->second;
-        parameterTypeByName.emplace(parameterType.name, ref);
+        auto& ref = parameterTypeById.try_emplace(parameterType.id, parameterType).first->second;
+        parameterTypeByName.try_emplace(parameterType.name, ref);
     }
 }

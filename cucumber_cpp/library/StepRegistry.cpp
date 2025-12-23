@@ -38,13 +38,13 @@ namespace cucumber_cpp::library
             Register(matcher.id, matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
     }
 
-    [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> StepRegistry::FindDefinitions(const std::string& expression)
+    [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> StepRegistry::FindDefinitions(const std::string& expression) const
     {
         std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> result;
         result.first.reserve(idToDefinitionMap.size());
         result.second.reserve(idToDefinitionMap.size());
 
-        for (auto& [id, iter] : idToDefinitionMap)
+        for (const auto& [id, iter] : idToDefinitionMap)
         {
             const auto match = std::visit(cucumber_expression::MatchVisitor{ expression }, iter->regex);
             if (match)
@@ -74,12 +74,12 @@ namespace cucumber_cpp::library
         return list;
     }
 
-    StepFactory StepRegistry::GetFactoryById(std::string id) const
+    StepFactory StepRegistry::GetFactoryById(const std::string& id) const
     {
         return idToDefinitionMap.at(id)->factory;
     }
 
-    StepRegistry::Definition StepRegistry::GetDefinitionById(std::string id) const
+    StepRegistry::Definition StepRegistry::GetDefinitionById(const std::string& id) const
     {
         return *idToDefinitionMap.at(id);
     }

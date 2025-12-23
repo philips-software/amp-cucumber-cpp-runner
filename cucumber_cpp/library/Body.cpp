@@ -27,7 +27,7 @@ namespace cucumber_cpp::library
         {
         }
 
-        void ReportTestPartResult(const testing::TestPartResult& testPartResult)
+        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override
         {
             if (testPartResult.failed())
             {
@@ -71,7 +71,7 @@ namespace cucumber_cpp::library
             if (!e.message.empty())
                 testStepResult.message = e.message;
         }
-        catch (const FatalError& error)
+        catch ([[maybe_unused]] const FatalError& error)
         {
             testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
         }
@@ -95,8 +95,8 @@ namespace cucumber_cpp::library
         auto nanoseconds = support::Stopwatch::Instance().Duration();
         static constexpr std::size_t nanosecondsPerSecond = 1e9;
         testStepResult.duration = {
-            .seconds = static_cast<std::size_t>(nanoseconds.count() / static_cast<std::size_t>(nanosecondsPerSecond)),
-            .nanos = static_cast<std::size_t>(nanoseconds.count() % static_cast<std::size_t>(nanosecondsPerSecond)),
+            .seconds = nanoseconds.count() / nanosecondsPerSecond,
+            .nanos = nanoseconds.count() % nanosecondsPerSecond,
         };
 
         return testStepResult;

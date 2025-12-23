@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -100,14 +101,14 @@ namespace cucumber_cpp::library
 
         void LoadSteps();
 
-        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> FindDefinitions(const std::string& expression);
+        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> FindDefinitions(const std::string& expression) const;
 
         [[nodiscard]] std::size_t Size() const;
 
         [[nodiscard]] std::vector<EntryView> List() const;
 
-        StepFactory GetFactoryById(std::string id) const;
-        Definition GetDefinitionById(std::string id) const;
+        StepFactory GetFactoryById(const std::string& id) const;
+        Definition GetDefinitionById(const std::string& id) const;
 
         const std::list<Definition>& StepDefinitions() const;
 
@@ -119,7 +120,7 @@ namespace cucumber_cpp::library
         cucumber::gherkin::id_generator_ptr idGenerator;
 
         std::list<Definition> registry;
-        std::map<std::string, std::list<Definition>::iterator> idToDefinitionMap;
+        std::map<std::string, std::list<Definition>::iterator, std::less<>> idToDefinitionMap;
     };
 
     struct StepStringRegistration

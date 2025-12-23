@@ -53,7 +53,10 @@ namespace cucumber_cpp::library::cucumber_expression
     TEST(TestTreeRegexp, ignores_positive_lookahead_as_a_non_capturing_group)
     {
         TreeRegexp treeRegexp{ R"__(a(?=[b])(.+))__" };
-        const auto group = *treeRegexp.MatchToGroup("ac");
+        const auto group = *treeRegexp.MatchToGroup("abc");
+        EXPECT_THAT(group.value.value(), testing::StrEq("abc"));
+        EXPECT_THAT(group.children.size(), 1);
+        EXPECT_THAT(group.children[0].value.value(), testing::StrEq("bc"));
     }
 
     TEST(TestTreeRegexp, DISABLED_ignores_positive_lookbehind_as_a_non_capturing_group)

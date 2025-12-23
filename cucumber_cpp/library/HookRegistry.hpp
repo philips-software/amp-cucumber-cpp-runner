@@ -108,8 +108,8 @@ namespace cucumber_cpp::library
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(HookType hookType) const;
 
-        HookFactory GetFactoryById(std::string id) const;
-        const Definition& GetDefinitionById(std::string id) const;
+        HookFactory GetFactoryById(const std::string& id) const;
+        const Definition& GetDefinitionById(const std::string& id) const;
 
     private:
         void Register(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);

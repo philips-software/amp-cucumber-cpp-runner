@@ -36,7 +36,6 @@ T TransformArg(const cucumber::messages::step_match_argument& match)
             void Execute(const cucumber::messages::step_match_arguments_list& args) override                                      \
             {                                                                                                                     \
                 cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                                     \
-                /*   ASSERT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));   */                            \
                 ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr));                                                       \
             }                                                                                                                     \
                                                                                                                                   \

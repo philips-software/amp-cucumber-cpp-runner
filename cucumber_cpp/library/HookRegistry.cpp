@@ -64,7 +64,7 @@ namespace cucumber_cpp::library
     }
 
     HookBase::HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
-        : engine::ExecutionContext{ broadCaster, context, stepOrHookStarted }
+        : engine::ExecutionContext{ broadCaster, context, std::move(stepOrHookStarted) }
     {}
 
     HookRegistry::Definition::Definition(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
@@ -72,7 +72,7 @@ namespace cucumber_cpp::library
         , tagExpression{ tag_expression::Parse(expression.value_or("")) }
         , factory{ factory }
         , hook{
-            .id = id,
+            .id = std::move(id),
             .name = name.has_value() ? std::make_optional<std::string>(name.value()) : std::nullopt,
             .source_reference = cucumber::messages::source_reference{
                 .uri = sourceLocation.file_name(),
@@ -118,28 +118,18 @@ namespace cucumber_cpp::library
         return std::ranges::count(registry | std::views::values, hookType, &Definition::type);
     }
 
-    HookFactory HookRegistry::GetFactoryById(std::string id) const
+    HookFactory HookRegistry::GetFactoryById(const std::string& id) const
     {
         return registry.at(id).factory;
     }
 
-    const HookRegistry::Definition& HookRegistry::GetDefinitionById(std::string id) const
+    const HookRegistry::Definition& HookRegistry::GetDefinitionById(const std::string& id) const
     {
         return registry.at(id);
     }
 
     void HookRegistry::Register(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(id, Definition{ id, type, expression, name, factory, sourceLocation });
+        registry.try_emplace(id, Definition{ id, type, expression, name, factory, sourceLocation });
     }
-
-    // std::span<HookEntry> HookRegistration::GetEntries()
-    // {
-    //     return registry;
-    // }
-
-    // std::span<const HookEntry> HookRegistration::GetEntries() const
-    // {
-    //     return registry;
-    // }
 }

@@ -8,7 +8,6 @@
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 
-// #define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::HookRegistration::Register, cucumber_cpp::library::HookBase)
 #define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::support::DefinitionRegistration::Register, cucumber_cpp::library::HookBase)
 
 #define HOOK_BEFORE_ALL(...)                                         \

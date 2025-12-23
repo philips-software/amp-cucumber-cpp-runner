@@ -31,7 +31,7 @@ namespace cucumber_cpp::library::formatter::helper
                 ++counts[result.status];
 
             auto values = counts | std::views::values;
-            const auto total = std::accumulate(values.begin(), values.end(), 0u);
+            const auto total = std::accumulate(values.begin(), values.end(), std::size_t{ 0u });
 
             std::string text = std::format("{} {}{}", total, type, (total == 1 ? "" : "s"));
 
