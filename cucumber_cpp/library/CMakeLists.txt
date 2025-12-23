@@ -22,8 +22,6 @@ target_sources(cucumber_cpp.library PRIVATE
     StepRegistry.cpp
     StepRegistry.hpp
     Steps.hpp
-    TraceTime.cpp
-    TraceTime.hpp
 )
 
 target_include_directories(cucumber_cpp.library PUBLIC
