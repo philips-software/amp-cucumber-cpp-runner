@@ -128,8 +128,8 @@ namespace cucumber_cpp::library
         return registry.at(id);
     }
 
-    void HookRegistry::Register(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
+    void HookRegistry::Register(const std::string& id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
     {
-        registry.try_emplace(id, Definition{ id, type, expression, name, factory, sourceLocation });
+        registry.try_emplace(id, id, type, expression, name, factory, sourceLocation);
     }
 }

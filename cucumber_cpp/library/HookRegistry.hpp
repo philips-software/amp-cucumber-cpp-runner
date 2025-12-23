@@ -12,6 +12,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -112,10 +113,10 @@ namespace cucumber_cpp::library
         const Definition& GetDefinitionById(const std::string& id) const;
 
     private:
-        void Register(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);
+        void Register(const std::string& id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);
 
         cucumber::gherkin::id_generator_ptr idGenerator;
-        std::map<std::string, Definition> registry;
+        std::map<std::string, Definition, std::less<>> registry;
     };
 }
 
