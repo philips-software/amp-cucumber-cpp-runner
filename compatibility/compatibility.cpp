@@ -100,7 +100,7 @@ namespace compatibility
                     uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
-                    json[key] = std::filesystem::path{ uri }.string();
+                    json[key] = std::filesystem::canonical(uri).string();
 
                     ++jsonIter;
                 }
