@@ -1,8 +1,6 @@
 #include "cucumber_cpp/library/formatter/helper/TestCaseAttemptParser.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/pickle_step_argument.hpp"
-#include "cucumber/messages/step_keyword_type.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
@@ -12,6 +10,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <filesystem>
 #include <format>
+#include <map>
 #include <optional>
 #include <span>
 #include <string>
@@ -26,14 +25,13 @@ namespace cucumber_cpp::library::formatter::helper
             const GherkinStepMap& gherkinStepMap,
             std::string_view keyword,
             KeywordType keywordType,
-            const cucumber::messages::pickle_step& pickleStep,
+            const std::map<std::string, const cucumber::messages::pickle_step&>& pickleStepMap,
             std::filesystem::path pickleUri,
             support::SupportCodeLibrary supportCode,
             const cucumber::messages::test_step& testStep,
             const cucumber::messages::test_step_result& testStepResult,
             std::span<const cucumber::messages::attachment> attachments)
         {
-            using std::operator""sv;
             ParsedTestStep parsedTestStep{
                 .attachments = attachments,
                 .keyword = std::string{ testStep.pickle_step_id ? keyword : (isBeforeHook ? "Before" : "After") },
@@ -61,6 +59,8 @@ namespace cucumber_cpp::library::formatter::helper
 
             if (testStep.pickle_step_id)
             {
+                const auto& pickleStep = pickleStepMap.at(*testStep.pickle_step_id);
+
                 parsedTestStep.location = {
                     .uri = pickleUri.string(),
                     .line = gherkinStepMap.at(pickleStep.ast_node_ids.front()).location.line
@@ -109,13 +109,12 @@ namespace cucumber_cpp::library::formatter::helper
             const auto& testStepResult = testCaseAttempt.stepResults.at(testStep.id);
             isBeforeHook = isBeforeHook && testStep.hook_id.has_value();
 
-            std::string_view keyword;
-            KeywordType keywordType;
-            const cucumber::messages::pickle_step* pickleStep{ nullptr };
+            std::string_view keyword{};
+            KeywordType keywordType{};
             if (testStep.pickle_step_id)
             {
-                pickleStep = &pickleStepMap.at(*testStep.pickle_step_id);
-                keyword = GetStepKeyword(*pickleStep, gherkinStepMap);
+                const auto& pickleStep = pickleStepMap.at(*testStep.pickle_step_id);
+                keyword = GetStepKeyword(pickleStep, gherkinStepMap);
                 keywordType = GetStepKeywordType(keyword, gherkinDocument.feature->language, previousKeyWordType);
             }
 
@@ -123,7 +122,7 @@ namespace cucumber_cpp::library::formatter::helper
                 gherkinStepMap,
                 keyword,
                 keywordType,
-                *pickleStep,
+                pickleStepMap,
                 relativePickleUri,
                 supportCodeLibrary,
                 testStep,
