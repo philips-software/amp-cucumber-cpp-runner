@@ -5,23 +5,15 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber/messages/group.hpp"
-#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include <any>
+#include <compare>
 #include <cstddef>
-#include <functional>
 #include <set>
 #include <source_location>
 #include <string>
-#include <string_view>
-#include <tuple>
-#include <utility>
 
 namespace cucumber_cpp::library
 {
-    using ToStringFn = std::function<cucumber::messages::group(cucumber_expression::MatchRange)>;
-    using ToAnyFn = std::function<std::any(const cucumber::messages::group&)>;
-
     struct ParameterEntryParams
     {
         std::string name;
@@ -37,10 +29,7 @@ namespace cucumber_cpp::library
 
         std::source_location location;
 
-        auto operator<=>(const ParameterEntry& other) const
-        {
-            return std::tie(params.name, params.regex) <=> std::tie(other.params.name, other.params.regex);
-        }
+        std::strong_ordering operator<=>(const ParameterEntry& other) const;
     };
 
     struct ParameterRegistration
@@ -49,30 +38,30 @@ namespace cucumber_cpp::library
         ParameterRegistration() = default;
 
     public:
-        static ParameterRegistration& Instance()
-        {
-            static ParameterRegistration instance;
-            return instance;
-        }
+        static ParameterRegistration& Instance();
 
         template<class Transformer, class TReturn>
-        std::size_t Register(ParameterEntryParams params, std::source_location location = std::source_location::current())
-        {
-            customParameters.emplace(params, customParameters.size() + 1, location);
+        std::size_t Register(ParameterEntryParams params, std::source_location location = std::source_location::current());
 
-            cucumber_expression::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
-
-            return customParameters.size();
-        }
-
-        const std::set<ParameterEntry>& GetRegisteredParameters() const
-        {
-            return customParameters;
-        }
+        const std::set<ParameterEntry>& GetRegisteredParameters() const;
 
     private:
         std::set<ParameterEntry> customParameters;
     };
+
+    ////////////////////
+    // Implementation //
+    ////////////////////
+
+    template<class Transformer, class TReturn>
+    std::size_t ParameterRegistration::Register(ParameterEntryParams params, std::source_location location)
+    {
+        customParameters.emplace(params, customParameters.size() + 1, location);
+
+        cucumber_expression::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
+
+        return customParameters.size();
+    }
 }
 
 #define PARAMETER_STRUCT CONCAT(ParameterImpl, __LINE__)

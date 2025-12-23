@@ -13,6 +13,8 @@ target_sources(cucumber_cpp.library PRIVATE
     HookRegistry.cpp
     HookRegistry.hpp
     Hooks.hpp
+    Parameter.cpp
+    Parameter.hpp
     Query.cpp
     Query.hpp
     Rtrim.cpp
