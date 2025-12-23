@@ -39,53 +39,46 @@
 
 namespace cucumber_cpp::library
 {
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument)
     {
-        Lineage copy = *this;
-        copy.gherkinDocument = gherkinDocument;
-        return copy;
+        lineage.gherkinDocument = gherkinDocument;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::feature> feature) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature)
     {
-        Lineage copy = *this;
-        copy.feature = feature;
-        return copy;
+        lineage.feature = feature;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::rule> rule) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule)
     {
-        Lineage copy = *this;
-        copy.rule = rule;
-        return copy;
+        lineage.rule = rule;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::scenario> scenario) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario)
     {
-        Lineage copy = *this;
-        copy.scenario = scenario;
-        return copy;
+        lineage.scenario = scenario;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::examples> examples) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples)
     {
-        Lineage copy = *this;
-        copy.examples = examples;
-        return copy;
+        lineage.examples = examples;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::shared_ptr<const cucumber::messages::table_row> tableRow) const
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow)
     {
-        Lineage copy = *this;
-        copy.tableRow = tableRow;
-        return copy;
+        lineage.tableRow = tableRow;
+        return std::move(lineage);
     }
 
-    Lineage Lineage::operator+(std::uint32_t featureIndex) const
+    Lineage operator+(Lineage lineage, std::uint32_t featureIndex)
     {
-        Lineage copy = *this;
-        copy.featureIndex = featureIndex;
-        return copy;
+        lineage.featureIndex = featureIndex;
+        return std::move(lineage);
     }
 
     std::string Lineage::GetUniqueFeatureName() const

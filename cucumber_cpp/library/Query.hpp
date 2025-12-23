@@ -47,14 +47,6 @@ namespace cucumber_cpp::library
 {
     struct Lineage
     {
-        Lineage operator+(std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument) const;
-        Lineage operator+(std::shared_ptr<const cucumber::messages::feature> feature) const;
-        Lineage operator+(std::shared_ptr<const cucumber::messages::rule> rule) const;
-        Lineage operator+(std::shared_ptr<const cucumber::messages::scenario> scenario) const;
-        Lineage operator+(std::shared_ptr<const cucumber::messages::examples> examples) const;
-        Lineage operator+(std::shared_ptr<const cucumber::messages::table_row> tableRow) const;
-        Lineage operator+(std::uint32_t featureIndex) const;
-
         std::string GetUniqueFeatureName() const;
         std::string GetScenarioAndOrRuleName() const;
 
@@ -67,6 +59,14 @@ namespace cucumber_cpp::library
 
         std::uint32_t featureIndex{ 0 };
     };
+
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument);
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature);
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule);
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario);
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples);
+    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow);
+    Lineage operator+(Lineage lineage, std::uint32_t featureIndex);
 
     struct Query
     {
