@@ -56,7 +56,7 @@ namespace cucumber_cpp::library::runtime
             return to_underlying(a.status) < to_underlying(b.status);
         };
 
-        inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
+        const inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
             cucumber::messages::test_step_result_status::AMBIGUOUS,
             cucumber::messages::test_step_result_status::FAILED,
             cucumber::messages::test_step_result_status::UNDEFINED,
@@ -160,10 +160,10 @@ namespace cucumber_cpp::library::runtime
     cucumber::messages::test_step_result Worker::RunTestHook(std::string id, Context& context)
     {
         const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
-        const auto testRunHookStartedid = idGenerator->next_id();
+        const auto testRunHookStartedId = idGenerator->next_id();
 
         const auto testRunHookStarted = cucumber::messages::test_run_hook_started{
-            .id = testRunHookStartedid,
+            .id = testRunHookStartedId,
             .test_run_started_id = std::string{ testRunStartedId },
             .hook_id = definition.hook.id,
             .timestamp = support::TimestampNow(),
@@ -174,7 +174,7 @@ namespace cucumber_cpp::library::runtime
         auto result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
 
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
-                                         .test_run_hook_started_id = testRunHookStartedid,
+                                         .test_run_hook_started_id = testRunHookStartedId,
                                          .result = result,
                                          .timestamp = support::TimestampNow(),
                                      } });
