@@ -121,7 +121,7 @@ namespace cucumber_cpp::library::assemble
         std::vector<AssembledTestSuite> assembledTestSuites;
         assembledTestSuites.reserve(assembledTestSuiteMap.size());
 
-        for (auto uri : testUris)
+        for (const auto& uri : testUris)
             assembledTestSuites.emplace_back(std::move(assembledTestSuiteMap.at(uri)));
 
         return assembledTestSuites;

@@ -81,27 +81,27 @@ namespace cucumber_cpp::library::api
 
         void EmitTestCaseHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
 
-            for (const auto& hook : beforeAllHooks)
+            for (auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
 
-            const auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::after);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::after);
 
-            for (const auto& hook : afterAllHooks)
+            for (auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
         void EmitTestRunHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            const auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
 
-            for (const auto& hook : beforeAllHooks)
+            for (auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
 
-            const auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::afterAll);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::afterAll);
 
-            for (const auto& hook : afterAllHooks)
+            for (auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
