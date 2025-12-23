@@ -12,3 +12,4 @@ ignore:
   - external
   - megalinter-reports
   - testdata
+  - compatibility
