@@ -58,7 +58,7 @@ namespace compatibility
             };
         }
 
-        void SanitizeExpectedJson(nlohmann::json& json)
+        void RemoveIncompatibilities(nlohmann::json& json)
         {
             for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
@@ -75,7 +75,7 @@ namespace compatibility
                     jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
-                    SanitizeExpectedJson(value);
+                    RemoveIncompatibilities(value);
                     ++jsonIter;
                 }
                 else if (value.is_array())
@@ -86,7 +86,7 @@ namespace compatibility
                         auto& item = *valueIter;
 
                         if (item.is_object())
-                            SanitizeExpectedJson(item);
+                            RemoveIncompatibilities(item);
 
                         ++valueIter;
                     }
@@ -95,47 +95,12 @@ namespace compatibility
                 }
                 else if (key == "uri")
                 {
-                    json[key] = std::regex_replace(value.get<std::string>(), std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
-                    json[key] = std::regex_replace(value.get<std::string>(), std::regex(R"(\.ts$)"), ".cpp");
-                    ++jsonIter;
-                }
-                else
-                    ++jsonIter;
-            }
-        }
+                    auto uri = value.get<std::string>();
 
-        void SanitizeActualJson(nlohmann::json& json)
-        {
-            for (auto jsonIter = json.begin(); jsonIter != json.end();)
-            {
-                auto& key = jsonIter.key();
-                auto& value = jsonIter.value();
+                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
+                    uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
-                if (key == "exception")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "message")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "line")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "snippets")
-                    jsonIter = json.erase(jsonIter);
-                else if (value.is_object())
-                {
-                    SanitizeActualJson(value);
-                    ++jsonIter;
-                }
-                else if (value.is_array())
-                {
-                    auto idx = 0;
-                    for (auto valueIter = value.begin(); valueIter != value.end();)
-                    {
-                        auto& item = *valueIter;
-
-                        if (item.is_object())
-                            SanitizeActualJson(item);
-
-                        ++valueIter;
-                    }
+                    json[key] = std::filesystem::path{ uri }.string();
 
                     ++jsonIter;
                 }
@@ -186,13 +151,13 @@ namespace compatibility
 
                 for (auto& json : actualEnvelopes)
                 {
-                    SanitizeActualJson(json);
+                    RemoveIncompatibilities(json);
                     actualOfs << json.dump() << "\n";
                 }
 
                 for (auto& json : expectedEnvelopes)
                 {
-                    SanitizeExpectedJson(json);
+                    RemoveIncompatibilities(json);
                     expectedOfs << json.dump() << "\n";
                 }
 
