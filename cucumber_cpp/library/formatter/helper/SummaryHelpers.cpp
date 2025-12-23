@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/formatter/helper/SummaryHelpers.hpp"
 #include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
@@ -59,6 +60,11 @@ namespace cucumber_cpp::library::formatter::helper
             const auto total = support::DurationToMilliseconds(duration);
             return std::format("{:%Mm %S}s", total);
         }
+
+        bool HasPickleStepId(const cucumber::messages::test_step& testStep)
+        {
+            return testStep.pickle_step_id.has_value();
+        }
     }
 
     std::string FormatSummary(std::span<const TestCaseAttempt> testCaseAttempts, cucumber::messages::duration testRunDuration)
@@ -75,9 +81,10 @@ namespace cucumber_cpp::library::formatter::helper
             if (!testCaseAttempt.willBeRetried)
             {
                 testCaseResults.emplace_back(testCaseAttempt.worstTestStepResult);
-                for (const auto& testStep : testCaseAttempt.testCase.test_steps)
-                    if (testStep.pickle_step_id)
-                        testStepResults.emplace_back(testCaseAttempt.stepResults.at(testStep.id));
+
+                for (const auto& testStep : testCaseAttempt.testCase.test_steps |
+                                                std::views::filter(HasPickleStepId))
+                    testStepResults.emplace_back(testCaseAttempt.stepResults.at(testStep.id));
             }
         }
 

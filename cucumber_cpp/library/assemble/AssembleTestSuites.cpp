@@ -4,7 +4,9 @@
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_case.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -22,13 +24,30 @@
 
 namespace cucumber_cpp::library::assemble
 {
+    namespace
+    {
+        auto TransformToMatch(const std::string& text)
+        {
+            return [&text](const StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
+            {
+                const auto match = std::visit(cucumber_expression::MatchVisitor{ text }, definition.regex);
+                return { definition.id, match };
+            };
+        }
+
+        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>& pair)
+        {
+            return pair.second.has_value();
+        }
+    }
+
     std::vector<AssembledTestSuite> AssembleTestSuites(support::SupportCodeLibrary supportCodeLibrary,
         std::string_view testRunStartedId,
         util::Broadcaster& broadcaster,
         const std::list<support::PickleSource>& sourcedPickles,
         cucumber::gherkin::id_generator_ptr idGenerator)
     {
-        std::vector<std::string> testUris;
+        std::list<std::string> testUris;
         std::map<std::string, AssembledTestSuite> assembledTestSuiteMap;
 
         for (const auto& pickleSource : sourcedPickles)
@@ -47,30 +66,24 @@ namespace cucumber_cpp::library::assemble
 
             for (const auto& step : pickleSource.pickle->steps)
             {
-                // auto definitions = supportCodeLibrary.stepRegistry.FindDefinitions(step.text);
                 const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
 
-                std::vector<std::string> stepDefinitionIds;
-                std::vector<cucumber::messages::step_match_arguments_list> stepMatchArgumentsLists;
-
-                for (const auto& definition : stepDefinitions)
-                {
-                    const auto match = std::visit(cucumber_expression::MatchVisitor{ step.text }, definition.regex);
-                    if (match)
-                    {
-                        stepDefinitionIds.push_back(definition.id);
-                        auto& argumentList = stepMatchArgumentsLists.emplace_back();
-                        for (const auto& result : *match)
-                            argumentList.step_match_arguments.emplace_back(result.Group(), result.Name().empty() ? std::nullopt : std::make_optional(result.Name()));
-                    }
-                }
-
-                testCase.test_steps.emplace_back(
+                auto& testStep = testCase.test_steps.emplace_back(
                     std::nullopt,
                     idGenerator->next_id(),
                     step.id,
-                    stepDefinitionIds,
-                    stepMatchArgumentsLists);
+                    std::vector<std::string>{},
+                    std::vector<cucumber::messages::step_match_arguments_list>{});
+
+                for (const auto& [id, match] : stepDefinitions |
+                                                   std::views::transform(TransformToMatch(step.text)) |
+                                                   std::views::filter(HasMatch))
+                {
+                    testStep.step_definition_ids.value().push_back(id);
+                    auto& argumentList = testStep.step_match_arguments_lists.value().emplace_back();
+                    for (const auto& result : *match)
+                        argumentList.step_match_arguments.emplace_back(result.Group(), result.Name().empty() ? std::nullopt : std::make_optional(result.Name()));
+                }
             }
 
             for (const auto& hookId : supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags) | std::views::reverse)

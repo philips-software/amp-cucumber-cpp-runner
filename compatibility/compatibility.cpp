@@ -93,6 +93,10 @@ namespace compatibility
 
                     ++jsonIter;
                 }
+                else if (key == "data")
+                {
+                    json[key] = std::regex_replace(json[key].get<std::string>(), std::regex(R"(\r\n)"), "\n");
+                }
                 else if (key == "uri")
                 {
                     auto uri = value.get<std::string>();

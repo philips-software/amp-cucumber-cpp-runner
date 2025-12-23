@@ -181,7 +181,7 @@ namespace cucumber_cpp::library::runtime
 
     cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
-        auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([&](const std::string& id)
+        auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([this](const std::string& id)
                                                                      {
                                                                          return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                      });

@@ -12,6 +12,12 @@ namespace cucumber_cpp::library::util
     struct Listener
     {
         explicit Listener(Broadcaster& broadcaster, const std::function<void(const cucumber::messages::envelope& envelope)>& onEvent);
+
+        Listener(const Listener&) = delete;
+        Listener& operator=(const Listener&) = delete;
+        Listener(Listener&&) = delete;
+        Listener& operator=(Listener&&) = delete;
+
         ~Listener();
 
         void Invoke(const cucumber::messages::envelope& envelope) const;

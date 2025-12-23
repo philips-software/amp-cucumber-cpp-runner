@@ -113,7 +113,9 @@ namespace cucumber_cpp::library::formatter
     }
 
     void PrettyPrinter::HandleAttachment(const cucumber::messages::attachment& attachment)
-    {}
+    {
+        /* TODO implement */
+    }
 
     void PrettyPrinter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
     {
@@ -133,7 +135,9 @@ namespace cucumber_cpp::library::formatter
     }
 
     void PrettyPrinter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
-    {}
+    {
+        /* TODO implement */
+    }
 
     void PrettyPrinter::PrintFeatureLine(const cucumber::messages::feature& feature)
     {
@@ -187,7 +191,7 @@ namespace cucumber_cpp::library::formatter
         }
         const auto padding = maxContentLength - title.length();
 
-        if (uri && line)
+        if (uri.has_value() && line.has_value())
             support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle ? formatTitle(title) : std::string(title), "", padding, ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
             support::print(outputStream, "{:{}}{}\n", "", indent, formatTitle ? formatTitle(title) : std::string(title));

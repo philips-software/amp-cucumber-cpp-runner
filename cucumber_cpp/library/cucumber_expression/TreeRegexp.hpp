@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct TreeRegexp
     {
-        TreeRegexp(std::string_view pattern);
+        explicit TreeRegexp(std::string_view pattern);
 
         const GroupBuilder& RootBuilder() const;
 
