@@ -3,6 +3,7 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
+#include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/test_run_hook_finished.hpp"
 #include "cucumber/messages/test_run_hook_started.hpp"
 #include "cucumber/messages/test_step_result.hpp"
@@ -18,7 +19,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
-#include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -61,6 +62,16 @@ namespace cucumber_cpp::library::runtime
             cucumber::messages::test_step_result_status::FAILED,
             cucumber::messages::test_step_result_status::UNDEFINED,
         };
+
+        std::size_t RetriesForPickle(const cucumber::messages::pickle& pickle, support::RunOptions::Runtime& options)
+        {
+            if (options.retry == 0)
+                return 0;
+            else if (options.retryTagExpression->Evaluate(pickle.tags))
+                return options.retry;
+            else
+                return 0;
+        }
     }
 
     Worker::Worker(std::string_view testRunStartedId,

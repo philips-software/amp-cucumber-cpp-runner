@@ -9,11 +9,14 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
+#include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
+#include <cstddef>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -28,15 +31,24 @@ namespace cucumber_cpp::library
     {
         struct Options
         {
+            std::set<std::string> paths{};
+
+            bool dryRun{ false };
+            bool failFast{ false };
+
+            std::set<std::string> format{};
+            std::set<std::string> formatOptions{};
+
+            std::string language{ "en" };
+
+            enum support::RunOptions::Ordering ordering{ support::RunOptions::Ordering::defined };
+
+            std::size_t retry{ 0 };
+            std::vector<std::string> retryTagFilter{};
+
+            bool strict{ true };
+
             std::vector<std::string> tags{};
-            std::vector<std::string> features{};
-            std::vector<std::string> reporters{};
-
-            std::string outputfolder{ "./out" };
-            std::string reportfile{ "TestReport" };
-
-            bool dryrun{ false };
-            bool printStepsNotUsed{ false };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
@@ -57,6 +69,7 @@ namespace cucumber_cpp::library
         [[nodiscard]] int GetExitCode() const;
 
         Options options;
+
         CLI::App cli;
         CLI::App* runCommand;
 

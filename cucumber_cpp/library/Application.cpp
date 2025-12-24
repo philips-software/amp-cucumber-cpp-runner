@@ -7,6 +7,8 @@
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include <CLI/App.hpp>
 #include <CLI/Error.hpp>
 #include <CLI/Option.hpp>
 #include <CLI/Validators.hpp>
@@ -19,6 +21,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <ostream>
@@ -58,7 +61,7 @@ namespace cucumber_cpp::library
         {
             std::set<std::filesystem::path> files;
 
-            for (const auto feature : options.features | std::views::transform(ToFileSystemPath))
+            for (const auto feature : options.paths | std::views::transform(ToFileSystemPath))
                 if (std::filesystem::is_directory(feature))
                     for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
                         files.emplace(entry.path());
@@ -92,30 +95,48 @@ namespace cucumber_cpp::library
             {
                 RunFeatures();
             });
-
-        runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
-        runCommand->add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required()->check(CLI::ExistingPath);
-
-        runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation"); //->check(reportHandlerValidator);
-        runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
-        runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
-        runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
-        runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
-
-        // reporters.Add("console", std::make_unique<report::StdOutReport>());
-        // reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
-
-        ProgramContext().InsertRef(options);
     }
 
     int Application::Run(int argc, const char* const* argv)
     {
         try
         {
-            const auto reportDescription = runCommand->get_option("--report")->get_description();
-            const auto joinedReporters = reportDescription; // + Join(reporters.AvailableReporters(), ", ");
 
-            runCommand->get_option("--report")->description(joinedReporters);
+            const std::map<std::string, support::RunOptions::Ordering> orderingMap{
+                { "defined", support::RunOptions::Ordering::defined },
+                { "reverse", support::RunOptions::Ordering::reverse },
+            };
+
+            runCommand->add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps");
+            runCommand->add_flag("--fail-fast", options.failFast, "Stop execution on first failure");
+            runCommand->add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.  Available formats:\n");
+            runCommand->add_option("--format-options", options.formatOptions, "provide options for formatters");
+            runCommand->add_option("--language", options.language, "Default langauge for feature files, eg 'en'")->default_str(options.language);
+            runCommand->add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case));
+            auto* retryOpt = runCommand->add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
+            runCommand->add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
+            runCommand->add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
+
+            CLI::deprecate_option(runCommand->add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
+            runCommand->add_option("-t,--tags", options.tags, "Cucumber tag expression");
+
+            CLI::deprecate_option(runCommand->add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
+            runCommand->add_option("paths", options.paths, "Paths to where your feature files are")->required()->check(CLI::ExistingPath);
+
+            // runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation"); //->check(reportHandlerValidator);
+            // runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
+            // runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
+            // runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
+
+            // reporters.Add("console", std::make_unique<report::StdOutReport>());
+            // reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
+
+            ProgramContext().InsertRef(options);
+
+            // const auto reportDescription = runCommand->get_option("--report")->get_description();
+            // const auto joinedReporters = reportDescription; // + Join(reporters.AvailableReporters(), ", ");
+
+            // runCommand->get_option("--report")->description(joinedReporters);
             cli.parse(argc, argv);
         }
         catch (const CLI::ParseError& e)
@@ -168,16 +189,19 @@ namespace cucumber_cpp::library
 
     void Application::RunFeatures()
     {
-        const auto tagExpression = Join(options.tags, " ");
-        const auto featureFiles = GetFeatureFiles(options);
 
         const auto runOptions = support::RunOptions{
             .sources = {
-                .paths = featureFiles,
-                .tagExpression = tagExpression,
+                .paths = GetFeatureFiles(options),
+                .tagExpression = tag_expression::Parse(Join(options.tags, " ")),
+                .ordering = options.ordering,
             },
             .runtime = {
-                .retry = 1,
+                .dryRun = options.dryRun,
+                .failFast = options.failFast,
+                .retry = options.retry,
+                .strict = options.strict,
+                .retryTagExpression = tag_expression::Parse(Join(options.retryTagFilter, " ")),
             },
         };
 

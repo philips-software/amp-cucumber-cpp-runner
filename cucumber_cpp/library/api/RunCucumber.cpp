@@ -142,10 +142,9 @@ namespace cucumber_cpp::library::api
 
         const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
 
-        const auto tagExpression = cucumber_cpp::library::tag_expression::Parse(options.sources.tagExpression);
-        const auto pickleFilter = [&tagExpression](const support::PickleSource& pickle)
+        const auto pickleFilter = [&options](const support::PickleSource& pickle)
         {
-            return tagExpression->Evaluate(pickle.pickle->tags);
+            return options.sources.tagExpression->Evaluate(pickle.pickle->tags);
         };
         auto filteredPicklesView = pickleSources | std::views::filter(pickleFilter);
 

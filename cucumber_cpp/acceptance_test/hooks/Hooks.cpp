@@ -1,5 +1,6 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "gmock/gmock.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <string>
 
@@ -8,7 +9,7 @@ HOOK_BEFORE_ALL()
     std::cout << "HOOK_BEFORE_ALL\n";
 
     if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
-        ASSERT_THAT(false, testing::IsTrue());
+        FAIL();
 }
 
 HOOK_AFTER_ALL()
@@ -38,12 +39,12 @@ HOOK_AFTER_STEP("@stephook and @bats")
 
 HOOK_BEFORE_SCENARIO("@fail_scenariohook_before")
 {
-    ASSERT_THAT(false, testing::IsTrue());
+    FAIL();
 }
 
 HOOK_AFTER_SCENARIO("@fail_scenariohook_after")
 {
-    ASSERT_THAT(false, testing::IsTrue());
+    FAIL();
 }
 
 HOOK_BEFORE_SCENARIO("@throw_scenariohook")

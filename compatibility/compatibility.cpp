@@ -2,10 +2,11 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "library/support/Duration.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
@@ -248,7 +249,7 @@ namespace compatibility
             cucumber_cpp::library::support::RunOptions runOptions{
                 .sources = {
                     .paths = devkit.paths,
-                    .tagExpression = devkit.tagExpression,
+                    .tagExpression = cucumber_cpp::library::tag_expression::Parse(devkit.tagExpression),
                     .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
                 },
                 .runtime = {
