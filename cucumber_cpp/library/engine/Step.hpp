@@ -5,6 +5,7 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber/messages/pickle_doc_string.hpp"
+#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
@@ -20,7 +21,7 @@ namespace cucumber_cpp::library::engine
 {
     struct Step : ExecutionContext
     {
-        Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString);
+        Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString);
         virtual ~Step() = default;
 
         virtual void SetUp()
@@ -38,7 +39,7 @@ namespace cucumber_cpp::library::engine
         void When(const std::string& step) const;
         void Then(const std::string& step) const;
 
-        std::optional<std::span<const cucumber::messages::pickle_table_row>> table;
+        const std::optional<cucumber::messages::pickle_table>& dataTable;
         const std::optional<cucumber::messages::pickle_doc_string>& docString;
     };
 }

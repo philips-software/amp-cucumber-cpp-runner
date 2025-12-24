@@ -19,17 +19,17 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
-        bool IsFailure(cucumber::messages::test_step_result_status status, bool willBeRetries)
+        bool IsFailure(cucumber::messages::test_step_result_status status, bool willBeRetried)
         {
             return status == cucumber::messages::test_step_result_status::AMBIGUOUS ||
                    status == cucumber::messages::test_step_result_status::UNDEFINED ||
-                   (status == cucumber::messages::test_step_result_status::FAILED && !willBeRetries);
+                   (status == cucumber::messages::test_step_result_status::FAILED && !willBeRetried);
         }
 
-        bool IsWarning(cucumber::messages::test_step_result_status status, bool willBeRetries)
+        bool IsWarning(cucumber::messages::test_step_result_status status, bool willBeRetried)
         {
             return status == cucumber::messages::test_step_result_status::PENDING ||
-                   (status == cucumber::messages::test_step_result_status::FAILED && willBeRetries);
+                   (status == cucumber::messages::test_step_result_status::FAILED && willBeRetried);
         }
     }
 

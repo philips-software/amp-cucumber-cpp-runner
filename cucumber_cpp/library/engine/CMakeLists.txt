@@ -24,6 +24,6 @@ target_link_libraries(cucumber_cpp.library.engine PUBLIC
 )
 
 if (CCR_BUILD_TESTS)
-    # add_subdirectory(test)
+    add_subdirectory(test)
     # add_subdirectory(test_helper)
 endif()

@@ -12,9 +12,9 @@
 
 namespace cucumber_cpp::library::engine
 {
-    Step::Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString)
+    Step::Step(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
         : ExecutionContext{ broadCaster, context, stepOrHookStarted }
-        , table{ table }
+        , dataTable{ dataTable }
         , docString{ docString }
     {}
 

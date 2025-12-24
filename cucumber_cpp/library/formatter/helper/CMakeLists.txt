@@ -11,6 +11,8 @@ target_sources(cucumber_cpp.library.formatter.helper PRIVATE
     IssueHelpers.hpp
     KeywordType.cpp
     KeywordType.hpp
+    LocationHelpers.cpp
+    LocationHelpers.hpp
     PickleParser.cpp
     PickleParser.hpp
     SummaryHelpers.hpp

@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/formatter/helper/IndentString.hpp"
+#include "cucumber_cpp/library/formatter/helper/LocationHelpers.hpp"
 #include "cucumber_cpp/library/formatter/helper/TestCaseAttemptParser.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <cstddef>
@@ -15,19 +16,10 @@ namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {
-        // to be moved tyo LocationHelpers.hpp
-        std::string FormatLocation(LineAndUri obj, std::optional<std::filesystem::path> cwd = std::nullopt)
-        {
-            std::string uri = obj.uri;
-            if (cwd)
-                uri = std::filesystem::relative(obj.uri, *cwd).string();
-            return std::format("{}:{}", uri, obj.line);
-        }
-
         std::string GetAttemptText(std::size_t attempt, bool willBeRetried)
         {
             if (attempt > 0 || willBeRetried)
-                return std::format(" (attempt  {}{})", attempt + 1, willBeRetried ? ", retried" : "");
+                return std::format(" (attempt {}{})", attempt + 1, willBeRetried ? ", retried" : "");
             return "";
         }
 

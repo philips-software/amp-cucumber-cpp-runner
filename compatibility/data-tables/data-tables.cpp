@@ -1,52 +1,39 @@
-#include "cucumber/messages/pickle_table_row.hpp"
+#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include <cstddef>
 #include <gmock/gmock.h>
-#include <span>
+#include <gtest/gtest.h>
 #include <vector>
 
 STEP(R"(the following table is transposed:)")
 {
-    std::vector<cucumber::messages::pickle_table_row> transposedTable;
-    transposedTable.reserve(this->table->front().cells.size());
-    for (std::size_t colIdx = 0; colIdx < this->table->front().cells.size(); ++colIdx)
-        transposedTable.emplace_back().cells.resize(this->table->size());
+    auto transposedTable = context.Emplace<cucumber::messages::pickle_table>();
+    transposedTable->rows.reserve(this->dataTable->rows[0].cells.size());
+    for (std::size_t colIdx = 0; colIdx < this->dataTable->rows[0].cells.size(); ++colIdx)
+        transposedTable->rows.emplace_back().cells.resize(this->dataTable->rows.size());
 
-    for (std::size_t rowIdx = 0; rowIdx < this->table->size(); ++rowIdx)
-        for (std::size_t colIdx = 0; colIdx < this->table->begin()[rowIdx].cells.size(); ++colIdx)
-            transposedTable[colIdx].cells[rowIdx] = this->table->begin()[rowIdx].cells[colIdx];
-
-    context.Insert(transposedTable);
+    for (std::size_t rowIdx = 0; rowIdx < this->dataTable->rows.size(); ++rowIdx)
+        for (std::size_t colIdx = 0; colIdx < this->dataTable->rows[rowIdx].cells.size(); ++colIdx)
+            transposedTable->rows[colIdx].cells[rowIdx] = this->dataTable->rows[rowIdx].cells[colIdx];
 }
 
 STEP(R"(it should be:)")
 {
-    std::span<const cucumber::messages::pickle_table_row> expected = context.Get<std::vector<cucumber::messages::pickle_table_row>>();
-    const auto& actual = *table;
-    const auto rows = expected.size();
-    ASSERT_THAT(rows, testing::Eq(actual.size()));
+    const auto& actualTable = context.Get<cucumber::messages::pickle_table>();
+    const auto& expectedTalbe = dataTable;
+
+    const auto rows = actualTable.rows.size();
+    ASSERT_THAT(rows, testing::Eq(expectedTalbe->rows.size()));
+
     for (auto rowIdx = 0; rowIdx < rows; ++rowIdx)
     {
-        const auto columns = expected[rowIdx].cells.size();
-        ASSERT_THAT(columns, testing::Eq(actual[rowIdx].cells.size()));
+        const auto columns = expectedTalbe->rows[rowIdx].cells.size();
+        ASSERT_THAT(columns, testing::Eq(actualTable.rows[rowIdx].cells.size()));
         for (auto colIdx = 0; colIdx < columns; ++colIdx)
         {
-            const auto& expectedCell = expected[rowIdx].cells[colIdx];
-            const auto& actualCell = actual[rowIdx].cells[colIdx];
+            const auto& expectedCell = expectedTalbe->rows[rowIdx].cells[colIdx];
+            const auto& actualCell = actualTable.rows[rowIdx].cells[colIdx];
             EXPECT_THAT(expectedCell.value, testing::StrEq(actualCell.value)) << "at row " << rowIdx << " column " << colIdx;
         }
     }
 }
-
-// import assert from 'node:assert'
-// import { DataTable, When, Then } from '@cucumber/fake-cucumber'
-
-// When('the following table is transposed:', function (table: DataTable) {
-//   this.transposed = table.transpose()
-// })
-
-// Then('it should be:', function (expected: DataTable) {
-//   assert.deepStrictEqual(this.transposed.raw(), expected.raw())
-// }

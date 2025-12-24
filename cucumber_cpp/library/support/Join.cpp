@@ -14,7 +14,7 @@ namespace cucumber_cpp::library::support
 
     std::string Join(std::span<const std::string> parts, const std::string& separator)
     {
-        if (parts.size() == 0)
+        if (parts.empty())
             return "";
 
         std::string joined = *parts.begin();

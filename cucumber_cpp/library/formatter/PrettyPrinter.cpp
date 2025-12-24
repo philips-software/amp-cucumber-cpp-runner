@@ -24,6 +24,7 @@
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -185,6 +186,9 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyPrinter::PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
     {
+        if (title.length() > maxContentLength)
+            throw std::logic_error("maxContentLength is smaller than title length");
+
         const auto padding = maxContentLength - title.length();
 
         if (uri.has_value() && line.has_value())

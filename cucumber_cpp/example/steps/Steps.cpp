@@ -3,7 +3,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
-#include <iostream>
 #include <string>
 
 GIVEN(R"(a background step)")
@@ -13,11 +12,11 @@ GIVEN(R"(a background step)")
 
 GIVEN(R"(a simple data table)")
 {
-    [[maybe_unused]] const auto row0col0 = table.value()[0].cells[0].value;
-    [[maybe_unused]] const auto row0col1 = table.value()[0].cells[1].value;
+    [[maybe_unused]] const auto row0col0 = dataTable->rows[0].cells[0].value;
+    [[maybe_unused]] const auto row0col1 = dataTable->rows[0].cells[1].value;
 
-    [[maybe_unused]] const auto row1col0 = table.value()[1].cells[0].value;
-    [[maybe_unused]] const auto row1col1 = table.value()[1].cells[1].value;
+    [[maybe_unused]] const auto row1col0 = dataTable->rows[1].cells[0].value;
+    [[maybe_unused]] const auto row1col1 = dataTable->rows[1].cells[1].value;
 }
 
 GIVEN(R"(there are {int} cucumbers)", (std::int32_t num))
@@ -99,7 +98,7 @@ STEP("this step should be skipped")
 
 STEP(R"(a step stores the value at row {int} and column {int} from the table:)", (std::int32_t row, std::int32_t column))
 {
-    context.EmplaceAt<std::string>("cell", table.value()[row].cells[column].value);
+    context.EmplaceAt<std::string>("cell", dataTable->rows[row].cells[column].value);
 }
 
 STEP(R"(the value should be {string})", (const std::string& expected_value))

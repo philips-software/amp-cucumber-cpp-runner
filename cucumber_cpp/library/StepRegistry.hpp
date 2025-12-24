@@ -3,6 +3,7 @@
 
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/pickle_doc_string.hpp"
+#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/Body.hpp"
@@ -34,12 +35,12 @@
 
 namespace cucumber_cpp::library
 {
-    using StepFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>>, const std::optional<cucumber::messages::pickle_doc_string>&);
+    using StepFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
 
     template<class T>
-    std::unique_ptr<Body> StepBodyFactory(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, std::optional<std::span<const cucumber::messages::pickle_table_row>> table, const std::optional<cucumber::messages::pickle_doc_string>& docString)
+    std::unique_ptr<Body> StepBodyFactory(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
     {
-        return std::make_unique<T>(broadCaster, context, stepOrHookStarted, table, docString);
+        return std::make_unique<T>(broadCaster, context, stepOrHookStarted, dataTable, docString);
     }
 
     struct StepMatch

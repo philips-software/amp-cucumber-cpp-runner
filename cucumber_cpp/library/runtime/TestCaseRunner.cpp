@@ -6,7 +6,6 @@
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
-#include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/suggestion.hpp"
 #include "cucumber/messages/test_case.hpp"
@@ -21,43 +20,22 @@
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include <algorithm>
-#include <any>
 #include <cstddef>
-#include <functional>
-#include <map>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
 {
-    namespace
-    {
-        // cucumber::messages::duration operator+=(cucumber::messages::duration durationA, cucumber::messages::duration durationB)
-        // {
-        //     const auto seconds = durationA.seconds + durationB.seconds;
-        //     const auto nanos = durationA.nanos + durationB.nanos;
-
-        //     if (nanos >= support::nanosecondsPerSecond)
-        //         return { seconds + 1, nanos - support::nanosecondsPerSecond };
-        //     else
-        //         return { seconds, nanos };
-        // }
-
-    }
-
     TestCaseRunner::TestCaseRunner(util::Broadcaster& broadcaster,
         cucumber::gherkin::id_generator_ptr idGenerator,
         const cucumber::messages::gherkin_document& gherkinDocument,
@@ -219,16 +197,11 @@ namespace cucumber_cpp::library::runtime
 
         if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::test_step_result_status::FAILED)
         {
+            const auto& dataTable = pickleStep.argument ? pickleStep.argument->data_table : std::nullopt;
+            const auto& docString = pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt;
+
             const auto& definition = stepDefinitions.front();
-
-            const auto toOptionalTable = [](const cucumber::messages::pickle_step& pickleStep) -> std::optional<std::span<const cucumber::messages::pickle_table_row>>
-            {
-                if (pickleStep.argument && pickleStep.argument->data_table)
-                    return pickleStep.argument->data_table->rows;
-                return std::nullopt;
-            };
-
-            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, toOptionalTable(pickleStep), pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt), testStep.step_match_arguments_lists->front());
+            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, dataTable, docString), testStep.step_match_arguments_lists->front());
             stepResults.push_back(result);
         }
 
