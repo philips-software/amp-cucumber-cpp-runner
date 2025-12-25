@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
@@ -155,7 +156,7 @@ For more complicated expressions consider using a regular expression instead.)",
         }
     {}
 
-    UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName)
+    UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string expression, std::string undefinedParameterName)
         : Error{
             node.Start(),
             expression,
@@ -163,5 +164,7 @@ For more complicated expressions consider using a regular expression instead.)",
             std::format(R"(Undefined parameter type '{}')", undefinedParameterName),
             std::format(R"(Please register a ParameterType for '{}')", undefinedParameterName),
         }
+        , expression{ std::move(expression) }
+        , undefinedParameterName{ std::move(undefinedParameterName) }
     {}
 }

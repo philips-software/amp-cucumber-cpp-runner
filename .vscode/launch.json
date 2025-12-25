@@ -15,7 +15,11 @@
                 "@result:UNDEFINED",
                 "@result:FAILED",
                 "@result:OK",
-                "@fail_feature"
+                "@fail_feature",
+                "@ex:2",
+                "@substep",
+                "@table_argument",
+                "@thishasarule"
             ]
         },
         {
@@ -24,7 +28,10 @@
             "type": "pickString",
             "options": [
                 "cucumber_cpp/example/features",
-                "cucumber_cpp/acceptance_test/features"
+                "cucumber_cpp/example/features/rule.feature",
+                "cucumber_cpp/example/features/substep.feature",
+                "cucumber_cpp/acceptance_test/features",
+                "cucumber_cpp/devkit/empty/features"
             ]
         }
     ],
@@ -36,16 +43,48 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "run",
-                "--feature",
-                "${input:features}",
-                "--report",
-                "console",
-                "junit-xml",
-                // "--com",
-                // "COMx",
-                // "--nordic",
+                "--com",
+                "COMx",
+                "--nordic",
+                "--format",
+                "summary",
                 "--tag",
-                "${input:tag}"
+                "${input:tag}",
+                "--",
+                "${input:features}",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "ASAN_OPTIONS",
+                    "value": "detect_leaks=0"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch - no tags",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "run",
+                "--com",
+                "COMx",
+                "--nordic",
+                "--format",
+                "summary",
+                "--",
+                "${input:features}",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

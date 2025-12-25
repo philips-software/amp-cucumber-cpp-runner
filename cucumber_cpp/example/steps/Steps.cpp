@@ -3,47 +3,52 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
-#include <iostream>
 #include <string>
 
 GIVEN(R"(a background step)")
 {
-    std::cout << "\nthis is a background step";
+    /* no body, example only */
 }
 
 GIVEN(R"(a simple data table)")
 {
-    std::cout << "row0.col0: " << table[0][0].As<std::string>() << "\n";
-    std::cout << "row0.col1: " << table[0][1].As<std::string>() << "\n";
+    [[maybe_unused]] const auto row0col0 = dataTable->rows[0].cells[0].value;
+    [[maybe_unused]] const auto row0col1 = dataTable->rows[0].cells[1].value;
 
-    std::cout << "row1.col0: " << table[1][0].As<std::string>() << "\n";
-    std::cout << "row1.col1: " << table[1][1].As<std::string>() << "\n";
+    [[maybe_unused]] const auto row1col0 = dataTable->rows[1].cells[0].value;
+    [[maybe_unused]] const auto row1col1 = dataTable->rows[1].cells[1].value;
 }
 
-GIVEN(R"(there are {int} cucumbers)", (std::uint32_t num))
+GIVEN(R"(there are {int} cucumbers)", (std::int32_t num))
 {
     context.InsertAt("cucumbers_before", num);
 }
 
-STEP(R"(I eat {int} cucumbers)", (std::uint32_t num))
+STEP(R"(I eat {int} cucumbers)", (std::int32_t num))
 {
     context.InsertAt("cucumbers_eaten", num);
 }
 
-THEN(R"(^I should have ([0-9]+) cucumbers$)", (std::uint32_t num))
+STEP("expect and assert")
 {
-    const auto& before = context.Get<std::uint32_t>("cucumbers_before");
-    const auto& eaten = context.Get<std::uint32_t>("cucumbers_eaten");
+    EXPECT_THAT(false, testing::Eq(true));
+    ASSERT_THAT(true, testing::Eq(false));
+}
+
+THEN(R"(I should have {int} cucumbers)", (std::int32_t num))
+{
+    const auto& before = context.Get<std::int32_t>("cucumbers_before");
+    const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 
     ASSERT_THAT(actual, testing::Eq(num));
 }
 
-THEN(R"(I should have ([0-9]+) cucumbers left)", (std::uint32_t num))
+THEN(R"(I should have {int} cucumbers left)", (std::int32_t num))
 {
-    const auto& before = context.Get<std::uint32_t>("cucumbers_before");
-    const auto& eaten = context.Get<std::uint32_t>("cucumbers_eaten");
+    const auto& before = context.Get<std::int32_t>("cucumbers_before");
+    const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 
@@ -68,4 +73,37 @@ STEP(R"(a data table with an empty cell)")
 STEP(R"(a data table with comments and newlines inside)")
 {
     /* no body, example only */
+}
+
+STEP(R"(^a step$)")
+{
+    context.EmplaceAt<std::string>("substep", "was executed");
+}
+
+STEP(R"(^a step calls another step$)")
+{
+    Given(R"(a step)");
+}
+
+STEP(R"(^the called step is executed$)")
+{
+    ASSERT_THAT(context.Contains("substep"), testing::IsTrue());
+    ASSERT_THAT(context.Get<std::string>("substep"), testing::Eq("was executed"));
+}
+
+STEP("this step should be skipped")
+{
+    /* no body, example only */
+}
+
+STEP(R"(a step stores the value at row {int} and column {int} from the table:)", (std::int32_t row, std::int32_t column))
+{
+    context.EmplaceAt<std::string>("cell", dataTable->rows[row].cells[column].value);
+}
+
+STEP(R"(the value should be {string})", (const std::string& expected_value))
+{
+    const auto& actual = context.Get<std::string>("cell");
+
+    ASSERT_THAT(actual, testing::StrEq(expected_value));
 }

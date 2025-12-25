@@ -1,24 +1,14 @@
-
-#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
 #include "gmock/gmock.h"
-#include <any>
 #include <cctype>
-#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <format>
-#include <functional>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <iterator>
-#include <limits>
-#include <optional>
-#include <regex>
 #include <string>
 #include <utility>
 #include <vector>

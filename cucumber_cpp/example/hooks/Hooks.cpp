@@ -12,7 +12,42 @@ HOOK_BEFORE_ALL()
         context.Emplace<NordicBleFixture>();
 }
 
-HOOK_BEFORE_SCENARIO("@dingus")
+HOOK_BEFORE_ALL(.name = "Initialize something")
 {
-    std::cout << "running only for dingus tests\n";
+    /* no body, example only */
+}
+
+HOOK_BEFORE_SCENARIO(.name = "explicit name only")
+{
+    /* no body, example only */
+}
+
+HOOK_BEFORE_SCENARIO("@dingus", "name", 10)
+{
+    /* no body, example only */
+}
+
+HOOK_BEFORE_SCENARIO("@result:OK")
+{
+    /* no body, example only */
+}
+
+HOOK_BEFORE_SCENARIO()
+{
+    /* no body, example only */
+}
+
+HOOK_AFTER_SCENARIO()
+{
+    /* no body, example only */
+}
+
+HOOK_BEFORE_STEP()
+{
+    /* no body, example only */
+}
+
+HOOK_AFTER_STEP()
+{
+    /* no body, example only */
 }

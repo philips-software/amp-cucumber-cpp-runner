@@ -23,5 +23,4 @@ target_sources(cucumber_cpp.library.engine.test_helper PRIVATE
     TemporaryFile.cpp
     TemporaryFile.hpp
     TestExecutionInstance.hpp
-    TestRunnerMock.hpp
 )

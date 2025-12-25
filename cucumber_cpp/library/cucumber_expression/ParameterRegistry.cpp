@@ -1,16 +1,17 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include <any>
 #include <cctype>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <format>
 #include <functional>
-#include <iterator>
 #include <map>
+#include <optional>
 #include <regex>
+#include <source_location>
 #include <string>
 #include <utility>
 #include <vector>
@@ -20,88 +21,85 @@ namespace cucumber_cpp::library::cucumber_expression
     namespace
     {
         template<class T>
-        std::function<std::any(MatchRange)> CreateStreamConverter()
+        std::function<T(const cucumber::messages::group&)> CreateStreamConverter()
         {
-            return [](const MatchRange& matches)
+            return [](const cucumber::messages::group& matches) -> T
             {
-                return StringTo<T>(matches.begin()->str());
+                if (matches.value.has_value())
+                    return StringTo<T>(matches.value.value());
+                return {};
             };
-        }
+        };
 
-        std::function<std::any(MatchRange)> CreateStringConverter()
+        std::function<std::string(const cucumber::messages::group&)> CreateStringConverter()
         {
-            return [](const MatchRange& matches)
+            return [](const cucumber::messages::group& matches)
             {
-                std::string str = matches[1].matched ? matches[1].str() : matches[3].str();
+                std::string str = matches.children.front().value.has_value()
+                                      ? matches.children.front().value.value()
+                                      : matches.children.back().value.value();
+
                 str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
                 str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
+
                 return str;
             };
         }
     }
-
-    std::smatch::const_iterator MatchRange::begin() const
-    {
-        return first;
-    }
-
-    std::smatch::const_iterator MatchRange::end() const
-    {
-        return second;
-    }
-
-    const std::ssub_match& MatchRange::operator[](std::size_t index) const
-    {
-        return *std::next(begin(), index);
-    }
-
-    Converter::Converter(std::size_t matches, std::function<std::any(MatchRange)> converter)
-        : matches{ matches }
-        , converter{ std::move(converter) }
-    {}
 
     ParameterRegistry::ParameterRegistry()
     {
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
-        const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
+        const static std::string stringRegex{ R"__("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
 
-        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
-        AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
-        AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
-        AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
-        AddParameter("", { ".*" }, CreateStreamConverter<std::string>());
-        AddParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
-        AddParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("double", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
+        AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("string", { stringRegex }, CreateStringConverter());
+        AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("double", { floatRegex }, CreateStreamConverter<double>());
 
         // extension
-        AddParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+        AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+
+        const auto& parameterRegistration = cucumber_cpp::library::ParameterRegistration::Instance();
+        for (const auto& parameter : parameterRegistration.GetRegisteredParameters())
+            AddParameter(Parameter{ parameter.params.name, { std::string(parameter.params.regex) }, false, parameter.params.useForSnippets, parameter.location });
     }
 
-    Parameter ParameterRegistry::Lookup(const std::string& name) const
+    const std::map<std::string, const Parameter>& ParameterRegistry::GetParameters() const
     {
-        if (parameters.contains(name))
-            return parameters.at(name);
-        return {};
+        return parametersByName;
     }
 
-    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter)
+    const Parameter& ParameterRegistry::Lookup(const std::string& name) const
     {
-        if (parameters.contains(name))
+        return parametersByName.at(name);
+    }
+
+    void ParameterRegistry::AssertParameterIsUnique(const std::string& name) const
+    {
+        if (parametersByName.contains(name))
         {
             if (name.empty())
                 throw CucumberExpressionError{ "The anonymous parameter type has already been defined" };
             else
                 throw CucumberExpressionError{ std::format("There is already a parameter with name {}", name) };
         }
+    }
 
-        parameters[name] = Parameter{ name, std::move(regex), std::move(converter) };
+    void ParameterRegistry::AddParameter(Parameter parameter)
+    {
+        AssertParameterIsUnique(parameter.name);
+
+        parametersByName.emplace(parameter.name, parameter);
     }
 }

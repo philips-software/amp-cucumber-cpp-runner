@@ -11,19 +11,22 @@ endif()
 
 if (CCR_STANDALONE)
     set(CCR_DEFAULTOPT On)
-else()
-    set(CCR_DEFAULTOPT Off)
-endif()
-
-if (CCR_STANDALONE)
     set(CCR_EXCLUDE_FROM_ALL "")
 else()
+    set(CCR_DEFAULTOPT Off)
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." On )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
+
+set(BUILD_SHARED_LIBS  Off CACHE STRING "")
+
+if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
 
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
@@ -68,3 +71,4 @@ else()
 endif()
 
 add_subdirectory(cucumber_cpp)
+add_subdirectory(compatibility)

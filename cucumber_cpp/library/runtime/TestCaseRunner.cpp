@@ -1,0 +1,246 @@
+
+#include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
+#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/gherkin_document.hpp"
+#include "cucumber/messages/pickle.hpp"
+#include "cucumber/messages/pickle_step.hpp"
+#include "cucumber/messages/pickle_table_row.hpp"
+#include "cucumber/messages/step_match_arguments_list.hpp"
+#include "cucumber/messages/suggestion.hpp"
+#include "cucumber/messages/test_case.hpp"
+#include "cucumber/messages/test_case_finished.hpp"
+#include "cucumber/messages/test_case_started.hpp"
+#include "cucumber/messages/test_step.hpp"
+#include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/test_step_result.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/test_step_started.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Body.hpp"
+#include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/support/Timestamp.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <ranges>
+#include <span>
+#include <string>
+#include <vector>
+
+namespace cucumber_cpp::library::runtime
+{
+    TestCaseRunner::TestCaseRunner(util::Broadcaster& broadcaster,
+        cucumber::gherkin::id_generator_ptr idGenerator,
+        const cucumber::messages::gherkin_document& gherkinDocument,
+        const cucumber::messages::pickle& pickle,
+        const cucumber::messages::test_case& testCase,
+        std::size_t retries,
+        bool skip,
+        support::SupportCodeLibrary& supportCodeLibrary,
+        Context& testSuiteContext)
+        : broadcaster{ broadcaster }
+        , idGenerator{ idGenerator }
+        , gherkinDocument{ gherkinDocument }
+        , pickle{ pickle }
+        , testCase{ testCase }
+        , maximumAttempts{ 1 + (skip ? 0 : retries) }
+        , skip{ skip }
+        , supportCodeLibrary{ supportCodeLibrary }
+        , testSuiteContext{ testSuiteContext }
+    {}
+
+    cucumber::messages::test_step_result_status TestCaseRunner::Run()
+    {
+        for (std::size_t attempt = 0; attempt < maximumAttempts; ++attempt)
+        {
+            testStepResults.clear();
+
+            const auto willRetry = RunAttempt(attempt, (attempt + 1) < maximumAttempts);
+
+            if (willRetry)
+                continue;
+
+            return GetWorstStepResult().status;
+        }
+
+        return cucumber::messages::test_step_result_status::UNKNOWN;
+    }
+
+    bool TestCaseRunner::RunAttempt(std::size_t attempt, bool moreAttemptsAvailable)
+    {
+        Context testCaseContext{ &testSuiteContext };
+        const auto currentTestCaseStartedId = idGenerator->next_id();
+        bool willRetry = false;
+
+        broadcaster.BroadcastEvent({ .test_case_started = cucumber::messages::test_case_started{
+                                         .attempt = attempt,
+                                         .id = currentTestCaseStartedId,
+                                         .test_case_id = testCase.id,
+                                         .timestamp = support::TimestampNow(),
+                                     } });
+
+        bool seenSteps = false;
+        bool error = false;
+
+        for (const auto& testStep : testCase.test_steps)
+        {
+            auto testStepStarted = cucumber::messages::test_step_started{
+                .test_case_started_id = currentTestCaseStartedId,
+                .test_step_id = testStep.id,
+                .timestamp = support::TimestampNow(),
+            };
+            broadcaster.BroadcastEvent({ .test_step_started = testStepStarted });
+
+            cucumber::messages::test_step_result testStepResult;
+
+            if (testStep.hook_id)
+            {
+                testStepResult = RunHook(supportCodeLibrary.hookRegistry.GetDefinitionById(testStep.hook_id.value()), !seenSteps, testCaseContext, testStepStarted);
+            }
+            else
+            {
+                auto pickleStepIter = std::ranges::find(pickle.steps, testStep.pickle_step_id.value(), &cucumber::messages::pickle_step::id);
+                testStepResult = RunStep(*pickleStepIter, testStep, testCaseContext, testStepStarted);
+                seenSteps = true;
+            }
+            testStepResults.emplace_back(testStepResult);
+
+            broadcaster.BroadcastEvent({ .test_step_finished = cucumber::messages::test_step_finished{
+                                             .test_case_started_id = currentTestCaseStartedId,
+                                             .test_step_id = testStep.id,
+                                             .test_step_result = testStepResult,
+                                             .timestamp = support::TimestampNow(),
+                                         } });
+        }
+
+        willRetry = GetWorstStepResult().status == cucumber::messages::test_step_result_status::FAILED && moreAttemptsAvailable;
+
+        broadcaster.BroadcastEvent({ .test_case_finished = cucumber::messages::test_case_finished{
+                                         .test_case_started_id = currentTestCaseStartedId,
+                                         .timestamp = support::TimestampNow(),
+                                         .will_be_retried = willRetry,
+                                     } });
+
+        return willRetry;
+    }
+
+    cucumber::messages::test_step_result TestCaseRunner::RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    {
+        if (ShouldSkipHook(isBeforeHook))
+            return {
+                .duration = cucumber::messages::duration{},
+                .status = cucumber::messages::test_step_result_status::SKIPPED,
+            };
+
+        return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, testStepStarted));
+    }
+
+    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    {
+        auto ids = supportCodeLibrary.hookRegistry.FindIds(hookType, pickle.tags);
+        std::vector<cucumber::messages::test_step_result> results;
+        results.reserve(ids.size());
+
+        for (const auto& id : ids)
+        {
+            const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
+            results.emplace_back(InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted)));
+        }
+
+        return results;
+    }
+
+    cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    {
+        auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([this](const std::string& id)
+                                                                     {
+                                                                         return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
+                                                                     });
+
+        if (const auto count = testStep.step_definition_ids->size(); count == 0)
+        {
+            broadcaster.BroadcastEvent({ .suggestion = cucumber::messages::suggestion{
+                                             .id = idGenerator->next_id(),
+                                             .pickle_step_id = pickleStep.id,
+                                             .snippets = {},
+                                         } });
+
+            return {
+                .duration = cucumber::messages::duration{},
+                .status = cucumber::messages::test_step_result_status::UNDEFINED,
+            };
+        }
+        else if (count > 1)
+        {
+            return {
+                .duration = cucumber::messages::duration{},
+                .message = "Ambiguous step definitions",
+                .status = cucumber::messages::test_step_result_status::AMBIGUOUS,
+            };
+        }
+        else if (IsSkippingSteps())
+        {
+            return {
+                .duration = cucumber::messages::duration{},
+                .status = cucumber::messages::test_step_result_status::SKIPPED,
+            };
+        }
+
+        auto stepResults = RunStepHooks(pickleStep, HookType::beforeStep, testCaseContext, testStepStarted);
+
+        if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::test_step_result_status::FAILED)
+        {
+            const auto& dataTable = pickleStep.argument ? pickleStep.argument->data_table : std::nullopt;
+            const auto& docString = pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt;
+
+            const auto& definition = stepDefinitions.front();
+            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, dataTable, docString), testStep.step_match_arguments_lists->front());
+            stepResults.push_back(result);
+        }
+
+        const auto afterStepHookResults = RunStepHooks(pickleStep, HookType::afterStep, testCaseContext, testStepStarted);
+        stepResults.reserve(stepResults.size() + afterStepHookResults.size());
+        stepResults.insert(stepResults.end(), afterStepHookResults.begin(), afterStepHookResults.end());
+
+        auto finalStepResult = util::GetWorstTestStepResult(stepResults);
+
+        cucumber::messages::duration finalDuration{};
+        for (const auto& stepResult : stepResults)
+            finalDuration += stepResult.duration;
+
+        finalStepResult.duration = finalDuration;
+        return finalStepResult;
+    }
+
+    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<Body> body, const cucumber::messages::step_match_arguments_list& args)
+    {
+        return body->ExecuteAndCatchExceptions(args);
+    }
+
+    cucumber::messages::test_step_result TestCaseRunner::GetWorstStepResult() const
+    {
+        if (testStepResults.empty())
+            return {
+                .status = skip ? cucumber::messages::test_step_result_status::SKIPPED : cucumber::messages::test_step_result_status::PASSED,
+            };
+
+        return util::GetWorstTestStepResult(testStepResults);
+    }
+
+    bool TestCaseRunner::ShouldSkipHook(bool isBeforeHook)
+    {
+        return skip || (IsSkippingSteps() && isBeforeHook);
+    }
+
+    bool TestCaseRunner::IsSkippingSteps()
+    {
+        return GetWorstStepResult().status != cucumber::messages::test_step_result_status::PASSED;
+    }
+}

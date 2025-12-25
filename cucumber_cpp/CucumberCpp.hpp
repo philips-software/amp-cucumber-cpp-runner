@@ -4,9 +4,10 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Hooks.hpp"
+#include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/Steps.hpp"
+#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
-#include "cucumber_cpp/library/report/Report.hpp"
 
 namespace cucumber_cpp
 {
@@ -14,7 +15,6 @@ namespace cucumber_cpp
     using cucumber_cpp::library::Context;
     using cucumber_cpp::library::engine::Step;
     using cucumber_cpp::library::engine::StringTo;
-    using cucumber_cpp::library::report::ReportHandlerV2;
 }
 
 #endif

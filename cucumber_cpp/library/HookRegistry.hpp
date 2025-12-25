@@ -1,14 +1,24 @@
 #ifndef CUCUMBER_CPP_HOOKREGISTRY_HPP
 #define CUCUMBER_CPP_HOOKREGISTRY_HPP
 
+#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/hook.hpp"
+#include "cucumber/messages/pickle_tag.hpp"
+#include "cucumber/messages/tag.hpp"
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
-#include <set>
+#include <optional>
+#include <ranges>
+#include <source_location>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -27,9 +37,9 @@ namespace cucumber_cpp::library
         afterStep,
     };
 
-    struct HookBase
+    struct HookBase : engine::ExecutionContext
     {
-        explicit HookBase(Context& context);
+        HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
 
         virtual ~HookBase() = default;
 
@@ -42,85 +52,72 @@ namespace cucumber_cpp::library
         {
             /* nothing to do */
         }
-
-    protected:
-        Context& context;
     };
+
+    using HookFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
+
+    template<class T>
+    std::unique_ptr<Body> HookBodyFactory(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
+    {
+        return std::make_unique<T>(broadCaster, context, stepOrHookStarted);
+    }
 
     struct HookMatch
     {
-        explicit HookMatch(std::unique_ptr<Body> (&factory)(Context& context))
+        explicit HookMatch(HookFactory factory)
             : factory(factory)
         {}
 
-        std::unique_ptr<Body> (&factory)(Context& context);
+        HookFactory factory;
     };
 
-    struct HookRegistryBase
+    struct HookRegistry
     {
-        struct Entry
+        struct Definition
         {
-            Entry(HookType type, std::string_view expression, std::unique_ptr<Body> (&factory)(Context& context))
-                : type(type)
-                , tagExpression{ tag_expression::Parse(expression) }
-                , factory(factory)
-            {}
+            Definition(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);
 
             HookType type;
             std::unique_ptr<tag_expression::Expression> tagExpression;
-            std::unique_ptr<Body> (&factory)(Context& context);
+            HookFactory factory;
+            cucumber::messages::hook hook;
         };
 
-        [[nodiscard]] std::vector<HookMatch> Query(HookType hookType, const std::set<std::string, std::less<>>& tags) const;
+        explicit HookRegistry(cucumber::gherkin::id_generator_ptr idGenerator);
+
+        void LoadHooks();
+
+        std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags = {}) const;
+        std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::tag> tags) const;
+
+        std::vector<cucumber::messages::hook> HooksByType(HookType hookType) const
+        {
+            auto filtered = registry |
+                            std::views::values |
+                            std::views::filter([hookType](const Definition& definition)
+                                {
+                                    return definition.type == hookType;
+                                }) |
+                            std::views::transform([](const Definition& definition)
+                                {
+                                    return definition.hook;
+                                });
+
+            return { filtered.begin(), filtered.end() };
+        }
 
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(HookType hookType) const;
 
-    protected:
-        template<class T>
-        std::size_t Register(const std::string& tagExpression, HookType hookType);
+        HookFactory GetFactoryById(const std::string& id) const;
+        const Definition& GetDefinitionById(const std::string& id) const;
 
     private:
-        template<class T>
-        static std::unique_ptr<Body> Construct(Context& context);
+        void Register(const std::string& id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);
 
-        std::vector<Entry> registry;
+        cucumber::gherkin::id_generator_ptr idGenerator;
+        std::map<std::string, Definition, std::less<>> registry;
     };
-
-    struct HookRegistry : HookRegistryBase
-    {
-    private:
-        HookRegistry() = default;
-
-    public:
-        static HookRegistry& Instance();
-
-        template<class T>
-        static std::size_t Register(const std::string& tagExpression, HookType hookType);
-    };
-
-    //////////////////////////
-    //    implementation    //
-    //////////////////////////
-
-    template<class T>
-    std::size_t HookRegistryBase::Register(const std::string& tagExpression, HookType hookType)
-    {
-        registry.emplace_back(hookType, tagExpression, Construct<T>);
-        return registry.size();
-    }
-
-    template<class T>
-    std::unique_ptr<Body> HookRegistryBase::Construct(Context& context)
-    {
-        return std::make_unique<T>(context);
-    }
-
-    template<class T>
-    std::size_t HookRegistry::Register(const std::string& tagExpression, HookType hookType)
-    {
-        return Instance().HookRegistryBase::Register<T>(tagExpression, hookType);
-    }
 }
 
 #endif

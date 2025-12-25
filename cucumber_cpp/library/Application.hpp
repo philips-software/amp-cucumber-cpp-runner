@@ -4,44 +4,52 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
-#include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
-#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
-#include "cucumber_cpp/library/engine/FeatureInfo.hpp"
-#include "cucumber_cpp/library/engine/Result.hpp"
-#include "cucumber_cpp/library/report/Report.hpp"
+#include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/support/Timestamp.hpp"
+#include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
-#include <filesystem>
+#include <cstddef>
 #include <memory>
+#include <set>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library
 {
-    struct ReportHandlerValidator : public CLI::Validator
-    {
-        explicit ReportHandlerValidator(const report::Reporters& reporters);
-    };
+    // struct ReportHandlerValidator : public CLI::Validator
+    // {
+    //     explicit ReportHandlerValidator(const report::Reporters& reporters);
+    // };
 
     struct Application
     {
         struct Options
         {
+            std::set<std::string> paths{};
+
+            bool dryRun{ false };
+            bool failFast{ false };
+
+            std::set<std::string> format{};
+            std::string formatOptions{};
+
+            std::string language{ "en" };
+
+            enum support::RunOptions::Ordering ordering{ support::RunOptions::Ordering::defined };
+
+            std::size_t retry{ 0 };
+            std::vector<std::string> retryTagFilter{};
+
+            bool strict{ true };
+
             std::vector<std::string> tags{};
-            std::vector<std::string> features{};
-            std::vector<std::string> reporters{};
-
-            std::string outputfolder{ "./out" };
-            std::string reportfile{ "TestReport" };
-
-            bool dryrun{ false };
-            bool printStepsNotUsed{ false };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
@@ -50,33 +58,38 @@ namespace cucumber_cpp::library
 
         CLI::App& CliParser();
         Context& ProgramContext();
-        cucumber_expression::ParameterRegistration& ParameterRegistration();
+        cucumber_expression::ParameterRegistry& ParameterRegistration();
 
-        void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
+        // void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
 
     private:
         void DryRunFeatures();
         void RunFeatures();
-        [[nodiscard]] engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
         void PrintStepsNotUsed(const StepRegistry& stepRegistry) const;
-        [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);
 
         [[nodiscard]] int GetExitCode() const;
-        [[nodiscard]] int GetExitCode(engine::Result result) const;
 
         Options options;
+
         CLI::App cli;
         CLI::App* runCommand;
 
-        engine::ContextManager contextManager;
+        std::shared_ptr<ContextStorageFactory> contextStorageFactory;
+        std::unique_ptr<Context> programContext{ std::make_unique<Context>(contextStorageFactory) };
+        Context& programContextRef{ *programContext };
 
-        report::ReportForwarderImpl reporters;
-        ReportHandlerValidator reportHandlerValidator;
+        api::Formatters formatters;
 
-        cucumber::gherkin::app gherkin;
+        util::Broadcaster broadcaster;
 
-        cucumber_expression::ParameterRegistry parameterRegistry;
+        // ReportHandlerValidator reportHandlerValidator;
+
+        cucumber_expression::ParameterRegistry parameterRegistry{};
         bool removeDefaultGoogleTestListener;
+        support::StopWatchHighResolutionClock stopwatchHighResolutionClock;
+        support::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
+
+        bool runPassed{ false };
     };
 }
 
