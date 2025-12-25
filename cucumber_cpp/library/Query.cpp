@@ -28,6 +28,7 @@
 #include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstdint>
 #include <format>
 #include <functional>
@@ -93,64 +94,12 @@ namespace cucumber_cpp::library
         return scenario->name;
     }
 
-    Query& Query::operator+=(const cucumber::messages::envelope& envelope)
-    {
-        if (envelope.meta)
-            meta = std::make_unique<cucumber::messages::meta>(*envelope.meta);
-
-        if (envelope.gherkin_document)
-            *this += *envelope.gherkin_document;
-
-        if (envelope.pickle)
-            *this += *envelope.pickle;
-
-        if (envelope.hook)
-            *this += *envelope.hook;
-
-        if (envelope.step_definition)
-            *this += *envelope.step_definition;
-
-        if (envelope.test_run_started)
-            *this += *envelope.test_run_started;
-
-        if (envelope.test_run_hook_started)
-            *this += *envelope.test_run_hook_started;
-
-        if (envelope.test_run_hook_finished)
-            *this += *envelope.test_run_hook_finished;
-
-        if (envelope.test_case)
-            *this += *envelope.test_case;
-
-        if (envelope.test_case_started)
-            *this += *envelope.test_case_started;
-
-        if (envelope.test_step_started)
-            *this += *envelope.test_step_started;
-
-        if (envelope.attachment)
-            *this += *envelope.attachment;
-
-        if (envelope.test_step_finished)
-            *this += *envelope.test_step_finished;
-
-        if (envelope.test_case_finished)
-            *this += *envelope.test_case_finished;
-
-        if (envelope.test_run_finished)
-            *this += *envelope.test_run_finished;
-
-        if (envelope.suggestion)
-            *this += *envelope.suggestion;
-
-        if (envelope.undefined_parameter_type)
-            *this += *envelope.undefined_parameter_type;
-
-        if (envelope.parameter_type)
-            *this += *envelope.parameter_type;
-
-        return *this;
-    }
+    Query::Query(util::Broadcaster& broadcaster)
+        : util::Listener{ broadcaster, [this](const cucumber::messages::envelope& envelope)
+            {
+                operator+=(envelope);
+            } }
+    {}
 
     const Lineage& Query::FindLineageByPickle(const cucumber::messages::pickle& pickle) const
     {
@@ -242,8 +191,66 @@ namespace cucumber_cpp::library
         return testCaseFinishedByTestCaseStartedId;
     }
 
-    void
-    Query::operator+=(const cucumber::messages::gherkin_document& gherkinDocument)
+    void Query::operator+=(const cucumber::messages::envelope& envelope)
+    {
+        if (envelope.meta)
+            meta = std::make_unique<cucumber::messages::meta>(*envelope.meta);
+
+        if (envelope.gherkin_document)
+            *this += *envelope.gherkin_document;
+
+        if (envelope.pickle)
+            *this += *envelope.pickle;
+
+        if (envelope.hook)
+            *this += *envelope.hook;
+
+        if (envelope.step_definition)
+            *this += *envelope.step_definition;
+
+        if (envelope.test_run_started)
+            *this += *envelope.test_run_started;
+
+        if (envelope.test_run_hook_started)
+            *this += *envelope.test_run_hook_started;
+
+        if (envelope.test_run_hook_finished)
+            *this += *envelope.test_run_hook_finished;
+
+        if (envelope.test_case)
+            *this += *envelope.test_case;
+
+        if (envelope.test_case_started)
+            *this += *envelope.test_case_started;
+
+        if (envelope.test_step_started)
+            *this += *envelope.test_step_started;
+
+        if (envelope.attachment)
+            *this += *envelope.attachment;
+
+        if (envelope.test_step_finished)
+            *this += *envelope.test_step_finished;
+
+        if (envelope.test_case_finished)
+            *this += *envelope.test_case_finished;
+
+        if (envelope.test_run_finished)
+            *this += *envelope.test_run_finished;
+
+        if (envelope.suggestion)
+            *this += *envelope.suggestion;
+
+        if (envelope.undefined_parameter_type)
+            *this += *envelope.undefined_parameter_type;
+
+        if (envelope.parameter_type)
+            *this += *envelope.parameter_type;
+
+        BroadcastEvent(envelope);
+    }
+
+    void Query::operator+=(const cucumber::messages::gherkin_document& gherkinDocument)
     {
         if (gherkinDocument.feature)
             *this += { *gherkinDocument.feature, Lineage{ std::make_unique<cucumber::messages::gherkin_document>(gherkinDocument) } };

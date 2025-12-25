@@ -31,6 +31,7 @@
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstdint>
 #include <forward_list>
 #include <functional>
@@ -69,8 +70,10 @@ namespace cucumber_cpp::library
     Lineage operator+(Lineage lineage, std::uint32_t featureIndex);
 
     struct Query
+        : util::Broadcaster
+        , util::Listener
     {
-        Query& operator+=(const cucumber::messages::envelope& envelope);
+        explicit Query(util::Broadcaster& broadcaster);
 
         auto GetPickles() const
         {
@@ -106,8 +109,9 @@ namespace cucumber_cpp::library
         const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
 
     private:
-        void
-        operator+=(const cucumber::messages::gherkin_document& gherkinDocument);
+        void operator+=(const cucumber::messages::envelope& envelope);
+
+        void operator+=(const cucumber::messages::gherkin_document& gherkinDocument);
         void operator+=(const cucumber::messages::pickle& pickle);
         void operator+=(const cucumber::messages::hook& hook);
         void operator+=(const cucumber::messages::step_definition& stepDefinition);
