@@ -35,7 +35,7 @@ STEP("expect and assert")
     ASSERT_THAT(true, testing::Eq(false));
 }
 
-THEN(R"(^I should have ([0-9]+) cucumbers$)", (std::int32_t num))
+THEN(R"(I should have {int} cucumbers)", (std::int32_t num))
 {
     const auto& before = context.Get<std::int32_t>("cucumbers_before");
     const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");
@@ -45,7 +45,7 @@ THEN(R"(^I should have ([0-9]+) cucumbers$)", (std::int32_t num))
     ASSERT_THAT(actual, testing::Eq(num));
 }
 
-THEN(R"(^I should have ([0-9]+) cucumbers left$)", (std::int32_t num))
+THEN(R"(I should have {int} cucumbers left)", (std::int32_t num))
 {
     const auto& before = context.Get<std::int32_t>("cucumbers_before");
     const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");

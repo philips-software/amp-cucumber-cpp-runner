@@ -101,7 +101,6 @@ namespace cucumber_cpp::library
     {
         try
         {
-
             const std::map<std::string, support::RunOptions::Ordering> orderingMap{
                 { "defined", support::RunOptions::Ordering::defined },
                 { "reverse", support::RunOptions::Ordering::reverse },

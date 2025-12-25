@@ -12,7 +12,7 @@ function(add_compatibility_kit name)
     )
 
     target_include_directories(${libname} PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../..>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
     target_sources(${libname} PRIVATE
