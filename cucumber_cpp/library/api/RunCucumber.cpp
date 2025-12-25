@@ -7,7 +7,9 @@
 #include "cucumber/messages/step_definition_pattern.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/formatter/PrettyPrinter.hpp"
@@ -17,12 +19,13 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <gtest/gtest.h>
 #include <list>
 #include <memory>
 #include <ranges>
+#include <set>
+#include <string>
 #include <utility>
 
 namespace cucumber_cpp::library::api
@@ -121,7 +124,7 @@ namespace cucumber_cpp::library::api
         }
     }
 
-    bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster)
+    bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string>& format, const std::string& formatOptions)
     {
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
@@ -137,8 +140,9 @@ namespace cucumber_cpp::library::api
         };
 
         formatter::helper::EventDataCollector eventDataCollector{ broadcaster };
-        formatter::PrettyPrinter prettyPrinter{ supportCodeLibrary, broadcaster, eventDataCollector };
-        formatter::SummaryFormatter summaryFormatter{ supportCodeLibrary, broadcaster, eventDataCollector };
+        Query query{ broadcaster };
+
+        const auto activeFormatters = formatters.EnableFormatters(format, formatOptions, supportCodeLibrary, query, eventDataCollector);
 
         const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
 

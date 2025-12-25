@@ -46,8 +46,6 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyPrinter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
-        query += envelope;
-
         if (envelope.test_case_started)
         {
             CalculateIndent(envelope.test_case_started.value());

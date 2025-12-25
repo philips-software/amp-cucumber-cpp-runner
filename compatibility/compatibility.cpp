@@ -1,5 +1,6 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
@@ -267,7 +268,8 @@ namespace compatibility
 
             BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
 
-            cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
+            cucumber_cpp::library::api::Formatters formatters;
+            cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "summary" }, {});
 
             broadcastListener.CompareEnvelopes();
         }

@@ -6,6 +6,7 @@
 
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
@@ -37,7 +38,7 @@ namespace cucumber_cpp::library
             bool failFast{ false };
 
             std::set<std::string> format{};
-            std::set<std::string> formatOptions{};
+            std::string formatOptions{};
 
             std::string language{ "en" };
 
@@ -76,6 +77,8 @@ namespace cucumber_cpp::library
         std::shared_ptr<ContextStorageFactory> contextStorageFactory;
         std::unique_ptr<Context> programContext{ std::make_unique<Context>(contextStorageFactory) };
         Context& programContextRef{ *programContext };
+
+        api::Formatters formatters;
 
         util::Broadcaster broadcaster;
 

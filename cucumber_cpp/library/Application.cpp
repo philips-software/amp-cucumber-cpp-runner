@@ -188,7 +188,6 @@ namespace cucumber_cpp::library
 
     void Application::RunFeatures()
     {
-
         const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = GetFeatureFiles(options),
@@ -207,7 +206,7 @@ namespace cucumber_cpp::library
         auto& listeners = testing::UnitTest::GetInstance()->listeners();
         auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
 
-        runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster);
+        runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
 
         listeners.Append(defaultEventListener);
 

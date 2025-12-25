@@ -1,6 +1,8 @@
 add_library(cucumber_cpp.library.api STATIC ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.api PRIVATE
+    Formatters.cpp
+    Formatters.hpp
     Gherkin.cpp
     Gherkin.hpp
     RunCucumber.cpp

@@ -59,8 +59,6 @@ namespace cucumber_cpp::library::formatter
 
         std::set<const cucumber::messages::feature*> printedFeatureUris;
         std::set<const cucumber::messages::rule*> printedRuleIds;
-
-        Query query;
     };
 }
 
