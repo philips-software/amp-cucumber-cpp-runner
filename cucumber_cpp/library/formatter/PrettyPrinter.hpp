@@ -33,8 +33,6 @@ namespace cucumber_cpp::library::formatter
         using Formatter::Formatter;
 
     private:
-        bool eventDataCollector{ false };
-
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
 
         void CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted);
