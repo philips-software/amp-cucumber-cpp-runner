@@ -2,9 +2,11 @@
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <cstddef>
+#include <format>
 #include <ranges>
 #include <span>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -17,7 +19,7 @@ namespace cucumber_cpp::library::cucumber_expression
     std::vector<Argument> Argument::BuildArguments(const cucumber::messages::group& group, std::span<const Parameter> parameters)
     {
         if (group.children.size() != parameters.size())
-            throw std::runtime_error("Mismatch between number of groups and parameters");
+            throw std::runtime_error(std::format("Mismatch between number of groups ({}) and parameters ({})", group.children.size(), parameters.size()));
 
         std::size_t index{ 0 };
         auto converted = parameters | std::views::transform([&group, &index](const Parameter& parameter) -> Argument
