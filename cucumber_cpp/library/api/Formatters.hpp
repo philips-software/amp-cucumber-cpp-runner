@@ -13,23 +13,29 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <vector>
+#include <utility>
 
 namespace cucumber_cpp::library::api
 {
+    struct RegisteredFormatter
+    {
+        std::function<std::unique_ptr<formatter::Formatter>(support::SupportCodeLibrary&, Query&, const formatter::helper::EventDataCollector&, std::ostream&)> factory;
+        bool hasOutput{ false };
+    };
+
     struct Formatters
     {
         Formatters();
 
         template<class T>
-        void RegisterFormatter(const std::string& name);
+        void RegisterFormatter(const std::string& name, bool hasOutput = false);
 
-        std::vector<std::string> GetAvailableFormatterNames() const;
+        std::set<std::pair<std::string, bool>> GetAvailableFormatterNames() const;
 
-        [[nodiscard]] std::list<std::unique_ptr<formatter::Formatter>> EnableFormatters(const std::set<std::string>& format, const std::string& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output = std::cout);
+        [[nodiscard]] std::list<std::unique_ptr<formatter::Formatter>> EnableFormatters(const std::set<std::string, std::less<>>& format, const std::string& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output = std::cout);
 
     private:
-        std::map<std::string, std::function<std::unique_ptr<formatter::Formatter>(support::SupportCodeLibrary&, Query&, const formatter::helper::EventDataCollector&, std::ostream&)>> availableFormatters;
+        std::map<std::string, RegisteredFormatter> availableFormatters;
     };
 
     ////////////////////
@@ -37,12 +43,13 @@ namespace cucumber_cpp::library::api
     ////////////////////
 
     template<class T>
-    void Formatters::RegisterFormatter(const std::string& name)
+    void Formatters::RegisterFormatter(const std::string& name, bool hasOutput)
     {
         availableFormatters.try_emplace(name, [](support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output)
             {
                 return std::make_unique<T>(supportCodeLibrary, query, eventDataCollector, output);
-            });
+            },
+            hasOutput);
     }
 }
 

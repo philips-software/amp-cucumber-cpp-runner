@@ -2,6 +2,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
@@ -14,6 +15,7 @@
 #include <CLI/Validators.hpp>
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
+#include <algorithm>
 #include <exception>
 #include <filesystem>
 #include <format>
@@ -29,6 +31,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
 namespace cucumber_cpp::library
@@ -70,28 +73,25 @@ namespace cucumber_cpp::library
 
             return files;
         }
+
+        struct RemoveDefaultEventListener
+        {
+            ~RemoveDefaultEventListener()
+            {
+                listeners.Append(defaultEventListener);
+            }
+
+        private:
+            testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
+            testing::TestEventListener* defaultEventListener{ listeners.Release(listeners.default_result_printer()) };
+        };
     }
-
-    // ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
-    //     : CLI::Validator("ReportHandler", [&reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
-    //           {
-    //               if (!cachedAvailableReporters)
-    //                   cachedAvailableReporters = reporters.AvailableReporters();
-
-    //               if (std::ranges::find(*cachedAvailableReporters, str) == cachedAvailableReporters->end())
-    //                   return std::string{ "'" + str + "' is not a reporter" };
-    //               else
-    //                   return std::string{};
-    //           })
-    // {}
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
         : contextStorageFactory{ contextStorageFactory }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
     {
-        cli.require_subcommand(1);
-
-        runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
+        cli.parse_complete_callback([this]
             {
                 RunFeatures();
             });
@@ -99,6 +99,28 @@ namespace cucumber_cpp::library
 
     int Application::Run(int argc, const char* const* argv)
     {
+        const auto formattersSet = formatters.GetAvailableFormatterNames();
+        const auto formatterDescription = std::format("{{{}}}", Join(formattersSet | std::views::transform([](const auto& pair)
+                                                                                         {
+                                                                                             if (pair.second)
+                                                                                                 return std::format("{}<<:output>>", pair.first);
+                                                                                             else
+                                                                                                 return pair.first;
+                                                                                         }),
+                                                                    ","));
+
+        CLI::Validator formatValidator{ [&formattersSet](const std::string& str) -> std::string
+            {
+                const auto colon = str.find(':');
+                const auto formatter = str.substr(0, colon);
+                const auto iter = std::ranges::find(formattersSet, formatter, &std::pair<std::string, bool>::first);
+                if (iter == formattersSet.end())
+                    return std::format("'{}' is not a valid formatter", formatter);
+                else
+                    return "";
+            },
+            formatterDescription };
+
         try
         {
             const std::map<std::string, support::RunOptions::Ordering> orderingMap{
@@ -106,36 +128,24 @@ namespace cucumber_cpp::library
                 { "reverse", support::RunOptions::Ordering::reverse },
             };
 
-            runCommand->add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps");
-            runCommand->add_flag("--fail-fast", options.failFast, "Stop execution on first failure");
-            runCommand->add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.  Available formats:\n");
-            runCommand->add_option("--format-options", options.formatOptions, "provide options for formatters");
-            runCommand->add_option("--language", options.language, "Default langauge for feature files, eg 'en'")->default_str(options.language);
-            runCommand->add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case));
-            auto* retryOpt = runCommand->add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
-            runCommand->add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
-            runCommand->add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
+            cli.add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps");
+            cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure");
+            cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator);
+            cli.add_option("--format-options", options.formatOptions, "provide options for formatters");
+            cli.add_option("--language", options.language, "Default langauge for feature files, eg 'en'")->default_str(options.language);
+            cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case));
+            auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
+            cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
+            cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
 
-            CLI::deprecate_option(runCommand->add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
-            runCommand->add_option("-t,--tags", options.tags, "Cucumber tag expression");
+            CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
+            cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
 
-            CLI::deprecate_option(runCommand->add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
-            runCommand->add_option("paths", options.paths, "Paths to where your feature files are")->required()->check(CLI::ExistingPath);
-
-            // runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation"); //->check(reportHandlerValidator);
-            // runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
-            // runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
-            // runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
-
-            // reporters.Add("console", std::make_unique<report::StdOutReport>());
-            // reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
+            CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
+            cli.add_option("paths", options.paths, "Paths to where your feature files are")->required()->check(CLI::ExistingPath);
 
             ProgramContext().InsertRef(options);
 
-            // const auto reportDescription = runCommand->get_option("--report")->get_description();
-            // const auto joinedReporters = reportDescription; // + Join(reporters.AvailableReporters(), ", ");
-
-            // runCommand->get_option("--report")->description(joinedReporters);
             cli.parse(argc, argv);
         }
         catch (const CLI::ParseError& e)
@@ -168,7 +178,7 @@ namespace cucumber_cpp::library
 
     CLI::App& Application::CliParser()
     {
-        return *runCommand;
+        return cli;
     }
 
     Context& Application::ProgramContext()
@@ -181,10 +191,10 @@ namespace cucumber_cpp::library
         return parameterRegistry;
     }
 
-    // void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
-    // {
-    //     reporters.Add(name, std::move(reporter));
-    // }
+    api::Formatters& Application::Formatters()
+    {
+        return formatters;
+    }
 
     void Application::RunFeatures()
     {
@@ -203,15 +213,8 @@ namespace cucumber_cpp::library
             },
         };
 
-        auto& listeners = testing::UnitTest::GetInstance()->listeners();
-        auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
-
+        RemoveDefaultEventListener removeDefaultListenerExceptionSafe;
         runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
-
-        listeners.Append(defaultEventListener);
-
-        // if (options.printStepsNotUsed)
-        //     PrintStepsNotUsed(stepRegistry);
     }
 
     void Application::PrintStepsNotUsed(const StepRegistry& stepRegistry) const

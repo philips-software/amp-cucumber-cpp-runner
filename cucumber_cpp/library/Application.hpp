@@ -16,6 +16,7 @@
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -23,21 +24,16 @@
 
 namespace cucumber_cpp::library
 {
-    // struct ReportHandlerValidator : public CLI::Validator
-    // {
-    //     explicit ReportHandlerValidator(const report::Reporters& reporters);
-    // };
-
     struct Application
     {
         struct Options
         {
-            std::set<std::string> paths{};
+            std::set<std::string, std::less<>> paths{};
 
             bool dryRun{ false };
             bool failFast{ false };
 
-            std::set<std::string> format{};
+            std::set<std::string, std::less<>> format{};
             std::string formatOptions{};
 
             std::string language{ "en" };
@@ -59,8 +55,7 @@ namespace cucumber_cpp::library
         CLI::App& CliParser();
         Context& ProgramContext();
         cucumber_expression::ParameterRegistry& ParameterRegistration();
-
-        // void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
+        api::Formatters& Formatters();
 
     private:
         void DryRunFeatures();
@@ -72,7 +67,6 @@ namespace cucumber_cpp::library
         Options options;
 
         CLI::App cli;
-        CLI::App* runCommand;
 
         std::shared_ptr<ContextStorageFactory> contextStorageFactory;
         std::unique_ptr<Context> programContext{ std::make_unique<Context>(contextStorageFactory) };
@@ -81,8 +75,6 @@ namespace cucumber_cpp::library
         api::Formatters formatters;
 
         util::Broadcaster broadcaster;
-
-        // ReportHandlerValidator reportHandlerValidator;
 
         cucumber_expression::ParameterRegistry parameterRegistry{};
         bool removeDefaultGoogleTestListener;
