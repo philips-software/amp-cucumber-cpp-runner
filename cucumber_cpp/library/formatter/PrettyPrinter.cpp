@@ -189,9 +189,15 @@ namespace cucumber_cpp::library::formatter
 
         const auto padding = maxContentLength - title.length();
 
+        if (!formatTitle)
+            formatTitle = [](std::string_view str)
+            {
+                return std::string{ str };
+            };
+
         if (uri.has_value() && line.has_value())
-            support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle ? formatTitle(title) : std::string(title), "", padding, ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle(title), "", padding, ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
-            support::print(outputStream, "{:{}}{}\n", "", indent, formatTitle ? formatTitle(title) : std::string(title));
+            support::print(outputStream, "{:{}}{}\n", "", indent, formatTitle(title));
     }
 }
