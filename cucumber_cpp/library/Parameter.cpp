@@ -20,5 +20,4 @@ namespace cucumber_cpp::library
     {
         return customParameters;
     }
-
 }
