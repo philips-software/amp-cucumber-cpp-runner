@@ -4,12 +4,13 @@
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <cstdio>
 #include <ostream>
 
 namespace cucumber_cpp::library::formatter
 {
-    Formatter::Formatter(support::SupportCodeLibrary& supportCodeLibrary, Query& query, const helper::EventDataCollector& eventDataCollector, std::ostream& outputStream)
+    Formatter::Formatter(support::SupportCodeLibrary& supportCodeLibrary, Query& query, const helper::EventDataCollector& eventDataCollector, const nlohmann::json& formatOptions, std::ostream& outputStream)
         : util::Listener{ query, [this](const cucumber::messages::envelope& envelope)
             {
                 OnEnvelope(envelope);
@@ -17,6 +18,7 @@ namespace cucumber_cpp::library::formatter
         , supportCodeLibrary{ supportCodeLibrary }
         , query{ query }
         , eventDataCollector{ eventDataCollector }
+        , formatOptions{ formatOptions }
         , outputStream{ outputStream }
     {
     }

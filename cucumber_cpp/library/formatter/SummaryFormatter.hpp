@@ -16,6 +16,8 @@ namespace cucumber_cpp::library::formatter
     {
         using Formatter::Formatter;
 
+        constexpr static auto name = "summary";
+
     private:
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
         void LogSummary(const cucumber::messages::duration& testRunDuration);

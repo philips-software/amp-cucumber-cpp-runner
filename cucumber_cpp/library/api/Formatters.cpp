@@ -5,6 +5,7 @@
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <functional>
 #include <list>
 #include <memory>
@@ -18,8 +19,8 @@ namespace cucumber_cpp::library::api
 {
     Formatters::Formatters()
     {
-        RegisterFormatter<formatter::PrettyPrinter>("pretty");
-        RegisterFormatter<formatter::SummaryFormatter>("summary");
+        RegisterFormatter<formatter::PrettyPrinter>();
+        RegisterFormatter<formatter::SummaryFormatter>();
     }
 
     std::set<std::pair<std::string, bool>> Formatters::GetAvailableFormatterNames() const
@@ -31,12 +32,12 @@ namespace cucumber_cpp::library::api
         return { view.begin(), view.end() };
     }
 
-    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const std::string& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output)
+    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output)
     {
         std::list<std::unique_ptr<formatter::Formatter>> activeFormatters;
 
         for (const auto& formatterName : format)
-            activeFormatters.emplace_back(availableFormatters.at(formatterName).factory(supportCodeLibrary, query, eventDataCollector, output));
+            activeFormatters.emplace_back(availableFormatters.at(formatterName).factory(supportCodeLibrary, query, eventDataCollector, formatOptions, output));
 
         return activeFormatters;
     }

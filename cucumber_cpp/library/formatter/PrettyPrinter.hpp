@@ -32,6 +32,8 @@ namespace cucumber_cpp::library::formatter
     {
         using Formatter::Formatter;
 
+        constexpr static auto name = "pretty";
+
     private:
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
 

@@ -14,8 +14,6 @@ target_include_directories(cucumber_cpp.library.api PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.api PUBLIC
-    # cucumber_cpp.library
-    # cucumber_cpp.library.util
     cucumber_cpp.library.cucumber_expression
 )
 

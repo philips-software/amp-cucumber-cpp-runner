@@ -20,6 +20,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <functional>
 #include <gtest/gtest.h>
 #include <list>
@@ -143,7 +144,8 @@ namespace cucumber_cpp::library::api
         formatter::helper::EventDataCollector eventDataCollector{ broadcaster };
         Query query{ broadcaster };
 
-        const auto activeFormatters = formatters.EnableFormatters(format, formatOptions, supportCodeLibrary, query, eventDataCollector);
+        const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
+        const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query, eventDataCollector);
 
         const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
 
