@@ -7,3 +7,6 @@ megalinter-reports/
 # compatibility generated files
 actual.ndjson
 expected.ndjson
+
+# bats task generated files
+test-report.xml
