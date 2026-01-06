@@ -113,22 +113,47 @@ namespace cucumber_cpp::library::cucumber_expression
         bool escaping{ false };
         bool charClass{ false };
 
+        const auto isCharClassOpening = [&escaping](char c)
+        {
+            return c == '[' && !escaping;
+        };
+
+        const auto isCharClassClosing = [&escaping](char c)
+        {
+            return c == ']' && !escaping;
+        };
+
+        const auto isGroupOpening = [&escaping, &charClass](char c)
+        {
+            return c == '(' && !escaping && !charClass;
+        };
+
+        const auto isGroupClosing = [&escaping, &charClass](char c)
+        {
+            return c == ')' && !escaping && !charClass;
+        };
+
+        const auto isEscaping = [&escaping](char c)
+        {
+            return c == '\\' && !escaping;
+        };
+
         for (std::size_t i = 0; i < pattern.size(); ++i)
         {
             const char c = pattern[i];
 
-            if (c == '[' && !escaping)
+            if (isCharClassOpening(c))
                 charClass = true;
-            else if (c == ']' && !escaping)
+            else if (isCharClassClosing(c))
                 charClass = false;
-            else if (c == '(' && !escaping && !charClass)
+            else if (isGroupOpening(c))
             {
                 groupStartStack.emplace_back(i);
                 auto& groupBuilder = stack.emplace_back();
                 if (IsNonCapturing(pattern, i))
                     groupBuilder.SetNonCapturing();
             }
-            else if (c == ')' && !escaping && !charClass)
+            else if (isGroupClosing(c))
             {
                 if (stack.empty())
                     throw std::runtime_error("Empty stack");
@@ -148,12 +173,10 @@ namespace cucumber_cpp::library::cucumber_expression
                     stack.back().Add(groupBuilder);
                 }
                 else
-                {
                     groupBuilder.MoveChildrenTo(stack.back());
-                }
             }
 
-            escaping = c == '\\' && !escaping;
+            escaping = isEscaping(c);
         }
 
         if (stack.empty())
