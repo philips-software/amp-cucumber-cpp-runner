@@ -14,13 +14,13 @@ namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {
-        std::vector<cucumber::messages::step> ExtractStep(const std::variant<cucumber::messages::scenario, cucumber::messages::background> tests)
+        const std::vector<cucumber::messages::step>& ExtractSteps(const std::variant<cucumber::messages::scenario, cucumber::messages::background>& scenarioOrBackground)
         {
-            return std::visit([](const auto& item)
+            return std::visit([](const auto& item) -> const std::vector<cucumber::messages::step>&
                 {
                     return item.steps;
                 },
-                tests);
+                scenarioOrBackground);
         }
 
         std::vector<cucumber::messages::scenario> ExtractScenarioFromRuleChild(const cucumber::messages::rule_child& child)
@@ -79,7 +79,7 @@ namespace cucumber_cpp::library::formatter::helper
     {
         auto steps = gherkinDocument.feature->children |
                      std::views::transform(ExtractStepContainers) | std::views::join |
-                     std::views::transform(ExtractStep) | std::views::join;
+                     std::views::transform(ExtractSteps) | std::views::join;
 
         GherkinStepMap map;
 
