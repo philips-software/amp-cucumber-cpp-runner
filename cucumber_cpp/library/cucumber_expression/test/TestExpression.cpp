@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::cucumber_expression
             return testdata;
         }
 
-        std::string FormatMessage(const std::string& file, const YAML::Node& node, const Expression& expression)
+        std::string FormatTestFailureMessage(const std::string& file, const YAML::Node& node, const Expression& expression)
         {
             return std::format("file:           {}\n"
                                "failed to match {}\n"
@@ -82,7 +82,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
                     const auto arguments = expression.MatchToArguments(testdata["text"].as<std::string>());
 
-                    ASSERT_THAT(matchOpt, testing::IsTrue()) << FormatMessage(file, testdata, expression);
+                    ASSERT_THAT(matchOpt, testing::IsTrue()) << FormatTestFailureMessage(file, testdata, expression);
 
                     const auto& match = *matchOpt;
                     for (std::size_t i = 0; i < testdata["expected_args"].size(); ++i)
@@ -90,41 +90,41 @@ namespace cucumber_cpp::library::cucumber_expression
                         const auto& argument = match[i];
 
                         if (argument.Name() == "")
-                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "int")
-                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "float")
-                            EXPECT_THAT(argument.GetValue<float>(), testdata["expected_args"][i].as<float>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<float>(), testdata["expected_args"][i].as<float>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "word")
-                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "string")
-                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::string>(), testdata["expected_args"][i].as<std::string>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "bigdecimal")
-                            EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "biginteger")
-                            EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "byte")
-                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "short")
-                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "long")
-                            EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "double")
-                            EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<double>(), testdata["expected_args"][i].as<double>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else
                             FAIL() << "Unknown type: " << argument.Name() << " for:\n"
-                                   << FormatMessage(file, testdata, expression);
+                                   << FormatTestFailureMessage(file, testdata, expression);
                     }
                 }
             }
