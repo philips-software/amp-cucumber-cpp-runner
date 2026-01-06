@@ -59,15 +59,49 @@ namespace cucumber_cpp::library
         std::shared_ptr<const cucumber::messages::table_row> tableRow;
 
         std::uint32_t featureIndex{ 0 };
-    };
 
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument);
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature);
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule);
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario);
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples);
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow);
-    Lineage operator+(Lineage lineage, std::uint32_t featureIndex);
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument)
+        {
+            lineage.gherkinDocument = gherkinDocument;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature)
+        {
+            lineage.feature = feature;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule)
+        {
+            lineage.rule = rule;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario)
+        {
+            lineage.scenario = scenario;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples)
+        {
+            lineage.examples = examples;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow)
+        {
+            lineage.tableRow = tableRow;
+            return std::move(lineage);
+        }
+
+        friend Lineage operator+(Lineage lineage, std::uint32_t featureIndex)
+        {
+            lineage.featureIndex = featureIndex;
+            return std::move(lineage);
+        }
+    };
 
     struct Query
         : util::Broadcaster
@@ -128,9 +162,9 @@ namespace cucumber_cpp::library
         void operator+=(const cucumber::messages::suggestion& suggestion);
         void operator+=(const cucumber::messages::undefined_parameter_type& undefinedParameterType);
 
-        void operator+=(std::pair<const cucumber::messages::feature&, Lineage> feature);
-        void operator+=(std::pair<const cucumber::messages::scenario&, Lineage> scenario);
-        void operator+=(std::pair<const cucumber::messages::rule&, Lineage> rule);
+        void operator+=(const std::pair<const cucumber::messages::feature&, Lineage>& feature);
+        void operator+=(const std::pair<const cucumber::messages::scenario&, Lineage>& scenario);
+        void operator+=(const std::pair<const cucumber::messages::rule&, Lineage>& rule);
         void operator+=(std::span<const cucumber::messages::step> steps);
 
         void operator+=(const cucumber::messages::parameter_type& parameterType);

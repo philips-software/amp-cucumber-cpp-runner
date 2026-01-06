@@ -40,48 +40,6 @@
 
 namespace cucumber_cpp::library
 {
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument)
-    {
-        lineage.gherkinDocument = gherkinDocument;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature)
-    {
-        lineage.feature = feature;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule)
-    {
-        lineage.rule = rule;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario)
-    {
-        lineage.scenario = scenario;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples)
-    {
-        lineage.examples = examples;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow)
-    {
-        lineage.tableRow = tableRow;
-        return std::move(lineage);
-    }
-
-    Lineage operator+(Lineage lineage, std::uint32_t featureIndex)
-    {
-        lineage.featureIndex = featureIndex;
-        return std::move(lineage);
-    }
-
     std::string Lineage::GetUniqueFeatureName() const
     {
         return std::format("{}/{}", feature->name, featureIndex);
@@ -365,7 +323,7 @@ namespace cucumber_cpp::library
         undefinedParameterTypes.emplace_front(undefinedParameterType);
     }
 
-    void Query::operator+=(std::pair<const cucumber::messages::feature&, Lineage> feature)
+    void Query::operator+=(const std::pair<const cucumber::messages::feature&, Lineage>& feature)
     {
         auto featurePtr = std::make_shared<cucumber::messages::feature>(feature.first);
 
@@ -385,7 +343,7 @@ namespace cucumber_cpp::library
         }
     }
 
-    void Query::operator+=(std::pair<const cucumber::messages::scenario&, Lineage> scenario)
+    void Query::operator+=(const std::pair<const cucumber::messages::scenario&, Lineage>& scenario)
     {
         auto scenarioPtr = std::make_shared<cucumber::messages::scenario>(scenario.first);
         lineageByUri[*scenario.second.gherkinDocument->uri] = scenario.second;
@@ -414,7 +372,7 @@ namespace cucumber_cpp::library
         *this += scenarioPtr->steps;
     }
 
-    void Query::operator+=(std::pair<const cucumber::messages::rule&, Lineage> rule)
+    void Query::operator+=(const std::pair<const cucumber::messages::rule&, Lineage>& rule)
     {
         auto rulePtr = std::make_shared<cucumber::messages::rule>(rule.first);
 
