@@ -51,7 +51,7 @@
                 "--tag",
                 "${input:tag}",
                 "--",
-                "${input:features}",
+                "${input:features}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -84,7 +84,7 @@
                 "--format",
                 "summary",
                 "--",
-                "${input:features}",
+                "${input:features}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
