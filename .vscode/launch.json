@@ -42,13 +42,12 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
-                "run",
                 "--com",
                 "COMx",
                 "--nordic",
                 "--format",
                 "summary",
-                "--tag",
+                "--tags",
                 "${input:tag}",
                 "--",
                 "${input:features}"
@@ -77,7 +76,6 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
-                "run",
                 "--com",
                 "COMx",
                 "--nordic",
