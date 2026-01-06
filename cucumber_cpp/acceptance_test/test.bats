@@ -42,26 +42,20 @@ teardown() {
 }
 
 @test "All features in a folder" {
-    run $acceptance_test --format summary pretty cucumber_cpp/acceptance_test/features/subfolder
+    run $acceptance_test --format summary pretty -- cucumber_cpp/acceptance_test/features/subfolder
     assert_success
     assert_output --partial "2 scenarios"
     assert_output --partial "2 passed"
 }
 
-@test "Missing mandatory feature argument" {
-    run $acceptance_test --format summary pretty
+@test "Missing mandatory paths argument" {
+    run $acceptance_test --format summary pretty --
     assert_failure
     assert_output --partial "paths is required"
 }
 
-# @test "Missing mandatory report argument" {
-#     run $acceptance_test --format summary pretty cucumber_cpp/acceptance_test/features
-#     assert_failure
-#     assert_output --partial "--report is required"
-# }
-
 @test "Missing mandatory custom argument" {
-    run $acceptance_test.custom --format summary pretty cucumber_cpp/acceptance_test/features
+    run $acceptance_test.custom --format summary pretty -- cucumber_cpp/acceptance_test/features
     assert_failure
     assert_output --partial "--required is required"
 }
@@ -71,11 +65,11 @@ teardown() {
     assert_success
 }
 
-# @test "Valid reporters only" {
-#     run $acceptance_test --format summary pretty cucumber_cpp/acceptance_test/features
-#     assert_failure
-#     assert_output --partial "--report: 'doesnotexist' is not a reporter"
-# }
+@test "Valid reporters only" {
+    run $acceptance_test --format doesnotexist -- cucumber_cpp/acceptance_test/features
+    assert_failure
+    assert_output --partial "--format: 'doesnotexist' is not a valid formatter"
+}
 
 @test "Run Program hooks" {
     run $acceptance_test --format summary pretty --tags @bats and @program_hooks -- cucumber_cpp/acceptance_test/features
