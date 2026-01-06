@@ -61,17 +61,32 @@ namespace cucumber_cpp::library::cucumber_expression
 
     TEST(TestTreeRegexp, DISABLED_ignores_positive_lookbehind_as_a_non_capturing_group)
     {
+        // std::regex does not support positive lookbehind
         TreeRegexp treeRegexp{ R"__(a(.+)(?<=c)$)__" };
+        const auto group = *treeRegexp.MatchToGroup("abc");
+        EXPECT_THAT(group.value.value(), testing::StrEq("abc"));
+        EXPECT_THAT(group.children.size(), 1);
+        EXPECT_THAT(group.children[0].value.value(), testing::StrEq("bc"));
     }
 
     TEST(TestTreeRegexp, DISABLED_ignores_negative_lookbehind_as_a_non_capturing_group)
     {
+        // std::regex does not support negative lookbehind
         TreeRegexp treeRegexp{ R"__(a(.+?)(?<!b)$)__" };
+        const auto group = *treeRegexp.MatchToGroup("abc");
+        EXPECT_THAT(group.value.value(), testing::StrEq("abc"));
+        EXPECT_THAT(group.children.size(), 1);
+        EXPECT_THAT(group.children[0].value.value(), testing::StrEq("bc"));
     }
 
     TEST(TestTreeRegexp, DISABLED_matches_named_capturing_group)
     {
+        // std::regex does not support named capturing groups
         TreeRegexp treeRegexp{ R"__(a(?<name>b)c)__" };
+        const auto group = *treeRegexp.MatchToGroup("abc");
+        EXPECT_THAT(group.value.value(), testing::StrEq("abc"));
+        EXPECT_THAT(group.children.size(), 1);
+        EXPECT_THAT(group.children[0].value.value(), testing::StrEq("b"));
     }
 
     TEST(TestTreeRegexp, matches_optional_group)
@@ -136,7 +151,8 @@ namespace cucumber_cpp::library::cucumber_expression
 
     TEST(TestTreeRegexp, DISABLED_works_with_case_insensitive_flag)
     {
-        TreeRegexp treeRegexp{ R"__(HELLO/)__" };
+        // std::regex does not support inline case insensitive flag
+        TreeRegexp treeRegexp{ R"__(HELLO/i)__" };
         const auto group = *treeRegexp.MatchToGroup("hello");
         EXPECT_THAT(group.value.value(), testing::StrEq("hello"));
     }
@@ -151,8 +167,11 @@ namespace cucumber_cpp::library::cucumber_expression
 
     TEST(TestTreeRegexp, DISABLED_empty_look_ahead)
     {
+        // std::regex does not support positive lookbehind
         TreeRegexp treeRegexp{ R"__((?<=))__" };
         const auto group = *treeRegexp.MatchToGroup("");
+        EXPECT_THAT(group.value.value(), testing::StrEq(""));
+        EXPECT_THAT(group.children.size(), testing::Eq(0));
     }
 
     TEST(TestTreeRegexp, does_not_consider_parenthesis_in_character_class_as_group)
