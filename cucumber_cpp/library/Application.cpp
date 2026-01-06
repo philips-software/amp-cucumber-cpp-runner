@@ -16,6 +16,7 @@
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <format>
@@ -238,6 +239,6 @@ namespace cucumber_cpp::library
 
     int Application::GetExitCode() const
     {
-        return runPassed ? 0 : 1;
+        return runPassed ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 }
