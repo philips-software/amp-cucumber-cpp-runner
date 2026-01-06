@@ -3,7 +3,6 @@
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
-#include <compare>
 #include <cstddef>
 #include <ranges>
 #include <source_location>
@@ -13,38 +12,11 @@
 #include <variant>
 #include <vector>
 
-namespace std
-{
-    std::strong_ordering operator<=>(const std::source_location& left, const std::source_location& right)
-    {
-        return std::forward_as_tuple(left.file_name(), left.line()) <=> std::forward_as_tuple(right.file_name(), right.line());
-    }
-}
-
 namespace cucumber_cpp::library::support
 {
-
-    std::strong_ordering operator<=>(const HookEntry& left, const HookEntry& right)
+    bool SourceLocationOrder::operator()(const std::source_location& lhs, const std::source_location& rhs) const
     {
-        return left.sourceLocation <=> right.sourceLocation;
-    }
-
-    std::strong_ordering operator<=>(const StepStringRegistration::Entry& left, const StepStringRegistration::Entry& right)
-    {
-        return left.sourceLocation <=> right.sourceLocation;
-    }
-
-    std::strong_ordering operator<=>(const Entry& left, const Entry& right)
-    {
-        constexpr static auto sourceLocationVisitor = [](const auto& entry)
-        {
-            return entry.sourceLocation;
-        };
-
-        const auto& leftSource = std::visit(sourceLocationVisitor, left);
-        const auto& rightSource = std::visit(sourceLocationVisitor, right);
-
-        return leftSource <=> rightSource;
+        return std::forward_as_tuple(lhs.file_name(), lhs.line()) < std::forward_as_tuple(rhs.file_name(), rhs.line());
     }
 
     DefinitionRegistration& DefinitionRegistration::Instance()

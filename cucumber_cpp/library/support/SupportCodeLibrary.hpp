@@ -64,9 +64,6 @@ namespace cucumber_cpp::library::support
         std::string id{ "unassigned" };
     };
 
-    std::strong_ordering operator<=>(const HookEntry& left, const HookEntry& right);
-    std::strong_ordering operator<=>(const StepStringRegistration::Entry& left, const StepStringRegistration::Entry& right);
-
     struct SupportCodeLibrary
     {
         HookRegistry& hookRegistry;
@@ -77,7 +74,10 @@ namespace cucumber_cpp::library::support
 
     using Entry = std::variant<HookEntry, StepStringRegistration::Entry>;
 
-    std::strong_ordering operator<=>(const Entry& left, const Entry& right);
+    struct SourceLocationOrder
+    {
+        bool operator()(const std::source_location& lhs, const std::source_location& rhs) const;
+    };
 
     struct DefinitionRegistration
     {
@@ -106,7 +106,7 @@ namespace cucumber_cpp::library::support
         std::size_t Register(GlobalHook hook, HookType hookType, HookFactory factory, std::source_location sourceLocation);
         std::size_t Register(std::string_view matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
 
-        std::map<std::source_location, Entry, std::less<>> registry;
+        std::map<std::source_location, Entry, SourceLocationOrder> registry;
     };
 
     //////////////////////////
