@@ -106,8 +106,6 @@ namespace cucumber_cpp::library
 
         [[nodiscard]] std::size_t Size() const;
 
-        [[nodiscard]] std::vector<EntryView> List() const;
-
         StepFactory GetFactoryById(const std::string& id) const;
         Definition GetDefinitionById(const std::string& id) const;
 

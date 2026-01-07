@@ -7,12 +7,11 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
-#include <compare>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <optional>
+#include <ranges>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -89,7 +88,9 @@ namespace cucumber_cpp::library::support
 
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 
-        std::vector<StepStringRegistration::Entry> GetSteps();
+        template<class T>
+        void ForEachRegisteredStep(const T& func);
+
         std::vector<HookEntry> GetHooks();
 
         template<class T>
@@ -112,6 +113,24 @@ namespace cucumber_cpp::library::support
     //////////////////////////
     //    implementation    //
     //////////////////////////
+
+    template<class T>
+    void DefinitionRegistration::ForEachRegisteredStep(const T& func)
+    {
+        auto allSteps = registry |
+                        std::views::values |
+                        std::views::filter([](const Entry& entry)
+                            {
+                                return std::holds_alternative<StepStringRegistration::Entry>(entry);
+                            }) |
+                        std::views::transform([](const Entry& entry)
+                            {
+                                return std::get<StepStringRegistration::Entry>(entry);
+                            });
+
+        for (const auto& step : allSteps)
+            func(step);
+    }
 
     template<class T>
     std::size_t DefinitionRegistration::Register(Hook hook, HookType hookType, std::source_location sourceLocation)

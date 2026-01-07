@@ -218,25 +218,6 @@ namespace cucumber_cpp::library
         runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
     }
 
-    void Application::PrintStepsNotUsed(const StepRegistry& stepRegistry) const
-    {
-        auto isUnused = [](const StepRegistry::EntryView& entry)
-        {
-            return entry.used == 0;
-        };
-
-        auto unusedSteps = stepRegistry.List() | std::views::filter(isUnused);
-
-        if (std::ranges::empty(unusedSteps))
-            std::cout << "\nAll steps have been used.";
-        else
-        {
-            std::cout << "\nThe following steps have not been used:";
-            for (const auto& entry : unusedSteps)
-                std::cout << "\n - " << std::visit(cucumber_expression::SourceVisitor{}, entry.stepRegex);
-        }
-    }
-
     int Application::GetExitCode() const
     {
         return runPassed ? EXIT_SUCCESS : EXIT_FAILURE;

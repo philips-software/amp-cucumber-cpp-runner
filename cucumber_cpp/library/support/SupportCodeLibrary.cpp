@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
 #include <cstddef>
+#include <map>
 #include <ranges>
 #include <source_location>
 #include <string>
@@ -36,19 +37,6 @@ namespace cucumber_cpp::library::support
             std::visit(assignGenerator, item);
     }
 
-    std::vector<StepStringRegistration::Entry> DefinitionRegistration::GetSteps()
-    {
-        auto allSteps = registry | std::views::values | std::views::filter([](const Entry& entry)
-                                                            {
-                                                                return std::holds_alternative<StepStringRegistration::Entry>(entry);
-                                                            }) |
-                        std::views::transform([](const Entry& entry)
-                            {
-                                return std::get<StepStringRegistration::Entry>(entry);
-                            });
-        return { allSteps.begin(), allSteps.end() };
-    }
-
     std::vector<HookEntry> DefinitionRegistration::GetHooks()
     {
         auto allSteps = registry | std::views::values | std::views::filter([](const Entry& entry)
@@ -62,21 +50,35 @@ namespace cucumber_cpp::library::support
         return { allSteps.begin(), allSteps.end() };
     }
 
+    namespace
+    {
+        void PrintContents(std::string_view type, std::source_location sourceLocation, const std::map<std::source_location, Entry, SourceLocationOrder>& registry)
+        {
+            std::cout << std::format("Added ({}): {}:{}\n", type, sourceLocation.file_name(), sourceLocation.line());
+            std::cout << "Registry contents:\n";
+            for (const auto& [key, item] : registry)
+                std::cout << std::format("  {}:{}\n", key.file_name(), key.line());
+        }
+    }
+
     std::size_t DefinitionRegistration::Register(Hook hook, HookType hookType, HookFactory factory, std::source_location sourceLocation)
     {
         registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
+        PrintContents("Hook", sourceLocation, registry);
         return registry.size();
     }
 
     std::size_t DefinitionRegistration::Register(GlobalHook hook, HookType hookType, HookFactory factory, std::source_location sourceLocation)
     {
         registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
+        PrintContents("GlobalHook", sourceLocation, registry);
         return registry.size();
     }
 
     std::size_t DefinitionRegistration::Register(std::string_view matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
     {
         registry.emplace(sourceLocation, StepStringRegistration::Entry{ stepType, std::string{ matcher }, factory, sourceLocation });
+        PrintContents("Step", sourceLocation, registry);
         return registry.size();
     }
 }

@@ -34,8 +34,10 @@ namespace cucumber_cpp::library
 
     void StepRegistry::LoadSteps()
     {
-        for (const auto& matcher : support::DefinitionRegistration::Instance().GetSteps())
-            Register(matcher.id, matcher.regex, matcher.type, matcher.factory, matcher.sourceLocation);
+        support::DefinitionRegistration::Instance().ForEachRegisteredStep([this](const StepStringRegistration::Entry& entry)
+            {
+                Register(entry.id, entry.regex, entry.type, entry.factory, entry.sourceLocation);
+            });
     }
 
     [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> StepRegistry::FindDefinitions(const std::string& expression) const
@@ -60,18 +62,6 @@ namespace cucumber_cpp::library
     std::size_t StepRegistry::Size() const
     {
         return registry.size();
-    }
-
-    std::vector<StepRegistry::EntryView> StepRegistry::List() const
-    {
-        std::vector<StepRegistry::EntryView> list;
-
-        list.reserve(registry.size());
-
-        for (const auto& entry : registry)
-            list.emplace_back(entry.regex, entry.used);
-
-        return list;
     }
 
     StepFactory StepRegistry::GetFactoryById(const std::string& id) const

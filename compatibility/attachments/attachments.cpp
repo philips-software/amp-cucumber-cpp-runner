@@ -1,14 +1,16 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
-#include <algorithm>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <ios>
 #include <numeric>
 #include <sstream>
 #include <string>
 
 namespace
 {
-    const std::filesystem::path currentCompileDir = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
+    const std::filesystem::path currentCompileDir = std::filesystem::current_path() / "compatibility" / "attachments";
 }
 
 WHEN(R"(the string {string} is attached as {string})", (const std::string& text, const std::string& mediaType))

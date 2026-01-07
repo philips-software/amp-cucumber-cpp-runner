@@ -60,7 +60,6 @@ namespace cucumber_cpp::library
     private:
         void DryRunFeatures();
         void RunFeatures();
-        void PrintStepsNotUsed(const StepRegistry& stepRegistry) const;
 
         [[nodiscard]] int GetExitCode() const;
 
