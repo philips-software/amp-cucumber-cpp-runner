@@ -112,11 +112,11 @@ namespace cucumber_cpp::library
 
         CLI::Validator formatValidator{ [&formattersSet](const std::string& str) -> std::string
             {
-                const auto colon = str.find(':');
-                const auto formatter = str.substr(0, colon);
-                const auto iter = std::ranges::find(formattersSet, formatter, &std::pair<std::string, bool>::first);
+                const api::FormatterOption option{ str };
+                const auto iter = std::ranges::find(formattersSet, option.name, &std::pair<std::string, bool>::first);
+
                 if (iter == formattersSet.end())
-                    return std::format("'{}' is not a valid formatter", formatter);
+                    return std::format("'{}' is not a valid formatter", option.name);
                 else
                     return "";
             },

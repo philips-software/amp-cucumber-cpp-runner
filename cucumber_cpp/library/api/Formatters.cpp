@@ -6,17 +6,28 @@
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include <filesystem>
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <ostream>
 #include <ranges>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::api
 {
+    FormatterOption::FormatterOption(std::string_view str)
+    {
+        const auto colon = str.find(':');
+        name = str.substr(0, colon);
+        output = colon == std::string::npos ? "" : str.substr(colon + 1);
+    }
+
     Formatters::Formatters()
     {
         RegisterFormatter<formatter::PrettyPrinter>();
@@ -37,7 +48,20 @@ namespace cucumber_cpp::library::api
         std::list<std::unique_ptr<formatter::Formatter>> activeFormatters;
 
         for (const auto& formatterName : format)
-            activeFormatters.emplace_back(availableFormatters.at(formatterName).factory(supportCodeLibrary, query, eventDataCollector, formatOptions, output));
+        {
+            const FormatterOption option{ formatterName };
+
+            if (option.output.empty())
+                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, query, eventDataCollector, formatOptions, output));
+            else
+            {
+                const auto absolutePath = std::filesystem::absolute(std::filesystem::path{ option.output }).string();
+                if (!customOutputFiles.contains(absolutePath))
+                    customOutputFiles.emplace(absolutePath, std::make_unique<std::ofstream>(absolutePath));
+
+                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, query, eventDataCollector, formatOptions, *customOutputFiles.at(absolutePath)));
+            }
+        }
 
         return activeFormatters;
     }

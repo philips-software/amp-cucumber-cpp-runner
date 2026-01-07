@@ -14,10 +14,19 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::api
 {
+    struct FormatterOption
+    {
+        FormatterOption(std::string_view str);
+
+        std::string name;
+        std::string output;
+    };
+
     struct RegisteredFormatter
     {
         std::function<std::unique_ptr<formatter::Formatter>(support::SupportCodeLibrary&, Query&, const formatter::helper::EventDataCollector&, const nlohmann::json& formatOptions, std::ostream&)> factory;
@@ -36,7 +45,8 @@ namespace cucumber_cpp::library::api
         [[nodiscard]] std::list<std::unique_ptr<formatter::Formatter>> EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output = std::cout);
 
     private:
-        std::map<std::string, RegisteredFormatter> availableFormatters;
+        std::map<std::string, RegisteredFormatter, std::less<>> availableFormatters;
+        std::map<std::string, std::unique_ptr<std::ostream>, std::less<>> customOutputFiles;
     };
 
     ////////////////////
