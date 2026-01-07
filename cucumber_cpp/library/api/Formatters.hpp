@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::api
 {
     struct FormatterOption
     {
-        FormatterOption(std::string_view str);
+        explicit FormatterOption(std::string_view str);
 
         std::string name;
         std::string output;
