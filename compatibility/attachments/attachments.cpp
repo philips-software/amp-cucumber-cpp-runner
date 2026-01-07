@@ -5,12 +5,13 @@
 #include <fstream>
 #include <ios>
 #include <numeric>
+#include <source_location>
 #include <sstream>
 #include <string>
 
 namespace
 {
-    const std::filesystem::path currentCompileDir = std::filesystem::current_path() / "compatibility" / "attachments";
+    const std::filesystem::path currentCompileDir = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
 }
 
 WHEN(R"(the string {string} is attached as {string})", (const std::string& text, const std::string& mediaType))

@@ -37,13 +37,6 @@ function(add_compatibility_kit name)
         KIT_NDJSON_FILE="${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.ndjson"
         $<$<BOOL:${SKIP_TEST}>:SKIP_TEST>
     )
-
-    add_custom_command(
-        TARGET ${libname} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/compatibility/${name}
-            $<TARGET_FILE_DIR:${libname}>/compatibility/${name}
-    )
 endfunction()
 
 file(GLOB kits RELATIVE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/*)

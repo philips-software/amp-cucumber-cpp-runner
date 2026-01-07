@@ -52,19 +52,11 @@ namespace compatibility
 
         Devkit LoadDevkit()
         {
-            std::cout << "LoadDevkit:\n";
-            std::cout << "KIT_FOLDER:      " << KIT_FOLDER << "\n";
-            std::cout << "KIT_NDJSON_FILE: " << KIT_NDJSON_FILE << "\n";
-            std::cout << "cwd:             " << std::filesystem::current_path() << "\n";
-
-            std::cout << "paths:           " << std::filesystem::current_path() / "compatibility" / KIT_STRING << "\n";
-            std::cout << "ndjsonfile:      " << std::filesystem::current_path() / "compatibility" / KIT_STRING / (std::string{ KIT_STRING } + ".ndjson") << "\n";
-
             return {
-                .paths = { std::filesystem::current_path() / "compatibility" / KIT_STRING },
+                .paths = { KIT_FOLDER },
                 .tagExpression = "",
                 .retry = 0,
-                .ndjsonFile = std::filesystem::current_path() / "compatibility" / KIT_STRING / (std::string{ KIT_STRING } + ".ndjson"),
+                .ndjsonFile = KIT_NDJSON_FILE
             };
         }
 
@@ -105,17 +97,16 @@ namespace compatibility
                     json[key] = std::regex_replace(json[key].get<std::string>(), std::regex(R"(\r\n)"), "\n");
                     ++jsonIter;
                 }
-                else if (key == "uri" && (value.get<std::string>().find("samples") != std::string::npos || value.get<std::string>().find("compatibility") != std::string::npos))
+                else if (key == "uri")
                 {
-                    jsonIter = json.erase(jsonIter);
-                    // auto uri = value.get<std::string>();
+                    auto uri = value.get<std::string>();
 
-                    // uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
-                    // uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
+                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
+                    uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
-                    // json[key] = std::filesystem::canonical(uri).string();
+                    json[key] = std::filesystem::canonical(uri).string();
 
-                    // ++jsonIter;
+                    ++jsonIter;
                 }
                 else
                     ++jsonIter;
