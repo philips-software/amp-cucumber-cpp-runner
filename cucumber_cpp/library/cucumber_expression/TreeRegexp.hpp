@@ -43,6 +43,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     private:
         GroupBuilder CreateGroupBuilder(std::string_view pattern);
+
         GroupBuilder rootGroupBuilder;
         std::regex regex;
     };

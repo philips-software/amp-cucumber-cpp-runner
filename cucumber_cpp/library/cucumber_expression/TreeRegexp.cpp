@@ -25,6 +25,69 @@ namespace cucumber_cpp::library::cucumber_expression
 
             return pattern[pos + 3] == '=' || pattern[pos + 3] == '!';
         }
+
+        void StartGroup(std::deque<GroupBuilder>& stack, std::deque<std::size_t>& groupStartStack, std::string_view pattern, std::size_t patternIndex)
+        {
+            groupStartStack.emplace_back(patternIndex);
+            auto& groupBuilder = stack.emplace_back();
+            if (IsNonCapturing(pattern, patternIndex))
+                groupBuilder.SetNonCapturing();
+        }
+
+        void FinalizeGroup(std::deque<GroupBuilder>& stack, std::deque<std::size_t>& groupStartStack, std::string_view pattern, std::size_t patternIndex)
+        {
+            if (stack.empty())
+                throw std::runtime_error("Empty stack");
+
+            auto groupBuilder = stack.back();
+            stack.pop_back();
+
+            auto groupStart = groupStartStack.empty() ? 0 : groupStartStack.back();
+            groupStart += 1;
+
+            if (!groupStartStack.empty())
+                groupStartStack.pop_back();
+
+            if (groupBuilder.IsCapturing())
+            {
+                groupBuilder.SetPattern(pattern.substr(groupStart, patternIndex - groupStart));
+                stack.back().Add(groupBuilder);
+            }
+            else
+                groupBuilder.MoveChildrenTo(stack.back());
+        }
+
+        struct PatternGroupParser
+        {
+            enum class State
+            {
+                nonGroup,
+                groupStart,
+                groupClose
+            };
+
+            State Parse(char c)
+            {
+                State state{};
+
+                if (c == '[' && !escaping)
+                    charClass = true;
+                else if (c == ']' && !escaping)
+                    charClass = false;
+                else if (c == '(' && !escaping && !charClass)
+                    state = State::groupStart;
+                else if (c == ')' && !escaping && !charClass)
+                    state = State::groupClose;
+
+                escaping = (c == '\\' && !escaping);
+
+                return state;
+            }
+
+        private:
+            bool escaping{ false };
+            bool charClass{ false };
+        };
     }
 
     void GroupBuilder::Add(GroupBuilder groupBuilder)
@@ -80,8 +143,6 @@ namespace cucumber_cpp::library::cucumber_expression
         };
     }
 
-    /////////////////////////////////////////////////////////
-
     TreeRegexp::TreeRegexp(std::string_view pattern)
         : rootGroupBuilder{ CreateGroupBuilder(pattern) }
         , regex{ std::string(pattern) }
@@ -107,76 +168,27 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         std::deque<GroupBuilder> stack;
         std::deque<std::size_t> groupStartStack;
+        PatternGroupParser patternParser;
 
         stack.emplace_back();
-
-        bool escaping{ false };
-        bool charClass{ false };
-
-        const auto isCharClassOpening = [&escaping](char c)
-        {
-            return c == '[' && !escaping;
-        };
-
-        const auto isCharClassClosing = [&escaping](char c)
-        {
-            return c == ']' && !escaping;
-        };
-
-        const auto isGroupOpening = [&escaping, &charClass](char c)
-        {
-            return c == '(' && !escaping && !charClass;
-        };
-
-        const auto isGroupClosing = [&escaping, &charClass](char c)
-        {
-            return c == ')' && !escaping && !charClass;
-        };
-
-        const auto isEscaping = [&escaping](char c)
-        {
-            return c == '\\' && !escaping;
-        };
 
         for (std::size_t i = 0; i < pattern.size(); ++i)
         {
             const char c = pattern[i];
 
-            if (isCharClassOpening(c))
-                charClass = true;
-            else if (isCharClassClosing(c))
-                charClass = false;
-            else if (isGroupOpening(c))
+            switch (patternParser.Parse(c))
             {
-                groupStartStack.emplace_back(i);
-                auto& groupBuilder = stack.emplace_back();
-                if (IsNonCapturing(pattern, i))
-                    groupBuilder.SetNonCapturing();
+                case PatternGroupParser::State::groupStart:
+                    StartGroup(stack, groupStartStack, pattern, i);
+                    break;
+
+                case PatternGroupParser::State::groupClose:
+                    FinalizeGroup(stack, groupStartStack, pattern, i);
+                    break;
+
+                case PatternGroupParser::State::nonGroup:
+                    break;
             }
-            else if (isGroupClosing(c))
-            {
-                if (stack.empty())
-                    throw std::runtime_error("Empty stack");
-
-                auto groupBuilder = stack.back();
-                stack.pop_back();
-
-                auto groupStart = groupStartStack.empty() ? 0 : groupStartStack.back();
-                groupStart += 1;
-
-                if (!groupStartStack.empty())
-                    groupStartStack.pop_back();
-
-                if (groupBuilder.IsCapturing())
-                {
-                    groupBuilder.SetPattern(pattern.substr(groupStart, i - groupStart));
-                    stack.back().Add(groupBuilder);
-                }
-                else
-                    groupBuilder.MoveChildrenTo(stack.back());
-            }
-
-            escaping = isEscaping(c);
         }
 
         if (stack.empty())
@@ -184,4 +196,5 @@ namespace cucumber_cpp::library::cucumber_expression
 
         return stack.back();
     }
+
 }
