@@ -4,8 +4,7 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
-#include "cucumber/messages/group.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <compare>
 #include <cstddef>
 #include <set>
@@ -62,7 +61,7 @@ namespace cucumber_cpp::library
     {
         customParameters.emplace(params, customParameters.size() + 1, location);
 
-        cucumber_expression::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
+        support::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
 
         return customParameters.size();
     }

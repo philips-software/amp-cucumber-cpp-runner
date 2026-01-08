@@ -5,13 +5,14 @@
 #include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
 
 template<class T>
 T TransformArg(const cucumber::messages::step_match_argument& match)
 {
-    return cucumber_cpp::library::cucumber_expression::ConverterTypeMap<T>::Instance().at(match.parameter_type_name.value_or(""))(match.group);
+    return cucumber_cpp::library::support::ConverterTypeMap<T>::Instance().at(match.parameter_type_name.value_or(""))(match.group);
 }
 
 #define BODY_MATCHER(matcher, ...) matcher

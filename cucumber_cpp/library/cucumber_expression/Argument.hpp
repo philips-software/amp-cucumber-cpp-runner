@@ -3,6 +3,7 @@
 
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <span>
 #include <vector>
 
@@ -19,7 +20,7 @@ namespace cucumber_cpp::library::cucumber_expression
         template<class T>
         T GetValue() const
         {
-            return ConverterTypeMap<T>::Instance().at(parameter.name)(group);
+            return support::ConverterTypeMap<T>::Instance().at(parameter.name)(group);
         }
 
         cucumber::messages::group Group() const;

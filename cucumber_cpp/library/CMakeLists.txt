@@ -37,6 +37,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
     cucumber_cpp.library.formatter
+    cucumber_cpp.library.support
     CLI11
 )
 

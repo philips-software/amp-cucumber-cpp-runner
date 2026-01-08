@@ -4,6 +4,7 @@
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
+#include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <algorithm>
 #include <any>
 #include <cctype>
@@ -97,22 +98,6 @@ namespace cucumber_cpp::library::cucumber_expression
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
     }
 
-    template<class T>
-    using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
-
-    template<class T>
-    struct ConverterTypeMap
-    {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
-    };
-
-    template<class T>
-    std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
-    {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
-        return typeMap;
-    }
-
     struct Parameter
     {
         std::string name;
@@ -168,7 +153,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         AddParameter(parameter);
 
-        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+        support::ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
     }
 }
 
