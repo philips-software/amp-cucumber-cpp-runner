@@ -74,18 +74,6 @@ namespace cucumber_cpp::library
 
             return files;
         }
-
-        struct RemoveDefaultEventListener
-        {
-            ~RemoveDefaultEventListener()
-            {
-                listeners.Append(defaultEventListener);
-            }
-
-        private:
-            testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
-            testing::TestEventListener* defaultEventListener{ listeners.Release(listeners.default_result_printer()) };
-        };
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
@@ -214,7 +202,6 @@ namespace cucumber_cpp::library
             },
         };
 
-        RemoveDefaultEventListener removeDefaultListenerExceptionSafe;
         runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
     }
 

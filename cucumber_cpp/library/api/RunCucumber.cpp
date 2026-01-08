@@ -34,7 +34,7 @@ namespace cucumber_cpp::library::api
 {
     namespace
     {
-        void EmitParameters(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
@@ -58,13 +58,13 @@ namespace cucumber_cpp::library::api
             }
         }
 
-        void EmitUndefinedParameters(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
                 broadcaster.BroadcastEvent({ .undefined_parameter_type = parameter });
         }
 
-        void EmitStepDefinitions(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
@@ -84,7 +84,7 @@ namespace cucumber_cpp::library::api
             }
         }
 
-        void EmitTestCaseHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
 
@@ -97,7 +97,7 @@ namespace cucumber_cpp::library::api
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
-        void EmitTestRunHooks(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
 
@@ -110,7 +110,7 @@ namespace cucumber_cpp::library::api
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
-        void EmitSupportCodeMessages(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
 
@@ -124,10 +124,45 @@ namespace cucumber_cpp::library::api
             EmitTestCaseHooks(supportCodeLibrary, broadcaster);
             EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }
+
+        auto FilterByTagExpression(const support::RunOptions::Sources& sources)
+        {
+            return [&sources](const support::PickleSource& pickle)
+            {
+                return sources.tagExpression->Evaluate(pickle.pickle->tags);
+            };
+        }
+
+        std::list<support::PickleSource> OrderPickles(const support::RunOptions::Sources& sources, auto pickles)
+        {
+            const auto createOrderedPickleList = [](auto ordered) -> std::list<support::PickleSource>
+            {
+                return { ordered.begin(), ordered.end() };
+            };
+
+            if (sources.ordering == support::RunOptions::Ordering::defined)
+                return createOrderedPickleList(pickles);
+            else
+                return createOrderedPickleList(pickles | std::views::reverse);
+        };
+
+        struct RemoveDefaultEventListener
+        {
+            ~RemoveDefaultEventListener()
+            {
+                listeners.Append(defaultEventListener);
+            }
+
+        private:
+            testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
+            testing::TestEventListener* defaultEventListener{ listeners.Release(listeners.default_result_printer()) };
+        };
     }
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
+        RemoveDefaultEventListener removeDefaultListenerExceptionSafe;
+
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
         support::UndefinedParameters undefinedParameters;
@@ -148,37 +183,11 @@ namespace cucumber_cpp::library::api
         const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query, eventDataCollector);
 
         const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
-
-        const auto pickleFilter = [&options](const support::PickleSource& pickle)
-        {
-            return options.sources.tagExpression->Evaluate(pickle.pickle->tags);
-        };
-        auto filteredPicklesView = pickleSources | std::views::filter(pickleFilter);
-
-        const auto createOrderedPickleList = [](auto ordered) -> std::list<support::PickleSource>
-        {
-            return { ordered.begin(), ordered.end() };
-        };
-        const auto orderPickles = [&](auto pickles) -> std::list<support::PickleSource>
-        {
-            if (options.sources.ordering == support::RunOptions::Ordering::defined)
-                return createOrderedPickleList(pickles);
-            else
-                return createOrderedPickleList(pickles | std::views::reverse);
-        };
-        std::list<support::PickleSource> orderedPickles = orderPickles(filteredPicklesView);
+        const auto orderedPickles = OrderPickles(options.sources, pickleSources | std::views::filter(FilterByTagExpression(options.sources)));
 
         EmitSupportCodeMessages(supportCodeLibrary, broadcaster, idGenerator);
 
-        auto runtime = runtime::MakeRuntime(options.runtime, broadcaster, orderedPickles, supportCodeLibrary, idGenerator, programContext);
-
-        auto& listeners = testing::UnitTest::GetInstance()->listeners();
-        auto* defaultEventListener = listeners.Release(listeners.default_result_printer());
-
-        auto result = runtime->Run();
-
-        listeners.Append(defaultEventListener);
-
-        return result;
+        const auto runtime = runtime::MakeRuntime(options.runtime, broadcaster, orderedPickles, supportCodeLibrary, idGenerator, programContext);
+        return runtime->Run();
     }
 }
