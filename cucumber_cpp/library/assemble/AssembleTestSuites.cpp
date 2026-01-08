@@ -11,6 +11,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <functional>
 #include <list>
 #include <map>
 #include <optional>
@@ -40,7 +41,7 @@ namespace cucumber_cpp::library::assemble
             return pair.second.has_value();
         }
 
-        void AssembleSteps(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
+        void AssembleSteps(const support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
             for (const auto& step : pickleSource.pickle->steps)
             {
@@ -89,7 +90,7 @@ namespace cucumber_cpp::library::assemble
         cucumber::gherkin::id_generator_ptr idGenerator)
     {
         std::list<std::string> testUris;
-        std::map<std::string, AssembledTestSuite> assembledTestSuiteMap;
+        std::map<std::string, AssembledTestSuite, std::less<>> assembledTestSuiteMap;
 
         for (const auto& pickleSource : sourcedPickles)
         {
@@ -107,7 +108,7 @@ namespace cucumber_cpp::library::assemble
             if (!assembledTestSuiteMap.contains(pickleSource.gherkinDocument->uri.value()))
             {
                 testUris.emplace_back(pickleSource.gherkinDocument->uri.value());
-                assembledTestSuiteMap.emplace(pickleSource.gherkinDocument->uri.value(), *pickleSource.gherkinDocument);
+                assembledTestSuiteMap.try_emplace(pickleSource.gherkinDocument->uri.value(), *pickleSource.gherkinDocument);
             }
 
             assembledTestSuiteMap.at(pickleSource.gherkinDocument->uri.value()).testCases.emplace_back(*pickleSource.pickle, testCase);
