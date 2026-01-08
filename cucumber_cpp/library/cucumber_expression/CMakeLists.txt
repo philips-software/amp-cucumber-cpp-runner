@@ -1,4 +1,4 @@
-add_library(cucumber_cpp.library.cucumber_expression STATIC ${CCR_EXCLUDE_FROM_ALL})
+add_library(cucumber_cpp.library.cucumber_expression ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     Argument.cpp
@@ -28,7 +28,6 @@ target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
 
 target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
     cucumber_gherkin_lib
-    cucumber_cpp.library
 )
 
 if (CCR_BUILD_TESTS)

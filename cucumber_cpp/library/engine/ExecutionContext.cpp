@@ -4,7 +4,7 @@
 #include "cucumber/messages/attachment_content_encoding.hpp"
 #include "cucumber/messages/test_run_hook_started.hpp"
 #include "cucumber/messages/test_step_started.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <istream>

@@ -21,7 +21,7 @@ option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." On )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 
-set(BUILD_SHARED_LIBS  Off CACHE STRING "")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
     add_compile_options(-fsanitize=address)

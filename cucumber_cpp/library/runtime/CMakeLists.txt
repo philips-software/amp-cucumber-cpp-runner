@@ -1,4 +1,4 @@
-add_library(cucumber_cpp.library.runtime STATIC ${CCR_EXCLUDE_FROM_ALL})
+add_library(cucumber_cpp.library.runtime ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.runtime PRIVATE
     Coordinator.cpp
@@ -18,6 +18,8 @@ target_include_directories(cucumber_cpp.library.runtime PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.runtime PUBLIC
+    GTest::gtest
+    GTest::gmock
     # cucumber_cpp.library
     # cucumber_cpp.library.util
     cucumber_cpp.library.cucumber_expression

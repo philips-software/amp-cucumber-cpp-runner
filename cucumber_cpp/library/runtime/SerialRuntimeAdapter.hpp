@@ -2,7 +2,7 @@
 #define RUNTIME_SERIAL_RUNTIME_ADAPTER_HPP
 
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"

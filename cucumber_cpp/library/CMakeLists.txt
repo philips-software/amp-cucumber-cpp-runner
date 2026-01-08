@@ -1,6 +1,6 @@
 set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 
-add_library(cucumber_cpp.library STATIC ${CCR_EXCLUDE_FROM_ALL})
+add_library(cucumber_cpp.library ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library PRIVATE
     Application.cpp

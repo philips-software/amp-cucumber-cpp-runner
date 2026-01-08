@@ -1,7 +1,7 @@
 #ifndef API_RUN_CUCUMBER_HPP
 #define API_RUN_CUCUMBER_HPP
 
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"

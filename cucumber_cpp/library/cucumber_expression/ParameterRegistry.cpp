@@ -1,7 +1,7 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber/messages/group.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include <cctype>
 #include <cstdint>
@@ -11,9 +11,7 @@
 #include <map>
 #include <optional>
 #include <regex>
-#include <source_location>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression

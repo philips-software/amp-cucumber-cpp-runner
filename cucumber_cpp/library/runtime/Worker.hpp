@@ -6,7 +6,7 @@
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"

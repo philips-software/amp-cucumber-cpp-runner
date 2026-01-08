@@ -1,13 +1,10 @@
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber/messages/pickle_doc_string.hpp"
-#include "cucumber/messages/pickle_table_row.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <optional>
-#include <source_location>
-#include <span>
 #include <string>
 
 namespace cucumber_cpp::library::engine

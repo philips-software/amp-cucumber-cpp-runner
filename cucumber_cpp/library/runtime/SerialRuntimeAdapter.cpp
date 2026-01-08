@@ -1,7 +1,7 @@
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"

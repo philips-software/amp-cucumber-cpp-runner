@@ -5,7 +5,6 @@
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"

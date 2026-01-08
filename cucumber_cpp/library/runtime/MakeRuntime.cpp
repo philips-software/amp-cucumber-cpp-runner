@@ -1,6 +1,6 @@
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/runtime/Coordinator.hpp"
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
