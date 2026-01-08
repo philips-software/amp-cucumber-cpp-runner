@@ -21,7 +21,6 @@
 #include <csignal>
 #include <cstdlib>
 #include <functional>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <list>
 #include <memory>
@@ -146,18 +145,6 @@ namespace cucumber_cpp::library::api
                 return createOrderedPickleList(pickles | std::views::reverse);
         };
 
-        struct RemoveDefaultEventListener
-        {
-            ~RemoveDefaultEventListener()
-            {
-                listeners.Append(defaultEventListener);
-            }
-
-        private:
-            testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
-            testing::TestEventListener* defaultEventListener{ listeners.Release(listeners.default_result_printer()) };
-        };
-
         void signal_handler(int signal)
         {
             if (signal == SIGABRT)
@@ -181,7 +168,6 @@ namespace cucumber_cpp::library::api
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
-        RemoveDefaultEventListener removeDefaultListenerExceptionSafe;
         OverrideAbortSignalHandler overrideSignalHandler;
 
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
