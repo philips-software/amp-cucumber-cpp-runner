@@ -57,7 +57,7 @@ namespace cucumber_cpp::library::api
             {
                 const auto absolutePath = std::filesystem::absolute(std::filesystem::path{ option.output }).string();
                 if (!customOutputFiles.contains(absolutePath))
-                    customOutputFiles.emplace(absolutePath, std::make_unique<std::ofstream>(absolutePath));
+                    customOutputFiles.try_emplace(absolutePath, std::make_unique<std::ofstream>(absolutePath));
 
                 activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, query, eventDataCollector, formatOptions, *customOutputFiles.at(absolutePath)));
             }
