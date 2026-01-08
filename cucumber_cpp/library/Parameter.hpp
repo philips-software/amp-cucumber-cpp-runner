@@ -47,7 +47,11 @@ namespace cucumber_cpp::library
 
     private:
         std::set<ParameterEntry> customParameters;
+
+        static ParameterRegistration instance;
     };
+
+    inline ParameterRegistration ParameterRegistration::instance;
 
     ////////////////////
     // Implementation //

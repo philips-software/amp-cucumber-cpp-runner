@@ -12,7 +12,6 @@ namespace cucumber_cpp::library
 
     ParameterRegistration& ParameterRegistration::Instance()
     {
-        static ParameterRegistration instance;
         return instance;
     }
 
