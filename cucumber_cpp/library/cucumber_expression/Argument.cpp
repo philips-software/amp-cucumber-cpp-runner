@@ -7,12 +7,13 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
     Argument::Argument(cucumber::messages::group group, const Parameter& parameter)
-        : group{ group }
+        : group{ std::move(group) }
         , parameter{ parameter }
     {}
 
