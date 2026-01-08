@@ -15,7 +15,6 @@ target_include_directories(cucumber_cpp.library.api PUBLIC
 
 target_link_libraries(cucumber_cpp.library.api PUBLIC
     GTest::gtest
-    GTest::gmock
     cucumber_cpp.library.cucumber_expression
 )
 

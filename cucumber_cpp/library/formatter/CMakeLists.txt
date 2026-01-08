@@ -16,8 +16,6 @@ target_include_directories(cucumber_cpp.library.formatter PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.formatter PUBLIC
-    GTest::gtest
-    GTest::gmock
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.formatter.helper
     cpp-terminal::cpp-terminal

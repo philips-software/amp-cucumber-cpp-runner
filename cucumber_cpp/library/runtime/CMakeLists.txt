@@ -18,10 +18,6 @@ target_include_directories(cucumber_cpp.library.runtime PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.runtime PUBLIC
-    GTest::gtest
-    GTest::gmock
-    # cucumber_cpp.library
-    # cucumber_cpp.library.util
     cucumber_cpp.library.cucumber_expression
 )
 
