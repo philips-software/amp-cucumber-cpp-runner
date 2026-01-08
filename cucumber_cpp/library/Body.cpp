@@ -13,9 +13,6 @@
 #include <format>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <ostream>
-#include <src/gtest-internal-inl.h>
 
 namespace cucumber_cpp::library
 {
