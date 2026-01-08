@@ -12,8 +12,6 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/formatter/PrettyPrinter.hpp"
-#include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -21,8 +19,11 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include <csignal>
+#include <cstdlib>
 #include <functional>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <ranges>
@@ -157,11 +158,32 @@ namespace cucumber_cpp::library::api
             testing::TestEventListeners& listeners{ testing::UnitTest::GetInstance()->listeners() };
             testing::TestEventListener* defaultEventListener{ listeners.Release(listeners.default_result_printer()) };
         };
+
+        void signal_handler(int signal)
+        {
+            if (signal == SIGABRT)
+                std::cerr << "SIGABRT received\n";
+            else
+                std::cerr << "Unexpected signal " << signal << " received\n";
+            std::_Exit(EXIT_FAILURE);
+        }
+
+        struct OverrideAbortSignalHandler
+        {
+            ~OverrideAbortSignalHandler()
+            {
+                std::signal(SIGABRT, original);
+            }
+
+            using signal_handler_t = void (*)(int);
+            signal_handler_t original{ std::signal(SIGABRT, signal_handler) };
+        };
     }
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
         RemoveDefaultEventListener removeDefaultListenerExceptionSafe;
+        OverrideAbortSignalHandler overrideSignalHandler;
 
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
