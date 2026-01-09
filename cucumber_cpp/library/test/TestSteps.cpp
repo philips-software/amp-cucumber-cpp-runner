@@ -1,7 +1,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Query.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <gmock/gmock.h>

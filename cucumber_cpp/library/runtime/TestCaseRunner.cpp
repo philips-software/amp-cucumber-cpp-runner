@@ -15,11 +15,11 @@
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
-#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -130,7 +130,7 @@ namespace cucumber_cpp::library::runtime
         return willRetry;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::RunHook(const HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    cucumber::messages::test_step_result TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
         if (ShouldSkipHook(isBeforeHook))
             return {
@@ -141,7 +141,7 @@ namespace cucumber_cpp::library::runtime
         return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, testStepStarted));
     }
 
-    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, support::HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
     {
         auto ids = supportCodeLibrary.hookRegistry.FindIds(hookType, pickle.tags);
         std::vector<cucumber::messages::test_step_result> results;
@@ -192,7 +192,7 @@ namespace cucumber_cpp::library::runtime
             };
         }
 
-        auto stepResults = RunStepHooks(pickleStep, HookType::beforeStep, testCaseContext, testStepStarted);
+        auto stepResults = RunStepHooks(pickleStep, support::HookType::beforeStep, testCaseContext, testStepStarted);
 
         if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::test_step_result_status::FAILED)
         {
@@ -204,7 +204,7 @@ namespace cucumber_cpp::library::runtime
             stepResults.push_back(result);
         }
 
-        const auto afterStepHookResults = RunStepHooks(pickleStep, HookType::afterStep, testCaseContext, testStepStarted);
+        const auto afterStepHookResults = RunStepHooks(pickleStep, support::HookType::afterStep, testCaseContext, testStepStarted);
         stepResults.reserve(stepResults.size() + afterStepHookResults.size());
         stepResults.insert(stepResults.end(), afterStepHookResults.begin(), afterStepHookResults.end());
 
@@ -218,7 +218,7 @@ namespace cucumber_cpp::library::runtime
         return finalStepResult;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<Body> body, const cucumber::messages::step_match_arguments_list& args)
+    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
     {
         return body->ExecuteAndCatchExceptions(args);
     }

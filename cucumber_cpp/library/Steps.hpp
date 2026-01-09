@@ -5,8 +5,8 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/BodyMacro.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 
 #define STEP_(matcher, type, args, fixture) BODY(matcher, type, args, cucumber_cpp::library::support::DefinitionRegistration::Register, fixture)

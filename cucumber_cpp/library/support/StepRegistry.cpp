@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
@@ -23,7 +23,7 @@
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     StepRegistry::StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::id_generator_ptr idGenerator)
         : parameterRegistry{ parameterRegistry }

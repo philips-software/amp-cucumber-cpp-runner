@@ -5,14 +5,14 @@
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/Query.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
@@ -85,12 +85,12 @@ namespace cucumber_cpp::library::api
 
         void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::before);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::before);
 
             for (auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
 
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::after);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::after);
 
             for (auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
@@ -98,12 +98,12 @@ namespace cucumber_cpp::library::api
 
         void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::beforeAll);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::beforeAll);
 
             for (auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
 
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(HookType::afterAll);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::afterAll);
 
             for (auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
@@ -173,8 +173,8 @@ namespace cucumber_cpp::library::api
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
         support::UndefinedParameters undefinedParameters;
-        StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
-        HookRegistry hookRegistry{ idGenerator };
+        support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
+        support::HookRegistry hookRegistry{ idGenerator };
 
         support::SupportCodeLibrary supportCodeLibrary{
             .hookRegistry = hookRegistry,

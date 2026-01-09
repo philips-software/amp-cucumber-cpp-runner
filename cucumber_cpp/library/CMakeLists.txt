@@ -5,21 +5,15 @@ add_library(cucumber_cpp.library ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library PRIVATE
     Application.cpp
     Application.hpp
-    Body.cpp
-    Body.hpp
     BodyMacro.hpp
     Context.hpp
     Errors.hpp
-    HookRegistry.cpp
-    HookRegistry.hpp
     Hooks.hpp
     Parameter.hpp
     Query.cpp
     Query.hpp
     Rtrim.cpp
     Rtrim.hpp
-    StepRegistry.cpp
-    StepRegistry.hpp
     Steps.hpp
 )
 

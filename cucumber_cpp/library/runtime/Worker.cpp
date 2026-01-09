@@ -9,10 +9,10 @@
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -90,7 +90,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeAllHooks()
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(HookType::beforeAll);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeAll);
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, programContext)));
 
@@ -100,7 +100,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunAfterAllHooks()
     {
         std::vector<cucumber::messages::test_step_result> results;
-        auto ids = supportCodeLibrary.hookRegistry.FindIds(HookType::afterAll);
+        auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterAll);
         for (const auto& id : ids | std::views::reverse)
             results.emplace_back(std::move(RunTestHook(id, programContext)));
 
@@ -144,7 +144,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(HookType::beforeFeature, feature.tags);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeFeature, feature.tags);
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, context)));
 
@@ -157,7 +157,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(HookType::afterFeature, feature.tags);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterFeature, feature.tags);
         for (const auto& id : ids)
             results.emplace_back(std::move(RunTestHook(id, context)));
 

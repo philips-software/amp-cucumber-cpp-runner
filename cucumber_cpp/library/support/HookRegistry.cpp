@@ -1,5 +1,5 @@
 
-#include "cucumber_cpp/library/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/hook_type.hpp"
 #include "cucumber/messages/location.hpp"
@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     namespace
     {

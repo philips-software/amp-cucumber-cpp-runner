@@ -3,11 +3,11 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_case.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -29,7 +29,7 @@ namespace cucumber_cpp::library::assemble
     {
         auto TransformToMatch(const std::string& text)
         {
-            return [&text](const StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
+            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
             {
                 const auto match = std::visit(cucumber_expression::MatchVisitor{ text }, definition.regex);
                 return { definition.id, match };
@@ -68,8 +68,8 @@ namespace cucumber_cpp::library::assemble
 
         void AssembleTestSteps(support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
-            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(HookType::before, pickleSource.pickle->tags);
-            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(HookType::after, pickleSource.pickle->tags);
+            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(support::HookType::before, pickleSource.pickle->tags);
+            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(support::HookType::after, pickleSource.pickle->tags);
 
             testCase.test_steps.reserve(beforeHooks.size() + pickleSource.pickle->steps.size() + afterHooks.size());
 

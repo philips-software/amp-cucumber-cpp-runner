@@ -6,13 +6,13 @@
 #include "cucumber/messages/pickle_table.hpp"
 #include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
-#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <any>
@@ -33,7 +33,7 @@
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     using StepFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
 

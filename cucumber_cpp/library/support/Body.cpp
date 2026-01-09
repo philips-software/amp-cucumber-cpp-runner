@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/Body.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
@@ -14,7 +14,7 @@
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
     {

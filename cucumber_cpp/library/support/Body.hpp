@@ -10,7 +10,7 @@
 #include <variant>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     using ExecuteArgs = std::variant<std::vector<std::string>, std::vector<std::any>>;
 

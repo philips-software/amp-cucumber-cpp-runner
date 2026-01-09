@@ -2,9 +2,9 @@
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
 #include "cucumber/messages/step_match_argument.hpp"
-#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -26,7 +26,7 @@ T TransformArg(const cucumber::messages::step_match_argument& match)
 #define BODY(matcher, type, targs, registration, base)                                                                            \
     namespace                                                                                                                     \
     {                                                                                                                             \
-        struct BODY_STRUCT : cucumber_cpp::library::Body                                                                          \
+        struct BODY_STRUCT : cucumber_cpp::library::support::Body                                                                 \
             , base                                                                                                                \
         {                                                                                                                         \
             /* Workaround namespaces in `base`. For example `base` = Foo::Bar. */                                                 \
@@ -36,7 +36,7 @@ T TransformArg(const cucumber::messages::step_match_argument& match)
                                                                                                                                   \
             void Execute(const cucumber::messages::step_match_arguments_list& args) override                                      \
             {                                                                                                                     \
-                cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                                     \
+                cucumber_cpp::library::support::SetUpTearDownWrapper wrapper{ *this };                                            \
                 ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr));                                                       \
             }                                                                                                                     \
                                                                                                                                   \

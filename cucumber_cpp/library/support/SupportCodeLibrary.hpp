@@ -2,11 +2,11 @@
 #define SUPPORT_SUPPORT_CODE_LIBRARY_HPP
 
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include <compare>
 #include <cstddef>

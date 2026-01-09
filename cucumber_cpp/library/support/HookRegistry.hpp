@@ -5,9 +5,9 @@
 #include "cucumber/messages/hook.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/tag.hpp"
-#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
@@ -23,7 +23,7 @@
 #include <string_view>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::support
 {
     enum struct HookType
     {

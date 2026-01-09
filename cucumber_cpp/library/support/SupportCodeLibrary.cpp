@@ -1,8 +1,8 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber_cpp/library/HookRegistry.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include <compare>
 #include <cstddef>
 #include <functional>
