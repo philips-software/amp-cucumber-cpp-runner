@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
@@ -259,7 +260,7 @@ namespace compatibility
                 },
             };
 
-            cucumber_cpp::library::cucumber_expression::ParameterRegistry parameterRegistry{};
+            cucumber_cpp::library::cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
 
             auto contextStorageFactory{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>() };
             auto programContext{ std::make_unique<cucumber_cpp::Context>(contextStorageFactory) };

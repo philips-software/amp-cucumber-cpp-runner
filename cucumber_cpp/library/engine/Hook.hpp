@@ -1,0 +1,28 @@
+#ifndef ENGINE_HOOK_HPP
+#define ENGINE_HOOK_HPP
+
+#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
+
+namespace cucumber_cpp::library::engine
+{
+    struct HookBase : engine::ExecutionContext
+    {
+        HookBase(util::Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted);
+
+        virtual ~HookBase() = default;
+
+        virtual void SetUp()
+        {
+            /* nothing to do */
+        }
+
+        virtual void TearDown()
+        {
+            /* nothing to do */
+        }
+    };
+}
+
+#endif

@@ -40,7 +40,7 @@ namespace cucumber_cpp::library::cucumber_expression
     TEST(TestTransformation, TestFromFiles)
     {
         std::filesystem::path testdataPath = "testdata/cucumber-expression/transformation";
-        ParameterRegistry parameterRegistry{};
+        ParameterRegistry parameterRegistry{ {} };
 
         for (const auto& [file, testdata] : GetTestData(testdataPath))
         {

@@ -5,40 +5,18 @@
 #include "cucumber/messages/test_run_hook_started.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <exception>
 #include <istream>
 #include <optional>
 #include <source_location>
 #include <string>
-#include <utility>
 #include <variant>
 
 namespace cucumber_cpp::library::engine
 {
-    struct StepSkipped : std::exception
-    {
-        StepSkipped(std::string message, std::source_location sourceLocation)
-            : message{ std::move(message) }
-            , sourceLocation{ sourceLocation }
-        {
-        }
-
-        std::string message;
-        std::source_location sourceLocation;
-    };
-
-    struct StepPending : std::exception
-    {
-        StepPending(std::string message, std::source_location sourceLocation)
-            : message{ std::move(message) }
-            , sourceLocation{ sourceLocation }
-        {
-        }
-
-        std::string message;
-        std::source_location sourceLocation;
-    };
+    using StepSkipped = support::StepSkipped;
+    using StepPending = support::StepPending;
 
     struct AttachOptions
     {

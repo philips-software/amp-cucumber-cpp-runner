@@ -2,12 +2,10 @@
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
 #include "cucumber/messages/group.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
-#include "cucumber_cpp/library/support/ParameterConversionTypeMap.hpp"
 #include <algorithm>
 #include <any>
 #include <cctype>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -15,6 +13,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <set>
 #include <source_location>
 #include <sstream>
 #include <stdexcept>
@@ -25,6 +24,24 @@
 namespace cucumber_cpp::library::cucumber_expression
 {
     using namespace std::literals;
+
+    struct CustomParameterEntryParams
+    {
+        std::string name;
+        std::string regex;
+        bool useForSnippets;
+    };
+
+    struct CustomParameterEntry
+    {
+        CustomParameterEntryParams params;
+
+        std::size_t localId;
+
+        std::source_location location;
+
+        std::strong_ordering operator<=>(const CustomParameterEntry& other) const;
+    };
 
     struct ConversionError : std::runtime_error
     {
@@ -107,9 +124,25 @@ namespace cucumber_cpp::library::cucumber_expression
         std::source_location location;
     };
 
+    template<class T>
+    using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
+
+    template<class T>
+    struct ConverterTypeMap
+    {
+        static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
+    };
+
+    template<class T>
+    std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
+    {
+        static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
+        return typeMap;
+    }
+
     struct ParameterRegistry
     {
-        ParameterRegistry();
+        explicit ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters);
 
         virtual ~ParameterRegistry() = default;
 
@@ -153,7 +186,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         AddParameter(parameter);
 
-        support::ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
     }
 }
 

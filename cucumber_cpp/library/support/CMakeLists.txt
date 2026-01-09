@@ -11,12 +11,12 @@ target_sources(cucumber_cpp.library.support PRIVATE
     Join.hpp
     StepRegistry.cpp
     StepRegistry.hpp
+    StepType.hpp
     SupportCodeLibrary.cpp
     SupportCodeLibrary.hpp
     Timestamp.cpp
     Timestamp.hpp
     Types.hpp
-
 )
 
 target_include_directories(cucumber_cpp.library.support PUBLIC
@@ -26,6 +26,8 @@ target_include_directories(cucumber_cpp.library.support PUBLIC
 target_link_libraries(cucumber_cpp.library.support PUBLIC
     GTest::gtest
     GTest::gmock
+    cucumber_cpp.library.cucumber_expression
+    cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
 )
 

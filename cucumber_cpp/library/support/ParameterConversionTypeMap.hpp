@@ -8,21 +8,21 @@
 
 namespace cucumber_cpp::library::support
 {
-    template<class T>
-    using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
+    // template<class T>
+    // using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
 
-    template<class T>
-    struct ConverterTypeMap
-    {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
-    };
+    // template<class T>
+    // struct ConverterTypeMap
+    // {
+    //     static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
+    // };
 
-    template<class T>
-    std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
-    {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
-        return typeMap;
-    }
+    // template<class T>
+    // std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
+    // {
+    //     static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
+    //     return typeMap;
+    // }
 }
 
 #endif

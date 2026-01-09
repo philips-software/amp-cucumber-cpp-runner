@@ -7,7 +7,7 @@
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include <cstddef>
@@ -79,7 +79,7 @@ namespace cucumber_cpp::library::support
         return registry;
     }
 
-    void StepRegistry::Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
+    void StepRegistry::Register(std::string id, const std::string& matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation)
     {
         try
         {

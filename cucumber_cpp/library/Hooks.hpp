@@ -5,10 +5,10 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/BodyMacro.hpp"
-#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/engine/Hook.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 
-#define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::support::DefinitionRegistration::Register, cucumber_cpp::library::support::HookBase)
+#define HOOK_(matcher, type) BODY(matcher, type, (), cucumber_cpp::library::support::DefinitionRegistration::Register, cucumber_cpp::library::engine::HookBase)
 
 #define HOOK_BEFORE_ALL(...)                                         \
     HOOK_(                                                           \

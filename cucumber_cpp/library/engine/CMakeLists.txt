@@ -3,9 +3,10 @@ add_library(cucumber_cpp.library.engine ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.engine PRIVATE
     ExecutionContext.cpp
     ExecutionContext.hpp
+    Hook.cpp
+    Hook.hpp
     Step.cpp
     Step.hpp
-    StepType.hpp
     StringTo.hpp
 )
 

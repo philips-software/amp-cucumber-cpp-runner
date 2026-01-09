@@ -18,10 +18,10 @@
         BODY_ARGS(__VA_ARGS__, (), ()), \
         fixture)
 
-#define GIVEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::engine::StepType::given, __VA_ARGS__)
-#define WHEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::engine::StepType::when, __VA_ARGS__)
-#define THEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::engine::StepType::then, __VA_ARGS__)
-#define STEP_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::engine::StepType::any, __VA_ARGS__)
+#define GIVEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::given, __VA_ARGS__)
+#define WHEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::when, __VA_ARGS__)
+#define THEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::then, __VA_ARGS__)
+#define STEP_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::any, __VA_ARGS__)
 
 #define GIVEN(...) GIVEN_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)
 #define WHEN(...) WHEN_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)

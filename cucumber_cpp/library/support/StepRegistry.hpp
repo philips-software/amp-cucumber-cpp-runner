@@ -4,15 +4,14 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_table.hpp"
-#include "cucumber/messages/pickle_table_row.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
+#include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <any>
@@ -79,7 +78,7 @@ namespace cucumber_cpp::library::support
             std::size_t line;
             std::filesystem::path uri;
 
-            engine::StepType type;
+            StepType type;
             std::string pattern;
             cucumber_expression::Matcher regex;
             cucumber::messages::step_definition_pattern_type patternType;
@@ -112,7 +111,7 @@ namespace cucumber_cpp::library::support
         const std::list<Definition>& StepDefinitions() const;
 
     private:
-        void Register(std::string id, const std::string& matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation);
+        void Register(std::string id, const std::string& matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation);
 
         cucumber_expression::ParameterRegistry& parameterRegistry;
         support::UndefinedParameters& undefinedParameters;
@@ -132,14 +131,14 @@ namespace cucumber_cpp::library::support
 
         struct Entry
         {
-            Entry(engine::StepType type, std::string regex, StepFactory factory, std::source_location sourceLocation)
+            Entry(StepType type, std::string regex, StepFactory factory, std::source_location sourceLocation)
                 : type{ type }
                 , regex{ std::move(regex) }
                 , factory{ factory }
                 , sourceLocation{ sourceLocation }
             {}
 
-            engine::StepType type{};
+            StepType type{};
             std::string regex;
             StepFactory factory;
             std::source_location sourceLocation;
@@ -147,7 +146,7 @@ namespace cucumber_cpp::library::support
         };
 
         template<class T>
-        static std::size_t Register(const std::string& matcher, engine::StepType stepType, std::source_location sourceLocation = std::source_location::current());
+        static std::size_t Register(const std::string& matcher, StepType stepType, std::source_location sourceLocation = std::source_location::current());
 
         std::span<Entry> GetEntries();
         [[nodiscard]] std::span<const Entry> GetEntries() const;
@@ -161,7 +160,7 @@ namespace cucumber_cpp::library::support
     //////////////////////////
 
     template<class T>
-    std::size_t StepStringRegistration::Register(const std::string& matcher, engine::StepType stepType, std::source_location sourceLocation)
+    std::size_t StepStringRegistration::Register(const std::string& matcher, StepType stepType, std::source_location sourceLocation)
     {
         Instance().registry.emplace_back(stepType, matcher, StepBodyFactory<T>, sourceLocation);
 

@@ -37,23 +37,6 @@ namespace cucumber_cpp::library::support
         afterStep,
     };
 
-    struct HookBase : engine::ExecutionContext
-    {
-        HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
-
-        virtual ~HookBase() = default;
-
-        virtual void SetUp()
-        {
-            /* nothing to do */
-        }
-
-        virtual void TearDown()
-        {
-            /* nothing to do */
-        }
-    };
-
     using HookFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted);
 
     template<class T>

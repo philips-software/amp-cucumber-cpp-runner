@@ -63,10 +63,6 @@ namespace cucumber_cpp::library::support
         };
     }
 
-    HookBase::HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
-        : engine::ExecutionContext{ broadCaster, context, std::move(stepOrHookStarted) }
-    {}
-
     HookRegistry::Definition::Definition(std::string id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation)
         : type{ type }
         , tagExpression{ tag_expression::Parse(expression.value_or("")) }

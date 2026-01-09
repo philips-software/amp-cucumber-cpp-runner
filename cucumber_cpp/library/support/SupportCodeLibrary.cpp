@@ -1,9 +1,9 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber_cpp/library/engine/StepType.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
-#include <compare>
+#include "cucumber_cpp/library/support/StepType.hpp"
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -18,11 +18,6 @@
 
 namespace cucumber_cpp::library::support
 {
-    std::strong_ordering ParameterEntry::operator<=>(const ParameterEntry& other) const
-    {
-        return std::tie(params.name, params.regex) <=> std::tie(other.params.name, other.params.regex);
-    }
-
     bool SourceLocationOrder::operator()(const std::source_location& lhs, const std::source_location& rhs) const
     {
         return std::forward_as_tuple(lhs.file_name(), lhs.line()) < std::forward_as_tuple(rhs.file_name(), rhs.line());
@@ -58,7 +53,7 @@ namespace cucumber_cpp::library::support
         return { allSteps.begin(), allSteps.end() };
     }
 
-    const std::set<ParameterEntry, std::less<>>& DefinitionRegistration::GetRegisteredParameters() const
+    const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& DefinitionRegistration::GetRegisteredParameters() const
     {
         return customParameters;
     }
@@ -88,7 +83,7 @@ namespace cucumber_cpp::library::support
         return registry.size();
     }
 
-    std::size_t DefinitionRegistration::Register(std::string_view matcher, engine::StepType stepType, StepFactory factory, std::source_location sourceLocation)
+    std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation)
     {
         registry.emplace(sourceLocation, StepStringRegistration::Entry{ stepType, std::string{ matcher }, factory, sourceLocation });
         PrintContents("Step", sourceLocation, registry);

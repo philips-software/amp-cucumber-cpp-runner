@@ -5,8 +5,11 @@
 #include "cucumber/messages/test_step_result.hpp"
 #include <any>
 #include <concepts>
+#include <exception>
+#include <source_location>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -17,6 +20,30 @@ namespace cucumber_cpp::library::support
     struct FatalError : std::runtime_error
     {
         using std::runtime_error::runtime_error;
+    };
+
+    struct StepSkipped : std::exception
+    {
+        StepSkipped(std::string message, std::source_location sourceLocation)
+            : message{ std::move(message) }
+            , sourceLocation{ sourceLocation }
+        {
+        }
+
+        std::string message;
+        std::source_location sourceLocation;
+    };
+
+    struct StepPending : std::exception
+    {
+        StepPending(std::string message, std::source_location sourceLocation)
+            : message{ std::move(message) }
+            , sourceLocation{ sourceLocation }
+        {
+        }
+
+        std::string message;
+        std::source_location sourceLocation;
     };
 
     struct Body

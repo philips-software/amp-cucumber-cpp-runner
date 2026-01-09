@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Query.hpp"
+#include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "gtest/gtest.h"
@@ -14,7 +15,7 @@ namespace cucumber_cpp::library
 {
     struct TestSteps : testing::Test
     {
-        cucumber_expression::ParameterRegistry parameterRegistry{};
+        cucumber_expression::ParameterRegistry parameterRegistry{ {} };
         StepRegistry stepRegistry{ parameterRegistry };
     };
 
@@ -43,12 +44,12 @@ namespace cucumber_cpp::library
 
     TEST_F(TestSteps, GetInvalidStep)
     {
-        EXPECT_THROW((void)stepRegistry.Query("This step does not exist"), StepRegistry::StepNotFoundError);
+        EXPECT_THROW((void)stepRegistry.Query("This step does not exist"), support::StepRegistry::StepNotFoundError);
     }
 
     TEST_F(TestSteps, GetAmbiguousStep)
     {
-        EXPECT_THROW((void)stepRegistry.Query("an ambiguous step"), StepRegistry::AmbiguousStepError);
+        EXPECT_THROW((void)stepRegistry.Query("an ambiguous step"), support::StepRegistry::AmbiguousStepError);
     }
 
     TEST_F(TestSteps, InvokeTestWithCucumberExpressions)

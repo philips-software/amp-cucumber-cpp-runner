@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     struct TestExpression : testing::Test
     {
-        ParameterRegistry parameterRegistry{};
+        ParameterRegistry parameterRegistry{ {} };
 
         template<class T>
         std::optional<T> Match(std::string expr, std::string text)

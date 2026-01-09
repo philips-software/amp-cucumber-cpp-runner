@@ -9,6 +9,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -75,7 +76,7 @@ namespace cucumber_cpp::library
 
         util::Broadcaster broadcaster;
 
-        cucumber_expression::ParameterRegistry parameterRegistry{};
+        cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
         support::StopWatchHighResolutionClock stopwatchHighResolutionClock;
         support::TimestampGeneratorSystemClock timestampGeneratorSystemClock;

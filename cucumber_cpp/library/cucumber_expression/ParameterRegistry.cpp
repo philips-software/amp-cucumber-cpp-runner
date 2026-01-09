@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <cctype>
+#include <compare>
 #include <cstdint>
 #include <cstdlib>
 #include <format>
@@ -10,7 +11,9 @@
 #include <map>
 #include <optional>
 #include <regex>
+#include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -44,7 +47,12 @@ namespace cucumber_cpp::library::cucumber_expression
         }
     }
 
-    ParameterRegistry::ParameterRegistry()
+    std::strong_ordering CustomParameterEntry::operator<=>(const CustomParameterEntry& other) const
+    {
+        return std::tie(params.name, params.regex) <=> std::tie(other.params.name, other.params.regex);
+    }
+
+    ParameterRegistry::ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters)
     {
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
@@ -67,8 +75,7 @@ namespace cucumber_cpp::library::cucumber_expression
         // extension
         AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
 
-        const auto& parameterRegistration = cucumber_cpp::library::support::DefinitionRegistration::Instance();
-        for (const auto& parameter : parameterRegistration.GetRegisteredParameters())
+        for (const auto& parameter : customParameters)
             AddParameter(Parameter{ parameter.params.name, { std::string(parameter.params.regex) }, false, parameter.params.useForSnippets, parameter.location });
     }
 

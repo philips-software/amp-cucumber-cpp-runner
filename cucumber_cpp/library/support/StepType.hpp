@@ -1,7 +1,7 @@
 #ifndef ENGINE_STEPTYPE_HPP
 #define ENGINE_STEPTYPE_HPP
 
-namespace cucumber_cpp::library::engine
+namespace cucumber_cpp::library::support
 {
     enum struct StepType
     {
