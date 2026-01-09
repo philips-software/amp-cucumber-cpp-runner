@@ -1,5 +1,5 @@
 
-#include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
+#include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cpp-terminal/color.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include <format>
@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-namespace cucumber_cpp::library::formatter
+namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {

@@ -3,8 +3,8 @@
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
+#include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
 #include <algorithm>

@@ -3,8 +3,6 @@ add_library(cucumber_cpp.library.formatter ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.formatter PRIVATE
     Formatter.cpp
     Formatter.hpp
-    GetColorFunctions.hpp
-    GetColorFunctions.cpp
     PrettyPrinter.cpp
     PrettyPrinter.hpp
     SummaryFormatter.cpp

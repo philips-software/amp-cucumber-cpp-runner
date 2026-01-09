@@ -7,13 +7,12 @@
 #include "cucumber_cpp/library/formatter/helper/IssueHelpers.hpp"
 #include "cucumber_cpp/library/formatter/helper/SummaryHelpers.hpp"
 #include "cucumber_cpp/library/support/Polyfill.hpp"
-#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Timestamp.hpp"
 #include <cstdio>
 #include <format>
+#include <list>
 #include <span>
 #include <string_view>
-#include <vector>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -51,8 +50,8 @@ namespace cucumber_cpp::library::formatter
 
     void SummaryFormatter::LogSummary(const cucumber::messages::duration& testRunDuration)
     {
-        std::vector<helper::TestCaseAttempt> failures{};
-        std::vector<helper::TestCaseAttempt> warnings{};
+        std::list<helper::TestCaseAttempt> failures{};
+        std::list<helper::TestCaseAttempt> warnings{};
 
         const auto attempts = eventDataCollector.GetTestCaseAttempts();
         for (const auto& attempt : attempts)
@@ -70,7 +69,7 @@ namespace cucumber_cpp::library::formatter
         outputStream << helper::FormatSummary(attempts, testRunDuration);
     }
 
-    void SummaryFormatter::LogIssues(std::span<const helper::TestCaseAttempt> attempts, std::string_view title)
+    void SummaryFormatter::LogIssues(const std::list<helper::TestCaseAttempt>& attempts, std::string_view title)
     {
         if (!attempts.empty())
         {

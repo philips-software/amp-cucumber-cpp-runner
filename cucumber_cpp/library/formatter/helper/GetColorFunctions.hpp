@@ -6,7 +6,7 @@
 #include <string>
 #include <string_view>
 
-namespace cucumber_cpp::library::formatter
+namespace cucumber_cpp::library::formatter::helper
 {
     struct ColorFunctions
     {

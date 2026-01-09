@@ -14,7 +14,7 @@
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
+#include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
 #include "cucumber_cpp/library/support/Polyfill.hpp"
 #include <algorithm>
@@ -166,7 +166,7 @@ namespace cucumber_cpp::library::formatter
                                           return tag.name;
                                       });
         std::vector<std::string> tagVec{ tags.begin(), tags.end() };
-        support::print(outputStream, "{:{}}{}\n", "", scenarioIndent, ColorFunctions::Tag(support::Join(tagVec, " ")));
+        support::print(outputStream, "{:{}}{}\n", "", scenarioIndent, helper::ColorFunctions::Tag(support::Join(tagVec, " ")));
     }
 
     void PrettyPrinter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
@@ -179,7 +179,7 @@ namespace cucumber_cpp::library::formatter
         const auto uri = stepDefinition ? std::make_optional(*stepDefinition->source_reference.uri) : std::nullopt;
         const auto line = stepDefinition ? std::make_optional(stepDefinition->source_reference.location->line) : std::nullopt;
 
-        PrintGherkinLine(std::format("{}{}", step.keyword, pickleStep.text), ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
+        PrintGherkinLine(std::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
     }
 
     void PrettyPrinter::PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
@@ -196,7 +196,7 @@ namespace cucumber_cpp::library::formatter
             };
 
         if (uri.has_value() && line.has_value())
-            support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle(title), "", padding, ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
             support::print(outputStream, "{:{}}{}\n", "", indent, formatTitle(title));
     }

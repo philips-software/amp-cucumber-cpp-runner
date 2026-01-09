@@ -6,7 +6,7 @@
 #include "cucumber/messages/timestamp.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
-#include <span>
+#include <list>
 #include <string_view>
 
 namespace cucumber_cpp::library::formatter
@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::formatter
     private:
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
         void LogSummary(const cucumber::messages::duration& testRunDuration);
-        void LogIssues(std::span<const helper::TestCaseAttempt> attempts, std::string_view title);
+        void LogIssues(const std::list<helper::TestCaseAttempt>& attempts, std::string_view title);
 
         cucumber::messages::timestamp testRunStartedAt{};
     };

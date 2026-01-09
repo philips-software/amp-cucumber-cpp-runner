@@ -1,7 +1,7 @@
 #include "cucumber_cpp/library/formatter/helper/TestCaseAttemptFormatter.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/formatter/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
+#include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/formatter/helper/IndentString.hpp"
 #include "cucumber_cpp/library/formatter/helper/LocationHelpers.hpp"
 #include "cucumber_cpp/library/formatter/helper/TestCaseAttemptParser.hpp"
