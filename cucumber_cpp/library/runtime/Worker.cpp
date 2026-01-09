@@ -8,7 +8,6 @@
 #include "cucumber/messages/test_run_hook_started.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/Body.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
