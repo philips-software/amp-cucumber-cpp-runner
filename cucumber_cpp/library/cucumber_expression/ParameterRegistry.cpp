@@ -1,8 +1,7 @@
-
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber/messages/group.hpp"
-#include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
@@ -68,7 +67,7 @@ namespace cucumber_cpp::library::cucumber_expression
         // extension
         AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
 
-        const auto& parameterRegistration = cucumber_cpp::library::ParameterRegistration::Instance();
+        const auto& parameterRegistration = cucumber_cpp::library::support::DefinitionRegistration::Instance();
         for (const auto& parameter : parameterRegistration.GetRegisteredParameters())
             AddParameter(Parameter{ parameter.params.name, { std::string(parameter.params.regex) }, false, parameter.params.useForSnippets, parameter.location });
     }

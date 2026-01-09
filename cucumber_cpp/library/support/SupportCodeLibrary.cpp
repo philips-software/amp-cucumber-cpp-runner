@@ -3,9 +3,12 @@
 #include "cucumber_cpp/library/HookRegistry.hpp"
 #include "cucumber_cpp/library/StepRegistry.hpp"
 #include "cucumber_cpp/library/engine/StepType.hpp"
+#include <compare>
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <ranges>
+#include <set>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -15,6 +18,11 @@
 
 namespace cucumber_cpp::library::support
 {
+    std::strong_ordering ParameterEntry::operator<=>(const ParameterEntry& other) const
+    {
+        return std::tie(params.name, params.regex) <=> std::tie(other.params.name, other.params.regex);
+    }
+
     bool SourceLocationOrder::operator()(const std::source_location& lhs, const std::source_location& rhs) const
     {
         return std::forward_as_tuple(lhs.file_name(), lhs.line()) < std::forward_as_tuple(rhs.file_name(), rhs.line());
@@ -48,6 +56,11 @@ namespace cucumber_cpp::library::support
                                 return std::get<HookEntry>(entry);
                             });
         return { allSteps.begin(), allSteps.end() };
+    }
+
+    const std::set<ParameterEntry, std::less<>>& DefinitionRegistration::GetRegisteredParameters() const
+    {
+        return customParameters;
     }
 
     namespace
