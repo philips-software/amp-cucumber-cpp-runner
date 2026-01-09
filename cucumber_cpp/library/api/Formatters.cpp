@@ -1,9 +1,9 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
-#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/PrettyPrinter.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
+#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <filesystem>
@@ -43,7 +43,7 @@ namespace cucumber_cpp::library::api
         return { view.begin(), view.end() };
     }
 
-    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output)
+    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output)
     {
         std::list<std::unique_ptr<formatter::Formatter>> activeFormatters;
 

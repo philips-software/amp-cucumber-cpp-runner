@@ -10,8 +10,6 @@ target_sources(cucumber_cpp.library PRIVATE
     Errors.hpp
     Hooks.hpp
     Parameter.hpp
-    Query.cpp
-    Query.hpp
     Rtrim.cpp
     Rtrim.hpp
     Steps.hpp
@@ -42,14 +40,15 @@ target_compile_options(cucumber_cpp.library
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
-add_subdirectory(assemble)
 add_subdirectory(api)
-add_subdirectory(support)
-add_subdirectory(runtime)
+add_subdirectory(assemble)
 add_subdirectory(cucumber_expression)
-add_subdirectory(formatter)
-add_subdirectory(tag_expression)
 add_subdirectory(engine)
+add_subdirectory(formatter)
+add_subdirectory(query)
+add_subdirectory(runtime)
+add_subdirectory(support)
+add_subdirectory(tag_expression)
 add_subdirectory(util)
 
 if (CCR_BUILD_TESTS)

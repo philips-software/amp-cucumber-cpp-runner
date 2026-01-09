@@ -14,9 +14,9 @@
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber_cpp/library/Query.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/GherkinDocumentParser.hpp"
+#include "cucumber_cpp/library/query/Query.hpp"
 #include <cstddef>
 #include <functional>
 #include <map>

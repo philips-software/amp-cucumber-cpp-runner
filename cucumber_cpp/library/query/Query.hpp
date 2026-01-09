@@ -35,7 +35,6 @@
 #include <cstdint>
 #include <forward_list>
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
 #include <ranges>
@@ -44,7 +43,7 @@
 #include <utility>
 #include <vector>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::query
 {
     struct Lineage
     {

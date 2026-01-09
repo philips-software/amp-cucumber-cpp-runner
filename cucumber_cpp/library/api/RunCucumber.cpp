@@ -5,11 +5,12 @@
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
-#include "cucumber_cpp/library/Query.hpp"
+#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
+#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
@@ -184,7 +185,7 @@ namespace cucumber_cpp::library::api
         };
 
         formatter::helper::EventDataCollector eventDataCollector{ broadcaster };
-        Query query{ broadcaster };
+        query::Query query{ broadcaster };
 
         const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
         const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query, eventDataCollector);

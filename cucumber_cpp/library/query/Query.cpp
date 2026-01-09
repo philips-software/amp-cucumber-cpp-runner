@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/Query.hpp"
+#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/background.hpp"
 #include "cucumber/messages/envelope.hpp"
@@ -29,7 +29,6 @@
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <cstdint>
 #include <format>
 #include <functional>
 #include <map>
@@ -38,7 +37,7 @@
 #include <string>
 #include <utility>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::query
 {
     std::string Lineage::GetUniqueFeatureName() const
     {

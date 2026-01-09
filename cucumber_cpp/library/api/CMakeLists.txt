@@ -15,9 +15,13 @@ target_include_directories(cucumber_cpp.library.api PUBLIC
 
 target_link_libraries(cucumber_cpp.library.api PUBLIC
     cucumber_cpp.library.cucumber_expression
+    cucumber_cpp.library.formatter
+    cucumber_cpp.library.runtime
+    cucumber_cpp.library.support
+    cucumber_cpp.library.util
 )
 
 if (CCR_BUILD_TESTS)
-    # add_subdirectory(test)
+    add_subdirectory(test)
     # add_subdirectory(test_helper)
 endif()

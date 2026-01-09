@@ -16,9 +16,12 @@ target_include_directories(cucumber_cpp.library.formatter PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.formatter PUBLIC
+    cpp-terminal
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.formatter.helper
-    cpp-terminal::cpp-terminal
+    cucumber_cpp.library.query
+    cucumber_cpp.library.support
+    cucumber_cpp.library.util
     nlohmann_json
 )
 
@@ -26,6 +29,6 @@ add_subdirectory(helper)
 
 
 if (CCR_BUILD_TESTS)
-    # add_subdirectory(test)
+    add_subdirectory(test)
     # add_subdirectory(test_helper)
 endif()
