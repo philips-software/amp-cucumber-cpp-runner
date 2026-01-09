@@ -4,9 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
-#include <string>
 #include <string_view>
-#include <utility>
 
 namespace cucumber_cpp::library::tag_expression
 {
