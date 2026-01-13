@@ -59,7 +59,6 @@ set_directory_properties(PROPERTY USE_FOLDERS ON)
 include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
-include(GoogleTest)
 
 if (CCR_FETCH_DEPS)
     add_subdirectory(external SYSTEM)
