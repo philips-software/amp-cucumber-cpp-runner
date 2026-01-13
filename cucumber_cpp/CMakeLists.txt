@@ -1,7 +1,10 @@
 add_subdirectory(library)
 add_subdirectory(runner)
-add_subdirectory(example)
-add_subdirectory(acceptance_test)
+
+if (CCR_STANDALONE)
+    add_subdirectory(example)
+    add_subdirectory(acceptance_test)
+endif()
 
 add_library(cucumber_cpp INTERFACE)
 
