@@ -24,9 +24,11 @@ option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
+if (CCR_STANDALONE)
+    if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
 endif()
 
 if (CCR_BUILD_TESTS)
