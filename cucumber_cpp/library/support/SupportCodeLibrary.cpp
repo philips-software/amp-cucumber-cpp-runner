@@ -62,10 +62,12 @@ namespace cucumber_cpp::library::support
     {
         void PrintContents(std::string_view type, std::source_location sourceLocation, const std::map<std::source_location, Entry, SourceLocationOrder>& registry)
         {
+#if defined(CCR_STANDALONE)
             std::cout << std::format("Added ({}): {}:{}\n", type, sourceLocation.file_name(), sourceLocation.line());
             std::cout << "Registry contents:\n";
             for (const auto& [key, item] : registry)
                 std::cout << std::format("  {}:{}\n", key.file_name(), key.line());
+#endif
         }
     }
 
