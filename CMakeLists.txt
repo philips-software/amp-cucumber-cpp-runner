@@ -18,7 +18,7 @@ else()
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
-option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." On )
+option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 
@@ -70,6 +70,7 @@ else()
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
     find_package(yaml-cpp REQUIRED)
+    find_package(cpp-terminal REQUIRED)
 endif()
 
 add_subdirectory(cucumber_cpp)
