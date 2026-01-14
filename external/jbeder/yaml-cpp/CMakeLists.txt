@@ -1,7 +1,9 @@
 FetchContent_Declare(
-  yaml-cpp
-  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-  GIT_TAG 2f86d13775d119edbb69af52e5f566fd65c6953b # Unreleased
+    yaml-cpp
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG 2f86d13775d119edbb69af52e5f566fd65c6953b # Unreleased
+
+    SYSTEM
 )
 
 set(YAML_ENABLE_PIC OFF CACHE STRING "")

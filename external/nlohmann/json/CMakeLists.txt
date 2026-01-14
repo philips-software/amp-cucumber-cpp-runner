@@ -2,6 +2,7 @@ FetchContent_Declare(nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG "79587f896ed4db2a0b63baa9151113f4da336599" # Unreleased
 
+    SYSTEM
     OVERRIDE_FIND_PACKAGE
 )
 
