@@ -12,12 +12,19 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <cucumber/messages/pickle.hpp>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
 {
+    struct FeatureHookError : std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     struct Worker
     {
         Worker(std::string_view testRunStartedId,
@@ -37,9 +44,9 @@ namespace cucumber_cpp::library::runtime
         std::vector<cucumber::messages::test_step_result> RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
         std::vector<cucumber::messages::test_step_result> RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
 
-        cucumber::messages::test_step_result RunTestHook(std::string id, Context& context);
+        cucumber::messages::test_step_result RunTestHook(const std::string& id, Context& context);
 
-        bool IsStatusFailed(cucumber::messages::test_step_result_status status);
+        bool IsStatusFailed(cucumber::messages::test_step_result_status status) const;
 
         std::string_view testRunStartedId;
         util::Broadcaster& broadcaster;

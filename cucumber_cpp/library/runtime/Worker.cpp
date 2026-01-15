@@ -1,6 +1,5 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -24,45 +23,21 @@
 #include <ranges>
 #include <set>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        cucumber::messages::duration operator+=(cucumber::messages::duration durationA, cucumber::messages::duration durationB)
-        {
-            const auto seconds = durationA.seconds + durationB.seconds;
-            const auto nanos = durationA.nanos + durationB.nanos;
-
-            if (nanos >= support::nanosecondsPerSecond)
-                return { seconds + 1, nanos - support::nanosecondsPerSecond };
-            else
-                return { seconds, nanos };
-        }
-
-        const auto to_underlying = [](const auto& value)
-        {
-            return static_cast<std::underlying_type_t<std::remove_cvref_t<decltype(value)>>>(value);
-        };
-
-        const auto compare = [](const cucumber::messages::test_step_result& a, const cucumber::messages::test_step_result& b)
-        {
-            return to_underlying(a.status) < to_underlying(b.status);
-        };
-
         const inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
             cucumber::messages::test_step_result_status::AMBIGUOUS,
             cucumber::messages::test_step_result_status::FAILED,
             cucumber::messages::test_step_result_status::UNDEFINED,
         };
 
-        std::size_t RetriesForPickle(const cucumber::messages::pickle& pickle, support::RunOptions::Runtime& options)
+        std::size_t RetriesForPickle(const cucumber::messages::pickle& pickle, const support::RunOptions::Runtime& options)
         {
             if (options.retry == 0)
                 return 0;
@@ -92,7 +67,7 @@ namespace cucumber_cpp::library::runtime
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeAll);
         for (const auto& id : ids)
-            results.emplace_back(std::move(RunTestHook(id, programContext)));
+            results.emplace_back(RunTestHook(id, programContext));
 
         return results;
     }
@@ -102,7 +77,7 @@ namespace cucumber_cpp::library::runtime
         std::vector<cucumber::messages::test_step_result> results;
         auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterAll);
         for (const auto& id : ids | std::views::reverse)
-            results.emplace_back(std::move(RunTestHook(id, programContext)));
+            results.emplace_back(RunTestHook(id, programContext));
 
         return results;
     }
@@ -130,7 +105,7 @@ namespace cucumber_cpp::library::runtime
             gherkinDocument,
             assembledTestCase.pickle,
             assembledTestCase.testCase,
-            options.retry,
+            RetriesForPickle(assembledTestCase.pickle, options),
             options.dryRun || (options.failFast && failing),
             supportCodeLibrary,
             testSuiteContext,
@@ -145,11 +120,12 @@ namespace cucumber_cpp::library::runtime
     {
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeFeature, feature.tags);
+
         for (const auto& id : ids)
-            results.emplace_back(std::move(RunTestHook(id, context)));
+            results.emplace_back(RunTestHook(id, context));
 
         if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
-            throw std::runtime_error("Failed before feature hook");
+            throw FeatureHookError{ "Failed before feature hook" };
 
         return results;
     }
@@ -158,16 +134,17 @@ namespace cucumber_cpp::library::runtime
     {
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterFeature, feature.tags);
+
         for (const auto& id : ids)
-            results.emplace_back(std::move(RunTestHook(id, context)));
+            results.emplace_back(RunTestHook(id, context));
 
         if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
-            throw std::runtime_error("Failed after feature hook");
+            throw FeatureHookError{ "Failed after feature hook" };
 
         return results;
     }
 
-    cucumber::messages::test_step_result Worker::RunTestHook(std::string id, Context& context)
+    cucumber::messages::test_step_result Worker::RunTestHook(const std::string& id, Context& context)
     {
         const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
         const auto testRunHookStartedId = idGenerator->next_id();
@@ -192,7 +169,7 @@ namespace cucumber_cpp::library::runtime
         return result;
     }
 
-    bool Worker::IsStatusFailed(cucumber::messages::test_step_result_status status)
+    bool Worker::IsStatusFailed(cucumber::messages::test_step_result_status status) const
     {
         if (options.dryRun)
             return false;
@@ -202,5 +179,4 @@ namespace cucumber_cpp::library::runtime
 
         return failingStatuses.contains(status);
     }
-
 }
