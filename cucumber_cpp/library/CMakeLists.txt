@@ -27,7 +27,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_cpp.library.util
     cucumber_cpp.library.formatter
     cucumber_cpp.library.support
-    CLI11
+    CLI11::CLI11
 )
 
 target_compile_options(cucumber_cpp.library

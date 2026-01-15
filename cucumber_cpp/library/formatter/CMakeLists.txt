@@ -20,7 +20,7 @@ target_link_libraries(cucumber_cpp.library.formatter PUBLIC
     cucumber_cpp.library.query
     cucumber_cpp.library.support
     cucumber_cpp.library.util
-    nlohmann_json
+    nlohmann_json::nlohmann_json
 )
 
 add_subdirectory(helper)
