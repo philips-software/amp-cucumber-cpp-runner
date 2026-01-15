@@ -3,9 +3,6 @@ if(NOT TARGET gtest)
         googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG        v1.14.0
-
-        SYSTEM
-        FIND_PACKAGE_ARGS NAMES GTest
     )
 
     set(gtest_force_shared_crt On CACHE BOOL "" FORCE) # For Windows: Prevent overriding the parent project's compiler/linker settings

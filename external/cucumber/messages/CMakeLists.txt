@@ -1,8 +1,7 @@
-FetchContent_Declare(cucumber_messages
+FetchContent_Declare(
+    cucumber_messages
     GIT_REPOSITORY https://github.com/cucumber/messages.git
     GIT_TAG "v31.0.0"
-
-    SYSTEM
     OVERRIDE_FIND_PACKAGE
 )
 
