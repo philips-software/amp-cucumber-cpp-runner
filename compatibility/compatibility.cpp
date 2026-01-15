@@ -257,6 +257,7 @@ namespace compatibility
                 .runtime = {
                     .retry = std::string{ KIT_STRING }.starts_with("retry") ? 2u : 0u,
                     .strict = true,
+                    .retryTagExpression = cucumber_cpp::library::tag_expression::Parse(""),
                 },
             };
 
