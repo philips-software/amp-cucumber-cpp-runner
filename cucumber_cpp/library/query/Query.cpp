@@ -29,6 +29,8 @@
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <cstddef>
+#include <cucumber/messages/test_step_result_status.hpp>
 #include <format>
 #include <functional>
 #include <map>
@@ -146,6 +148,21 @@ namespace cucumber_cpp::library::query
     const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& Query::TestCaseFinishedByTestCaseStartedId() const
     {
         return testCaseFinishedByTestCaseStartedId;
+    }
+
+    std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> Query::CountMostSevereTestStepResultStatus() const
+    {
+        std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> result{
+            { cucumber::messages::test_step_result_status::UNKNOWN, 0 },
+            { cucumber::messages::test_step_result_status::PASSED, 0 },
+            { cucumber::messages::test_step_result_status::SKIPPED, 0 },
+            { cucumber::messages::test_step_result_status::PENDING, 0 },
+            { cucumber::messages::test_step_result_status::UNDEFINED, 0 },
+            { cucumber::messages::test_step_result_status::AMBIGUOUS, 0 },
+            { cucumber::messages::test_step_result_status::FAILED, 0 },
+        };
+
+        return result;
     }
 
     void Query::operator+=(const cucumber::messages::envelope& envelope)

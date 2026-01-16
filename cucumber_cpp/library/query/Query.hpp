@@ -32,7 +32,9 @@
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include <cstddef>
 #include <cstdint>
+#include <cucumber/messages/test_step_result_status.hpp>
 #include <forward_list>
 #include <functional>
 #include <map>
@@ -141,8 +143,11 @@ namespace cucumber_cpp::library::query
         const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;
         const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
 
+        std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> CountMostSevereTestStepResultStatus() const;
+
     private:
-        void operator+=(const cucumber::messages::envelope& envelope);
+        void
+        operator+=(const cucumber::messages::envelope& envelope);
 
         void operator+=(const cucumber::messages::gherkin_document& gherkinDocument);
         void operator+=(const cucumber::messages::pickle& pickle);
