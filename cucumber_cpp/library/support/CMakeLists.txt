@@ -9,8 +9,6 @@ endif()
 target_sources(cucumber_cpp.library.support PRIVATE
     Body.cpp
     Body.hpp
-    Duration.cpp
-    Duration.hpp
     HookRegistry.cpp
     HookRegistry.hpp
     Join.cpp
@@ -20,8 +18,6 @@ target_sources(cucumber_cpp.library.support PRIVATE
     StepType.hpp
     SupportCodeLibrary.cpp
     SupportCodeLibrary.hpp
-    Timestamp.cpp
-    Timestamp.hpp
     Types.hpp
 )
 

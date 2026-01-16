@@ -61,9 +61,9 @@ namespace cucumber_cpp::library
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::set<std::filesystem::path> GetFeatureFiles(Application::Options& options)
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(Application::Options& options)
         {
-            std::set<std::filesystem::path> files;
+            std::set<std::filesystem::path, std::less<>> files;
 
             for (const auto feature : options.paths | std::views::transform(ToFileSystemPath))
                 if (std::filesystem::is_directory(feature))

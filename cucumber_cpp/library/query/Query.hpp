@@ -2,6 +2,7 @@
 #define LIBRARY_QUERY_HPP
 
 #include "cucumber/messages/attachment.hpp"
+#include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/examples.hpp"
 #include "cucumber/messages/feature.hpp"
@@ -29,14 +30,15 @@
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber/messages/test_step_result.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <cucumber/messages/test_step_result_status.hpp>
 #include <forward_list>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <ranges>
@@ -104,6 +106,11 @@ namespace cucumber_cpp::library::query
         }
     };
 
+    struct NamingStrategy
+    {
+        static std::string Reduce(const Lineage& lineage, const cucumber::messages::pickle& pickle);
+    };
+
     struct Query
         : util::Broadcaster
         , util::Listener
@@ -133,8 +140,7 @@ namespace cucumber_cpp::library::query
 
         const cucumber::messages::test_step& FindTestStepBy(const cucumber::messages::test_step_finished& testStepFinished) const;
 
-        const cucumber::messages::step&
-        FindStepBy(const cucumber::messages::pickle_step& pickleStep) const;
+        const cucumber::messages::step& FindStepBy(const cucumber::messages::pickle_step& pickleStep) const;
 
         const cucumber::messages::step_definition& FindStepDefinitionById(const std::string& id) const;
 
@@ -143,7 +149,18 @@ namespace cucumber_cpp::library::query
         const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;
         const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
 
+        std::size_t CountTestCasesStarted() const;
+
         std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> CountMostSevereTestStepResultStatus() const;
+
+        std::list<const cucumber::messages::test_case_started*> FindAllTestCaseStarted() const;
+        std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+
+        cucumber::messages::duration FindTestRunDuration() const;
+
+        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
+        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const;
 
     private:
         void

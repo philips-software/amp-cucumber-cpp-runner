@@ -13,10 +13,10 @@
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -153,7 +153,7 @@ namespace cucumber_cpp::library::runtime
             .id = testRunHookStartedId,
             .test_run_started_id = std::string{ testRunStartedId },
             .hook_id = definition.hook.id,
-            .timestamp = support::TimestampNow(),
+            .timestamp = util::TimestampNow(),
         };
 
         broadcaster.BroadcastEvent({ .test_run_hook_started = testRunHookStarted });
@@ -163,7 +163,7 @@ namespace cucumber_cpp::library::runtime
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
                                          .test_run_hook_started_id = testRunHookStartedId,
                                          .result = result,
-                                         .timestamp = support::TimestampNow(),
+                                         .timestamp = util::TimestampNow(),
                                      } });
 
         return result;

@@ -1,12 +1,12 @@
-#ifndef SUPPORT_TIMESTAMP_HPP
-#define SUPPORT_TIMESTAMP_HPP
+#ifndef UTIL_TIMESTAMP_HPP
+#define UTIL_TIMESTAMP_HPP
 
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/timestamp.hpp"
 #include <chrono>
 #include <cstddef>
 
-namespace cucumber_cpp::library::support
+namespace cucumber_cpp::library::util
 {
     constexpr std::size_t millisecondsPerSecond = 1e3;
     constexpr std::size_t nanosecondsPerMillisecond = 1e6;
@@ -41,7 +41,7 @@ namespace cucumber_cpp::library::support
 
 namespace cucumber::messages
 {
-    using cucumber_cpp::library::support::operator-;
+    using cucumber_cpp::library::util::operator-;
 };
 
 #endif

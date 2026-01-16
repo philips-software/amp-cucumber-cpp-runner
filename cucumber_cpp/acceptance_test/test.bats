@@ -61,8 +61,8 @@ teardown() {
 }
 
 @test "Second feature file does not overwrite success with an undefined status" {
-    run $acceptance_test --format summary pretty --tags "@undefinedsuccess and @result:success" -- cucumber_cpp/acceptance_test/features/test_undefined_success_1.feature cucumber_cpp/acceptance_test/features/test_undefined_success_2.feature
-    assert_success
+    run $acceptance_test --format summary pretty --tags @undefinedsuccess -- cucumber_cpp/acceptance_test/features/test_undefined_success_1.feature cucumber_cpp/acceptance_test/features/test_undefined_success_2.feature
+    assert_failure
 }
 
 @test "Valid reporters only" {

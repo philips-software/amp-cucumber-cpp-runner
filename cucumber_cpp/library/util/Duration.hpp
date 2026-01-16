@@ -1,10 +1,10 @@
-#ifndef SUPPORT_DURATION_HPP
-#define SUPPORT_DURATION_HPP
+#ifndef UTIL_DURATION_HPP
+#define UTIL_DURATION_HPP
 
 #include "cucumber/messages/duration.hpp"
 #include <chrono>
 
-namespace cucumber_cpp::library::support
+namespace cucumber_cpp::library::util
 {
     cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis);
 
@@ -40,7 +40,7 @@ namespace cucumber_cpp::library::support
 
 namespace cucumber::messages
 {
-    using cucumber_cpp::library::support::operator+=;
+    using cucumber_cpp::library::util::operator+=;
 };
 
 #endif

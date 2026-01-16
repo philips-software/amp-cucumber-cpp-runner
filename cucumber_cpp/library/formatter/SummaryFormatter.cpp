@@ -7,7 +7,7 @@
 #include "cucumber_cpp/library/formatter/helper/IssueHelpers.hpp"
 #include "cucumber_cpp/library/formatter/helper/SummaryHelpers.hpp"
 #include "cucumber_cpp/library/support/Polyfill.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <cstdio>
 #include <format>
 #include <list>

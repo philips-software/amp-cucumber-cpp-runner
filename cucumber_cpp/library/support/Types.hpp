@@ -7,11 +7,11 @@
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <set>
 #include <span>
-#include <string>
 
 namespace cucumber_cpp::library::support
 {
@@ -25,7 +25,7 @@ namespace cucumber_cpp::library::support
 
         struct Sources
         {
-            std::set<std::filesystem::path> paths{};
+            std::set<std::filesystem::path, std::less<>> paths{};
             std::unique_ptr<tag_expression::Expression> tagExpression;
             Ordering ordering{ Ordering::defined };
 

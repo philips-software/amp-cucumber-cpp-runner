@@ -42,13 +42,13 @@ namespace cucumber_cpp::library::formatter
         constexpr auto attachmentIndentLength = 4;
 
         std::map<cucumber::messages::test_step_result_status, std::string, std::less<>> iconMap{
-            { cucumber::messages::test_step_result_status::AMBIGUOUS, "❓" },
-            { cucumber::messages::test_step_result_status::FAILED, "❌" },
-            { cucumber::messages::test_step_result_status::PASSED, "✅" },
-            { cucumber::messages::test_step_result_status::PENDING, "🟡" },
-            { cucumber::messages::test_step_result_status::SKIPPED, "➡️" },
-            { cucumber::messages::test_step_result_status::UNDEFINED, "⚠️" },
-            { cucumber::messages::test_step_result_status::UNKNOWN, "❔" },
+            { cucumber::messages::test_step_result_status::AMBIGUOUS, "✘" },
+            { cucumber::messages::test_step_result_status::FAILED, "✘" },
+            { cucumber::messages::test_step_result_status::PASSED, "✔" },
+            { cucumber::messages::test_step_result_status::PENDING, "■" },
+            { cucumber::messages::test_step_result_status::SKIPPED, "↷" },
+            { cucumber::messages::test_step_result_status::UNDEFINED, "■" },
+            { cucumber::messages::test_step_result_status::UNKNOWN, " " },
         };
 
         std::string FormatPickleTitle(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario)
@@ -268,8 +268,8 @@ namespace cucumber_cpp::library::formatter
             };
 
         if (uri.has_value() && line.has_value())
-            support::print(outputStream, "{:{}}{}{}{:{}} {}\n", "", indent, icon, formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            support::print(outputStream, "{:{}}{} {}{:{}} {}\n", "", indent, formatTitle(icon), formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
-            support::print(outputStream, "{:{}}{}{}\n", "", indent, icon, formatTitle(title));
+            support::print(outputStream, "{:{}}{} {}\n", "", indent, formatTitle(icon), formatTitle(title));
     }
 }

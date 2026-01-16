@@ -17,13 +17,13 @@
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
-#include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -82,7 +82,7 @@ namespace cucumber_cpp::library::runtime
                                          .attempt = attempt,
                                          .id = currentTestCaseStartedId,
                                          .test_case_id = testCase.id,
-                                         .timestamp = support::TimestampNow(),
+                                         .timestamp = util::TimestampNow(),
                                      } });
 
         bool seenSteps = false;
@@ -93,7 +93,7 @@ namespace cucumber_cpp::library::runtime
             auto testStepStarted = cucumber::messages::test_step_started{
                 .test_case_started_id = currentTestCaseStartedId,
                 .test_step_id = testStep.id,
-                .timestamp = support::TimestampNow(),
+                .timestamp = util::TimestampNow(),
             };
             broadcaster.BroadcastEvent({ .test_step_started = testStepStarted });
 
@@ -115,7 +115,7 @@ namespace cucumber_cpp::library::runtime
                                              .test_case_started_id = currentTestCaseStartedId,
                                              .test_step_id = testStep.id,
                                              .test_step_result = testStepResult,
-                                             .timestamp = support::TimestampNow(),
+                                             .timestamp = util::TimestampNow(),
                                          } });
         }
 
@@ -123,7 +123,7 @@ namespace cucumber_cpp::library::runtime
 
         broadcaster.BroadcastEvent({ .test_case_finished = cucumber::messages::test_case_finished{
                                          .test_case_started_id = currentTestCaseStartedId,
-                                         .timestamp = support::TimestampNow(),
+                                         .timestamp = util::TimestampNow(),
                                          .will_be_retried = willRetry,
                                      } });
 

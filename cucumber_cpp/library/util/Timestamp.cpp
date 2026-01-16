@@ -1,11 +1,11 @@
 
-#include "cucumber/messages/timestamp.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber/messages/duration.hpp"
-#include "cucumber_cpp/library/support/Duration.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
+#include "cucumber/messages/timestamp.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
 #include <chrono>
 
-namespace cucumber_cpp::library::support
+namespace cucumber_cpp::library::util
 {
     namespace
     {

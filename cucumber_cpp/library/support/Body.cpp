@@ -3,7 +3,7 @@
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/support/Duration.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <cstddef>
@@ -52,7 +52,7 @@ namespace cucumber_cpp::library::support
 
         try
         {
-            support::Stopwatch::Instance().Start();
+            util::Stopwatch::Instance().Start();
             Execute(args);
         }
         catch (const StepSkipped& e)
@@ -88,7 +88,7 @@ namespace cucumber_cpp::library::support
             };
         }
 
-        auto nanoseconds = support::Stopwatch::Instance().Duration();
+        auto nanoseconds = util::Stopwatch::Instance().Duration();
         static constexpr std::size_t nanosecondsPerSecond = 1e9;
         testStepResult.duration = {
             .seconds = nanoseconds.count() / nanosecondsPerSecond,

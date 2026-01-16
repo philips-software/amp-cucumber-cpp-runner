@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/background.hpp"
+#include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/examples.hpp"
 #include "cucumber/messages/feature.hpp"
@@ -26,18 +27,25 @@
 #include "cucumber/messages/test_run_started.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
+#include <algorithm>
 #include <cstddef>
-#include <cucumber/messages/test_step_result_status.hpp>
 #include <format>
+#include <forward_list>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
+#include <numeric>
+#include <ranges>
 #include <span>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace cucumber_cpp::library::query
 {
@@ -51,6 +59,34 @@ namespace cucumber_cpp::library::query
         if (rule)
             return std::format("{}/{}", rule->name, scenario->name);
         return scenario->name;
+    }
+
+    std::string NamingStrategy::Reduce(const Lineage& lineage, const cucumber::messages::pickle& pickle)
+    {
+        std::vector<std::string> parts;
+        parts.reserve(10);
+
+        if (!lineage.feature)
+            parts.emplace_back(lineage.feature->name);
+
+        if (lineage.rule)
+            parts.emplace_back(lineage.rule->name);
+
+        if (lineage.scenario)
+            parts.emplace_back(lineage.scenario->name);
+        else
+            parts.emplace_back(pickle.name);
+
+        if (lineage.examples)
+            parts.emplace_back(lineage.examples->name);
+
+        return std::accumulate(parts.begin(), parts.end(), std::string{}, [](const std::string& a, const std::string& b)
+            {
+                if (b.empty())
+                    return a;
+                else
+                    return a + " - " + b;
+            });
     }
 
     Query::Query(util::Broadcaster& broadcaster)
@@ -150,8 +186,24 @@ namespace cucumber_cpp::library::query
         return testCaseFinishedByTestCaseStartedId;
     }
 
+    std::size_t Query::CountTestCasesStarted() const
+    {
+        return FindAllTestCaseStarted().size();
+    }
+
     std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> Query::CountMostSevereTestStepResultStatus() const
     {
+        struct SortByStatus
+        {
+            bool operator()(const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& a,
+                const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& b) const
+            {
+                const auto& statusA = a.first->test_step_result.status;
+                const auto& statusB = b.first->test_step_result.status;
+                return static_cast<int>(statusA) < static_cast<int>(statusB);
+            }
+        };
+
         std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> result{
             { cucumber::messages::test_step_result_status::UNKNOWN, 0 },
             { cucumber::messages::test_step_result_status::PASSED, 0 },
@@ -162,7 +214,59 @@ namespace cucumber_cpp::library::query
             { cucumber::messages::test_step_result_status::FAILED, 0 },
         };
 
+        for (const auto* testCaseStarted : FindAllTestCaseStarted())
+        {
+            const auto testStepFinishedAndTestSteps = FindTestStepFinishedAndTestStepBy(*testCaseStarted);
+            const auto [testStepFinished, testStep] = *std::ranges::max_element(testStepFinishedAndTestSteps, SortByStatus{});
+            ++result[testStepFinished->test_step_result.status];
+        }
+
         return result;
+    }
+
+    std::list<const cucumber::messages::test_case_started*> Query::FindAllTestCaseStarted() const
+    {
+        auto view = testCaseStartedById |
+                    std::views::values |
+                    std::views::filter([this](const cucumber::messages::test_case_started& testCaseStarted)
+                        {
+                            return !testCaseFinishedByTestCaseStartedId.at(testCaseStarted.id).will_be_retried;
+                        }) |
+                    std::views::transform([](const cucumber::messages::test_case_started& testCaseStarted)
+                        {
+                            return &testCaseStarted;
+                        });
+        return { view.begin(), view.end() };
+    }
+
+    std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> Query::FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const
+    {
+        const auto& testStepsFinished = testStepFinishedByTestCaseStartedId.at(testCaseStarted.id);
+        auto view = testStepsFinished | std::views::transform([this](const auto& testStepFinished)
+                                            {
+                                                return std::make_pair(&testStepFinished, &FindTestStepBy(testStepFinished));
+                                            });
+        return { view.begin(), view.end() };
+    }
+
+    cucumber::messages::duration Query::FindTestRunDuration() const
+    {
+        return testRunFinished->timestamp - testRunStarted->timestamp;
+    }
+
+    cucumber::messages::duration Query::FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted) const
+    {
+        return FindTestCaseDurationBy(testCaseStarted, testCaseFinishedByTestCaseStartedId.at(testCaseStarted.id));
+    }
+
+    cucumber::messages::duration Query::FindTestCaseDurationBy(const cucumber::messages::test_case_finished& testCaseFinished) const
+    {
+        return FindTestCaseDurationBy(testCaseStartedById.at(testCaseFinished.test_case_started_id), testCaseFinished);
+    }
+
+    cucumber::messages::duration Query::FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const
+    {
+        return testCaseFinished.timestamp - testCaseStarted.timestamp;
     }
 
     void Query::operator+=(const cucumber::messages::envelope& envelope)

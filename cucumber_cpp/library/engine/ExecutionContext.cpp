@@ -5,8 +5,8 @@
 #include "cucumber/messages/test_run_hook_started.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <istream>
 #include <iterator>
 #include <optional>
@@ -127,7 +127,7 @@ namespace cucumber_cpp::library::engine
                 .test_case_started_id = std::move(test_case_started_id),
                 .test_step_id = std::move(test_step_id),
                 .test_run_hook_started_id = std::move(test_run_hook_started_id),
-                .timestamp = support::TimestampNow(),
+                .timestamp = util::TimestampNow(),
             },
         });
     }

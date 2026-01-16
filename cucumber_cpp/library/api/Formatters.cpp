@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
+#include "cucumber_cpp/library/formatter/JunitXmlFormatter.hpp"
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
@@ -32,6 +33,7 @@ namespace cucumber_cpp::library::api
     {
         RegisterFormatter<formatter::PrettyFormatter>();
         RegisterFormatter<formatter::SummaryFormatter>();
+        RegisterFormatter<formatter::JunitXmlFormatter>();
     }
 
     std::set<std::pair<std::string, bool>> Formatters::GetAvailableFormatterNames() const

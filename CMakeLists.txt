@@ -61,7 +61,7 @@ include(GNUInstallDirs)
 include(CTest)
 
 if (CCR_FETCH_DEPS)
-    add_subdirectory(external SYSTEM)
+    add_subdirectory(external)
 else()
     find_package(CLI11 REQUIRED)
     find_package(nlohmann_json REQUIRED)

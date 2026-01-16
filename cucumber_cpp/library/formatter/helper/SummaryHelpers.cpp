@@ -5,8 +5,8 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
-#include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
@@ -57,7 +57,7 @@ namespace cucumber_cpp::library::formatter::helper
 
         std::string GetDurationSummary(const cucumber::messages::duration& duration)
         {
-            const auto total = support::DurationToMilliseconds(duration);
+            const auto total = util::DurationToMilliseconds(duration);
             return std::format("{:%Mm %S}s", total);
         }
 

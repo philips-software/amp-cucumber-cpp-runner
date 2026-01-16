@@ -3,12 +3,12 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/Duration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "cucumber_cpp/library/support/Timestamp.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
@@ -45,7 +45,7 @@ namespace compatibility
     {
         struct Devkit
         {
-            std::set<std::filesystem::path> paths;
+            std::set<std::filesystem::path, std::less<>> paths;
             std::string tagExpression;
             std::size_t retry;
             std::filesystem::path ndjsonFile;
@@ -198,9 +198,9 @@ namespace compatibility
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::set<std::filesystem::path> GetFeatureFiles(std::set<std::filesystem::path> paths)
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(std::set<std::filesystem::path, std::less<>> paths)
         {
-            std::set<std::filesystem::path> files;
+            std::set<std::filesystem::path, std::less<>> files;
 
             for (const auto feature : paths)
                 if (std::filesystem::is_directory(feature))
@@ -215,7 +215,7 @@ namespace compatibility
             return files;
         }
 
-        struct StopwatchIncremental : cucumber_cpp::library::support::Stopwatch
+        struct StopwatchIncremental : cucumber_cpp::library::util::Stopwatch
         {
             virtual ~StopwatchIncremental() = default;
 
@@ -231,7 +231,7 @@ namespace compatibility
             std::chrono::nanoseconds current{ std::chrono::milliseconds{ 1 } };
         };
 
-        struct TimestampGeneratorIncremental : cucumber_cpp::library::support::TimestampGenerator
+        struct TimestampGeneratorIncremental : cucumber_cpp::library::util::TimestampGenerator
         {
             virtual ~TimestampGeneratorIncremental() = default;
 
