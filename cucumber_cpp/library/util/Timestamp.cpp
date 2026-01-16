@@ -4,6 +4,8 @@
 #include "cucumber/messages/timestamp.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include <chrono>
+#include <format>
+#include <string>
 
 namespace cucumber_cpp::library::util
 {
@@ -57,5 +59,11 @@ namespace cucumber_cpp::library::util
     {
         const auto durationMillis = TimestampToMillis(lhs) - TimestampToMillis(rhs);
         return MillisecondsToDuration(durationMillis);
+    }
+
+    std::string MakeIso8601Timestamp(const cucumber::messages::timestamp& timestamp)
+    {
+        const std::chrono::system_clock::time_point tp{ std::chrono::seconds(timestamp.seconds) + std::chrono::nanoseconds(timestamp.nanos) };
+        return std::format("{:%FT%T%Z}", tp);
     }
 }

@@ -36,11 +36,11 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <forward_list>
 #include <functional>
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string>
@@ -152,10 +152,13 @@ namespace cucumber_cpp::library::query
         std::size_t CountTestCasesStarted() const;
 
         std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> CountMostSevereTestStepResultStatus() const;
+        std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
 
         std::list<const cucumber::messages::test_case_started*> FindAllTestCaseStarted() const;
         std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const;
 
+        const cucumber::messages::test_run_started& FindTestRunStarted() const;
         cucumber::messages::duration FindTestRunDuration() const;
 
         cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted) const;
@@ -192,21 +195,21 @@ namespace cucumber_cpp::library::query
 
         std::map<std::string, std::uint32_t, std::less<>> featureCountByName;
 
-        std::forward_list<cucumber::messages::test_step_result> testStepResults;
-        std::map<std::string, std::forward_list<cucumber::messages::test_step_result*>, std::less<>> testStepResultByPickleId;
-        std::map<std::string, std::forward_list<cucumber::messages::test_step_result*>, std::less<>> testStepResultsByPickleStepId;
-        std::map<std::string, std::forward_list<cucumber::messages::test_step_result*>, std::less<>> testStepResultsbyTestStepId;
+        std::list<cucumber::messages::test_step_result> testStepResults;
+        std::map<std::string, std::list<cucumber::messages::test_step_result*>, std::less<>> testStepResultByPickleId;
+        std::map<std::string, std::list<cucumber::messages::test_step_result*>, std::less<>> testStepResultsByPickleStepId;
+        std::map<std::string, std::list<cucumber::messages::test_step_result*>, std::less<>> testStepResultsbyTestStepId;
 
         std::map<std::string, cucumber::messages::test_case, std::less<>> testCaseById;
         std::map<std::string, cucumber::messages::test_case&, std::less<>> testCaseByPickleId;
 
         std::map<std::string, std::string, std::less<>> pickleIdByTestStepId;
         std::map<std::string, std::string, std::less<>> pickleStepIdByTestStepId;
-        std::map<std::string, std::forward_list<std::string>, std::less<>> testStepIdsByPickleStepId;
+        std::map<std::string, std::list<std::string>, std::less<>> testStepIdsByPickleStepId;
         std::map<std::string, cucumber::messages::hook, std::less<>> hooksById;
-        std::forward_list<cucumber::messages::attachment> attachments;
-        std::map<std::string, std::forward_list<cucumber::messages::attachment*>, std::less<>> attachmentsByTestStepId;
-        std::map<std::string, std::forward_list<cucumber::messages::attachment*>, std::less<>> attachmentsByTestCaseStartedId;
+        std::list<cucumber::messages::attachment> attachments;
+        std::map<std::string, std::list<cucumber::messages::attachment*>, std::less<>> attachmentsByTestStepId;
+        std::map<std::string, std::list<cucumber::messages::attachment*>, std::less<>> attachmentsByTestCaseStartedId;
         // std::map<std::string, std::vector<std::shared_ptr<const cucumber::messages::attachment>>, std::less<>> attachmentsByTestRunHookStartedId;
 
         std::map<std::string, std::vector<cucumber::messages::step_match_arguments_list>, std::less<>> stepMatchArgumentsListsByPickleStepId;
@@ -228,11 +231,11 @@ namespace cucumber_cpp::library::query
         std::map<std::string, cucumber::messages::test_step, std::less<>> testStepById;
         std::map<std::string, cucumber::messages::test_run_hook_started, std::less<>> testRunHookStartedById;
         std::map<std::string, cucumber::messages::test_run_hook_finished, std::less<>> testRunHookFinishedByTestRunHookStartedId;
-        std::map<std::string, std::forward_list<cucumber::messages::test_step_started>, std::less<>> testStepStartedByTestCaseStartedId;
-        std::map<std::string, std::forward_list<cucumber::messages::test_step_finished>, std::less<>> testStepFinishedByTestCaseStartedId;
+        std::map<std::string, std::list<cucumber::messages::test_step_started>, std::less<>> testStepStartedByTestCaseStartedId;
+        std::map<std::string, std::list<cucumber::messages::test_step_finished>, std::less<>> testStepFinishedByTestCaseStartedId;
 
-        std::map<std::string, std::forward_list<cucumber::messages::suggestion>, std::less<>> suggestionsByPickleStepId;
-        std::forward_list<cucumber::messages::undefined_parameter_type> undefinedParameterTypes;
+        std::map<std::string, std::list<cucumber::messages::suggestion>, std::less<>> suggestionsByPickleStepId;
+        std::list<cucumber::messages::undefined_parameter_type> undefinedParameterTypes;
 
         std::map<std::string, cucumber::messages::parameter_type, std::less<>> parameterTypeById;
         std::map<std::string, cucumber::messages::parameter_type&, std::less<>> parameterTypeByName;

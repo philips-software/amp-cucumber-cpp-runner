@@ -27,6 +27,7 @@
 #include "cucumber/messages/test_run_started.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber/messages/undefined_parameter_type.hpp"
@@ -42,6 +43,7 @@
 #include <map>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string>
@@ -50,6 +52,20 @@
 
 namespace cucumber_cpp::library::query
 {
+    namespace
+    {
+        struct SortByStatus
+        {
+            bool operator()(const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& a,
+                const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& b) const
+            {
+                const auto& statusA = a.first->test_step_result.status;
+                const auto& statusB = b.first->test_step_result.status;
+                return static_cast<int>(statusA) < static_cast<int>(statusB);
+            }
+        };
+    }
+
     std::string Lineage::GetUniqueFeatureName() const
     {
         return std::format("{}/{}", feature->name, featureIndex);
@@ -197,17 +213,6 @@ namespace cucumber_cpp::library::query
 
     std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> Query::CountMostSevereTestStepResultStatus() const
     {
-        struct SortByStatus
-        {
-            bool operator()(const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& a,
-                const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& b) const
-            {
-                const auto& statusA = a.first->test_step_result.status;
-                const auto& statusB = b.first->test_step_result.status;
-                return static_cast<int>(statusA) < static_cast<int>(statusB);
-            }
-        };
-
         std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> result{
             { cucumber::messages::test_step_result_status::UNKNOWN, 0 },
             { cucumber::messages::test_step_result_status::PASSED, 0 },
@@ -226,6 +231,23 @@ namespace cucumber_cpp::library::query
         }
 
         return result;
+    }
+
+    std::optional<const cucumber::messages::test_step_result*> Query::FindMostSevereTestStepResultBy(const cucumber::messages::test_case_started& testCaseStarted) const
+    {
+        auto list = FindTestStepFinishedAndTestStepBy(testCaseStarted);
+        if (list.empty())
+            return std::nullopt;
+
+        list.sort(SortByStatus{});
+
+        const auto [testStepFinished, testStep] = list.back();
+        return &testStepFinished->test_step_result;
+    }
+
+    std::optional<const cucumber::messages::test_step_result*> Query::FindMostSevereTestStepResultBy(const cucumber::messages::test_case_finished& testCaseFinished) const
+    {
+        return FindMostSevereTestStepResultBy(testCaseStartedById.at(testCaseFinished.test_case_started_id));
     }
 
     std::list<const cucumber::messages::test_case_started*> Query::FindAllTestCaseStarted() const
@@ -251,6 +273,11 @@ namespace cucumber_cpp::library::query
                                                 return std::make_pair(&testStepFinished, &FindTestStepBy(testStepFinished));
                                             });
         return { view.begin(), view.end() };
+    }
+
+    const cucumber::messages::test_run_started& Query::FindTestRunStarted() const
+    {
+        return *testRunStarted;
     }
 
     cucumber::messages::duration Query::FindTestRunDuration() const
@@ -383,7 +410,7 @@ namespace cucumber_cpp::library::query
             if (testStep.pickle_step_id)
             {
                 pickleStepIdByTestStepId[testStep.id] = testStep.pickle_step_id.value();
-                testStepIdsByPickleStepId[testStep.pickle_step_id.value()].push_front(testStep.id);
+                testStepIdsByPickleStepId[testStep.pickle_step_id.value()].push_back(testStep.id);
 
                 if (testStep.step_match_arguments_lists)
                     stepMatchArgumentsListsByPickleStepId[testStep.pickle_step_id.value()] = testStep.step_match_arguments_lists.value();
@@ -400,31 +427,31 @@ namespace cucumber_cpp::library::query
 
     void Query::operator+=(const cucumber::messages::test_step_started& testStepStarted)
     {
-        testStepStartedByTestCaseStartedId[testStepStarted.test_case_started_id].push_front(testStepStarted);
+        testStepStartedByTestCaseStartedId[testStepStarted.test_case_started_id].push_back(testStepStarted);
     }
 
     void Query::operator+=(const cucumber::messages::attachment& attachment)
     {
         auto* ptr = &attachments.emplace_front(attachment);
         if (attachment.test_step_id)
-            attachmentsByTestStepId[attachment.test_step_id.value()].push_front(ptr);
+            attachmentsByTestStepId[attachment.test_step_id.value()].push_back(ptr);
         if (attachment.test_case_started_id)
-            attachmentsByTestCaseStartedId[attachment.test_case_started_id.value()].push_front(ptr);
+            attachmentsByTestCaseStartedId[attachment.test_case_started_id.value()].push_back(ptr);
     }
 
     void Query::operator+=(const cucumber::messages::test_step_finished& testStepFinished)
     {
         auto* testStepResultPtr = &testStepResults.emplace_front(testStepFinished.test_step_result);
 
-        testStepFinishedByTestCaseStartedId[testStepFinished.test_case_started_id].push_front(testStepFinished);
+        testStepFinishedByTestCaseStartedId[testStepFinished.test_case_started_id].push_back(testStepFinished);
 
         const auto& pickleId = pickleIdByTestStepId.at(testStepFinished.test_step_id);
-        testStepResultByPickleId[pickleId].push_front(testStepResultPtr);
+        testStepResultByPickleId[pickleId].push_back(testStepResultPtr);
 
         const auto& testStep = testStepById.at(testStepFinished.test_step_id);
-        testStepResultsbyTestStepId[testStep.id].push_front(testStepResultPtr);
+        testStepResultsbyTestStepId[testStep.id].push_back(testStepResultPtr);
         if (testStep.pickle_step_id)
-            testStepResultsByPickleStepId[testStep.pickle_step_id.value()].push_front(testStepResultPtr);
+            testStepResultsByPickleStepId[testStep.pickle_step_id.value()].push_back(testStepResultPtr);
     }
 
     void Query::operator+=(const cucumber::messages::test_case_finished& testCaseFinished)
@@ -439,7 +466,7 @@ namespace cucumber_cpp::library::query
 
     void Query::operator+=(const cucumber::messages::suggestion& suggestion)
     {
-        suggestionsByPickleStepId[suggestion.pickle_step_id].push_front(suggestion);
+        suggestionsByPickleStepId[suggestion.pickle_step_id].push_back(suggestion);
     }
 
     void Query::operator+=(const cucumber::messages::undefined_parameter_type& undefinedParameterType)

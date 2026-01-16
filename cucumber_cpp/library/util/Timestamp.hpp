@@ -5,6 +5,7 @@
 #include "cucumber/messages/timestamp.hpp"
 #include <chrono>
 #include <cstddef>
+#include <string>
 
 namespace cucumber_cpp::library::util
 {
@@ -33,10 +34,11 @@ namespace cucumber_cpp::library::util
         std::chrono::milliseconds Now() override;
     };
 
-    cucumber::messages::timestamp
-    TimestampNow();
+    cucumber::messages::timestamp TimestampNow();
 
     cucumber::messages::duration operator-(const cucumber::messages::timestamp& lhs, const cucumber::messages::timestamp& rhs);
+
+    std::string MakeIso8601Timestamp(const cucumber::messages::timestamp& timestamp);
 }
 
 namespace cucumber::messages

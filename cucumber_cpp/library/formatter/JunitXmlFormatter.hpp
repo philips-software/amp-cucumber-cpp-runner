@@ -4,6 +4,7 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "pugixml.cpp"
 #include <optional>
 #include <string>
 
@@ -27,7 +28,10 @@ namespace cucumber_cpp::library::formatter
 
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
 
-        Options options{ formatOptions };
+        Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
+
+        pugi::xml_document doc;
+        pugi::xml_node testSuite{ doc.append_child("testsuite") };
     };
 }
 
