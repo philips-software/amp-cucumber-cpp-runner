@@ -60,9 +60,21 @@ namespace cucumber_cpp::library::formatter::helper
             text += '\n';
 
             if (testStep.argument)
-                ; // indent 4 FormatStepArgument append \n
+                // const argumentsText = formatStepArgument(testStep.argument)
+                // text += indentString(`${colorFn(argumentsText)}\n`, 4)
+                ;
 
-            // indent 4 print attachments append \n
+            // if (valueOrDefault(printAttachments, true)) {
+            // attachments.forEach(({ body, mediaType, fileName }) => {
+            //     let message = ''
+            //     if (mediaType === 'text/plain') {
+            //     message = `: ${body}`
+            //     } else if (fileName) {
+            //     message = `: ${fileName}`
+            //     }
+            //     text += indentString(`Attachment (${mediaType})${message}\n`, 4)
+            // })
+            // }
 
             auto message = GetStepMessage(testStep);
             if (!message.empty())
