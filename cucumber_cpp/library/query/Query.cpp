@@ -37,6 +37,7 @@
 #include <format>
 #include <forward_list>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
@@ -80,7 +81,10 @@ namespace cucumber_cpp::library::query
         if (lineage.examples)
             parts.emplace_back(lineage.examples->name);
 
-        return std::accumulate(parts.begin(), parts.end(), std::string{}, [](const std::string& a, const std::string& b)
+        if (parts.size() == 1)
+            return parts.front();
+
+        return std::accumulate(std::next(parts.begin()), parts.end(), parts.front(), [](const std::string& a, const std::string& b)
             {
                 if (b.empty())
                     return a;
