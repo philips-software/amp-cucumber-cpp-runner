@@ -1,6 +1,6 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "cucumber_cpp/library/formatter/PrettyPrinter.hpp"
+#include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::api
 
     Formatters::Formatters()
     {
-        RegisterFormatter<formatter::PrettyPrinter>();
+        RegisterFormatter<formatter::PrettyFormatter>();
         RegisterFormatter<formatter::SummaryFormatter>();
     }
 

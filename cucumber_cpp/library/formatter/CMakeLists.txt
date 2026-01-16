@@ -3,8 +3,8 @@ add_library(cucumber_cpp.library.formatter ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.formatter PRIVATE
     Formatter.cpp
     Formatter.hpp
-    PrettyPrinter.cpp
-    PrettyPrinter.hpp
+    PrettyFormatter.cpp
+    PrettyFormatter.hpp
     SummaryFormatter.cpp
     SummaryFormatter.hpp
 )

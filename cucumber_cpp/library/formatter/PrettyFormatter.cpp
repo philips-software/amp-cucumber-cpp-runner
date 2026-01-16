@@ -1,4 +1,4 @@
-#include "cucumber_cpp/library/formatter/PrettyPrinter.hpp"
+#include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
@@ -44,7 +44,7 @@ namespace cucumber_cpp::library::formatter
         }
     }
 
-    void PrettyPrinter::OnEnvelope(const cucumber::messages::envelope& envelope)
+    void PrettyFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
         if (envelope.test_case_started)
         {
@@ -58,7 +58,7 @@ namespace cucumber_cpp::library::formatter
         }
     }
 
-    void PrettyPrinter::CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted)
+    void PrettyFormatter::CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted)
     {
         const auto& pickle = query.FindPickleBy(testCaseStarted);
         const auto& lineage = query.FindLineageByPickle(pickle);
@@ -91,7 +91,7 @@ namespace cucumber_cpp::library::formatter
         scenarioIndentByTestCaseStartedId[testCaseStarted.id] = scenarioIndent;
     }
 
-    void PrettyPrinter::HandleTestCaseStarted(const cucumber::messages::test_case_started& testCaseStarted)
+    void PrettyFormatter::HandleTestCaseStarted(const cucumber::messages::test_case_started& testCaseStarted)
     {
         const auto& pickle = query.FindPickleBy(testCaseStarted);
         const auto& location = query.FindLocationOf(pickle);
@@ -111,12 +111,12 @@ namespace cucumber_cpp::library::formatter
         PrintScenarioLine(pickle, *scenario, scenarioIndent, maxContentLength);
     }
 
-    void PrettyPrinter::HandleAttachment(const cucumber::messages::attachment& attachment)
+    void PrettyFormatter::HandleAttachment(const cucumber::messages::attachment& attachment)
     {
         /* TODO implement */
     }
 
-    void PrettyPrinter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
+    void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
     {
         const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testStepFinished.test_case_started_id);
         const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testStepFinished.test_case_started_id);
@@ -133,12 +133,12 @@ namespace cucumber_cpp::library::formatter
         }
     }
 
-    void PrettyPrinter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
+    void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
     {
         /* TODO implement */
     }
 
-    void PrettyPrinter::PrintFeatureLine(const cucumber::messages::feature& feature)
+    void PrettyFormatter::PrintFeatureLine(const cucumber::messages::feature& feature)
     {
         if (printedFeatureUris.contains(&feature))
             return;
@@ -147,7 +147,7 @@ namespace cucumber_cpp::library::formatter
         printedFeatureUris.insert(&feature);
     }
 
-    void PrettyPrinter::PrintRuleLine(const cucumber::messages::rule& rule)
+    void PrettyFormatter::PrintRuleLine(const cucumber::messages::rule& rule)
     {
         if (printedRuleIds.contains(&rule))
             return;
@@ -156,7 +156,7 @@ namespace cucumber_cpp::library::formatter
         printedRuleIds.insert(&rule);
     }
 
-    void PrettyPrinter::PrintTags(const cucumber::messages::pickle& pickle, std::size_t scenarioIndent)
+    void PrettyFormatter::PrintTags(const cucumber::messages::pickle& pickle, std::size_t scenarioIndent)
     {
         if (pickle.tags.empty())
             return;
@@ -169,12 +169,12 @@ namespace cucumber_cpp::library::formatter
         support::print(outputStream, "{:{}}{}\n", "", scenarioIndent, helper::ColorFunctions::Tag(support::Join(tagVec, " ")));
     }
 
-    void PrettyPrinter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
+    void PrettyFormatter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
     {
         PrintGherkinLine(std::format("{}: {}", scenario.keyword, pickle.name), nullptr, pickle.uri, scenario.location.line, scenarioIndent, maxContentLength);
     }
 
-    void PrettyPrinter::PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength)
+    void PrettyFormatter::PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength)
     {
         const auto uri = stepDefinition ? std::make_optional(*stepDefinition->source_reference.uri) : std::nullopt;
         const auto line = stepDefinition ? std::make_optional(stepDefinition->source_reference.location->line) : std::nullopt;
@@ -182,7 +182,7 @@ namespace cucumber_cpp::library::formatter
         PrintGherkinLine(std::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
     }
 
-    void PrettyPrinter::PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
+    void PrettyFormatter::PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
     {
         if (title.length() > maxContentLength)
             throw std::logic_error("maxContentLength is smaller than title length");

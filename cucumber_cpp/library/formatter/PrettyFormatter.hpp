@@ -27,7 +27,7 @@
 
 namespace cucumber_cpp::library::formatter
 {
-    struct PrettyPrinter
+    struct PrettyFormatter
         : Formatter
     {
         using Formatter::Formatter;
