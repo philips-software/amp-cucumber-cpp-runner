@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber/messages/attachment.hpp"
+#include "cucumber/messages/attachment_content_encoding.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/location.hpp"
@@ -14,14 +15,17 @@
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
 #include "cucumber_cpp/library/support/Polyfill.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <format>
 #include <functional>
+#include <map>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
@@ -33,6 +37,20 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
+        constexpr auto gherkinIndentLength = 2;
+        constexpr auto stepArgumentIndentLength = 2;
+        constexpr auto attachmentIndentLength = 4;
+
+        std::map<cucumber::messages::test_step_result_status, std::string, std::less<>> iconMap{
+            { cucumber::messages::test_step_result_status::AMBIGUOUS, "❓" },
+            { cucumber::messages::test_step_result_status::FAILED, "❌" },
+            { cucumber::messages::test_step_result_status::PASSED, "✅" },
+            { cucumber::messages::test_step_result_status::PENDING, "🟡" },
+            { cucumber::messages::test_step_result_status::SKIPPED, "➡️" },
+            { cucumber::messages::test_step_result_status::UNDEFINED, "⚠️" },
+            { cucumber::messages::test_step_result_status::UNKNOWN, "❔" },
+        };
+
         std::string FormatPickleTitle(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario)
         {
             return std::format("{}: {}", scenario.keyword, pickle.name);
@@ -42,6 +60,40 @@ namespace cucumber_cpp::library::formatter
         {
             return std::format("{}{}", step.keyword, pickleStep.text);
         }
+
+        std::string FormatBase64Attachment(const std::string& body, const std::string& mediaType, const std::optional<std::string>& filename)
+        {
+            if (!filename)
+                return helper::ColorFunctions::Attachment(std::format("Embedding [{} {} bytes]", mediaType, body.length()));
+            else
+                return helper::ColorFunctions::Attachment(std::format("Embedding {} [{} {} bytes]", filename.value(), mediaType, body.length()));
+        }
+
+        std::string FormatTextAttachment(const std::string& body)
+        {
+            return helper::ColorFunctions::Attachment(body);
+        }
+
+        std::string FormatAttachment(const cucumber::messages::attachment& attachment)
+        {
+            if (attachment.content_encoding == cucumber::messages::attachment_content_encoding::BASE64)
+            {
+                return FormatBase64Attachment(attachment.body, attachment.media_type, attachment.file_name);
+            }
+            else
+            {
+                return FormatTextAttachment(attachment.body);
+            }
+            return "";
+        }
+    }
+
+    PrettyFormatter::Options::Options(const nlohmann::json& formatOptions)
+        : includeAttachments{ formatOptions.contains("pretty") ? formatOptions.at("pretty").value("include_attachments", true) : true }
+        , includeFeatureLine{ formatOptions.contains("pretty") ? formatOptions.at("pretty").value("include_feature_line", true) : true }
+        , includeRuleLine{ formatOptions.contains("pretty") ? formatOptions.at("pretty").value("include_rule_line", true) : true }
+        , useStatusIcon{ formatOptions.contains("pretty") ? formatOptions.at("pretty").value("use_status_icon", true) : true }
+    {
     }
 
     void PrettyFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
@@ -52,9 +104,19 @@ namespace cucumber_cpp::library::formatter
             HandleTestCaseStarted(envelope.test_case_started.value());
         }
 
+        if (envelope.attachment)
+        {
+            HandleAttachment(envelope.attachment.value());
+        }
+
         if (envelope.test_step_finished)
         {
             HandleTestStepFinished(envelope.test_step_finished.value());
+        }
+
+        if (envelope.test_run_finished)
+        {
+            HandleTestRunFinished(envelope.test_run_finished.value());
         }
     }
 
@@ -79,10 +141,11 @@ namespace cucumber_cpp::library::formatter
         };
 
         auto steplengths = testCase.test_steps | std::views::filter(hasPickleStepId) | std::views::transform(toLength);
+
         const auto maxStepLengthIter = std::ranges::max_element(steplengths);
         const auto maxStepLength = (maxStepLengthIter != steplengths.end()) ? *maxStepLengthIter : 0;
 
-        maxContentLengthByTestCaseStartedId[testCaseStarted.id] = std::max(scenarioLength, maxStepLength);
+        maxContentLengthByTestCaseStartedId[testCaseStarted.id] = std::max(scenarioLength, options.useStatusIcon ? maxStepLength + 2 : maxStepLength);
 
         std::size_t scenarioIndent{ 0 };
         scenarioIndent += 2;
@@ -113,7 +176,13 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyFormatter::HandleAttachment(const cucumber::messages::attachment& attachment)
     {
-        /* TODO implement */
+        if (!options.includeAttachments)
+            return;
+
+        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value());
+        const auto content = FormatAttachment(attachment);
+
+        support::print(outputStream, "{:{}}{}\n", "", scenarioIndent + gherkinIndentLength + attachmentIndentLength, content);
     }
 
     void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
@@ -135,7 +204,10 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
     {
-        /* TODO implement */
+        if (testRunFinished.exception && testRunFinished.exception->stack_trace)
+            support::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->stack_trace.value()));
+        else if (testRunFinished.exception && testRunFinished.exception->message)
+            support::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->message.value()));
     }
 
     void PrettyFormatter::PrintFeatureLine(const cucumber::messages::feature& feature)
@@ -171,7 +243,7 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyFormatter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
     {
-        PrintGherkinLine(std::format("{}: {}", scenario.keyword, pickle.name), nullptr, pickle.uri, scenario.location.line, scenarioIndent, maxContentLength);
+        PrintGherkinLine("", std::format("{}: {}", scenario.keyword, pickle.name), nullptr, pickle.uri, scenario.location.line, scenarioIndent, maxContentLength);
     }
 
     void PrettyFormatter::PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength)
@@ -179,10 +251,10 @@ namespace cucumber_cpp::library::formatter
         const auto uri = stepDefinition ? std::make_optional(*stepDefinition->source_reference.uri) : std::nullopt;
         const auto line = stepDefinition ? std::make_optional(stepDefinition->source_reference.location->line) : std::nullopt;
 
-        PrintGherkinLine(std::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
+        PrintGherkinLine(options.useStatusIcon ? iconMap.at(testStepFinished.test_step_result.status) : "", std::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
     }
 
-    void PrettyFormatter::PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
+    void PrettyFormatter::PrintGherkinLine(std::string_view icon, std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
     {
         if (title.length() > maxContentLength)
             throw std::logic_error("maxContentLength is smaller than title length");
@@ -196,8 +268,8 @@ namespace cucumber_cpp::library::formatter
             };
 
         if (uri.has_value() && line.has_value())
-            support::print(outputStream, "{:{}}{}{:{}} {}\n", "", indent, formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            support::print(outputStream, "{:{}}{}{}{:{}} {}\n", "", indent, icon, formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
-            support::print(outputStream, "{:{}}{}\n", "", indent, formatTitle(title));
+            support::print(outputStream, "{:{}}{}{}\n", "", indent, icon, formatTitle(title));
     }
 }

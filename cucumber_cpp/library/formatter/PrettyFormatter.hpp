@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <functional>
 #include <map>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <set>
 #include <string>
@@ -35,6 +36,16 @@ namespace cucumber_cpp::library::formatter
         constexpr static auto name = "pretty";
 
     private:
+        struct Options
+        {
+            explicit Options(const nlohmann::json& formatOptions);
+
+            const bool includeAttachments;
+            const bool includeFeatureLine;
+            const bool includeRuleLine;
+            const bool useStatusIcon;
+        };
+
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
 
         void CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted);
@@ -50,7 +61,9 @@ namespace cucumber_cpp::library::formatter
         void PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength);
         void PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength);
 
-        void PrintGherkinLine(std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength);
+        void PrintGherkinLine(std::string_view icon, std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength);
+
+        Options options{ formatOptions };
 
         std::map<std::string, helper::GherkinScenarioMap> testCaseStartedIdToScenarioMap;
 

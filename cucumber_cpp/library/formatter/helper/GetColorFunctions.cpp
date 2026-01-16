@@ -18,8 +18,7 @@ namespace cucumber_cpp::library::formatter::helper
         }
     }
 
-    std::function<std::string(std::string_view sv)>
-    ColorFunctions::ForStatus(cucumber::messages::test_step_result_status status)
+    std::function<std::string(std::string_view sv)> ColorFunctions::ForStatus(cucumber::messages::test_step_result_status status)
     {
         using enum cucumber::messages::test_step_result_status;
 
@@ -38,6 +37,11 @@ namespace cucumber_cpp::library::formatter::helper
             default:
                 return ColorString<Term::Color::Name::Red>;
         }
+    }
+
+    std::string ColorFunctions::Attachment(std::string_view sv)
+    {
+        return ColorString<Term::Color::Name::Blue>(sv);
     }
 
     std::string ColorFunctions::Location(std::string_view sv)
