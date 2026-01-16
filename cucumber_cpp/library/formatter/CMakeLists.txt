@@ -5,6 +5,8 @@ target_sources(cucumber_cpp.library.formatter PRIVATE
     Formatter.hpp
     JunitXmlFormatter.cpp
     JunitXmlFormatter.hpp
+    MessageFormatter.cpp
+    MessageFormatter.hpp
     PrettyFormatter.cpp
     PrettyFormatter.hpp
     SummaryFormatter.cpp
