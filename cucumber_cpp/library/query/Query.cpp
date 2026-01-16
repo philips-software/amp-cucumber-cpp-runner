@@ -192,7 +192,8 @@ namespace cucumber_cpp::library::query
     const cucumber::messages::location& Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
     {
         const auto& lineage = FindLineageByUri(pickle.uri);
-        // if (lineage.examples)
+        if (lineage.tableRow)
+            return lineage.tableRow->location;
         return lineage.scenario->location;
     }
 
