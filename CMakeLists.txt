@@ -69,7 +69,7 @@ else()
     find_package(pugixml REQUIRED)
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
-    find_package(cpp-terminal REQUIRED)
+    find_package(fmt REQUIRED)
 
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)

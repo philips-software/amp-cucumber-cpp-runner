@@ -18,7 +18,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
-#include "cucumber_cpp/library/support/Polyfill.hpp"
+#include "fmt/ostream.h"
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -182,7 +182,7 @@ namespace cucumber_cpp::library::formatter
         const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value());
         const auto content = FormatAttachment(attachment);
 
-        support::print(outputStream, "{:{}}{}\n", "", scenarioIndent + gherkinIndentLength + attachmentIndentLength, content);
+        fmt::print(outputStream, "{:{}}{}\n", "", scenarioIndent + gherkinIndentLength + attachmentIndentLength, content);
     }
 
     void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
@@ -205,9 +205,9 @@ namespace cucumber_cpp::library::formatter
     void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
     {
         if (testRunFinished.exception && testRunFinished.exception->stack_trace)
-            support::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->stack_trace.value()));
+            fmt::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->stack_trace.value()));
         else if (testRunFinished.exception && testRunFinished.exception->message)
-            support::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->message.value()));
+            fmt::print(outputStream, "{}\n", helper::ColorFunctions::ForStatus(cucumber::messages::test_step_result_status::FAILED)(testRunFinished.exception->message.value()));
     }
 
     void PrettyFormatter::PrintFeatureLine(const cucumber::messages::feature& feature)
@@ -215,7 +215,7 @@ namespace cucumber_cpp::library::formatter
         if (printedFeatureUris.contains(&feature))
             return;
 
-        support::print(outputStream, "{}: {}\n", feature.keyword, feature.name);
+        fmt::print(outputStream, "{}: {}\n", feature.keyword, feature.name);
         printedFeatureUris.insert(&feature);
     }
 
@@ -224,7 +224,7 @@ namespace cucumber_cpp::library::formatter
         if (printedRuleIds.contains(&rule))
             return;
 
-        support::print(outputStream, "{:{}}{}: {}\n", "", 2, rule.keyword, rule.name);
+        fmt::print(outputStream, "{:{}}{}: {}\n", "", 2, rule.keyword, rule.name);
         printedRuleIds.insert(&rule);
     }
 
@@ -238,7 +238,7 @@ namespace cucumber_cpp::library::formatter
                                           return tag.name;
                                       });
         std::vector<std::string> tagVec{ tags.begin(), tags.end() };
-        support::print(outputStream, "{:{}}{}\n", "", scenarioIndent, helper::ColorFunctions::Tag(support::Join(tagVec, " ")));
+        fmt::print(outputStream, "{:{}}{}\n", "", scenarioIndent, helper::ColorFunctions::Tag(support::Join(tagVec, " ")));
     }
 
     void PrettyFormatter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
@@ -268,8 +268,8 @@ namespace cucumber_cpp::library::formatter
             };
 
         if (uri.has_value() && line.has_value())
-            support::print(outputStream, "{:{}}{} {}{:{}} {}\n", "", indent, formatTitle(icon), formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            fmt::print(outputStream, "{:{}}{} {}{:{}} {}\n", "", indent, formatTitle(icon), formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
         else
-            support::print(outputStream, "{:{}}{} {}\n", "", indent, formatTitle(icon), formatTitle(title));
+            fmt::print(outputStream, "{:{}}{} {}\n", "", indent, formatTitle(icon), formatTitle(title));
     }
 }

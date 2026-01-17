@@ -1,8 +1,8 @@
 
 #include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
-#include "cpp-terminal/color.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include <format>
+#include "fmt/color.h"
+#include "fmt/format.h"
 #include <functional>
 #include <string>
 #include <string_view>
@@ -11,10 +11,10 @@ namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {
-        template<Term::Color::Name colour>
-        std::string ColorString(std::string_view sv)
+        template<fmt::color colour>
+        std::string ColorStringFmt(std::string_view sv)
         {
-            return std::format("{}{}{}", Term::color_fg(colour), sv, Term::color_fg(Term::Color::Name::Default));
+            return fmt::format("{}", fmt::styled(sv, fmt::fg(colour)));
         }
     }
 
@@ -25,52 +25,52 @@ namespace cucumber_cpp::library::formatter::helper
         switch (status)
         {
             case PASSED:
-                return ColorString<Term::Color::Name::Green>;
+                return ColorStringFmt<fmt::color::green>;
             case SKIPPED:
-                return ColorString<Term::Color::Name::Cyan>;
+                return ColorStringFmt<fmt::color::cyan>;
             case UNKNOWN:
             case PENDING:
             case UNDEFINED:
-                return ColorString<Term::Color::Name::Yellow>;
+                return ColorStringFmt<fmt::color::yellow>;
             case AMBIGUOUS:
             case FAILED:
             default:
-                return ColorString<Term::Color::Name::Red>;
+                return ColorStringFmt<fmt::color::red>;
         }
     }
 
     std::string ColorFunctions::Attachment(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Blue>(sv);
+        return ColorStringFmt<fmt::color::blue>(sv);
     }
 
     std::string ColorFunctions::Location(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Gray>(sv);
+        return ColorStringFmt<fmt::color::gray>(sv);
     }
 
     std::string ColorFunctions::Tag(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Cyan>(sv);
+        return ColorStringFmt<fmt::color::cyan>(sv);
     }
 
     std::string ColorFunctions::DiffAdded(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Green>(sv);
+        return ColorStringFmt<fmt::color::green>(sv);
     }
 
     std::string ColorFunctions::DiffRemoved(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Red>(sv);
+        return ColorStringFmt<fmt::color::red>(sv);
     }
 
     std::string ColorFunctions::ErrorMessage(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Red>(sv);
+        return ColorStringFmt<fmt::color::red>(sv);
     }
 
     std::string ColorFunctions::ErrorStack(std::string_view sv)
     {
-        return ColorString<Term::Color::Name::Gray>(sv);
+        return ColorStringFmt<fmt::color::gray>(sv);
     }
 }

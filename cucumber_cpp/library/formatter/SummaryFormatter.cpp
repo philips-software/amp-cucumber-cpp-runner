@@ -6,10 +6,9 @@
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/formatter/helper/IssueHelpers.hpp"
 #include "cucumber_cpp/library/formatter/helper/SummaryHelpers.hpp"
-#include "cucumber_cpp/library/support/Polyfill.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "fmt/ostream.h"
 #include <cstdio>
-#include <format>
 #include <list>
 #include <span>
 #include <string_view>
@@ -73,7 +72,7 @@ namespace cucumber_cpp::library::formatter
     {
         if (!attempts.empty())
         {
-            support::print(outputStream, "{}:\n\n", title);
+            fmt::print(outputStream, "{}:\n\n", title);
 
             auto nr = 1;
             for (const auto& issue : attempts)
