@@ -1,9 +1,28 @@
 #include "cucumber_cpp/library/Steps.hpp"
+#include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <string>
+
+struct LoadMeOnConstruction
+{
+    void Tadaa() const
+    {}
+};
+
+struct CustomFixture : cucumber_cpp::library::engine::Step
+{
+    using Step::Step;
+
+    const LoadMeOnConstruction& alwaysAvailable{ context.Get<LoadMeOnConstruction>() };
+};
+
+GIVEN_F(CustomFixture, R"(a custom fixture background step)")
+{
+    alwaysAvailable.Tadaa();
+}
 
 GIVEN(R"(a background step)")
 {
