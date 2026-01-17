@@ -49,7 +49,7 @@ STEP("cucumber expression without captures"){
     // body
 }
 
-STEP("cucumber expression with an {int}", (int arg)){
+STEP("cucumber expression with an {int}", (std::int32_t arg)){
     // body
 }
 
