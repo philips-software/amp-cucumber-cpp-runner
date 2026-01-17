@@ -63,7 +63,8 @@ namespace cucumber_cpp::library::util
 
     std::string MakeIso8601Timestamp(const cucumber::messages::timestamp& timestamp)
     {
-        const std::chrono::system_clock::time_point tp{ std::chrono::seconds(timestamp.seconds) + std::chrono::nanoseconds(timestamp.nanos) };
+        const auto duration = std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::seconds(timestamp.seconds) + std::chrono::nanoseconds(timestamp.nanos));
+        const std::chrono::system_clock::time_point tp{ duration };
         return std::format("{:%FT%T%Z}", tp);
     }
 }
