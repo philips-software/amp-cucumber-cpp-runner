@@ -45,6 +45,16 @@ namespace cucumber_cpp::library::cucumber_expression
                 return str;
             };
         }
+
+        std::function<std::int8_t(const cucumber::messages::group&)> CreateByteConverter()
+        {
+            return [](const cucumber::messages::group& matches) -> std::int8_t
+            {
+                if (matches.value.has_value())
+                    return static_cast<std::int8_t>(StringTo<std::int32_t>(matches.value.value()));
+                return {};
+            };
+        }
     }
 
     std::strong_ordering CustomParameterEntry::operator<=>(const CustomParameterEntry& other) const
@@ -67,8 +77,8 @@ namespace cucumber_cpp::library::cucumber_expression
         AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
         AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
         AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddBuiltinParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateByteConverter());
+        AddBuiltinParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int16_t>());
         AddBuiltinParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
         AddBuiltinParameter("double", { floatRegex }, CreateStreamConverter<double>());
 

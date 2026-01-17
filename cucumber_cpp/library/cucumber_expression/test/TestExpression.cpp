@@ -111,10 +111,10 @@ namespace cucumber_cpp::library::cucumber_expression
                             EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "byte")
-                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatTestFailureMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int8_t>(), testdata["expected_args"][i].as<std::int8_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "short")
-                            EXPECT_THAT(argument.GetValue<std::int32_t>(), testdata["expected_args"][i].as<std::int32_t>()) << FormatTestFailureMessage(file, testdata, expression);
+                            EXPECT_THAT(argument.GetValue<std::int16_t>(), testdata["expected_args"][i].as<std::int16_t>()) << FormatTestFailureMessage(file, testdata, expression);
 
                         else if (argument.Name() == "long")
                             EXPECT_THAT(argument.GetValue<std::int64_t>(), testdata["expected_args"][i].as<std::int64_t>()) << FormatTestFailureMessage(file, testdata, expression);
