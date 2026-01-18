@@ -18,12 +18,12 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/GetColorFunctions.hpp"
 #include "cucumber_cpp/library/support/Join.hpp"
+#include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
-#include <format>
 #include <functional>
 #include <map>
 #include <optional>
@@ -53,20 +53,20 @@ namespace cucumber_cpp::library::formatter
 
         std::string FormatPickleTitle(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario)
         {
-            return std::format("{}: {}", scenario.keyword, pickle.name);
+            return fmt::format("{}: {}", scenario.keyword, pickle.name);
         }
 
         std::string FormatStepTitle(const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step)
         {
-            return std::format("{}{}", step.keyword, pickleStep.text);
+            return fmt::format("{}{}", step.keyword, pickleStep.text);
         }
 
         std::string FormatBase64Attachment(const std::string& body, const std::string& mediaType, const std::optional<std::string>& filename)
         {
             if (!filename)
-                return helper::ColorFunctions::Attachment(std::format("Embedding [{} {} bytes]", mediaType, body.length()));
+                return helper::ColorFunctions::Attachment(fmt::format("Embedding [{} {} bytes]", mediaType, body.length()));
             else
-                return helper::ColorFunctions::Attachment(std::format("Embedding {} [{} {} bytes]", filename.value(), mediaType, body.length()));
+                return helper::ColorFunctions::Attachment(fmt::format("Embedding {} [{} {} bytes]", filename.value(), mediaType, body.length()));
         }
 
         std::string FormatTextAttachment(const std::string& body)
@@ -243,7 +243,7 @@ namespace cucumber_cpp::library::formatter
 
     void PrettyFormatter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
     {
-        PrintGherkinLine("", std::format("{}: {}", scenario.keyword, pickle.name), nullptr, pickle.uri, scenario.location.line, scenarioIndent, maxContentLength);
+        PrintGherkinLine("", fmt::format("{}: {}", scenario.keyword, pickle.name), nullptr, pickle.uri, scenario.location.line, scenarioIndent, maxContentLength);
     }
 
     void PrettyFormatter::PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength)
@@ -251,7 +251,7 @@ namespace cucumber_cpp::library::formatter
         const auto uri = stepDefinition ? std::make_optional(*stepDefinition->source_reference.uri) : std::nullopt;
         const auto line = stepDefinition ? std::make_optional(stepDefinition->source_reference.location->line) : std::nullopt;
 
-        PrintGherkinLine(options.useStatusIcon ? iconMap.at(testStepFinished.test_step_result.status) : "", std::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
+        PrintGherkinLine(options.useStatusIcon ? iconMap.at(testStepFinished.test_step_result.status) : "", fmt::format("{}{}", step.keyword, pickleStep.text), helper::ColorFunctions::ForStatus(testStepFinished.test_step_result.status), uri, line, scenarioIndent + 2, maxContentLength);
     }
 
     void PrettyFormatter::PrintGherkinLine(std::string_view icon, std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength)
@@ -268,7 +268,7 @@ namespace cucumber_cpp::library::formatter
             };
 
         if (uri.has_value() && line.has_value())
-            fmt::print(outputStream, "{:{}}{} {}{:{}} {}\n", "", indent, formatTitle(icon), formatTitle(title), "", padding, helper::ColorFunctions::Location(std::format("# {}:{}", *uri, *line)));
+            fmt::print(outputStream, "{:{}}{} {}{:{}} {}\n", "", indent, formatTitle(icon), formatTitle(title), "", padding, helper::ColorFunctions::Location(fmt::format("# {}:{}", *uri, *line)));
         else
             fmt::print(outputStream, "{:{}}{} {}\n", "", indent, formatTitle(icon), formatTitle(title));
     }
