@@ -46,7 +46,8 @@
                 "COMx",
                 "--nordic",
                 "--format",
-                "junit",
+                "summary",
+                "pretty",
                 "--tags",
                 "${input:tag}",
                 "--",
@@ -62,7 +63,6 @@
             ],
             "externalConsole": false,
             "MIMode": "gdb",
-            "debugServerPath": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
