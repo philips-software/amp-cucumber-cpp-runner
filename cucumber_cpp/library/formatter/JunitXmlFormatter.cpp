@@ -10,16 +10,15 @@
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 #include "nlohmann/json_fwd.hpp"
 #include "pugixml.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
-#include <format>
-#include <iterator>
 #include <list>
-#include <numeric>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -29,28 +28,14 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
-        void ltrim(std::string& s)
+        [[nodiscard]] std::string trim(const std::string& str)
         {
-            s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
-                                   {
-                                       return !std::isspace(ch);
-                                   }));
-        }
+            const auto start = str.find_first_not_of(" \t\n\r");
+            if (start == std::string::npos)
+                return "";
 
-        void rtrim(std::string& s)
-        {
-            s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
-                        {
-                            return !std::isspace(ch);
-                        })
-                        .base(),
-                s.end());
-        }
-
-        void trim(std::string& s)
-        {
-            rtrim(s);
-            ltrim(s);
+            const auto end = str.find_last_not_of(" \t\n\r");
+            return str.substr(start, end - start + 1);
         }
 
         enum class FailureKind
@@ -112,13 +97,7 @@ namespace cucumber_cpp::library::formatter
                     return std::tolower(c);
                 });
 
-            auto keyword = gherkinStep.keyword;
-            auto text = pickleStep.text;
-
-            trim(keyword);
-            trim(text);
-
-            return std::format("{:.<76}{}", keyword + " " + text, statusString);
+            return fmt::format("{:.<76}{}", trim(gherkinStep.keyword) + " " + trim(pickleStep.text), statusString);
         }
 
         std::string MakeOutput(query::Query& query, const cucumber::messages::test_case_started& testCaseStarted)
@@ -138,11 +117,7 @@ namespace cucumber_cpp::library::formatter
                                       return FormatStep(gherkinStep, pickleStep, testStepFinished->test_step_result.status);
                                   });
 
-            return "\n" + std::accumulate(std::next(outputView.begin()), outputView.end(), outputView.front(), [](const std::string& a, const std::string& b)
-                              {
-                                  return a + "\n" + b;
-                              }) +
-                   "\n";
+            return fmt::format("\n{}\n", fmt::join(outputView, "\n"));
         }
 
         std::list<ReportTestCase> MakeTestCases(query::Query& query, const std::optional<std::string>& testClassName)
