@@ -23,6 +23,8 @@ target_sources(cucumber_cpp.library.formatter.helper PRIVATE
     TestCaseAttemptFormatter.hpp
     TestCaseAttemptParser.cpp
     TestCaseAttemptParser.hpp
+    TextBuilder.cpp
+    TextBuilder.hpp
 )
 
 target_include_directories(cucumber_cpp.library.formatter.helper PUBLIC
