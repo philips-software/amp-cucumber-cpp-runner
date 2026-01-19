@@ -107,7 +107,7 @@ namespace cucumber_cpp::library
             cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure");
             cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator);
             cli.add_option("--format-options", options.formatOptions, "provide options for formatters");
-            cli.add_option("--language", options.language, "Default langauge for feature files, eg 'en'")->default_str(options.language);
+            cli.add_option("--language", options.language, "Default language for feature files, eg 'en'")->default_str(options.language);
             cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case));
             auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
             cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
