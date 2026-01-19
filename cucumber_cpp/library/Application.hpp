@@ -29,13 +29,15 @@ namespace cucumber_cpp::library
     {
         struct Options
         {
+            bool dumpConfig{ false };
+
             std::set<std::filesystem::path, std::less<>> paths{ { std::filesystem::path(".") / "features" } };
 
             bool dryRun{ false };
             bool failFast{ false };
 
-            std::set<std::string, std::less<>> format{};
-            std::string formatOptions{};
+            std::set<std::string, std::less<>> format{ "summary" };
+            std::string formatOptions{ R"({})" };
 
             std::string language{ "en" };
 

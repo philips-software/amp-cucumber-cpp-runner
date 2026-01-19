@@ -20,6 +20,7 @@
 #include <exception>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <functional>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -69,6 +70,7 @@ namespace cucumber_cpp::library
         : contextStorageFactory{ contextStorageFactory }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
     {
+        cli.set_config("--config", "cucumber.toml");
     }
 
     int Application::Run(int argc, const char* const* argv)
@@ -103,12 +105,14 @@ namespace cucumber_cpp::library
                 { "reverse", support::RunOptions::Ordering::reverse },
             };
 
-            cli.add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps");
-            cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure");
-            cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator);
-            cli.add_option("--format-options", options.formatOptions, "provide options for formatters");
+            cli.add_flag("--dump-config", options.dumpConfig, "Dump the configuration");
+
+            cli.add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps")->default_val(options.dryRun);
+            cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure")->default_val(options.failFast);
+            cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator)->default_val(options.format);
+            cli.add_option("--format-options", options.formatOptions, "provide options for formatters")->default_val(options.formatOptions);
             cli.add_option("--language", options.language, "Default language for feature files, eg 'en'")->default_str(options.language);
-            cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case));
+            cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case))->default_val(options.ordering);
             auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
             cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
             cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
@@ -118,11 +122,14 @@ namespace cucumber_cpp::library
             cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
 
             CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
-            cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \".features\"")->default_val(options.paths);
+            cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \"./features\"")->default_val(options.paths);
 
             ProgramContext().InsertRef(options);
 
             cli.parse(argc, argv);
+
+            if (options.dumpConfig)
+                std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
 
             return RunFeatures();
         }
@@ -174,6 +181,7 @@ namespace cucumber_cpp::library
 
     int Application::RunFeatures()
     {
+        fmt::println("Running with tags: {}", options.tags);
         const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = GetFeatureFiles(options),
