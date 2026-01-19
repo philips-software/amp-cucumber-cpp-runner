@@ -4,11 +4,11 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 #include <CLI/App.hpp>
 #include <CLI/Error.hpp>
 #include <CLI/Option.hpp>
@@ -23,56 +23,45 @@
 #include <functional>
 #include <gtest/gtest.h>
 #include <iostream>
-#include <iterator>
 #include <map>
 #include <memory>
-#include <numeric>
 #include <ostream>
 #include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <variant>
 
 namespace cucumber_cpp::library
 {
     namespace
     {
-        template<class Range>
-        std::string Join(const Range& range, std::string_view delim)
-        {
-            if (range.empty())
-                return "";
-
-            return std::accumulate(std::next(range.begin()), range.end(), range.front(), [&delim](const auto& lhs, const auto& rhs)
-                {
-                    return std::format("{}{}{}", lhs, delim, rhs);
-                });
-        }
-
-        std::filesystem::path ToFileSystemPath(const std::string_view& sv)
-        {
-            return { sv };
-        }
-
         bool IsFeatureFile(const std::filesystem::directory_entry& entry)
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
+        void CollectFilesFromDirectory(std::set<std::filesystem::path, std::less<>>& foundFiles, std::filesystem::path folder, Application::Options& options)
+        {
+            if (options.recursive)
+                for (const auto& entry : std::filesystem::recursive_directory_iterator{ folder } | std::views::filter(IsFeatureFile))
+                    foundFiles.emplace(entry.path());
+            else
+                for (const auto& entry : std::filesystem::directory_iterator{ folder } | std::views::filter(IsFeatureFile))
+                    foundFiles.emplace(entry.path());
+        }
+
         std::set<std::filesystem::path, std::less<>> GetFeatureFiles(Application::Options& options)
         {
-            std::set<std::filesystem::path, std::less<>> files;
+            std::set<std::filesystem::path, std::less<>> foundFiles;
 
-            for (const auto feature : options.paths | std::views::transform(ToFileSystemPath))
+            for (const auto feature : options.paths)
                 if (std::filesystem::is_directory(feature))
-                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
-                        files.emplace(entry.path());
-                else
-                    files.emplace(feature);
+                    CollectFilesFromDirectory(foundFiles, feature, options);
+                else if (IsFeatureFile(std::filesystem::directory_entry{ feature }))
+                    foundFiles.emplace(feature);
 
-            return files;
+            return foundFiles;
         }
     }
 
@@ -80,22 +69,19 @@ namespace cucumber_cpp::library
         : contextStorageFactory{ contextStorageFactory }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
     {
-        cli.parse_complete_callback([this]
-            {
-                RunFeatures();
-            });
     }
 
     int Application::Run(int argc, const char* const* argv)
     {
         const auto formattersSet = formatters.GetAvailableFormatterNames();
-        const auto formatterDescription = std::format("{{{}}}", Join(formattersSet | std::views::transform([](const auto& pair)
-                                                                                         {
-                                                                                             if (pair.second)
-                                                                                                 return std::format("{}<<:output>>", pair.first);
-                                                                                             else
-                                                                                                 return pair.first;
-                                                                                         }),
+
+        const auto formatterDescription = fmt::format("{{{}}}", fmt::join(formattersSet | std::views::transform([](const auto& pair)
+                                                                                              {
+                                                                                                  if (pair.second)
+                                                                                                      return fmt::format("{}<<:output>>", pair.first);
+                                                                                                  else
+                                                                                                      return pair.first;
+                                                                                              }),
                                                                     ","));
 
         CLI::Validator formatValidator{ [&formattersSet](const std::string& str) -> std::string
@@ -126,16 +112,19 @@ namespace cucumber_cpp::library
             auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
             cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
             cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
+            cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
 
             CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
             cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
 
             CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
-            cli.add_option("paths", options.paths, "Paths to where your feature files are")->required()->check(CLI::ExistingPath);
+            cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \".features\"")->default_val(options.paths);
 
             ProgramContext().InsertRef(options);
 
             cli.parse(argc, argv);
+
+            return RunFeatures();
         }
         catch (const CLI::ParseError& e)
         {
@@ -144,25 +133,23 @@ namespace cucumber_cpp::library
         catch (const InternalError& error)
         {
             std::cout << std::format("InternalError error:\n{}\n", error.what());
-            return 1;
+            return EXIT_FAILURE;
         }
         catch (const cucumber_expression::Error& error)
         {
             std::cout << std::format("Cucumber Expression error:\n{}\n", error.what());
-            return 1;
+            return EXIT_FAILURE;
         }
         catch (const std::exception& error)
         {
             std::cout << std::format("Generic error:\n{}\n", error.what());
-            return 1;
+            return EXIT_FAILURE;
         }
         catch (...)
         {
             std::cout << "Unknown error";
-            return 1;
+            return EXIT_FAILURE;
         }
-
-        return GetExitCode();
     }
 
     CLI::App& Application::CliParser()
@@ -185,12 +172,12 @@ namespace cucumber_cpp::library
         return formatters;
     }
 
-    void Application::RunFeatures()
+    int Application::RunFeatures()
     {
         const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = GetFeatureFiles(options),
-                .tagExpression = tag_expression::Parse(Join(options.tags, " ")),
+                .tagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.tags, " "))),
                 .ordering = options.ordering,
             },
             .runtime = {
@@ -198,15 +185,11 @@ namespace cucumber_cpp::library
                 .failFast = options.failFast,
                 .retry = options.retry,
                 .strict = options.strict,
-                .retryTagExpression = tag_expression::Parse(Join(options.retryTagFilter, " ")),
+                .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
             },
         };
 
-        runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
-    }
-
-    int Application::GetExitCode() const
-    {
+        const auto runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
         return runPassed ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 }

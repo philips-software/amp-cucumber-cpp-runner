@@ -7,7 +7,6 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -17,6 +16,7 @@
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
 #include <cstddef>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <set>
@@ -29,7 +29,7 @@ namespace cucumber_cpp::library
     {
         struct Options
         {
-            std::set<std::string, std::less<>> paths{};
+            std::set<std::filesystem::path, std::less<>> paths{ { std::filesystem::path(".") / "features" } };
 
             bool dryRun{ false };
             bool failFast{ false };
@@ -46,12 +46,14 @@ namespace cucumber_cpp::library
 
             bool strict{ true };
 
+            bool recursive{ true };
+
             std::vector<std::string> tags{};
         };
 
-        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
+        Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
 
-        int Run(int argc, const char* const* argv);
+        [[nodiscard]] int Run(int argc, const char* const* argv);
 
         CLI::App& CliParser();
         Context& ProgramContext();
@@ -60,9 +62,7 @@ namespace cucumber_cpp::library
 
     private:
         void DryRunFeatures();
-        void RunFeatures();
-
-        [[nodiscard]] int GetExitCode() const;
+        [[nodiscard]] int RunFeatures();
 
         Options options;
 

@@ -15,7 +15,7 @@ teardown() {
 }
 
 @test "Successful test" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:OK" -- cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary pretty message junit --tags "@result:OK" --no-recursive -- cucumber_cpp/acceptance_test/features
     assert_success
 }
 
@@ -46,12 +46,6 @@ teardown() {
     assert_success
     assert_output --partial "2 scenarios"
     assert_output --partial "2 passed"
-}
-
-@test "Missing mandatory paths argument" {
-    run $acceptance_test --format summary pretty message junit --
-    assert_failure
-    assert_output --partial "paths is required"
 }
 
 @test "Missing mandatory custom argument" {
