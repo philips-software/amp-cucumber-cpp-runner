@@ -3,7 +3,9 @@
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "fmt/format.h"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <cstddef>
@@ -12,6 +14,7 @@
 #include <format>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
+#include <string>
 
 namespace cucumber_cpp::library::support
 {
@@ -50,10 +53,32 @@ namespace cucumber_cpp::library::support
         cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
         CucumberResultReporter reportListener{ testStepResult };
 
+        const auto startTime = util::Stopwatch::Instance().Start();
         try
         {
-            util::Stopwatch::Instance().Start();
             Execute(args);
+        }
+        catch (const runtime::NestedTestCaseRunnerError& e)
+        {
+            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
+
+            if (e.status.status != cucumber::messages::test_step_result_status::PASSED)
+            {
+                const auto offset = std::string(e.nesting, ' ');
+
+                if (e.status.message.has_value())
+                    testStepResult.message = fmt::format(R"({0} {1} nested step: "* {2}")"
+                                                         "\n{0} {3}",
+                        offset,
+                        cucumber::messages::to_string(e.status.status),
+                        e.text,
+                        e.status.message.value());
+                else
+                    testStepResult.message = fmt::format(R"({0} {1} nested step: "* {2}")",
+                        offset,
+                        cucumber::messages::to_string(e.status.status),
+                        e.text);
+            }
         }
         catch (const StepSkipped& e)
         {
@@ -88,7 +113,7 @@ namespace cucumber_cpp::library::support
             };
         }
 
-        auto nanoseconds = util::Stopwatch::Instance().Duration();
+        auto nanoseconds = util::Stopwatch::Instance().Duration(startTime);
         static constexpr std::size_t nanosecondsPerSecond = 1e9;
         testStepResult.duration = {
             .seconds = nanoseconds.count() / nanosecondsPerSecond,

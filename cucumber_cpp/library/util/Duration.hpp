@@ -20,8 +20,8 @@ namespace cucumber_cpp::library::util
     public:
         static Stopwatch& Instance();
 
-        virtual void Start() = 0;
-        virtual std::chrono::nanoseconds Duration() = 0;
+        virtual std::chrono::high_resolution_clock::time_point Start() = 0;
+        virtual std::chrono::nanoseconds Duration(std::chrono::high_resolution_clock::time_point timepPoint) = 0;
 
     private:
         static inline Stopwatch* instance{ nullptr };
@@ -30,11 +30,8 @@ namespace cucumber_cpp::library::util
     struct StopWatchHighResolutionClock : Stopwatch
     {
         virtual ~StopWatchHighResolutionClock() = default;
-        void Start() override;
-        std::chrono::nanoseconds Duration() override;
-
-    private:
-        std::chrono::high_resolution_clock::time_point timeStart{};
+        std::chrono::high_resolution_clock::time_point Start() override;
+        std::chrono::nanoseconds Duration(std::chrono::high_resolution_clock::time_point timePoint) override;
     };
 }
 

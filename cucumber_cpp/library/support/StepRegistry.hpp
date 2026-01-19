@@ -32,14 +32,20 @@
 #include <variant>
 #include <vector>
 
+namespace cucumber_cpp::library::runtime
+{
+    struct NestedTestCaseRunner;
+}
+
 namespace cucumber_cpp::library::support
 {
-    using StepFactory = std::unique_ptr<Body> (&)(util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
+
+    using StepFactory = std::unique_ptr<Body> (&)(const runtime::NestedTestCaseRunner&, util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
 
     template<class T>
-    std::unique_ptr<Body> StepBodyFactory(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
+    std::unique_ptr<Body> StepBodyFactory(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
     {
-        return std::make_unique<T>(broadCaster, context, stepOrHookStarted, dataTable, docString);
+        return std::make_unique<T>(nestedTestCaseRunner, broadCaster, context, stepOrHookStarted, dataTable, docString);
     }
 
     struct StepMatch

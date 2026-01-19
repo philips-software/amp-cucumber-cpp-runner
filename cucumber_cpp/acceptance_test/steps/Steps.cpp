@@ -1,4 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "fmt/format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
@@ -92,4 +93,25 @@ THEN("the next scenario is executed")
 GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
 {
     EXPECT_THAT(a, testing::Eq(b));
+}
+
+GIVEN(R"(a step calls another step with {string})", (const std::string& str))
+{
+    Step(fmt::format(R"(I store "{}")", str));
+}
+
+GIVEN(R"(I store {string})", (const std::string& str))
+{
+    Step(fmt::format(R"(I store "{}" again)", str));
+}
+
+GIVEN(R"(I store {string} again)", (const std::string& str))
+{
+    context.InsertAt("storedstring", str);
+}
+
+THEN(R"(the stored string is {string})", (const std::string& expected))
+{
+    const auto& stored = context.Get<std::string>("storedstring");
+    EXPECT_THAT(stored, testing::StrEq(expected));
 }

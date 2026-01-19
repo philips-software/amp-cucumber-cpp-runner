@@ -1,7 +1,15 @@
+#include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/pickle_step_argument.hpp"
+#include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
+#include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
+#include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/StepRegistry.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -10,23 +18,21 @@
 
 namespace cucumber_cpp::library::engine
 {
-    struct StepMock : Step
+    struct StepMock : StepBase
     {
-        using Step::Step;
+        using StepBase::StepBase;
 
         MOCK_METHOD(void, SetUp, (), (override));
         MOCK_METHOD(void, TearDown, (), (override));
 
-        using Step::Pending;
-        using Step::Skipped;
+        using StepBase::Pending;
+        using StepBase::Skipped;
 
-        using Step::Given;
-        using Step::Then;
-        using Step::When;
+        using StepBase::Step;
 
-        using Step::context;
-        using Step::dataTable;
-        using Step::docString;
+        using StepBase::context;
+        using StepBase::dataTable;
+        using StepBase::docString;
     };
 
     struct TestStep : testing::Test
@@ -37,12 +43,33 @@ namespace cucumber_cpp::library::engine
         engine::StepOrHookStarted stepOrHookStarted;
         cucumber::messages::pickle_step_argument pickleStepArgument;
 
+        cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+        cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
+        support::UndefinedParameters undefinedParameters;
+        support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
+        support::HookRegistry hookRegistry{ idGenerator };
+
+        support::SupportCodeLibrary supportCodeLibrary{
+            hookRegistry,
+            stepRegistry,
+            parameterRegistry,
+            undefinedParameters
+        };
+        runtime::NestedTestCaseRunner nestedTestCaseRunner{
+            0,
+            supportCodeLibrary,
+            broadcaster,
+            context,
+            std::get<cucumber::messages::test_step_started>(stepOrHookStarted),
+        };
+
         StepMock step{
+            nestedTestCaseRunner,
             broadcaster,
             context,
             stepOrHookStarted,
             pickleStepArgument.data_table,
-            pickleStepArgument.doc_string
+            pickleStepArgument.doc_string,
         };
     };
 
@@ -50,14 +77,14 @@ namespace cucumber_cpp::library::engine
     {
         EXPECT_CALL(step, SetUp());
 
-        static_cast<Step&>(step).SetUp();
+        static_cast<StepBase&>(step).SetUp();
     }
 
     TEST_F(TestStep, StepProvidesAccessToTearDownFunction)
     {
         EXPECT_CALL(step, TearDown());
 
-        static_cast<Step&>(step).TearDown();
+        static_cast<StepBase&>(step).TearDown();
     }
 
     TEST_F(TestStep, ProvidesAccessToCurrentContext)

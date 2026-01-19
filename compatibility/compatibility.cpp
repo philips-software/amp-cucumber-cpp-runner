@@ -219,11 +219,12 @@ namespace compatibility
         {
             virtual ~StopwatchIncremental() = default;
 
-            void Start() override
+            std::chrono::high_resolution_clock::time_point Start() override
             {
+                return {};
             }
 
-            std::chrono::nanoseconds Duration() override
+            std::chrono::nanoseconds Duration([[maybe_unused]] std::chrono::high_resolution_clock::time_point timePoint) override
             {
                 return current;
             }

@@ -13,7 +13,7 @@ namespace cucumber_cpp
 {
     using cucumber_cpp::library::Application;
     using cucumber_cpp::library::Context;
-    using cucumber_cpp::library::engine::Step;
+    using cucumber_cpp::library::engine::StepBase;
     using cucumber_cpp::library::engine::StringTo;
 }
 

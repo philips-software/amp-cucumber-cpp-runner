@@ -23,9 +23,9 @@
 #define THEN_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::then, __VA_ARGS__)
 #define STEP_F(fixture, ...) STEP_TYPE_(fixture, cucumber_cpp::library::support::StepType::any, __VA_ARGS__)
 
-#define GIVEN(...) GIVEN_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)
-#define WHEN(...) WHEN_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)
-#define THEN(...) THEN_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)
-#define STEP(...) STEP_F(cucumber_cpp::library::engine::Step, __VA_ARGS__)
+#define GIVEN(...) GIVEN_F(cucumber_cpp::library::engine::StepBase, __VA_ARGS__)
+#define WHEN(...) WHEN_F(cucumber_cpp::library::engine::StepBase, __VA_ARGS__)
+#define THEN(...) THEN_F(cucumber_cpp::library::engine::StepBase, __VA_ARGS__)
+#define STEP(...) STEP_F(cucumber_cpp::library::engine::StepBase, __VA_ARGS__)
 
 #endif

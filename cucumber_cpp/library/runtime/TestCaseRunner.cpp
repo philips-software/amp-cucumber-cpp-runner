@@ -16,6 +16,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
@@ -200,7 +201,10 @@ namespace cucumber_cpp::library::runtime
             const auto& docString = pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt;
 
             const auto& definition = stepDefinitions.front();
-            const auto result = InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted, dataTable, docString), testStep.step_match_arguments_lists->front());
+            const auto result = InvokeStep(definition.factory(
+                                               NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted },
+                                               broadcaster, testCaseContext, testStepStarted, dataTable, docString),
+                testStep.step_match_arguments_lists->front());
             stepResults.push_back(result);
         }
 

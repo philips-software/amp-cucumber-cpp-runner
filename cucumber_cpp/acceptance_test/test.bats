@@ -203,3 +203,8 @@ teardown() {
     assert_success
     refute_output --partial "The following steps have not been used:"
 }
+
+@test "Test nested steps" {
+    run $acceptance_test --format summary pretty --tags "@nested_steps" -- cucumber_cpp/acceptance_test/features
+    assert_success
+}

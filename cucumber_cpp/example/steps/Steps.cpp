@@ -12,9 +12,9 @@ struct LoadMeOnConstruction
     {}
 };
 
-struct CustomFixture : cucumber_cpp::library::engine::Step
+struct CustomFixture : cucumber_cpp::library::engine::StepBase
 {
-    using Step::Step;
+    using StepBase::StepBase;
 
     const LoadMeOnConstruction& alwaysAvailable{ context.Get<LoadMeOnConstruction>() };
 };
@@ -101,7 +101,7 @@ STEP(R"(^a step$)")
 
 STEP(R"(^a step calls another step$)")
 {
-    Given(R"(a step)");
+    Step(R"(a step)");
 }
 
 STEP(R"(^the called step is executed$)")

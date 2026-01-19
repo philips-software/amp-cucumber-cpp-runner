@@ -34,15 +34,15 @@ namespace cucumber_cpp::library::util
         return *instance;
     }
 
-    void StopWatchHighResolutionClock::Start()
+    std::chrono::high_resolution_clock::time_point StopWatchHighResolutionClock::Start()
     {
-        timeStart = std::chrono::high_resolution_clock::now();
+        return std::chrono::high_resolution_clock::now();
     }
 
-    std::chrono::nanoseconds StopWatchHighResolutionClock::Duration()
+    std::chrono::nanoseconds StopWatchHighResolutionClock::Duration(std::chrono::high_resolution_clock::time_point timePoint)
     {
         const auto timeStop = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(timeStop - timeStart);
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(timeStop - timePoint);
     }
 
     cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis)

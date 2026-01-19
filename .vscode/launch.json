@@ -19,7 +19,8 @@
                 "@ex:2",
                 "@substep",
                 "@table_argument",
-                "@thishasarule"
+                "@thishasarule",
+                "@nested_steps"
             ]
         },
         {

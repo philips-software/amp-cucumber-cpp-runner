@@ -5,6 +5,8 @@ target_sources(cucumber_cpp.library.runtime PRIVATE
     Coordinator.hpp
     MakeRuntime.cpp
     MakeRuntime.hpp
+    NestedTestCaseRunner.cpp
+    NestedTestCaseRunner.hpp
     SerialRuntimeAdapter.cpp
     SerialRuntimeAdapter.hpp
     TestCaseRunner.cpp
@@ -22,6 +24,7 @@ target_link_libraries(cucumber_cpp.library.runtime PUBLIC
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.support
     cucumber_cpp.library.util
+    fmt-header-only
 )
 
 if (CCR_BUILD_TESTS)
