@@ -6,15 +6,16 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <string_view>
 
 namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {
-        std::string ApplyStyle(const std::string& text, std::optional<fmt::text_style> style)
+        std::string ApplyStyle(std::string_view text, std::optional<fmt::text_style> style)
         {
             if (!style)
-                return text;
+                return std::string{ text };
 
             return fmt::format(*style, "{}", text);
         }
@@ -32,7 +33,7 @@ namespace cucumber_cpp::library::formatter::helper
         return *this;
     }
 
-    TextBuilder& TextBuilder::Append(const std::string& text, std::optional<fmt::text_style> style)
+    TextBuilder& TextBuilder::Append(std::string_view text, std::optional<fmt::text_style> style)
     {
         this->text += ApplyStyle(text, style);
         return *this;

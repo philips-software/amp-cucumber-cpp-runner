@@ -8,6 +8,16 @@
 #include <stdexcept>
 #include <string>
 
+GIVEN("an ambiguous step")
+{
+    // empty
+}
+
+GIVEN("a(n) ambiguous step")
+{
+    // empty
+}
+
 GIVEN("a background step")
 {
     // empty

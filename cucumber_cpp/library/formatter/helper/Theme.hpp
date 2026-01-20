@@ -92,7 +92,7 @@ namespace cucumber_cpp::library::formatter::helper
 
         struct
         {
-            std::string bullet{};
+            std::string bullet{ " " };
         } symbol;
     };
 

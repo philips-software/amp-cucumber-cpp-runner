@@ -20,3 +20,8 @@ Feature: Simple feature file
   Scenario: A scenario with undefined step
     Given a missing step
     Then this should be skipped
+
+  @result:AMBIGUOUS
+  Scenario: A scenario with ambiguous step
+    Given an ambiguous step
+    Then this should be skipped

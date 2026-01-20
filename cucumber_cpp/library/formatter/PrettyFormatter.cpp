@@ -1,11 +1,15 @@
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/attachment_content_encoding.hpp"
+#include "cucumber/messages/data_table.hpp"
+#include "cucumber/messages/doc_string.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle.hpp"
+#include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_step.hpp"
+#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber/messages/rule.hpp"
 #include "cucumber/messages/scenario.hpp"
 #include "cucumber/messages/step.hpp"
@@ -25,8 +29,10 @@
 #include <cstddef>
 #include <cstdlib>
 #include <functional>
+#include <list>
 #include <map>
 #include <optional>
+#include <ostream>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -39,6 +45,18 @@ namespace cucumber_cpp::library::formatter
         constexpr auto gherkinIndentLength = 2;
         constexpr auto stepArgumentIndentLength = 2;
         constexpr auto attachmentIndentLength = 4;
+        constexpr auto errorIndentLength = 4;
+
+        const auto transformToString = [](auto subrange)
+        {
+            return std::string_view{ subrange.begin(), subrange.end() };
+        };
+
+        void PrintlnIndentedContent(std::ostream& os, std::string_view content, std::size_t indent)
+        {
+            const std::string indentStr(indent, ' ');
+            fmt::println(os, "{}{}", indentStr, fmt::join(content | std::views::split('\n') | std::views::transform(transformToString), "\n" + indentStr));
+        }
 
         std::string FormatPickleTitle(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, const helper::Theme& theme = helper::CreatePlainTheme())
         {
@@ -162,6 +180,89 @@ namespace cucumber_cpp::library::formatter
                 .Build();
         }
 
+        std::string FormatDocString(const cucumber::messages::pickle_doc_string& pickleDocString, const helper::Theme& theme)
+        {
+            helper::TextBuilder builder{};
+            builder.Append(R"(""")", theme.docString.delimiter);
+            if (pickleDocString.media_type.has_value())
+                builder.Append(pickleDocString.media_type.value(), theme.docString.mediaType);
+            builder.Line();
+
+            for (const auto& line : pickleDocString.content | std::views::split('\n') | std::views::transform(transformToString))
+                builder.Append(line).Line();
+
+            builder.Append(R"(""")", theme.docString.delimiter);
+
+            return builder.Build(theme.docString.all, true);
+        }
+
+        std::vector<std::size_t> CalcualteColumnWidths(const cucumber::messages::pickle_table& pickleDataTable)
+        {
+            std::vector<std::size_t> columnWidths(pickleDataTable.rows.empty() ? 0 : pickleDataTable.rows.front().cells.size(), 0);
+
+            for (const auto& row : pickleDataTable.rows)
+                for (std::size_t colIndex = 0; colIndex < row.cells.size(); ++colIndex)
+                {
+                    const auto cellContentLength = row.cells[colIndex].value.length();
+                    columnWidths[colIndex] = std::max(columnWidths[colIndex], cellContentLength);
+                }
+
+            return columnWidths;
+        }
+
+        std::string FormatDataTable(const cucumber::messages::pickle_table& pickleDataTable, const helper::Theme& theme)
+        {
+            const auto columnWidths = CalcualteColumnWidths(pickleDataTable);
+            helper::TextBuilder builder{};
+
+            for (auto rowIndex = 0; rowIndex != pickleDataTable.rows.size(); ++rowIndex)
+            {
+                const auto& row = pickleDataTable.rows[rowIndex];
+
+                if (rowIndex > 0)
+                    builder.Line();
+                builder.Append("|", theme.dataTable.border);
+
+                for (auto colIndex = 0; colIndex != pickleDataTable.rows[rowIndex].cells.size(); ++colIndex)
+                {
+                    const auto& cell = row.cells[colIndex];
+                    builder.Append(fmt::format(" {:<{}} ", cell.value, columnWidths[colIndex]), theme.dataTable.content)
+                        .Append("|", theme.dataTable.border);
+                }
+            }
+
+            return builder.Build(theme.dataTable.all, true);
+        }
+
+        std::string FormatPickleStepArgument(const cucumber::messages::pickle_step& pickleStep, const helper::Theme& theme)
+        {
+            if (pickleStep.argument && pickleStep.argument->doc_string.has_value())
+                return FormatDocString(pickleStep.argument->doc_string.value(), theme);
+
+            if (pickleStep.argument && pickleStep.argument->data_table.has_value())
+                return FormatDataTable(pickleStep.argument->data_table.value(), theme);
+
+            return "";
+        }
+
+        std::string FormatAmbiguousStep(const std::list<const cucumber::messages::step_definition*>& stepDefinitions, const helper::Theme& theme)
+        {
+            helper::TextBuilder builder{};
+            builder.Append("Multiple matching step definitions found:");
+            for (const auto* stepDefinition : stepDefinitions)
+            {
+                builder.Line().Append("  " + theme.symbol.bullet + " ");
+
+                if (!stepDefinition->pattern.source.empty())
+                    builder.Append(stepDefinition->pattern.source);
+
+                const auto location = FormatCodeLocation(stepDefinition, theme);
+                if (!location.empty())
+                    builder.Space().Append(location);
+            }
+            return builder.Build({}, true);
+        }
+
         std::string FormatTestRunFinishedError(const cucumber::messages::test_run_finished& testRunFinished, const helper::Theme& theme)
         {
             if (testRunFinished.message)
@@ -170,13 +271,13 @@ namespace cucumber_cpp::library::formatter
                     .Append(testRunFinished.message.value())
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
-            if (testRunFinished.exception && testRunFinished.exception->stack_trace)
+            else if (testRunFinished.exception && testRunFinished.exception->stack_trace)
             {
                 return helper::TextBuilder{}
                     .Append(testRunFinished.exception->stack_trace.value())
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
-            if (testRunFinished.exception && testRunFinished.exception->message)
+            else if (testRunFinished.exception && testRunFinished.exception->message)
             {
                 return helper::TextBuilder{}
                     .Append(testRunFinished.exception->message.value())
@@ -332,6 +433,8 @@ namespace cucumber_cpp::library::formatter
             const auto* stepDefinition = (testStep.step_definition_ids && !testStep.step_definition_ids->empty()) ? &query.FindStepDefinitionById(testStep.step_definition_ids->front()) : nullptr;
 
             PrintStepLine(testStepFinished, testStep, *pickleStep, step, stepDefinition, scenarioIndent, maxContentLength);
+            PrintStepArgument(*pickleStep, scenarioIndent, options.theme);
+            PrintAmbiguousStep(testStepFinished, testStep, scenarioIndent);
         }
     }
 
@@ -387,14 +490,37 @@ namespace cucumber_cpp::library::formatter
             scenarioIndent + 2, maxContentLength);
     }
 
+    void PrettyFormatter::PrintStepArgument(const cucumber::messages::pickle_step& pickleStep, std::size_t scenarioIndent, const helper::Theme& theme)
+    {
+        const auto content = FormatPickleStepArgument(pickleStep, options.theme);
+        if (content.empty())
+            return;
+
+        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + stepArgumentIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
+    }
+
+    void PrettyFormatter::PrintAmbiguousStep(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent)
+    {
+        if (testStepFinished.test_step_result.status != cucumber::messages::test_step_result_status::AMBIGUOUS)
+            return;
+
+        const auto list = query.FindStepDefinitionsById(testStep);
+        const auto content = FormatAmbiguousStep(list, options.theme);
+
+        if (content.empty())
+            return;
+
+        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + errorIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
+    }
+
     void PrettyFormatter::PrintGherkinLine(const std::string& title, const std::optional<std::string>& location, std::size_t indent, std::size_t maxContentLength)
     {
         const auto unstyledLength = helper::Unstyled(title).length();
         const auto padding = location.has_value() ? (maxContentLength - std::min(unstyledLength, maxContentLength)) + 1 : 0;
 
-        const std::string indentStr(indent, ' ');
         const std::string paddingStr(padding, ' ');
+        const auto content = fmt::format("{}{}{}", title, paddingStr, location.value_or(""));
 
-        fmt::println(outputStream, "{}{}{}{}", indentStr, title, paddingStr, location.value_or(""));
+        PrintlnIndentedContent(outputStream, content, indent);
     }
 }

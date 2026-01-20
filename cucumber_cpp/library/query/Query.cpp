@@ -189,6 +189,19 @@ namespace cucumber_cpp::library::query
         return stepDefinitionById.at(id);
     }
 
+    std::list<const cucumber::messages::step_definition*> Query::FindStepDefinitionsById(const cucumber::messages::test_step& testStep) const
+    {
+        if (!testStep.step_definition_ids.has_value())
+            return {};
+
+        auto view = testStep.step_definition_ids.value() | std::views::transform([this](const std::string& id)
+                                                               {
+                                                                   return &FindStepDefinitionById(id);
+                                                               });
+
+        return { view.begin(), view.end() };
+    }
+
     const cucumber::messages::location& Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
     {
         const auto& lineage = FindLineageByUri(pickle.uri);
