@@ -20,7 +20,8 @@
                 "@substep",
                 "@table_argument",
                 "@thishasarule",
-                "@nested_steps"
+                "@nested_steps",
+                "@rules"
             ]
         },
         {
@@ -43,11 +44,7 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
-                "--com",
-                "COMx",
-                "--nordic",
                 "--format",
-                "summary",
                 "pretty",
                 "--tags",
                 "${input:tag}",

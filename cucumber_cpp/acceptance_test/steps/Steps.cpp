@@ -115,3 +115,8 @@ THEN(R"(the stored string is {string})", (const std::string& expected))
     const auto& stored = context.Get<std::string>("storedstring");
     EXPECT_THAT(stored, testing::StrEq(expected));
 }
+
+GIVEN(R"(I attach a link to {string})", (const std::string& url))
+{
+    Link(url, "title");
+}

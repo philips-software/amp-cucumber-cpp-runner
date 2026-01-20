@@ -16,6 +16,7 @@
 #include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/GherkinDocumentParser.hpp"
+#include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include <cstddef>
 #include <functional>
@@ -35,7 +36,6 @@ namespace cucumber_cpp::library::formatter
 
         constexpr static auto name = "pretty";
 
-    private:
         struct Options
         {
             explicit Options(const nlohmann::json& formatOptions);
@@ -44,8 +44,10 @@ namespace cucumber_cpp::library::formatter
             const bool includeFeatureLine;
             const bool includeRuleLine;
             const bool useStatusIcon;
+            const helper::Theme theme;
         };
 
+    private:
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
 
         void CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted);
@@ -61,9 +63,9 @@ namespace cucumber_cpp::library::formatter
         void PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength);
         void PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength);
 
-        void PrintGherkinLine(std::string_view icon, std::string_view title, std::function<std::string(std::string_view)> formatTitle, std::optional<std::string_view> uri, std::optional<std::size_t> line, std::size_t indent, std::size_t maxContentLength);
+        void PrintGherkinLine(const std::string& title, const std::optional<std::string>& location, std::size_t indent, std::size_t maxContentLength);
 
-        Options options{ formatOptions };
+        Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
 
         std::map<std::string, helper::GherkinScenarioMap> testCaseStartedIdToScenarioMap;
 

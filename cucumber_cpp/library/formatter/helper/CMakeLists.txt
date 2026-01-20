@@ -25,6 +25,8 @@ target_sources(cucumber_cpp.library.formatter.helper PRIVATE
     TestCaseAttemptParser.hpp
     TextBuilder.cpp
     TextBuilder.hpp
+    Theme.cpp
+    Theme.hpp
 )
 
 target_include_directories(cucumber_cpp.library.formatter.helper PUBLIC
