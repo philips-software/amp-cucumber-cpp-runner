@@ -202,12 +202,14 @@ namespace cucumber_cpp::library::query
         return { view.begin(), view.end() };
     }
 
-    const cucumber::messages::location& Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
+    std::optional<cucumber::messages::location> Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
     {
         const auto& lineage = FindLineageByUri(pickle.uri);
         if (lineage.tableRow)
             return lineage.tableRow->location;
-        return lineage.scenario->location;
+        if (lineage.scenario)
+            return lineage.scenario->location;
+        return std::nullopt;
     }
 
     const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& Query::TestCaseStarted() const
