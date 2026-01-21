@@ -10,6 +10,7 @@
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "cucumber_cpp/library/util/Trim.hpp"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include "nlohmann/json_fwd.hpp"
@@ -28,16 +29,6 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
-        [[nodiscard]] std::string trim(const std::string& str)
-        {
-            const auto start = str.find_first_not_of(" \t\n\r");
-            if (start == std::string::npos)
-                return "";
-
-            const auto end = str.find_last_not_of(" \t\n\r");
-            return str.substr(start, end - start + 1);
-        }
-
         enum class FailureKind
         {
             failure,
@@ -97,7 +88,7 @@ namespace cucumber_cpp::library::formatter
                     return std::tolower(c);
                 });
 
-            return fmt::format("{:.<76}{}", trim(gherkinStep.keyword) + " " + trim(pickleStep.text), statusString);
+            return fmt::format("{:.<76}{}", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString);
         }
 
         std::string MakeOutput(query::Query& query, const cucumber::messages::test_case_started& testCaseStarted)

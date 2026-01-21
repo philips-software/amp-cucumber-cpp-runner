@@ -10,7 +10,7 @@ target_sources(cucumber_cpp.library.util PRIVATE
     Immoveable.hpp
     Timestamp.cpp
     Timestamp.hpp
-
+    Trim.hpp
 )
 
 target_include_directories(cucumber_cpp.library.util PUBLIC

@@ -20,6 +20,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/TextBuilder.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
+#include "cucumber_cpp/library/util/Trim.hpp"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
@@ -49,16 +50,6 @@ namespace cucumber_cpp::library::formatter
         {
             return std::string_view{ subrange.begin(), subrange.end() };
         };
-
-        [[nodiscard]] std::string Trim(const std::string& str)
-        {
-            const auto start = str.find_first_not_of(" \t\n\r");
-            if (start == std::string::npos)
-                return "";
-
-            const auto end = str.find_last_not_of(" \t\n\r");
-            return str.substr(start, end - start + 1);
-        }
 
         void PrintlnIndentedContent(std::ostream& os, std::string_view content, std::size_t indent)
         {
@@ -276,21 +267,21 @@ namespace cucumber_cpp::library::formatter
             if (testStepResult.exception.has_value() && testStepResult.exception.value().stack_trace.has_value())
             {
                 return helper::TextBuilder{}
-                    .Append(Trim(testStepResult.exception.value().stack_trace.value()))
+                    .Append(util::Trim(testStepResult.exception.value().stack_trace.value()))
                     .Build(theme.status.All(testStepResult.status), true);
             }
 
             if (testStepResult.exception.has_value() && testStepResult.exception.value().message.has_value())
             {
                 return helper::TextBuilder{}
-                    .Append(Trim(testStepResult.exception.value().message.value()))
+                    .Append(util::Trim(testStepResult.exception.value().message.value()))
                     .Build(theme.status.All(testStepResult.status), true);
             }
 
             if (testStepResult.message.has_value())
             {
                 return helper::TextBuilder{}
-                    .Append(Trim(testStepResult.message.value()))
+                    .Append(util::Trim(testStepResult.message.value()))
                     .Build(theme.status.All(testStepResult.status), true);
             }
 
@@ -302,14 +293,14 @@ namespace cucumber_cpp::library::formatter
             if (testRunFinished.exception && testRunFinished.exception->stack_trace)
             {
                 return helper::TextBuilder{}
-                    .Append(Trim(testRunFinished.exception->stack_trace.value()))
+                    .Append(util::Trim(testRunFinished.exception->stack_trace.value()))
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
 
             if (testRunFinished.exception && testRunFinished.exception->message)
             {
                 return helper::TextBuilder{}
-                    .Append(Trim(testRunFinished.exception->message.value()))
+                    .Append(util::Trim(testRunFinished.exception->message.value()))
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
 
