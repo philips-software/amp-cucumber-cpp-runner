@@ -1,24 +1,15 @@
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/rule.hpp"
-#include "cucumber/messages/scenario.hpp"
-#include "cucumber/messages/step.hpp"
-#include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/test_case_started.hpp"
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/FormatMessages.hpp"
+#include "cucumber_cpp/library/formatter/helper/PrintMessages.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "fmt/format.h"
 #include "fmt/ostream.h"
-#include "fmt/ranges.h"
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -33,26 +24,6 @@
 
 namespace cucumber_cpp::library::formatter
 {
-    namespace
-    {
-        constexpr auto gherkinIndentLength = 2;
-        constexpr auto stepArgumentIndentLength = 2;
-        constexpr auto attachmentIndentLength = 4;
-        constexpr auto errorIndentLength = 4;
-
-        const auto transformToString = [](auto subrange)
-        {
-            return std::string_view{ subrange.begin(), subrange.end() };
-        };
-
-        void PrintlnIndentedContent(std::ostream& os, std::string_view content, std::size_t indent)
-        {
-            const std::string indentStr(indent, ' ');
-            fmt::println(os, "{}{}", indentStr, fmt::join(content | std::views::split('\n') | std::views::transform(transformToString), "\n" + indentStr));
-        }
-
-    }
-
     PrettyFormatter::Options::Options(const nlohmann::json& formatOptions)
         : includeAttachments{ formatOptions.value("include_attachments", true) }
         , includeFeatureLine{ formatOptions.value("include_feature_line", true) }
@@ -116,9 +87,9 @@ namespace cucumber_cpp::library::formatter
         std::size_t scenarioIndent{ 0 };
         if (options.includeFeatureLine)
         {
-            scenarioIndent += gherkinIndentLength;
+            scenarioIndent += helper::gherkinIndentLength;
             if (options.includeRuleLine && lineage.rule)
-                scenarioIndent += gherkinIndentLength;
+                scenarioIndent += helper::gherkinIndentLength;
         }
 
         scenarioIndentByTestCaseStartedId[testCaseStarted.id] = scenarioIndent;
@@ -135,12 +106,19 @@ namespace cucumber_cpp::library::formatter
         const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testCaseStarted.id);
         const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testCaseStarted.id);
 
-        PrintFeatureLine(*feature);
-        if (rule)
-            PrintRuleLine(*rule);
+        if (options.includeFeatureLine && !printedFeatureUris.contains(feature.get()))
+            helper::PrintFeatureLine(outputStream, *feature, options.theme);
+
+        if (options.includeRuleLine && !printedRuleIds.contains(rule.get()))
+            helper::PrintRuleLine(outputStream, *rule, options.theme);
+
         outputStream << "\n";
-        PrintTags(pickle, scenarioIndent);
-        PrintScenarioLine(pickle, *scenario, scenarioIndent, maxContentLength);
+
+        helper::PrintTags(outputStream, pickle, scenarioIndent, options.theme);
+        helper::PrintScenarioLine(outputStream, pickle, *scenario, scenarioIndent, maxContentLength, options.theme);
+
+        printedFeatureUris.insert(feature.get());
+        printedRuleIds.insert(rule.get());
     }
 
     void PrettyFormatter::HandleAttachment(const cucumber::messages::attachment& attachment)
@@ -148,11 +126,7 @@ namespace cucumber_cpp::library::formatter
         if (!options.includeAttachments)
             return;
 
-        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value());
-        const auto content = FormatAttachment(attachment, options.theme);
-        const std::string indentStr(scenarioIndent + gherkinIndentLength + attachmentIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0), ' ');
-
-        fmt::println(outputStream, "\n{}{}\n", indentStr, content);
+        helper::PrintAttachment(outputStream, attachment, scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value()), options.useStatusIcon, options.theme);
     }
 
     void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
@@ -168,11 +142,11 @@ namespace cucumber_cpp::library::formatter
             const auto& step = query.FindStepBy(*pickleStep);
             const auto* stepDefinition = (testStep.step_definition_ids && !testStep.step_definition_ids->empty()) ? &query.FindStepDefinitionById(testStep.step_definition_ids->front()) : nullptr;
 
-            PrintStepLine(testStepFinished, testStep, *pickleStep, step, stepDefinition, scenarioIndent, maxContentLength);
-            PrintStepArgument(*pickleStep, scenarioIndent, options.theme);
-            PrintAmbiguousStep(testStepFinished, testStep, scenarioIndent);
+            helper::PrintStepLine(outputStream, testStepFinished, testStep, *pickleStep, step, stepDefinition, scenarioIndent, maxContentLength, options.useStatusIcon, options.theme);
+            helper::PrintStepArgument(outputStream, *pickleStep, scenarioIndent, options.useStatusIcon, options.theme);
+            helper::PrintAmbiguousStep(outputStream, query, testStepFinished, testStep, scenarioIndent, options.useStatusIcon, options.theme);
         }
-        PrintError(testStepFinished, scenarioIndent);
+        helper::PrintError(outputStream, testStepFinished, scenarioIndent, options.useStatusIcon, options.theme);
     }
 
     void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
@@ -183,90 +157,4 @@ namespace cucumber_cpp::library::formatter
             fmt::println(outputStream, "{}", content);
     }
 
-    void PrettyFormatter::PrintFeatureLine(const cucumber::messages::feature& feature)
-    {
-        if (options.includeFeatureLine == false || printedFeatureUris.contains(&feature))
-            return;
-
-        fmt::println(outputStream, "\n{}", FormatFeatureTitle(feature, options.theme));
-        printedFeatureUris.insert(&feature);
-    }
-
-    void PrettyFormatter::PrintRuleLine(const cucumber::messages::rule& rule)
-    {
-        if (options.includeRuleLine == false || printedRuleIds.contains(&rule))
-            return;
-
-        fmt::println(outputStream, "\n{}{}", std::string(gherkinIndentLength, ' '), FormatRuleTitle(rule, options.theme));
-
-        printedRuleIds.insert(&rule);
-    }
-
-    void PrettyFormatter::PrintTags(const cucumber::messages::pickle& pickle, std::size_t scenarioIndent)
-    {
-        if (pickle.tags.empty())
-            return;
-
-        fmt::println(outputStream, "{}{}", std::string(scenarioIndent, ' '), FormatPickleTags(pickle, options.theme));
-    }
-
-    void PrettyFormatter::PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength)
-    {
-        PrintGherkinLine(
-            FormatPickleTitle(pickle, scenario, options.theme),
-            FormatPickleLocation(pickle, scenario.location, options.theme),
-            scenarioIndent,
-            maxContentLength);
-    }
-
-    void PrettyFormatter::PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength)
-    {
-        PrintGherkinLine(
-            helper::FormatStepTitle(testStep, pickleStep, step, testStepFinished.test_step_result.status, options.useStatusIcon, options.theme),
-            helper::FormatCodeLocation(stepDefinition, options.theme),
-            scenarioIndent + 2, maxContentLength);
-    }
-
-    void PrettyFormatter::PrintStepArgument(const cucumber::messages::pickle_step& pickleStep, std::size_t scenarioIndent, const helper::Theme& theme)
-    {
-        const auto content = FormatPickleStepArgument(pickleStep, options.theme);
-        if (content.empty())
-            return;
-
-        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + stepArgumentIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
-    }
-
-    void PrettyFormatter::PrintAmbiguousStep(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent)
-    {
-        if (testStepFinished.test_step_result.status != cucumber::messages::test_step_result_status::AMBIGUOUS)
-            return;
-
-        const auto list = query.FindStepDefinitionsById(testStep);
-        const auto content = FormatAmbiguousStep(list, options.theme);
-
-        if (content.empty())
-            return;
-
-        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + errorIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
-    }
-
-    void PrettyFormatter::PrintError(const cucumber::messages::test_step_finished& testStepFinished, std::size_t scenarioIndent)
-    {
-        const auto content = FormatTestStepResultError(testStepFinished.test_step_result, options.theme);
-        if (content.empty())
-            return;
-
-        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + errorIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
-    }
-
-    void PrettyFormatter::PrintGherkinLine(const std::string& title, const std::optional<std::string>& location, std::size_t indent, std::size_t maxContentLength)
-    {
-        const auto unstyledLength = helper::Unstyled(title).length();
-        const auto padding = location.has_value() ? (maxContentLength - std::min(unstyledLength, maxContentLength)) + 1 : 0;
-
-        const std::string paddingStr(padding, ' ');
-        const auto content = fmt::format("{}{}{}", title, paddingStr, location.value_or(""));
-
-        PrintlnIndentedContent(outputStream, content, indent);
-    }
 }

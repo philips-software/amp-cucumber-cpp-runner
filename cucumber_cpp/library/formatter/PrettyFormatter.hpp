@@ -54,17 +54,6 @@ namespace cucumber_cpp::library::formatter
         void HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished);
         void HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished);
 
-        void PrintFeatureLine(const cucumber::messages::feature& feature);
-        void PrintRuleLine(const cucumber::messages::rule& rule);
-        void PrintTags(const cucumber::messages::pickle& pickle, std::size_t scenarioIndent);
-        void PrintScenarioLine(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength);
-        void PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength);
-        void PrintStepArgument(const cucumber::messages::pickle_step& pickleStep, std::size_t scenarioIndent, const helper::Theme& theme);
-        void PrintAmbiguousStep(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent);
-        void PrintError(const cucumber::messages::test_step_finished& testStepFinished, std::size_t scenarioIndent);
-
-        void PrintGherkinLine(const std::string& title, const std::optional<std::string>& location, std::size_t indent, std::size_t maxContentLength);
-
         Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
 
         std::map<std::string, helper::GherkinScenarioMap> testCaseStartedIdToScenarioMap;
