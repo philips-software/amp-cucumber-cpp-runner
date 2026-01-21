@@ -3,6 +3,8 @@ add_library(cucumber_cpp.library.formatter.helper ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.formatter.helper PRIVATE
     EventDataCollector.cpp
     EventDataCollector.hpp
+    FormatMessages.cpp
+    FormatMessages.hpp
     GetColorFunctions.hpp
     GetColorFunctions.cpp
     GherkinDocumentParser.cpp
