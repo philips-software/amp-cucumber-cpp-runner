@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include <CLI/App.hpp>
@@ -182,6 +183,7 @@ namespace cucumber_cpp::library
     int Application::RunFeatures()
     {
         fmt::println("Running with tags: {}", options.tags);
+
         const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = GetFeatureFiles(options),
