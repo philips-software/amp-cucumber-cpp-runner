@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/test_case_started.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
@@ -10,7 +11,9 @@
 #include "fmt/ostream.h"
 #include <cstdio>
 #include <list>
+#include <map>
 #include <span>
+#include <string>
 #include <string_view>
 
 namespace cucumber_cpp::library::formatter
@@ -33,24 +36,31 @@ namespace cucumber_cpp::library::formatter
 
     void SummaryFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
-        if (envelope.test_run_started)
-        {
-            testRunStartedAt = envelope.test_run_started->timestamp;
-        }
-
         if (envelope.test_run_finished)
-        {
-            const auto testRunFinishedAt = envelope.test_run_finished->timestamp;
-            const auto duration = testRunFinishedAt - testRunStartedAt;
-
-            LogSummary(duration);
-        }
+            LogSummary(query.FindTestRunDuration());
     }
 
     void SummaryFormatter::LogSummary(const cucumber::messages::duration& testRunDuration)
     {
         std::list<helper::TestCaseAttempt> failures{};
         std::list<helper::TestCaseAttempt> warnings{};
+
+        // WIP
+        // auto testCases = query.TestCaseStarted();
+        // std::map<std::string, const cucumber::messages::test_case_started*> failedTestStepResults{};
+        // std::map<std::string, const cucumber::messages::test_case_started*> warningTestStepResults{};
+
+        // for (const auto& [id, testCaseStarted] : testCases)
+        // {
+        //     const auto& testCaseFinished = query.TestCaseFinishedByTestCaseStartedId().at(testCaseStarted.id);
+        //     const auto* testStepResult = query.FindMostSevereTestStepResultBy(testCaseStarted).value_or(nullptr);
+
+        //     if (testStepResult != nullptr && IsFailure(testStepResult->status, testCaseFinished.will_be_retried))
+        //         failedTestStepResults[id] = &testCaseStarted;
+
+        //     if (testStepResult != nullptr && IsWarning(testStepResult->status, testCaseFinished.will_be_retried))
+        //         warningTestStepResults[id] = &testCaseStarted;
+        // }
 
         const auto attempts = eventDataCollector.GetTestCaseAttempts();
         for (const auto& attempt : attempts)
