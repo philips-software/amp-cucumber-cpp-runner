@@ -17,15 +17,12 @@
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/GherkinDocumentParser.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include <cstddef>
-#include <functional>
 #include <map>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <set>
 #include <string>
-#include <string_view>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -64,6 +61,7 @@ namespace cucumber_cpp::library::formatter
         void PrintStepLine(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength);
         void PrintStepArgument(const cucumber::messages::pickle_step& pickleStep, std::size_t scenarioIndent, const helper::Theme& theme);
         void PrintAmbiguousStep(const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent);
+        void PrintError(const cucumber::messages::test_step_finished& testStepFinished, std::size_t scenarioIndent);
 
         void PrintGherkinLine(const std::string& title, const std::optional<std::string>& location, std::size_t indent, std::size_t maxContentLength);
 

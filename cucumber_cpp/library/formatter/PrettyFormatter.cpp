@@ -1,8 +1,6 @@
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/attachment_content_encoding.hpp"
-#include "cucumber/messages/data_table.hpp"
-#include "cucumber/messages/doc_string.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/location.hpp"
@@ -18,6 +16,7 @@
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/TextBuilder.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
@@ -28,7 +27,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
-#include <functional>
 #include <list>
 #include <map>
 #include <optional>
@@ -51,6 +49,16 @@ namespace cucumber_cpp::library::formatter
         {
             return std::string_view{ subrange.begin(), subrange.end() };
         };
+
+        [[nodiscard]] std::string Trim(const std::string& str)
+        {
+            const auto start = str.find_first_not_of(" \t\n\r");
+            if (start == std::string::npos)
+                return "";
+
+            const auto end = str.find_last_not_of(" \t\n\r");
+            return str.substr(start, end - start + 1);
+        }
 
         void PrintlnIndentedContent(std::ostream& os, std::string_view content, std::size_t indent)
         {
@@ -263,26 +271,48 @@ namespace cucumber_cpp::library::formatter
             return builder.Build({}, true);
         }
 
+        std::string FormatTestStepResultError(const cucumber::messages::test_step_result& testStepResult, const helper::Theme& theme)
+        {
+            if (testStepResult.exception.has_value() && testStepResult.exception.value().stack_trace.has_value())
+            {
+                return helper::TextBuilder{}
+                    .Append(Trim(testStepResult.exception.value().stack_trace.value()))
+                    .Build(theme.status.All(testStepResult.status), true);
+            }
+
+            if (testStepResult.exception.has_value() && testStepResult.exception.value().message.has_value())
+            {
+                return helper::TextBuilder{}
+                    .Append(Trim(testStepResult.exception.value().message.value()))
+                    .Build(theme.status.All(testStepResult.status), true);
+            }
+
+            if (testStepResult.message.has_value())
+            {
+                return helper::TextBuilder{}
+                    .Append(Trim(testStepResult.message.value()))
+                    .Build(theme.status.All(testStepResult.status), true);
+            }
+
+            return "";
+        }
+
         std::string FormatTestRunFinishedError(const cucumber::messages::test_run_finished& testRunFinished, const helper::Theme& theme)
         {
-            if (testRunFinished.message)
+            if (testRunFinished.exception && testRunFinished.exception->stack_trace)
             {
                 return helper::TextBuilder{}
-                    .Append(testRunFinished.message.value())
+                    .Append(Trim(testRunFinished.exception->stack_trace.value()))
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
-            else if (testRunFinished.exception && testRunFinished.exception->stack_trace)
+
+            if (testRunFinished.exception && testRunFinished.exception->message)
             {
                 return helper::TextBuilder{}
-                    .Append(testRunFinished.exception->stack_trace.value())
+                    .Append(Trim(testRunFinished.exception->message.value()))
                     .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
             }
-            else if (testRunFinished.exception && testRunFinished.exception->message)
-            {
-                return helper::TextBuilder{}
-                    .Append(testRunFinished.exception->message.value())
-                    .Build(theme.status.All(cucumber::messages::test_step_result_status::FAILED));
-            }
+
             return "";
         }
 
@@ -390,7 +420,6 @@ namespace cucumber_cpp::library::formatter
     void PrettyFormatter::HandleTestCaseStarted(const cucumber::messages::test_case_started& testCaseStarted)
     {
         const auto& pickle = query.FindPickleBy(testCaseStarted);
-        const auto& location = query.FindLocationOf(pickle);
         const auto& lineage = query.FindLineageByPickle(pickle);
         const auto& scenario = lineage.scenario;
         const auto& rule = lineage.rule;
@@ -436,6 +465,7 @@ namespace cucumber_cpp::library::formatter
             PrintStepArgument(*pickleStep, scenarioIndent, options.theme);
             PrintAmbiguousStep(testStepFinished, testStep, scenarioIndent);
         }
+        PrintError(testStepFinished, scenarioIndent);
     }
 
     void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished)
@@ -507,6 +537,15 @@ namespace cucumber_cpp::library::formatter
         const auto list = query.FindStepDefinitionsById(testStep);
         const auto content = FormatAmbiguousStep(list, options.theme);
 
+        if (content.empty())
+            return;
+
+        PrintlnIndentedContent(outputStream, content, scenarioIndent + gherkinIndentLength + errorIndentLength + (options.useStatusIcon ? gherkinIndentLength : 0));
+    }
+
+    void PrettyFormatter::PrintError(const cucumber::messages::test_step_finished& testStepFinished, std::size_t scenarioIndent)
+    {
+        const auto content = FormatTestStepResultError(testStepFinished.test_step_result, options.theme);
         if (content.empty())
             return;
 
