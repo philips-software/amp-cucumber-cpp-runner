@@ -106,10 +106,10 @@ namespace cucumber_cpp::library::formatter
         const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testCaseStarted.id);
         const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testCaseStarted.id);
 
-        if (options.includeFeatureLine && !printedFeatureUris.contains(feature.get()))
+        if (options.includeFeatureLine && rule && !printedFeatureUris.contains(feature.get()))
             helper::PrintFeatureLine(outputStream, *feature, options.theme);
 
-        if (options.includeRuleLine && !printedRuleIds.contains(rule.get()))
+        if (options.includeRuleLine && rule && !printedRuleIds.contains(rule.get()))
             helper::PrintRuleLine(outputStream, *rule, options.theme);
 
         outputStream << "\n";
