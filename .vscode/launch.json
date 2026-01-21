@@ -46,6 +46,9 @@
             "args": [
                 "--format",
                 "pretty",
+                "summary",
+                "--retry",
+                "1",
                 "--tags",
                 "${input:tag}",
                 "--",
