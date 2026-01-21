@@ -103,6 +103,8 @@ namespace cucumber_cpp::library::formatter::helper
             return CreateCucumberTheme();
         else if (name == "plain")
             return CreatePlainTheme();
+        else if (name == "none")
+            return CreateEmptyTheme();
         else
             return CreateEmptyTheme();
     }

@@ -411,9 +411,13 @@ namespace cucumber_cpp::library::formatter
         maxContentLengthByTestCaseStartedId[testCaseStarted.id] = std::max(scenarioLength, options.useStatusIcon ? maxStepLength + 2 : maxStepLength);
 
         std::size_t scenarioIndent{ 0 };
-        scenarioIndent += 2;
-        if (lineage.rule)
-            scenarioIndent += 2;
+        if (options.includeFeatureLine)
+        {
+            scenarioIndent += gherkinIndentLength;
+            if (options.includeRuleLine && lineage.rule)
+                scenarioIndent += gherkinIndentLength;
+        }
+
         scenarioIndentByTestCaseStartedId[testCaseStarted.id] = scenarioIndent;
     }
 
