@@ -101,7 +101,7 @@ namespace cucumber_cpp::library::formatter::helper
         return builder.Build(theme.location);
     }
 
-    std::string FormatStepText(const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const Theme& theme)
+    std::string FormatStepText(const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, cucumber::messages::test_step_result_status status, const Theme& theme)
     {
         TextBuilder builder{};
         const auto& stepMatchArgumentsLists = testStep.step_match_arguments_lists;
@@ -119,18 +119,18 @@ namespace cucumber_cpp::library::formatter::helper
                 {
                     const auto text = pickleStep.text.substr(currentIndex, group.start.value() - currentIndex);
                     currentIndex = group.start.value() + group.value->size();
-                    builder.Append(text, theme.step.text)
-                        .Append(group.value.value(), theme.step.argument);
+                    builder.Append(text, theme.step.text.value_or(fmt::text_style{}) | theme.status.All(status))
+                        .Append(group.value.value(), theme.step.argument.value_or(fmt::text_style{}) | theme.status.All(status));
                 }
             }
             if (currentIndex != pickleStep.text.size())
             {
                 const auto remainingText = pickleStep.text.substr(currentIndex);
-                builder.Append(remainingText, theme.step.text);
+                builder.Append(remainingText, theme.step.text.value_or(fmt::text_style{}) | theme.status.All(status));
             }
         }
         else
-            builder.Append(pickleStep.text, theme.step.text);
+            builder.Append(pickleStep.text, theme.step.text.value_or(fmt::text_style{}) | theme.status.All(status));
 
         return builder.Build();
     }
@@ -218,7 +218,7 @@ namespace cucumber_cpp::library::formatter::helper
 
         return builder.Append(TextBuilder{}
                                   .Append(step.keyword, theme.step.keyword)
-                                  .Append(FormatStepText(testStep, pickleStep, theme), theme.status.All(status))
+                                  .Append(FormatStepText(testStep, pickleStep, status, theme), theme.status.All(status))
                                   .Build(theme.status.All(status)))
             .Build();
     }
