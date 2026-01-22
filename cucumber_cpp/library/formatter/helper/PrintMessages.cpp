@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/formatter/helper/PrintMessages.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/feature.hpp"
+#include "cucumber/messages/hook.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
 #include "cucumber/messages/rule.hpp"
@@ -68,6 +69,23 @@ namespace cucumber_cpp::library::formatter::helper
             maxContentLength, theme);
     }
 
+    void PrintScenarioAttemptLine(std::ostream& stream, const cucumber::messages::pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme)
+    {
+        PrintGherkinLine(stream,
+            FormatPickleAttemptTitle(pickle, attempt, retry, scenario, theme),
+            FormatPickleLocation(pickle, scenario.location, theme),
+            scenarioIndent,
+            maxContentLength, theme);
+    }
+
+    void PrintHookLine(std::ostream& stream, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::hook& hook, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const Theme& theme)
+    {
+        PrintGherkinLine(stream,
+            helper::FormatHookTitle(hook, testStepFinished.test_step_result.status, isBeforeHook, useStatusIcon, theme),
+            helper::FormatCodeLocation(hook.source_reference, theme),
+            scenarioIndent + 2, maxContentLength, theme);
+    }
+
     void PrintStepLine(std::ostream& stream, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const Theme& theme)
     {
         PrintGherkinLine(stream,
@@ -85,7 +103,7 @@ namespace cucumber_cpp::library::formatter::helper
         PrintlnIndentedContent(stream, content, scenarioIndent + gherkinIndentLength + stepArgumentIndentLength + (useStatusIcon ? gherkinIndentLength : 0));
     }
 
-    void PrintAmbiguousStep(std::ostream& stream, query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
+    void PrintAmbiguousStep(std::ostream& stream, const query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
     {
         if (testStepFinished.test_step_result.status != cucumber::messages::test_step_result_status::AMBIGUOUS)
             return;

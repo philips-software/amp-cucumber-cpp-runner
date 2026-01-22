@@ -52,7 +52,7 @@ HOOK_BEFORE_SCENARIO("@throw_scenariohook")
     throw std::string{ "error" };
 }
 
-HOOK_BEFORE_SCENARIO()
+HOOK_BEFORE_SCENARIO(.name = "fail if --failprogramhook is set")
 {
     if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
         std::cout << "should not be executed\n";

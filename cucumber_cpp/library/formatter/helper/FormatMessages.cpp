@@ -2,6 +2,7 @@
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/attachment_content_encoding.hpp"
 #include "cucumber/messages/feature.hpp"
+#include "cucumber/messages/hook.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_doc_string.hpp"
@@ -9,6 +10,7 @@
 #include "cucumber/messages/pickle_table.hpp"
 #include "cucumber/messages/rule.hpp"
 #include "cucumber/messages/scenario.hpp"
+#include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/test_run_finished.hpp"
@@ -18,6 +20,7 @@
 #include "cucumber_cpp/library/formatter/helper/TextBuilder.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/util/Trim.hpp"
+#include "fmt/color.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include <algorithm>
@@ -51,6 +54,13 @@ namespace cucumber_cpp::library::formatter::helper
         {
             return std::string_view{ subrange.begin(), subrange.end() };
         };
+
+        std::string GetAttemptText(std::size_t attempt, bool willBeRetried)
+        {
+            if (attempt > 0 || willBeRetried)
+                return fmt::format("(attempt {}{})", attempt + 1, willBeRetried ? ", retried" : "");
+            return "";
+        }
     }
 
     std::string FormatPickleTitle(const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, const Theme& theme)
@@ -60,6 +70,21 @@ namespace cucumber_cpp::library::formatter::helper
             .Space()
             .Append(pickle.name, theme.scenario.name)
             .Build(theme.scenario.all);
+    }
+
+    std::string FormatPickleAttemptTitle(const cucumber::messages::pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::scenario& scenario, const Theme& theme)
+    {
+        auto attemptText = GetAttemptText(attempt, retry);
+
+        TextBuilder builder{};
+        builder.Append(scenario.keyword + ":", theme.scenario.keyword)
+            .Space()
+            .Append(pickle.name, theme.scenario.name);
+
+        if (!attemptText.empty())
+            builder.Space().Append(attemptText, theme.scenario.attempt);
+
+        return builder.Build(theme.scenario.all);
     }
 
     std::string FormatPickleLocation(const cucumber::messages::pickle& pickle, const std::optional<cucumber::messages::location>& location, const Theme& theme)
@@ -110,21 +135,29 @@ namespace cucumber_cpp::library::formatter::helper
         return builder.Build();
     }
 
-    std::string FormatCodeLocation(const cucumber::messages::step_definition* stepDefinition, const Theme& theme)
+    std::string FormatCodeLocation(const cucumber::messages::source_reference& sourceReference, const Theme& theme)
     {
-        if (stepDefinition != nullptr && stepDefinition->source_reference.uri.has_value())
+        if (sourceReference.uri.has_value())
         {
             TextBuilder builder{};
 
             builder.Append("#")
                 .Space()
-                .Append(stepDefinition->source_reference.uri.value());
+                .Append(sourceReference.uri.value());
 
-            if (stepDefinition->source_reference.location.has_value())
+            if (sourceReference.location.has_value())
                 builder.Append(":")
-                    .Append(std::to_string(stepDefinition->source_reference.location.value().line));
+                    .Append(std::to_string(sourceReference.location.value().line));
             return builder.Build(theme.location);
         }
+
+        return "";
+    }
+
+    std::string FormatCodeLocation(const cucumber::messages::step_definition* stepDefinition, const Theme& theme)
+    {
+        if (stepDefinition != nullptr)
+            return FormatCodeLocation(stepDefinition->source_reference, theme);
 
         return "";
     }
@@ -160,6 +193,21 @@ namespace cucumber_cpp::library::formatter::helper
                 .Build(theme.tag);
         }
         return "";
+    }
+
+    std::string FormatHookTitle(const cucumber::messages::hook& hook, cucumber::messages::test_step_result_status status, bool isBeforeHook, bool useStatusIcon, const Theme& theme)
+    {
+        TextBuilder builder{};
+
+        if (useStatusIcon)
+            builder.Append(theme.status.Icon(status, " "), theme.status.All(status)).Space();
+
+        builder.Append((isBeforeHook ? "Before" : "After"), theme.step.keyword.value_or(fmt::text_style{}) | theme.status.All(status));
+
+        if (hook.name.has_value())
+            builder.Space().Append('(' + hook.name.value() + ')', theme.status.All(status));
+
+        return builder.Build(theme.status.All(status));
     }
 
     std::string FormatStepTitle(const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, cucumber::messages::test_step_result_status status, bool useStatusIcon, const Theme& theme)

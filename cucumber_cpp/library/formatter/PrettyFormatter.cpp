@@ -42,19 +42,13 @@ namespace cucumber_cpp::library::formatter
         }
 
         if (envelope.attachment)
-        {
             HandleAttachment(envelope.attachment.value());
-        }
 
         if (envelope.test_step_finished)
-        {
             HandleTestStepFinished(envelope.test_step_finished.value());
-        }
 
         if (envelope.test_run_finished)
-        {
             HandleTestRunFinished(envelope.test_run_finished.value());
-        }
     }
 
     void PrettyFormatter::CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted)

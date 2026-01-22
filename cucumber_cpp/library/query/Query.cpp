@@ -202,6 +202,11 @@ namespace cucumber_cpp::library::query
         return { view.begin(), view.end() };
     }
 
+    const cucumber::messages::hook& Query::FindHookById(const std::string& id) const
+    {
+        return hooksById.at(id);
+    }
+
     std::optional<cucumber::messages::location> Query::FindLocationOf(const cucumber::messages::pickle& pickle) const
     {
         const auto& lineage = FindLineageByUri(pickle.uri);

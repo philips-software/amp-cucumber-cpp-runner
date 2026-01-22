@@ -51,6 +51,7 @@ namespace cucumber_cpp::library::formatter::helper
             std::optional<fmt::text_style> all{};
             std::optional<fmt::text_style> keyword{};
             std::optional<fmt::text_style> name{};
+            std::optional<fmt::text_style> attempt{};
         } scenario;
 
         struct

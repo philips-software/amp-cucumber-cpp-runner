@@ -145,6 +145,8 @@ namespace cucumber_cpp::library::query
         const cucumber::messages::step_definition& FindStepDefinitionById(const std::string& id) const;
         std::list<const cucumber::messages::step_definition*> FindStepDefinitionsById(const cucumber::messages::test_step& testStep) const;
 
+        const cucumber::messages::hook& FindHookById(const std::string& id) const;
+
         std::optional<cucumber::messages::location> FindLocationOf(const cucumber::messages::pickle& pickle) const;
 
         const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;

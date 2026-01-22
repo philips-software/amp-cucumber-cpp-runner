@@ -68,6 +68,7 @@ namespace cucumber_cpp::library::formatter::helper
             },
             .scenario = {
                 .keyword = fmt::emphasis::bold,
+                .attempt = fmt::emphasis::italic,
             },
             .status = {
                 .all = statusColors,

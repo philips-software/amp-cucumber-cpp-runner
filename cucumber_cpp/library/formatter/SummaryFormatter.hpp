@@ -5,6 +5,8 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
+#include "cucumber_cpp/library/formatter/helper/Theme.hpp"
+#include <cstddef>
 #include <list>
 #include <string_view>
 
@@ -20,7 +22,10 @@ namespace cucumber_cpp::library::formatter
     private:
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
         void LogSummary(const cucumber::messages::duration& testRunDuration);
-        void LogIssues(const std::list<helper::TestCaseAttempt>& attempts, std::string_view title);
+
+        const helper::Theme theme = helper::CreateCucumberTheme();
+        const bool useStatusIcon = true;
+        const std::size_t scenarioIndent = 0;
     };
 }
 
