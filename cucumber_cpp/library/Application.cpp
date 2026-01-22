@@ -27,11 +27,9 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <ostream>
 #include <ranges>
 #include <set>
 #include <string>
-#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library
@@ -122,7 +120,7 @@ namespace cucumber_cpp::library
             CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
             cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
 
-            CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are")->check(CLI::ExistingPath), "paths");
+            CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are"), "paths");
             cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \"./features\"")->default_val(options.paths);
 
             ProgramContext().InsertRef(options);

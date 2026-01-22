@@ -31,7 +31,7 @@ namespace cucumber_cpp::library
         {
             bool dumpConfig{ false };
 
-            std::set<std::filesystem::path, std::less<>> paths{ { std::filesystem::path(".") / "features" } };
+            std::set<std::string, std::less<>> paths{ { (std::filesystem::path(".") / "features").string() } };
 
             bool dryRun{ false };
             bool failFast{ false };

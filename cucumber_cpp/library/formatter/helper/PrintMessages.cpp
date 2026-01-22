@@ -18,7 +18,6 @@
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
 #include <algorithm>
-#include <bits/getopt_core.h>
 #include <cstddef>
 #include <optional>
 #include <ostream>
