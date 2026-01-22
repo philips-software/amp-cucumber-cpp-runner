@@ -19,6 +19,7 @@
 #include "cucumber_cpp/library/util/ToLower.hpp"
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <map>
@@ -26,6 +27,7 @@
 #include <ostream>
 #include <ranges>
 #include <string>
+#include <string_view>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -162,6 +164,12 @@ namespace cucumber_cpp::library::formatter
         }
     }
 
+    SummaryFormatter::Options::Options(const nlohmann::json& formatOptions)
+        : useStatusIcon{ formatOptions.value("use_status_icon", true) }
+        , theme{ helper::CreateTheme(formatOptions.value("theme", std::string_view{ "cucumber" })) }
+    {
+    }
+
     void SummaryFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
         if (envelope.test_run_finished)
@@ -205,10 +213,10 @@ namespace cucumber_cpp::library::formatter
             }
         }
 
-        HandleTestCaseStartedList(outputStream, query, "Warnings", warningTestStepResults, useStatusIcon, theme);
-        HandleTestCaseStartedList(outputStream, query, "Failures", failedTestStepResults, useStatusIcon, theme);
-        HandleSummary(outputStream, "scenarios", scenarioCounts, theme);
-        HandleSummary(outputStream, "steps", stepCounts, theme);
+        HandleTestCaseStartedList(outputStream, query, "Warnings", warningTestStepResults, options.useStatusIcon, options.theme);
+        HandleTestCaseStartedList(outputStream, query, "Failures", failedTestStepResults, options.useStatusIcon, options.theme);
+        HandleSummary(outputStream, "scenarios", scenarioCounts, options.theme);
+        HandleSummary(outputStream, "steps", stepCounts, options.theme);
 
         fmt::println(outputStream, "{:%Mm %S}s (executing steps: {:%Mm %S}s)", util::DurationToMilliseconds(testRunDuration), util::DurationToMilliseconds(totalStepDuration));
     }

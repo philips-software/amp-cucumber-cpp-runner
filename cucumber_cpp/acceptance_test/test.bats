@@ -29,11 +29,11 @@ teardown() {
     assert_failure
 }
 
-@test "Undefined tests" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
+@test "■ tests" {
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "UNDEFINED Given a missing step"
-    assert_output --partial "SKIPPED Then this should be skipped"
+    assert_output --partial "■ Given a missing step"
+    assert_output --partial "↷ Then this should be skipped"
 }
 
 @test "No tests" {
@@ -54,7 +54,7 @@ teardown() {
     assert_output --partial "--required is required"
 }
 
-@test "Second feature file does not overwrite success with an undefined status" {
+@test "Second feature file does not overwrite success with an ■ status" {
     run $acceptance_test --format summary pretty message junit --tags @undefinedsuccess -- cucumber_cpp/acceptance_test/features/test_undefined_success_1.feature cucumber_cpp/acceptance_test/features/test_undefined_success_2.feature
     assert_failure
 }
@@ -118,9 +118,9 @@ teardown() {
     run $acceptance_test --format summary pretty message junit --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
     assert_failure
 
-    run $acceptance_test --format summary pretty message junit --tags "@result:UNDEFINED" --dry-run  cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" --dry-run  cucumber_cpp/acceptance_test/features
     assert_success
-    assert_output --partial "UNDEFINED Given a missing step"
+    assert_output --partial "■ Given a missing step"
 }
 
 @test "Test the and keyword" {
@@ -152,21 +152,21 @@ teardown() {
 }
 
 @test "Test failing hook before results in error" {
-    run $acceptance_test --format summary pretty message junit  --tags "@fail_scenariohook_before" -- cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_before" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "FAILED Before"
+    assert_output --partial "✘ Before"
 }
 
 @test "Test failing hook after results in error" {
-    run $acceptance_test --format summary pretty message junit  --tags "@fail_scenariohook_after" -- cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_after" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "FAILED After"
+    assert_output --partial "✘ After"
 }
 
 @test "Test throwing hook results in error" {
-    run $acceptance_test --format summary pretty message junit  --tags "@throw_scenariohook" -- cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@throw_scenariohook" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "FAILED Before"
+    assert_output --partial "✘ Before"
 }
 
 @test "Test error program hook results in error and skipped steps" {

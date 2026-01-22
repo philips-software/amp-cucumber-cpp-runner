@@ -5,9 +5,8 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <cstddef>
-#include <list>
-#include <string_view>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -19,12 +18,18 @@ namespace cucumber_cpp::library::formatter
         constexpr static auto name = "summary";
 
     private:
+        struct Options
+        {
+            explicit Options(const nlohmann::json& formatOptions);
+
+            const bool useStatusIcon;
+            const helper::Theme theme;
+        };
+
         void OnEnvelope(const cucumber::messages::envelope& envelope) override;
         void LogSummary(const cucumber::messages::duration& testRunDuration);
 
-        const helper::Theme theme = helper::CreateCucumberTheme();
-        const bool useStatusIcon = true;
-        const std::size_t scenarioIndent = 0;
+        Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
     };
 }
 
