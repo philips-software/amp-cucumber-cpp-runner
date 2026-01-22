@@ -9,7 +9,6 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
@@ -184,11 +183,10 @@ namespace cucumber_cpp::library::api
             .undefinedParameters = undefinedParameters,
         };
 
-        formatter::helper::EventDataCollector eventDataCollector{ broadcaster };
         query::Query query{ broadcaster };
 
         const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
-        const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query, eventDataCollector);
+        const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query);
 
         const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
         const auto orderedPickles = OrderPickles(options.sources, pickleSources | std::views::filter(FilterByTagExpression(options.sources)));

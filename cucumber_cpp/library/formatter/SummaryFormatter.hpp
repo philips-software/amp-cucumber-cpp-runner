@@ -4,7 +4,6 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include <cstddef>
 #include <list>

@@ -2,7 +2,6 @@
 #define API_FORMATTERS_HPP
 
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "cucumber_cpp/library/formatter/helper/EventDataCollector.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "nlohmann/json_fwd.hpp"
@@ -29,7 +28,7 @@ namespace cucumber_cpp::library::api
 
     struct RegisteredFormatter
     {
-        std::function<std::unique_ptr<formatter::Formatter>(support::SupportCodeLibrary&, query::Query&, const formatter::helper::EventDataCollector&, const nlohmann::json& formatOptions, std::ostream&)> factory;
+        std::function<std::unique_ptr<formatter::Formatter>(support::SupportCodeLibrary&, query::Query&, const nlohmann::json& formatOptions, std::ostream&)> factory;
         bool hasOutput{ false };
     };
 
@@ -42,7 +41,7 @@ namespace cucumber_cpp::library::api
 
         std::set<std::pair<std::string, bool>> GetAvailableFormatterNames() const;
 
-        [[nodiscard]] std::list<std::unique_ptr<formatter::Formatter>> EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, const formatter::helper::EventDataCollector& eventDataCollector, std::ostream& output = std::cout);
+        [[nodiscard]] std::list<std::unique_ptr<formatter::Formatter>> EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, std::ostream& output = std::cout);
 
     private:
         std::map<std::string, RegisteredFormatter, std::less<>> availableFormatters;
@@ -56,9 +55,9 @@ namespace cucumber_cpp::library::api
     template<class T>
     void Formatters::RegisterFormatter(bool hasOutput)
     {
-        availableFormatters.try_emplace(T::name, [](support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, const formatter::helper::EventDataCollector& eventDataCollector, const nlohmann::json& formatOptions, std::ostream& output)
+        availableFormatters.try_emplace(T::name, [](support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, const nlohmann::json& formatOptions, std::ostream& output)
             {
-                return std::make_unique<T>(supportCodeLibrary, query, eventDataCollector, formatOptions, output);
+                return std::make_unique<T>(supportCodeLibrary, query, formatOptions, output);
             },
             hasOutput);
     }

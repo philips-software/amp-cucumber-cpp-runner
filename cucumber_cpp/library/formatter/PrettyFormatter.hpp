@@ -15,7 +15,6 @@
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "cucumber_cpp/library/formatter/helper/GherkinDocumentParser.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include <cstddef>
 #include <map>
@@ -55,8 +54,6 @@ namespace cucumber_cpp::library::formatter
         void HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished);
 
         Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
-
-        std::map<std::string, helper::GherkinScenarioMap> testCaseStartedIdToScenarioMap;
 
         std::map<std::string, std::size_t> maxContentLengthByTestCaseStartedId;
         std::map<std::string, std::size_t> scenarioIndentByTestCaseStartedId;
