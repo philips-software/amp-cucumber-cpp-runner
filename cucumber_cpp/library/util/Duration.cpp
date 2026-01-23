@@ -64,4 +64,11 @@ namespace cucumber_cpp::library::util
 
         return lhs;
     }
+
+    cucumber::messages::duration operator+(const cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs)
+    {
+        cucumber::messages::duration result = lhs;
+
+        return result += rhs;
+    }
 }

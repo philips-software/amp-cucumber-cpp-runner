@@ -217,6 +217,16 @@ namespace cucumber_cpp::library::query
         return std::nullopt;
     }
 
+    const cucumber::messages::test_case_started& Query::FindTestCaseStartedById(const std::string& id) const
+    {
+        return testCaseStartedById.at(id);
+    }
+
+    const std::map<std::string, cucumber::messages::step_definition, std::less<>>& Query::StepDefinitions() const
+    {
+        return stepDefinitionById;
+    }
+
     const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& Query::TestCaseStarted() const
     {
         return testCaseStartedById;
@@ -319,6 +329,11 @@ namespace cucumber_cpp::library::query
     cucumber::messages::duration Query::FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const
     {
         return testCaseFinished.timestamp - testCaseStarted.timestamp;
+    }
+
+    cucumber::messages::duration Query::FindTestStepDurationByTestStepId(const std::string& testStepId) const
+    {
+        return testStepFinishedByTestStepId.at(testStepId)->timestamp - testStepStartedByTestStepId.at(testStepId)->timestamp;
     }
 
     void Query::operator+=(const cucumber::messages::envelope& envelope)
@@ -449,6 +464,7 @@ namespace cucumber_cpp::library::query
     void Query::operator+=(const cucumber::messages::test_step_started& testStepStarted)
     {
         testStepStartedByTestCaseStartedId[testStepStarted.test_case_started_id].push_back(testStepStarted);
+        testStepStartedByTestStepId[testStepStarted.test_step_id] = &testStepStartedByTestCaseStartedId[testStepStarted.test_case_started_id].back();
     }
 
     void Query::operator+=(const cucumber::messages::attachment& attachment)
@@ -465,6 +481,7 @@ namespace cucumber_cpp::library::query
         auto* testStepResultPtr = &testStepResults.emplace_front(testStepFinished.test_step_result);
 
         testStepFinishedByTestCaseStartedId[testStepFinished.test_case_started_id].push_back(testStepFinished);
+        testStepFinishedByTestStepId[testStepFinished.test_step_id] = &testStepFinishedByTestCaseStartedId[testStepFinished.test_case_started_id].back();
 
         const auto& pickleId = pickleIdByTestStepId.at(testStepFinished.test_step_id);
         testStepResultByPickleId[pickleId].push_back(testStepResultPtr);

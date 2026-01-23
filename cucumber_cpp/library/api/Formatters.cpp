@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/formatter/MessageFormatter.hpp"
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
+#include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "nlohmann/json_fwd.hpp"
@@ -35,6 +36,7 @@ namespace cucumber_cpp::library::api
         RegisterFormatter<formatter::SummaryFormatter>();
         RegisterFormatter<formatter::JunitXmlFormatter>();
         RegisterFormatter<formatter::MessageFormatter>();
+        RegisterFormatter<formatter::UsageFormatter>();
     }
 
     std::set<std::pair<std::string, bool>> Formatters::GetAvailableFormatterNames() const

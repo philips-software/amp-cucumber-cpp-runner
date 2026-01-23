@@ -11,6 +11,8 @@ target_sources(cucumber_cpp.library.formatter PRIVATE
     PrettyFormatter.hpp
     SummaryFormatter.cpp
     SummaryFormatter.hpp
+    UsageFormatter.cpp
+    UsageFormatter.hpp
 )
 
 target_include_directories(cucumber_cpp.library.formatter PUBLIC

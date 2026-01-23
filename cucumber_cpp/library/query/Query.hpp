@@ -149,6 +149,9 @@ namespace cucumber_cpp::library::query
 
         std::optional<cucumber::messages::location> FindLocationOf(const cucumber::messages::pickle& pickle) const;
 
+        const cucumber::messages::test_case_started& FindTestCaseStartedById(const std::string& id) const;
+
+        const std::map<std::string, cucumber::messages::step_definition, std::less<>>& StepDefinitions() const;
         const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;
         const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
 
@@ -168,9 +171,10 @@ namespace cucumber_cpp::library::query
         cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
         cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const;
 
+        cucumber::messages::duration FindTestStepDurationByTestStepId(const std::string& testStepId) const;
+
     private:
-        void
-        operator+=(const cucumber::messages::envelope& envelope);
+        void operator+=(const cucumber::messages::envelope& envelope);
 
         void operator+=(const cucumber::messages::gherkin_document& gherkinDocument);
         void operator+=(const cucumber::messages::pickle& pickle);
@@ -236,6 +240,9 @@ namespace cucumber_cpp::library::query
         std::map<std::string, cucumber::messages::test_run_hook_finished, std::less<>> testRunHookFinishedByTestRunHookStartedId;
         std::map<std::string, std::list<cucumber::messages::test_step_started>, std::less<>> testStepStartedByTestCaseStartedId;
         std::map<std::string, std::list<cucumber::messages::test_step_finished>, std::less<>> testStepFinishedByTestCaseStartedId;
+
+        std::map<std::string, const cucumber::messages::test_step_started*, std::less<>> testStepStartedByTestStepId;
+        std::map<std::string, const cucumber::messages::test_step_finished*, std::less<>> testStepFinishedByTestStepId;
 
         std::map<std::string, std::list<cucumber::messages::suggestion>, std::less<>> suggestionsByPickleStepId;
         std::list<cucumber::messages::undefined_parameter_type> undefinedParameterTypes;

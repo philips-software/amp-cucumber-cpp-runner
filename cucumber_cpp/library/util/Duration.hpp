@@ -10,6 +10,7 @@ namespace cucumber_cpp::library::util
 
     std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::duration& duration);
     cucumber::messages::duration& operator+=(cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
+    cucumber::messages::duration operator+(const cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
 
     struct Stopwatch
     {
@@ -38,6 +39,7 @@ namespace cucumber_cpp::library::util
 namespace cucumber::messages
 {
     using cucumber_cpp::library::util::operator+=;
+    using cucumber_cpp::library::util::operator+;
 };
 
 #endif
