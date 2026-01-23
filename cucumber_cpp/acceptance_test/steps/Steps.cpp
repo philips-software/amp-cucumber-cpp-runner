@@ -3,7 +3,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
-#include <format>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -45,7 +44,7 @@ STEP("a step step")
 
 WHEN("I print {string}", (const std::string& str))
 {
-    std::cout << std::format("print: {}\n", str);
+    std::cout << fmt::format("print: {}\n", str);
 }
 
 THEN("an assertion is raised")

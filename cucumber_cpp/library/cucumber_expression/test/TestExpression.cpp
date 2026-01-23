@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
@@ -12,7 +13,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
-#include <format>
 #include <gtest/gtest.h>
 #include <limits>
 #include <optional>
@@ -37,7 +37,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         std::string FormatTestFailureMessage(const std::string& file, const YAML::Node& node, const Expression& expression)
         {
-            return std::format("file:           {}\n"
+            return fmt::format("file:           {}\n"
                                "failed to match {}\n"
                                "regex           {}\n"
                                "against         {}",
@@ -70,7 +70,7 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             if (testdata["exception"])
                 ASSERT_ANY_THROW(Match<std::string>(testdata["expression"].as<std::string>(), testdata["text"].as<std::string>()))
-                    << std::format("Test failed for file: {}", file);
+                    << fmt::format("Test failed for file: {}", file);
             else
             {
                 if (testdata["expected_args"].IsNull())

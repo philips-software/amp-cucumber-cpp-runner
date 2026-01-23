@@ -1,12 +1,12 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionTokenizer.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
 #include "gmock/gmock.h"
 #include <cstddef>
 #include <filesystem>
-#include <format>
 #include <gtest/gtest.h>
 #include <map>
 #include <string>
@@ -62,13 +62,13 @@ namespace cucumber_cpp::library::cucumber_expression
         for (const auto& [file, testdata] : GetTestData(testdataPath))
             if (testdata["exception"])
                 ASSERT_ANY_THROW(ExpressionTokenizer{}.Tokenize(testdata["expression"].as<std::string>()))
-                    << std::format("Test failed for file: {}", file);
+                    << fmt::format("Test failed for file: {}", file);
             else
             {
                 const auto actual = ExpressionTokenizer{}.Tokenize(testdata["expression"].as<std::string>());
                 const auto expected = CreateTokens(testdata["expected_tokens"]);
                 ASSERT_THAT(actual, testing::ElementsAreArray(expected))
-                    << std::format("Test failed for file: {}", file);
+                    << fmt::format("Test failed for file: {}", file);
             }
     }
 

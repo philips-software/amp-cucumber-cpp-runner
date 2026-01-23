@@ -1,11 +1,11 @@
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ExpressionParser.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
 #include <cstddef>
 #include <filesystem>
-#include <format>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -107,13 +107,13 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             if (testdata["exception"])
                 ASSERT_ANY_THROW(ExpressionParser{}.Parse(testdata["expression"].as<std::string>()))
-                    << std::format("Test failed for file: {}", file);
+                    << fmt::format("Test failed for file: {}", file);
             else
             {
                 const auto actual = ExpressionParser{}.Parse(testdata["expression"].as<std::string>());
                 const auto expected = CreateNode(testdata["expected_ast"]);
                 ASSERT_THAT(actual, testing::Eq(expected))
-                    << std::format("Test failed for file: {}", file);
+                    << fmt::format("Test failed for file: {}", file);
             }
         }
     }

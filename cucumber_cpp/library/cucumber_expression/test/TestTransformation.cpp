@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
@@ -7,7 +8,6 @@
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
-#include <format>
 #include <gtest/gtest.h>
 #include <string>
 #include <utility>
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         std::string FormatMessage(const YAML::Node& node, const Expression& expression)
         {
-            return std::format("failed to match {}\n"
+            return fmt::format("failed to match {}\n"
                                "regex           {}\n"
                                "against         {}",
                 node["expression"].as<std::string>(), expression.Pattern(), node["text"].as<std::string>());
@@ -48,7 +48,7 @@ namespace cucumber_cpp::library::cucumber_expression
             const auto actualRegex = expression.Pattern();
 
             EXPECT_THAT(actualRegex, testing::StrEq(testdata["expected_regex"].as<std::string>()))
-                << std::format("Test failed for {}", testdata["expression"].as<std::string>());
+                << fmt::format("Test failed for {}", testdata["expression"].as<std::string>());
         }
     }
 }
