@@ -9,3 +9,12 @@ target_sources(cucumber_cpp.acceptance_test.steps PRIVATE
 target_link_libraries(cucumber_cpp.acceptance_test.steps PRIVATE
     cucumber_cpp
 )
+add_library(cucumber_cpp.acceptance_test.usedunused OBJECT ${CCR_EXCLUDE_FROM_ALL})
+
+target_sources(cucumber_cpp.acceptance_test.usedunused PRIVATE
+    UsedUnused.cpp
+)
+
+target_link_libraries(cucumber_cpp.acceptance_test.usedunused PRIVATE
+    cucumber_cpp
+)

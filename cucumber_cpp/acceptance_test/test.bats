@@ -202,3 +202,23 @@ teardown() {
     run $acceptance_test --format summary pretty --tags "@nested_steps" -- cucumber_cpp/acceptance_test/features
     assert_success
 }
+
+@test "Test usage formatter" {
+    run $acceptance_test.unused --format usage --tags "@unused" -- cucumber_cpp/acceptance_test/features
+    assert_success
+    assert_output --partial "│ this step is used   │ "
+    assert_output --partial "│   this step is used │ "
+    assert_output --partial "│ This step is unused │ UNUSED   │"
+
+    run $acceptance_test.unused --format usage --tags "@unused" --dry-run -- cucumber_cpp/acceptance_test/features
+    assert_success
+    assert_output --partial "│ this step is used   │ -        │"
+    assert_output --partial "│   this step is used │ -        │"
+    assert_output --partial "│ This step is unused │ UNUSED   │"
+
+    run $acceptance_test.unused --format usage --tags "@unused" --dry-run --format-options "{ \"usage\" : {\"theme\": \"plain\"} }" -- cucumber_cpp/acceptance_test/features
+    assert_success
+    assert_output --partial "| this step is used   | -        |"
+    assert_output --partial "|   this step is used | -        |"
+    assert_output --partial "| This step is unused | UNUSED   |"
+}

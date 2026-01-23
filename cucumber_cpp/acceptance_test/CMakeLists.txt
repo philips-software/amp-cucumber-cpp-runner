@@ -21,5 +21,13 @@ target_link_libraries(cucumber_cpp.acceptance_test.custom PRIVATE
     cucumber_cpp.acceptance_test.steps
 )
 
+add_executable(cucumber_cpp.acceptance_test.unused ${CCR_EXCLUDE_FROM_ALL})
+
+target_link_libraries(cucumber_cpp.acceptance_test.unused PRIVATE
+    cucumber_cpp
+    cucumber_cpp.runner
+    cucumber_cpp.acceptance_test.usedunused
+)
+
 add_subdirectory(hooks)
 add_subdirectory(steps)

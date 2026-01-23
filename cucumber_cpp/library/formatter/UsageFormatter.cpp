@@ -197,7 +197,7 @@ namespace cucumber_cpp::library::formatter
             }
 
             fmt::println(outputStream, fmt::runtime(topRow), "", patternWidth, "", durationWidth, "", locationWidth);
-            fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", "Pattern / Text", patternWidth, "Duration", durationWidth, "Location", locationWidth);
+            fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, "Pattern / Text", patternWidth, "Duration", durationWidth, "Location", locationWidth);
 
             const auto horizontalDivider = fmt::format(fmt::runtime(middleRow), "", patternWidth, "", durationWidth, "", locationWidth);
 
@@ -206,17 +206,17 @@ namespace cucumber_cpp::library::formatter
                 fmt::println(outputStream, "{}", horizontalDivider);
 
                 if (usage.matches.empty())
-                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, "UNUSED", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
+                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, "UNUSED", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
                 else if (usage.meanDuration.has_value())
-                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value()), durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
+                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value()), durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
                 else
-                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, "-", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
+                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, "-", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
 
                 for (const auto& match : usage.matches)
                     if (match.duration.has_value())
-                        fmt::println(outputStream, "│   {:<{}} │ {:<{}} │ {:<{}} │", match.text, patternWidth - 2, std::chrono::duration_cast<std::chrono::milliseconds>(match.duration.value()), durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
+                        fmt::println(outputStream, "{0}   {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, match.text, patternWidth - 2, std::chrono::duration_cast<std::chrono::milliseconds>(match.duration.value()), durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
                     else
-                        fmt::println(outputStream, "│   {:<{}} │ {:<{}} │ {:<{}} │", match.text, patternWidth - 2, "-", durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
+                        fmt::println(outputStream, "{0}   {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, match.text, patternWidth - 2, "-", durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
             }
 
             fmt::println(outputStream, fmt::runtime(bottomRow), "", patternWidth, "", durationWidth, "", locationWidth);
