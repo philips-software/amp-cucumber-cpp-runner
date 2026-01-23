@@ -83,13 +83,13 @@ namespace cucumber_cpp::library::formatter
 
                 for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
                 {
-                    if (!testStep->step_definition_ids.has_value() || testStep->step_definition_ids->size() != 1)
+                    if (!testStep->step_definition_ids.has_value() || testStep->step_definition_ids.value().size() != 1)
                         continue;
 
                     const auto& pickleStep = query.FindPickleStepById(testStep->pickle_step_id.value());
                     const auto& pickle = query.FindPickleById(testCase.pickle_id);
                     const auto& step = query.FindStepBy(pickleStep);
-                    const auto& stepDefinitionId = testStep->step_definition_ids->front();
+                    const auto& stepDefinitionId = testStep->step_definition_ids.value().front();
                     const auto& lineage = query.FindLineageByPickle(pickle);
 
                     std::optional<std::chrono::nanoseconds> duration{};
