@@ -11,8 +11,6 @@ target_sources(cucumber_cpp.library.support PRIVATE
     Body.hpp
     HookRegistry.cpp
     HookRegistry.hpp
-    Join.cpp
-    Join.hpp
     StepRegistry.cpp
     StepRegistry.hpp
     StepType.hpp
