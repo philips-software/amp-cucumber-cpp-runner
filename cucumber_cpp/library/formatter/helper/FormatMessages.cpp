@@ -304,6 +304,8 @@ namespace cucumber_cpp::library::formatter::helper
         if (testStepResult.exception.has_value() && testStepResult.exception.value().message.has_value())
         {
             return TextBuilder{}
+                .Append(util::Trim(testStepResult.exception.value().type))
+                .Append(": ")
                 .Append(util::Trim(testStepResult.exception.value().message.value()))
                 .Build(theme.status.All(testStepResult.status), true);
         }
