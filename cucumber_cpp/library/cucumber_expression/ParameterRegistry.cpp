@@ -2,11 +2,11 @@
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "fmt/format.h"
 #include <cctype>
 #include <compare>
 #include <cstdint>
 #include <cstdlib>
-#include <format>
 #include <functional>
 #include <map>
 #include <optional>
@@ -106,7 +106,7 @@ namespace cucumber_cpp::library::cucumber_expression
             if (name.empty())
                 throw CucumberExpressionError{ "The anonymous parameter type has already been defined" };
             else
-                throw CucumberExpressionError{ std::format("There is already a parameter with name {}", name) };
+                throw CucumberExpressionError{ fmt::format("There is already a parameter with name {}", name) };
         }
     }
 

@@ -2,17 +2,15 @@
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
 #include "cucumber/messages/group.hpp"
+#include "fmt/format.h"
 #include <algorithm>
-#include <any>
 #include <cctype>
 #include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <format>
 #include <functional>
 #include <map>
-#include <optional>
 #include <set>
 #include <source_location>
 #include <sstream>
@@ -58,7 +56,7 @@ namespace cucumber_cpp::library::cucumber_expression
         To to{};
         stream >> to;
         if (stream.fail())
-            throw ConversionError{ std::format("Cannot convert parameter {} in to {}", s, typeid(To).name()) };
+            throw ConversionError{ fmt::format("Cannot convert parameter {} in to {}", s, typeid(To).name()) };
 
         return to;
     }
