@@ -3,6 +3,7 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/timestamp.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "fmt/chrono.h"
 #include "fmt/format.h"
 #include <chrono>
 #include <string>
