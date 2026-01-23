@@ -3,8 +3,8 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/timestamp.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "fmt/format.h"
 #include <chrono>
-#include <format>
 #include <string>
 
 namespace cucumber_cpp::library::util
@@ -65,6 +65,6 @@ namespace cucumber_cpp::library::util
     {
         const auto duration = std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::seconds(timestamp.seconds) + std::chrono::nanoseconds(timestamp.nanos));
         const std::chrono::system_clock::time_point tp{ duration };
-        return std::format("{:%FT%T%Z}", tp);
+        return fmt::format("{:%FT%T%Z}", tp);
     }
 }

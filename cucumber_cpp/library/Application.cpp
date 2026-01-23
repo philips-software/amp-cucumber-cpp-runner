@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <functional>
 #include <gtest/gtest.h>
@@ -91,7 +90,7 @@ namespace cucumber_cpp::library
                 const auto iter = std::ranges::find(formattersSet, option.name, &std::pair<std::string, bool>::first);
 
                 if (iter == formattersSet.end())
-                    return std::format("'{}' is not a valid formatter", option.name);
+                    return fmt::format("'{}' is not a valid formatter", option.name);
                 else
                     return "";
             },
@@ -138,17 +137,17 @@ namespace cucumber_cpp::library
         }
         catch (const InternalError& error)
         {
-            std::cout << std::format("InternalError error:\n{}\n", error.what());
+            std::cout << fmt::format("InternalError error:\n{}\n", error.what());
             return EXIT_FAILURE;
         }
         catch (const cucumber_expression::Error& error)
         {
-            std::cout << std::format("Cucumber Expression error:\n{}\n", error.what());
+            std::cout << fmt::format("Cucumber Expression error:\n{}\n", error.what());
             return EXIT_FAILURE;
         }
         catch (const std::exception& error)
         {
-            std::cout << std::format("Generic error:\n{}\n", error.what());
+            std::cout << fmt::format("Generic error:\n{}\n", error.what());
             return EXIT_FAILURE;
         }
         catch (...)

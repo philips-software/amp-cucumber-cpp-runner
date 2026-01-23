@@ -19,6 +19,7 @@ target_include_directories(cucumber_cpp.library.util PUBLIC
 
 target_link_libraries(cucumber_cpp.library.util PUBLIC
     cucumber_gherkin_lib
+    fmt::fmt
 )
 
 if (CCR_BUILD_TESTS)
