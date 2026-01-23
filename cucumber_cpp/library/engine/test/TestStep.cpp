@@ -96,11 +96,10 @@ namespace cucumber_cpp::library::engine
         ASSERT_THAT(context.Contains("top level value"), testing::Eq(true));
     }
 
-    // TEST_F(TestStep, ProvidesAccessToTable)
-    // {
-    //     ASSERT_THAT(step.table[0][0].As<std::string>(), testing::Eq(table[0][0].As<std::string>()));
-    //     ASSERT_THAT(step.table[1][1].As<std::string>(), testing::Eq(table[1][1].As<std::string>()));
-    // }
+    TEST_F(TestStep, ProvidesAccessToTable)
+    {
+        ASSERT_THAT(step.dataTable.has_value(), testing::Eq(false));
+    }
 
     TEST_F(TestStep, ThrowsStepPendingExceptionOnPending)
     {
