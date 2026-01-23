@@ -272,7 +272,7 @@ namespace compatibility
             BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
 
             cucumber_cpp::library::api::Formatters formatters;
-            cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "summary" }, {});
+            cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "junit", "message", "pretty", "summary", "usage" }, {});
 
             broadcastListener.CompareEnvelopes();
         }
