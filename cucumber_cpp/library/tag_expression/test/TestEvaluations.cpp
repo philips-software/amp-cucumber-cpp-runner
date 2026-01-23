@@ -1,11 +1,11 @@
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/emit.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/yaml.h"
 #include <cstdlib>
 #include <filesystem>
-#include <format>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <set>
@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::tag_expression
                             return new TestEvaluations(node["expression"].as<std::string>(), test["variables"], test["result"].as<bool>());
                         };
 
-                        auto* testInfo = testing::RegisterTest("TestEvaluations", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
+                        auto* testInfo = testing::RegisterTest("TestEvaluations", fmt::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
 
                         tests.push_back(testInfo);
 

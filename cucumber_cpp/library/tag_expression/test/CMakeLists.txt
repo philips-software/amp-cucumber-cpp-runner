@@ -6,6 +6,7 @@ target_link_libraries(cucumber_cpp.library.tag_expression.test PUBLIC
     cucumber_cpp.library.tag_expression
     yaml-cpp::yaml-cpp
     GTest::gmock
+    fmt::fmt
 )
 
 target_sources(cucumber_cpp.library.tag_expression.test PRIVATE

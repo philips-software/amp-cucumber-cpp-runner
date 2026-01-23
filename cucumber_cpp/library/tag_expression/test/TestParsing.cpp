@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "fmt/format.h"
 #include "yaml-cpp/node/emit.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
@@ -6,7 +7,6 @@
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
-#include <format>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -69,7 +69,7 @@ namespace cucumber_cpp::library::tag_expression
                         return new TestParsingFixture(node["expression"].as<std::string>(), node["formatted"].as<std::string>());
                     };
 
-                    auto* testInfo = testing::RegisterTest("TestParsing", std::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
+                    auto* testInfo = testing::RegisterTest("TestParsing", fmt::format("Test_{}_{}", tests.size(), lineNumber).c_str(), nullptr, nullptr, testdataPath.string().c_str(), lineNumber, factory);
 
                     tests.push_back(testInfo);
 

@@ -1,9 +1,9 @@
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/tag.hpp"
+#include "fmt/format.h"
 #include <algorithm>
 #include <cstddef>
-#include <format>
 #include <functional>
 #include <memory>
 #include <regex>
@@ -104,7 +104,7 @@ namespace cucumber_cpp::library::tag_expression
         if (!left || !right)
             return "";
 
-        return std::format(R"(( {} and {} ))", static_cast<std::string>(*left), static_cast<std::string>(*right));
+        return fmt::format(R"(( {} and {} ))", static_cast<std::string>(*left), static_cast<std::string>(*right));
     }
 
     OrExpression::OrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
@@ -132,7 +132,7 @@ namespace cucumber_cpp::library::tag_expression
         if (!left || !right)
             return "";
 
-        return std::format(R"(( {} or {} ))", static_cast<std::string>(*left), static_cast<std::string>(*right));
+        return fmt::format(R"(( {} or {} ))", static_cast<std::string>(*left), static_cast<std::string>(*right));
     }
 
     NotExpression::NotExpression(std::unique_ptr<Expression> operand)
@@ -160,8 +160,8 @@ namespace cucumber_cpp::library::tag_expression
             return "";
 
         if (const auto& ref = *operand.get(); typeid(ref) == typeid(AndExpression) || typeid(ref) == typeid(OrExpression))
-            return std::format(R"(not {})", static_cast<std::string>(*operand));
+            return fmt::format(R"(not {})", static_cast<std::string>(*operand));
 
-        return std::format(R"(not ( {} ))", static_cast<std::string>(*operand));
+        return fmt::format(R"(not ( {} ))", static_cast<std::string>(*operand));
     }
 }

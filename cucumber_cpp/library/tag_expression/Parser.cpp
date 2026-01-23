@@ -2,10 +2,10 @@
 #include "cucumber_cpp/library/tag_expression/Error.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include "cucumber_cpp/library/tag_expression/Token.hpp"
+#include "fmt/format.h"
 #include <cctype>
 #include <cstddef>
 #include <deque>
-#include <format>
 #include <locale>
 #include <memory>
 #include <stack>
@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::tag_expression
         void EnsureExpectedTokenType(TokenType tokenType, TokenType expected, std::string_view lastPart)
         {
             if (tokenType != expected)
-                throw Error(std::format(R"(Syntax error. Expected {} after {})", TokenTypeMap().at(expected), lastPart));
+                throw Error(fmt::format(R"(Syntax error. Expected {} after {})", TokenTypeMap().at(expected), lastPart));
         }
 
         void RequireArgCount(const Token& token, std::deque<std::unique_ptr<Expression>>& expressions, std::size_t number)
@@ -37,7 +37,7 @@ namespace cucumber_cpp::library::tag_expression
                     expressionsStr += static_cast<std::string>(*expr);
                 }
 
-                throw Error(std::format(R"({}: Too few operands (expressions={{{}}}))", token.keyword, expressionsStr));
+                throw Error(fmt::format(R"({}: Too few operands (expressions={{{}}}))", token.keyword, expressionsStr));
             }
         }
 
@@ -74,7 +74,7 @@ namespace cucumber_cpp::library::tag_expression
             else if (token == NOT)
                 PushUnary<NotExpression>(token, expressions);
             else
-                throw Error(std::format("Unexpected token: {}", token.keyword));
+                throw Error(fmt::format("Unexpected token: {}", token.keyword));
         }
 
         std::vector<std::string> Tokenize(std::string_view expression)
@@ -88,7 +88,7 @@ namespace cucumber_cpp::library::tag_expression
                 if (escaped)
                 {
                     if ((ch != '(' && ch != ')' && ch != '\\') && !std::isspace(ch, std::locale()))
-                        throw Error(std::format(R"(Tag expression "{}" could not be parsed because of syntax error: Illegal escape before "{}".)", expression, ch));
+                        throw Error(fmt::format(R"(Tag expression "{}" could not be parsed because of syntax error: Illegal escape before "{}".)", expression, ch));
                     token += ch;
                     escaped = false;
                 }
@@ -174,7 +174,7 @@ namespace cucumber_cpp::library::tag_expression
                 }
 
                 if (operations.empty())
-                    throw Error(std::format("Missing '(': Too few open-parens in: {}", expression));
+                    throw Error(fmt::format("Missing '(': Too few open-parens in: {}", expression));
 
                 else if (operations.top() == OPEN_PARENTHESIS)
                 {
@@ -192,7 +192,7 @@ namespace cucumber_cpp::library::tag_expression
             operations.pop();
 
             if (lastOperation == OPEN_PARENTHESIS)
-                throw Error(std::format("Unclosed '(': Too many open-parens in: {}", expression));
+                throw Error(fmt::format("Unclosed '(': Too many open-parens in: {}", expression));
 
             PushExpression(lastOperation, expressions);
         }
