@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <exception>
 #include <filesystem>
-#include <format>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <string>
@@ -35,9 +34,9 @@ namespace cucumber_cpp::library::support
                 auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
 
                 if (testStepResult.message)
-                    testStepResult.message = std::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
+                    testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
                 else
-                    testStepResult.message = std::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
+                    testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
             }
 
             if (testPartResult.fatally_failed())
