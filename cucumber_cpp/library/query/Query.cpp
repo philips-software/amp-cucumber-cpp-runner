@@ -33,10 +33,9 @@
 #include "cucumber/messages/undefined_parameter_type.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "fmt/format.h"
 #include <algorithm>
 #include <cstddef>
-#include <format>
-#include <forward_list>
 #include <functional>
 #include <iterator>
 #include <list>
@@ -68,13 +67,13 @@ namespace cucumber_cpp::library::query
 
     std::string Lineage::GetUniqueFeatureName() const
     {
-        return std::format("{}/{}", feature->name, featureIndex);
+        return fmt::format("{}/{}", feature->name, featureIndex);
     }
 
     std::string Lineage::GetScenarioAndOrRuleName() const
     {
         if (rule)
-            return std::format("{}/{}", rule->name, scenario->name);
+            return fmt::format("{}/{}", rule->name, scenario->name);
         return scenario->name;
     }
 
