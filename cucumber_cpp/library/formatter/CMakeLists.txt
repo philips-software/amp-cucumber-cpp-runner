@@ -25,7 +25,7 @@ target_link_libraries(cucumber_cpp.library.formatter PUBLIC
     cucumber_cpp.library.query
     cucumber_cpp.library.support
     cucumber_cpp.library.util
-    fmt-header-only
+    fmt::fmt
     nlohmann_json::nlohmann_json
     pugixml::pugixml
 )

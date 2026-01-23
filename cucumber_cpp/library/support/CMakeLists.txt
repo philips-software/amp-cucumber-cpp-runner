@@ -31,7 +31,7 @@ target_link_libraries(cucumber_cpp.library.support PUBLIC
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
-    fmt-header-only
+    fmt::fmt
 )
 
 if (CCR_BUILD_TESTS)
