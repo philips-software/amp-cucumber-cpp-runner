@@ -120,7 +120,8 @@ namespace cucumber_cpp::library::formatter
         if (!options.includeAttachments)
             return;
 
-        helper::PrintAttachment(outputStream, attachment, scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value()), options.useStatusIcon, options.theme);
+        if (attachment.test_case_started_id.has_value())
+            helper::PrintAttachment(outputStream, attachment, scenarioIndentByTestCaseStartedId.at(attachment.test_case_started_id.value()), options.useStatusIcon, options.theme);
     }
 
     void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished)
