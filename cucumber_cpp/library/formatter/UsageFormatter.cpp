@@ -1,33 +1,42 @@
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
-#include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/location.hpp"
-#include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <functional>
 #include <list>
 #include <map>
-#include <numeric>
+#include <optional>
 #include <ranges>
 #include <string>
+#include <tuple>
 #include <utility>
 
 namespace cucumber_cpp::library::formatter
 {
     namespace
     {
+        bool HasExecuted(cucumber::messages::test_step_result_status status)
+        {
+            return status == cucumber::messages::test_step_result_status::UNKNOWN ||
+                   status == cucumber::messages::test_step_result_status::PASSED ||
+                   status == cucumber::messages::test_step_result_status::PENDING ||
+                   status == cucumber::messages::test_step_result_status::FAILED;
+        }
+
         struct UsageMatch
         {
-            cucumber::messages::duration duration;
+            std::optional<std::chrono::nanoseconds> duration;
             std::size_t line;
             std::string text;
             std::string uri;
@@ -40,6 +49,7 @@ namespace cucumber_cpp::library::formatter
             std::string pattern;
             std::string patternType;
             std::string uri;
+            std::optional<std::chrono::nanoseconds> meanDuration;
         };
 
         std::map<std::string, Usage, std::less<>> BuildEmptyMapping(const query::Query& query)
@@ -53,7 +63,8 @@ namespace cucumber_cpp::library::formatter
                     .matches = {},
                     .pattern = stepDefinition.pattern.source,
                     .patternType = std::string{ cucumber::messages::to_string(stepDefinition.pattern.type) },
-                    .uri = stepDefinition.source_reference.uri.value_or("")
+                    .uri = stepDefinition.source_reference.uri.value_or(""),
+                    .meanDuration = {},
                 };
             }
 
@@ -81,75 +92,134 @@ namespace cucumber_cpp::library::formatter
                     const auto& stepDefinitionId = testStep->step_definition_ids->front();
                     const auto& lineage = query.FindLineageByPickle(pickle);
 
-                    mapping.at(stepDefinitionId).matches.emplace_back(query.FindTestStepDurationByTestStepId(testStepFinished->test_step_id), step.location.line, pickleStep.text, lineage.gherkinDocument->uri.value_or(""));
+                    std::optional<std::chrono::nanoseconds> duration{};
+                    if (HasExecuted(testStepFinished->test_step_result.status))
+                        duration = util::DurationToNanoSeconds(query.FindTestStepDurationByTestStepId(testStepFinished->test_step_id));
+
+                    mapping.at(stepDefinitionId).matches.emplace_back(duration, step.location.line, pickleStep.text, lineage.gherkinDocument->uri.value_or(""));
+                }
+            }
+
+            for (auto& usage : mapping | std::views::values)
+            {
+
+                if (usage.matches.empty())
+                    usage.meanDuration = std::chrono::nanoseconds{ -1 };
+                else
+                {
+                    std::chrono::nanoseconds totalDuration{};
+                    std::size_t countDuration{};
+
+                    for (const auto& match : usage.matches)
+                    {
+                        if (match.duration.has_value())
+                        {
+                            ++countDuration;
+                            totalDuration += match.duration.value_or(std::chrono::nanoseconds{});
+                        }
+                    }
+
+                    if (countDuration != 0)
+                        usage.meanDuration = totalDuration / countDuration;
                 }
             }
 
             return mapping;
         }
 
-        void BuildResult(const query::Query& query)
-        {}
-
-        std::map<std::string, Usage, std::less<>> GetUsage(const query::Query& query)
+        std::list<Usage> GetUsage(const query::Query& query, bool unusedOnly)
         {
-            return BuildMapping(query);
+            const auto& mapping = BuildMapping(query);
+            auto mapValues = mapping | std::views::values | (std::views::filter([unusedOnly](const Usage& usage)
+                                                                {
+                                                                    return !unusedOnly || usage.matches.empty();
+                                                                }));
+
+            std::list<Usage> usageList{ mapValues.begin(), mapValues.end() };
+
+            usageList.sort([](const Usage& lhs, const Usage& rhs)
+                {
+                    if (lhs.matches.empty() && !rhs.matches.empty())
+                        return false;
+                    if (!lhs.matches.empty() && rhs.matches.empty())
+                        return true;
+
+                    if (lhs.meanDuration == rhs.meanDuration)
+                        return std::make_tuple(lhs.uri, lhs.line) < std::make_tuple(rhs.uri, rhs.line);
+
+                    return lhs.meanDuration > rhs.meanDuration;
+                });
+
+            for (auto& usage : usageList)
+                usage.matches.sort([](const UsageMatch& lhs, const UsageMatch& rhs)
+                    {
+                        if (lhs.duration == rhs.duration)
+                            return std::make_tuple(lhs.uri, lhs.line, lhs.text) < std::make_tuple(rhs.uri, rhs.line, rhs.text);
+
+                        return lhs.duration > rhs.duration;
+                    });
+
+            return usageList;
         }
+    }
+
+    UsageFormatter::Options::Options(const nlohmann::json& json)
+        : unusedOnly{ json.value("unused_only", false) }
+        , theme{ helper::CreateTheme(json.value("theme", "cucumber")) }
+    {
     }
 
     void UsageFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
         if (envelope.test_run_finished.has_value())
         {
-            const auto& mapping = GetUsage(query);
+            const auto& mapping = GetUsage(query, options.unusedOnly);
 
-            std::size_t patternWidth = std::string("Pattern / Text").size();
-            std::size_t durationWidth = std::string("Duration").size();
-            std::size_t locationWidth = std::string("Location").size();
+            auto patternWidth = std::string("Pattern / Text").size();
+            auto durationWidth = std::string("Duration").size();
+            auto locationWidth = std::string("Location").size();
 
-            for (const auto& usage : mapping | std::views::values)
+            for (const auto& usage : mapping)
             {
                 patternWidth = std::max(patternWidth, usage.pattern.size());
-                cucumber::messages::duration totalDuration{};
                 locationWidth = std::max(locationWidth, fmt::format("{}:{}", usage.uri, usage.line).size());
+
+                if (usage.meanDuration.has_value())
+                    durationWidth = std::max(durationWidth, fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value())).size());
+                else
+                    durationWidth = std::max(durationWidth, std::string("-").size());
 
                 for (const auto& match : usage.matches)
                 {
                     patternWidth = std::max(patternWidth, match.text.size() + 2);
-                    totalDuration += match.duration;
                     locationWidth = std::max(locationWidth, fmt::format("{}:{}", match.uri, match.line).size());
                 }
-
-                const auto meanDuration = usage.matches.empty() ? std::chrono::milliseconds{ 0 } : std::chrono::milliseconds{ util::DurationToMilliseconds(totalDuration) / usage.matches.size() };
-                durationWidth = std::max(durationWidth, fmt::format("{}", meanDuration).size());
             }
 
-            fmt::println(outputStream, "┌─{:─<{}}─┬─{:─<{}}─┬─{:─<{}}─┐", "", patternWidth, "", durationWidth, "", locationWidth);
+            fmt::println(outputStream, fmt::runtime(topRow), "", patternWidth, "", durationWidth, "", locationWidth);
             fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", "Pattern / Text", patternWidth, "Duration", durationWidth, "Location", locationWidth);
 
-            for (const auto& usage : mapping | std::views::values)
+            const auto horizontalDivider = fmt::format(fmt::runtime(middleRow), "", patternWidth, "", durationWidth, "", locationWidth);
+
+            for (const auto& usage : mapping)
             {
-                auto durations = usage.matches | std::views::transform([](const UsageMatch& match) -> cucumber::messages::duration
-                                                     {
-                                                         return match.duration;
-                                                     });
-                const auto totalDuration = std::accumulate(durations.begin(), durations.end(), cucumber::messages::duration{}, [](const auto& lhs, const auto& rhs)
-                    {
-                        return lhs + rhs;
-                    });
+                fmt::println(outputStream, "{}", horizontalDivider);
 
-                const auto meanDuration = usage.matches.empty() ? std::chrono::milliseconds{ 0 } : std::chrono::milliseconds{ util::DurationToMilliseconds(totalDuration) / usage.matches.size() };
-
-                fmt::println(outputStream, "├─{:─<{}}─┼─{:─<{}}─┼─{:─<{}}─┤", "", patternWidth, "", durationWidth, "", locationWidth);
                 if (usage.matches.empty())
                     fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, "UNUSED", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
+                else if (usage.meanDuration.has_value())
+                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value()), durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
                 else
-                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, meanDuration, durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
+                    fmt::println(outputStream, "│ {:<{}} │ {:<{}} │ {:<{}} │", usage.pattern, patternWidth, "-", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
 
                 for (const auto& match : usage.matches)
-                    fmt::println(outputStream, "│   {:<{}} │ {:<{}} │ {:<{}} │", match.text, patternWidth - 2, util::DurationToMilliseconds(match.duration), durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
+                    if (match.duration.has_value())
+                        fmt::println(outputStream, "│   {:<{}} │ {:<{}} │ {:<{}} │", match.text, patternWidth - 2, std::chrono::duration_cast<std::chrono::milliseconds>(match.duration.value()), durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
+                    else
+                        fmt::println(outputStream, "│   {:<{}} │ {:<{}} │ {:<{}} │", match.text, patternWidth - 2, "-", durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
             }
-            fmt::println(outputStream, "└─{:─<{}}─┴─{:─<{}}─┴─{:─<{}}─┘", "", patternWidth, "", durationWidth, "", locationWidth);
+
+            fmt::println(outputStream, fmt::runtime(bottomRow), "", patternWidth, "", durationWidth, "", locationWidth);
         }
     }
 }

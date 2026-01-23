@@ -4,7 +4,11 @@
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
+#include "fmt/std.h"
 #include <cstddef>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <ranges>
@@ -63,10 +67,10 @@ namespace cucumber_cpp::library::support
         void PrintContents(std::string_view type, std::source_location sourceLocation, const std::map<std::source_location, Entry, SourceLocationOrder>& registry)
         {
 #if defined(CCR_STANDALONE)
-            std::cout << std::format("Added ({}): {}:{}\n", type, sourceLocation.file_name(), sourceLocation.line());
-            std::cout << "Registry contents:\n";
+            fmt::println("Added ({}): {}:{}", type, std::filesystem::path{ sourceLocation.file_name() }, sourceLocation.line());
+            fmt::println("Registry contents:");
             for (const auto& [key, item] : registry)
-                std::cout << std::format("  {}:{}\n", key.file_name(), key.line());
+                fmt::println("  {}:{}", std::filesystem::path{ key.file_name() }, key.line());
 #endif
         }
     }

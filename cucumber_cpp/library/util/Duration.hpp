@@ -9,6 +9,7 @@ namespace cucumber_cpp::library::util
     cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis);
 
     std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::duration& duration);
+    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::duration& duration);
     cucumber::messages::duration& operator+=(cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
     cucumber::messages::duration operator+(const cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
 

@@ -95,6 +95,24 @@ namespace cucumber_cpp::library::formatter::helper
         {
             std::string bullet{ " " };
         } symbol;
+
+        struct
+        {
+            std::string cornerTopLeft{ "|" };
+            std::string cornerTopRight{ "|" };
+            std::string cornerBottomLeft{ "|" };
+            std::string cornerBottomRight{ "|" };
+
+            std::string edgeTopT{ "|" };
+            std::string edgeBottomT{ "|" };
+            std::string edgeLeftT{ "|" };
+            std::string edgeRightT{ "|" };
+
+            std::string dash{ "-" };
+            std::string vertical{ "|" };
+
+            std::string cross{ "+" };
+        } table;
     };
 
     Theme CreateEmptyTheme();

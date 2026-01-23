@@ -80,6 +80,19 @@ namespace cucumber_cpp::library::formatter::helper
                 .keyword = fmt::emphasis::bold,
             },
             .symbol = { .bullet = "•" },
+            .table{
+                .cornerTopLeft{ "┌" },
+                .cornerTopRight{ "┐" },
+                .cornerBottomLeft{ "└" },
+                .cornerBottomRight{ "┘" },
+                .edgeTopT{ "┬" },
+                .edgeBottomT{ "┴" },
+                .edgeLeftT{ "├" },
+                .edgeRightT{ "┤" },
+                .dash{ "─" },
+                .vertical{ "│" },
+                .cross{ "┼" },
+            },
         };
 
         return theme;

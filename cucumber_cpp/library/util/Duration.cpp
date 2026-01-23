@@ -15,6 +15,11 @@ namespace cucumber_cpp::library::util
                    std::chrono::duration_cast<std::chrono::milliseconds>(nanos);
         }
 
+        std::chrono::nanoseconds ToNanoSeconds(std::chrono::seconds seconds, std::chrono::nanoseconds nanos)
+        {
+            return std::chrono::duration_cast<std::chrono::nanoseconds>(seconds) + nanos;
+        }
+
         cucumber::messages::duration ToDuration(std::chrono::milliseconds millis)
         {
             return {
@@ -52,7 +57,12 @@ namespace cucumber_cpp::library::util
 
     std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::duration& duration)
     {
-        return ToMillis(std::chrono::seconds(duration.seconds), std::chrono::nanoseconds(duration.nanos));
+        return ToMillis(std::chrono::seconds{ duration.seconds }, std::chrono::nanoseconds{ duration.nanos });
+    }
+
+    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::duration& duration)
+    {
+        return ToNanoSeconds(std::chrono::seconds{ duration.seconds }, std::chrono::nanoseconds{ duration.nanos });
     }
 
     cucumber::messages::duration& operator+=(cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs)
