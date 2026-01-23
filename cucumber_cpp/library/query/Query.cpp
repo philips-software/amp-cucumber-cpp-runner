@@ -257,6 +257,8 @@ namespace cucumber_cpp::library::query
         for (const auto* testCaseStarted : FindAllTestCaseStarted())
         {
             const auto testStepFinishedAndTestSteps = FindTestStepFinishedAndTestStepBy(*testCaseStarted);
+            if (testStepFinishedAndTestSteps.empty())
+                continue;
             const auto [testStepFinished, testStep] = *std::ranges::max_element(testStepFinishedAndTestSteps, SortByStatus{});
             ++result[testStepFinished->test_step_result.status];
         }
