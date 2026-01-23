@@ -49,7 +49,18 @@ WHEN("I print {string}", (const std::string& str))
 
 THEN("an assertion is raised")
 {
+    EXPECT_THAT(1, testing::Eq(2));
     ASSERT_THAT(false, testing::IsTrue());
+}
+
+THEN("an exception is thrown")
+{
+    struct CustomException : public std::runtime_error
+    {
+        using runtime_error::runtime_error;
+    };
+
+    throw CustomException{ "This is a custom exception" };
 }
 
 THEN("two expectations are raised")

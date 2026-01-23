@@ -25,7 +25,7 @@ teardown() {
 }
 
 @test "Failed tests" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:FAILED" -- cucumber_cpp/acceptance_test/features
+    run $acceptance_test --format summary pretty message junit --tags "@smoke and @result:FAILED" -- cucumber_cpp/acceptance_test/features
     assert_failure
 }
 
