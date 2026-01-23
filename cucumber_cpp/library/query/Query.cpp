@@ -298,6 +298,9 @@ namespace cucumber_cpp::library::query
 
     std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> Query::FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const
     {
+        if (!testStepFinishedByTestCaseStartedId.contains(testCaseStarted.id))
+            return {};
+
         const auto& testStepsFinished = testStepFinishedByTestCaseStartedId.at(testCaseStarted.id);
         auto view = testStepsFinished | std::views::transform([this](const auto& testStepFinished)
                                             {

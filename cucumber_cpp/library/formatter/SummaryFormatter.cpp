@@ -199,7 +199,10 @@ namespace cucumber_cpp::library::formatter
 
             if (!testCaseFinished.will_be_retried)
             {
-                ++scenarioCounts[query.FindMostSevereTestStepResultBy(testCaseFinished).value()->status];
+                if (const auto& testStepResultPtr = query.FindMostSevereTestStepResultBy(testCaseFinished); testStepResultPtr.has_value())
+                    ++scenarioCounts[testStepResultPtr.value()->status];
+                else
+                    ++scenarioCounts[cucumber::messages::test_step_result_status::PASSED];
 
                 const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
                 for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
