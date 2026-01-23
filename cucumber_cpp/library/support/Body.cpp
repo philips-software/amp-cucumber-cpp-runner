@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/support/Body.hpp"
+#include "cucumber/gherkin/demangle.hpp"
 #include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
@@ -99,7 +100,7 @@ namespace cucumber_cpp::library::support
         {
             testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
             testStepResult.exception = cucumber::messages::exception{
-                .type = typeid(e).name(),
+                .type = cucumber::gherkin::detail::demangle(typeid(e).name()).get(),
                 .message = e.what(),
             };
         }
