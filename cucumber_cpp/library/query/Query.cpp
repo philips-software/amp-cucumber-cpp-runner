@@ -521,17 +521,17 @@ namespace cucumber_cpp::library::query
 
         ++featureCountByName[feature.first.name];
 
-        auto linaege = feature.second + featurePtr + featureCountByName[feature.first.name];
-        lineageByUri[*linaege.gherkinDocument->uri] = linaege;
+        auto lineage = feature.second + featurePtr + featureCountByName[feature.first.name];
+        lineageByUri[*lineage.gherkinDocument->uri] = lineage;
 
         for (const auto& child : feature.first.children)
         {
             if (child.background)
                 *this += child.background->steps;
             if (child.scenario)
-                *this += { *child.scenario, linaege };
+                *this += { *child.scenario, lineage };
             if (child.rule)
-                *this += { *child.rule, linaege };
+                *this += { *child.rule, lineage };
         }
     }
 
