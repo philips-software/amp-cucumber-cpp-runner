@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::support
 {
     bool SourceLocationOrder::operator()(const std::source_location& lhs, const std::source_location& rhs) const
     {
-        return std::forward_as_tuple(lhs.file_name(), lhs.line()) < std::forward_as_tuple(rhs.file_name(), rhs.line());
+        return std::make_tuple(std::string_view{ lhs.file_name() }, lhs.line()) < std::make_tuple(std::string_view{ rhs.file_name() }, rhs.line());
     }
 
     DefinitionRegistration& DefinitionRegistration::Instance()
