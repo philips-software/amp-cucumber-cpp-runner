@@ -158,14 +158,61 @@ If asserting (or expecting) is not an option then it is also safe to throw excep
 
 ## Writing hook definitions
 
-\<\<todo>>
+Hooks are executed in order of appearance (reverse for AFTER hooks), sorted by filename and line number. If any before hook is executed then all after hooks are also executed. Even if a before hook has a failure.
 
+API:
+```cpp
+// HOOK_BEFORE_ALL and HOOK_AFTER_ALL have optional name and order arguments
+// BEFORE_ALL hooks are executed before any test is executed
+HOOK_BEFORE_ALL(){}
+HOOK_BEFORE_ALL(.name = "Custom Name", .order = -1){}
 
-## How to test the software
+// AFTER_ALL hooks are executed after all tests have executed
+HOOK_AFTER_ALL(.name = "Custom After All hook"){}
+HOOK_AFTER_ALL(.order = 10){}
 
-- `cmake --preset Host`
-- `cmake --build --preset Host-Debug`
-- `ctest --preset Host-Debug`
+// All other hooks have an additional optional (tag) expression argument
+// HOOK_BEFORE_FEATURE (non-standard) executes before the first scenario per feature file
+HOOK_BEFORE_FEATURE(){}
+HOOK_BEFORE_FEATURE("@smoke", "custom name", 10){}
+
+// HOOK_AFTER_FEATURE (non-standard) executes after the last scenario per feature file
+HOOK_AFTER_FEATURE(.expression = "@dummy"){}
+HOOK_AFTER_FEATURE(.name = "after feature name"){}
+
+// HOOK_BEFORE_SCENARIO and HOOK_AFTER_SCENARIO are executed before and after every scenario.
+HOOK_BEFORE_SCENARIO(){}
+HOOK_AFTER_SCENARIO(){}
+
+// HOOK_BEFORE_SCENARIO and HOOK_AFTER_SCENARIO are executed before and after every step.
+HOOK_BEFORE_STEP(){}
+HOOK_AFTER_STEP(){}
+```
+
+## Executing tests
+
+```sh
+# executes all tests in the ./feature folder using the default summary formatter
+$ example
+
+# executes all tests in the ./feature folder using the prety formatter
+$ example --format pretty
+
+# executes all tests in the ./feature folder redirecting the pretty formatter to output.txt
+$ example --format pretty:output.txt
+
+# executes all tests in the ./feature folder redirecting the pretty formatter to output.txt. Also prints the pretty formatter to the console
+$ example --format pretty:output.txt pretty
+
+# executes all tests in the ./feature folder redirecting the pretty formatter to output.txt. Also prints the pretty formatter to the console. Sets the theme for all pretty formatters to plain
+$ example --format pretty:output.txt pretty --format-options "{ \"pretty\": {\"theme\" : \"plain\"} }"
+
+# executes all tests in the ./feature/acceptance and ./feature/integration folders using the prety formatter
+$ example --format pretty -- ./feature/acceptance ./feature/integration
+
+# executes all tests matching the exact tag expression in the ./feature/acceptance and ./feature/integration folders
+$ example --format pretty --tags @smoke and not @ignore -- ./feature/acceptance ./feature/integration
+```
 
 ## Contributing
 
@@ -174,6 +221,12 @@ If asserting (or expecting) is not an option then it is also safe to throw excep
 amp-cucumber-cpp-runner uses semantic versioning and conventional commits.
 
 Please refer to our [Contributing](CONTRIBUTING.md) guide when you want to contribute to this project.
+
+## How to test the software
+
+- `cmake --preset Host`
+- `cmake --build --preset Host-Debug`
+- `ctest --preset Host-Debug`
 
 ## License
 
