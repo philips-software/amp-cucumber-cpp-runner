@@ -124,7 +124,8 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
 
-        if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
+        if (const auto worstStatus = util::GetWorstTestStepResult(results).status;
+            worstStatus != cucumber::messages::test_step_result_status::PASSED && worstStatus != cucumber::messages::test_step_result_status::SKIPPED)
             throw FeatureHookError{ "Failed before feature hook" };
 
         return results;
@@ -138,7 +139,8 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
 
-        if (util::GetWorstTestStepResult(results).status != cucumber::messages::test_step_result_status::PASSED)
+        if (const auto worstStatus = util::GetWorstTestStepResult(results).status;
+            worstStatus != cucumber::messages::test_step_result_status::PASSED && worstStatus != cucumber::messages::test_step_result_status::SKIPPED)
             throw FeatureHookError{ "Failed after feature hook" };
 
         return results;

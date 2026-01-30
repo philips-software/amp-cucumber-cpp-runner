@@ -14,6 +14,17 @@
 
 namespace cucumber_cpp::library::runtime
 {
+    namespace
+    {
+        bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
+        {
+            if (dryRun)
+                return false;
+
+            return status != cucumber::messages::test_step_result_status::PASSED;
+        }
+    }
+
     SerialRuntimeAdapter::SerialRuntimeAdapter(std::string testRunStartedId,
         util::Broadcaster& broadcaster,
         cucumber::gherkin::id_generator_ptr idGenerator,
@@ -37,7 +48,7 @@ namespace cucumber_cpp::library::runtime
 
         const auto beforeHookResults = worker.RunBeforeAllHooks();
 
-        if (util::GetWorstTestStepResult(beforeHookResults).status != cucumber::messages::test_step_result_status::PASSED)
+        if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
             failing = true;
 
         if (!failing)
@@ -61,7 +72,7 @@ namespace cucumber_cpp::library::runtime
 
         const auto afterHookResults = worker.RunAfterAllHooks();
 
-        if (util::GetWorstTestStepResult(afterHookResults).status != cucumber::messages::test_step_result_status::PASSED)
+        if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
             failing = true;
 
         return !failing;
