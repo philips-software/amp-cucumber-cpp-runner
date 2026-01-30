@@ -160,7 +160,9 @@ namespace cucumber_cpp::library::runtime
 
         broadcaster.BroadcastEvent({ .test_run_hook_started = testRunHookStarted });
 
-        auto result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
+        cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
+        if (!options.dryRun)
+            result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
 
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
                                          .test_run_hook_started_id = testRunHookStartedId,
