@@ -20,7 +20,7 @@
 
 namespace cucumber_cpp::library::runtime
 {
-    struct FeatureHookError : std::runtime_error
+    struct GlobalHookError : std::runtime_error
     {
         using std::runtime_error::runtime_error;
     };

@@ -15,8 +15,8 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "fmt/format.h"
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -124,10 +124,6 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
 
-        if (const auto worstStatus = util::GetWorstTestStepResult(results).status;
-            worstStatus != cucumber::messages::test_step_result_status::PASSED && worstStatus != cucumber::messages::test_step_result_status::SKIPPED)
-            throw FeatureHookError{ "Failed before feature hook" };
-
         return results;
     }
 
@@ -138,10 +134,6 @@ namespace cucumber_cpp::library::runtime
 
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
-
-        if (const auto worstStatus = util::GetWorstTestStepResult(results).status;
-            worstStatus != cucumber::messages::test_step_result_status::PASSED && worstStatus != cucumber::messages::test_step_result_status::SKIPPED)
-            throw FeatureHookError{ "Failed after feature hook" };
 
         return results;
     }
@@ -162,7 +154,12 @@ namespace cucumber_cpp::library::runtime
 
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
         if (!options.dryRun)
+        {
             result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
+
+            if (result.status != cucumber::messages::test_step_result_status::PASSED)
+                throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", definition.hook.to_string(), result.to_string()) };
+        }
 
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
                                          .test_run_hook_started_id = testRunHookStartedId,
