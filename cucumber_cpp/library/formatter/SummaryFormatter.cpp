@@ -81,6 +81,8 @@ namespace cucumber_cpp::library::formatter
         {
             const auto& hook = query.FindHookById(testStep.hook_id.value());
             helper::PrintHookLine(stream, testStepFinished, hook, scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
+
+            helper::PrintError(stream, testStepFinished, scenarioIndent, useStatusIcon, theme);
         }
 
         void HandleTestStep(std::ostream& stream, const query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme)
