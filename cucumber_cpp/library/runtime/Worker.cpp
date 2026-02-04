@@ -90,7 +90,7 @@ namespace cucumber_cpp::library::runtime
 
         auto failed = false;
         for (const auto& assembledTestCase : assembledTestSuite.testCases)
-            failed |= !RunTestCase(assembledTestSuite.gherkinDocument, assembledTestCase, testSuiteContext, failing);
+            failed |= !RunTestCase(assembledTestSuite.gherkinDocument, assembledTestCase, testSuiteContext, failed || failing);
 
         RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
 
