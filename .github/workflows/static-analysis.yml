@@ -22,7 +22,7 @@ jobs:
     env:
       SONAR_SERVER_URL: "https://sonarcloud.io"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
@@ -71,13 +71,13 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: ${{ github.job }}
-      - uses: github/codeql-action/init@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
+      - uses: github/codeql-action/init@19b2f06db2b6f5108140aeb04014ef02b648f789 # v4.31.11
         with:
           languages: cpp
       - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
@@ -85,4 +85,4 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Debug"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
-      - uses: github/codeql-action/analyze@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
+      - uses: github/codeql-action/analyze@19b2f06db2b6f5108140aeb04014ef02b648f789 # v4.31.11
