@@ -35,9 +35,11 @@ namespace cucumber_cpp::library::support
         {
             bool dryRun{ false };
             bool failFast{ false };
+            bool failGlobalHookFast{ false };
             std::size_t retry{ 0 };
             bool strict{ true };
             std::unique_ptr<tag_expression::Expression> retryTagExpression{};
+            bool featureHooks{ false };
         } runtime;
 
         struct RunEnvironment

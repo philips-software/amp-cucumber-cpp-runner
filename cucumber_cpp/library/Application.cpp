@@ -108,6 +108,7 @@ namespace cucumber_cpp::library
 
             cli.add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps")->default_val(options.dryRun);
             cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure")->default_val(options.failFast);
+            cli.add_flag("--fail-global-hook-fast", options.failGlobalHookFast, "Stop execution on first global hook failure")->default_val(options.failGlobalHookFast);
             cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator)->default_val(options.format);
             cli.add_option("--format-options", options.formatOptions, "provide options for formatters")->default_val(options.formatOptions);
             cli.add_option("--language", options.language, "Default language for feature files, eg 'en'")->default_str(options.language);
@@ -115,6 +116,7 @@ namespace cucumber_cpp::library
             auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
             cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
             cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
+            cli.add_flag("--feature-hooks,!--no-feature-hooks", options.featureHooks, "Run Before/After Feature hooks, note these are non-standard and are not supported by messages")->default_val(options.featureHooks);
             cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
 
             CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
@@ -191,9 +193,11 @@ namespace cucumber_cpp::library
             .runtime = {
                 .dryRun = options.dryRun,
                 .failFast = options.failFast,
+                .failGlobalHookFast = options.failGlobalHookFast,
                 .retry = options.retry,
                 .strict = options.strict,
                 .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
+                .featureHooks = options.featureHooks,
             },
         };
 

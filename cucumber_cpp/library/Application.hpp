@@ -35,6 +35,7 @@ namespace cucumber_cpp::library
 
             bool dryRun{ false };
             bool failFast{ false };
+            bool failGlobalHookFast{ false };
 
             std::set<std::string, std::less<>> format{ "summary" };
             std::string formatOptions{ R"({})" };
@@ -47,6 +48,8 @@ namespace cucumber_cpp::library
             std::vector<std::string> retryTagFilter{};
 
             bool strict{ true };
+
+            bool featureHooks{ false };
 
             bool recursive{ true };
 

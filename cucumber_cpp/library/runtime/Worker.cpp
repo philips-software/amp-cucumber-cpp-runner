@@ -15,6 +15,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "fmt/format.h"
 #include <cstddef>
@@ -45,6 +46,14 @@ namespace cucumber_cpp::library::runtime
                 return options.retry;
             else
                 return 0;
+        }
+
+        bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
+        {
+            if (dryRun)
+                return false;
+
+            return status != cucumber::messages::test_step_result_status::PASSED;
         }
     }
 
@@ -86,13 +95,26 @@ namespace cucumber_cpp::library::runtime
     {
         Context testSuiteContext{ &programContext };
 
-        RunBeforeTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
-
         auto failed = false;
+
+        if (options.featureHooks)
+        {
+            const auto beforeHookResults = RunBeforeTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+
+            if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
+                failing = true;
+        }
+
         for (const auto& assembledTestCase : assembledTestSuite.testCases)
             failed |= !RunTestCase(assembledTestSuite.gherkinDocument, assembledTestCase, testSuiteContext, failed || failing);
 
-        RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+        if (options.featureHooks)
+        {
+            const auto afterHookResults = RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+
+            if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
+                failing = true;
+        }
 
         return !failed;
     }
@@ -157,7 +179,7 @@ namespace cucumber_cpp::library::runtime
         {
             result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
 
-            if (result.status != cucumber::messages::test_step_result_status::PASSED)
+            if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", definition.hook.to_string(), result.to_string()) };
         }
 
