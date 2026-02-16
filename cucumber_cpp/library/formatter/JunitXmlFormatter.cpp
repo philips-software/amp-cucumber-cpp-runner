@@ -154,6 +154,61 @@ namespace cucumber_cpp::library::formatter
                 .timestamp = util::MakeIso8601Timestamp(query.FindTestRunStarted().timestamp),
             };
         }
+
+        void AddTestSuiteAttributes(const ReportSuite& report, const std::string& suiteName, pugi::xml_node& testSuiteNode)
+        {
+            testSuiteNode.append_attribute("name").set_value(suiteName.c_str());
+            testSuiteNode.append_attribute("time").set_value(report.time / 1000.0f);
+            testSuiteNode.append_attribute("tests").set_value(static_cast<unsigned int>(report.tests));
+            testSuiteNode.append_attribute("skipped").set_value(static_cast<unsigned int>(report.skipped));
+            testSuiteNode.append_attribute("failures").set_value(static_cast<unsigned int>(report.failures));
+            testSuiteNode.append_attribute("errors").set_value(static_cast<unsigned int>(report.errors));
+        }
+
+        void AddTimestamp(const ReportSuite& report, pugi::xml_node& testSuiteNode)
+        {
+            if (report.timestamp)
+                testSuiteNode.append_attribute("timestamp").set_value(report.timestamp->c_str());
+        }
+
+        void AddFailure(const ReportTestCase& testCase, pugi::xml_node& testCaseNode)
+        {
+            if (testCase.failure)
+            {
+                auto failureNode = testCaseNode.append_child(testCase.failure->kind == FailureKind::failure ? "failure" : "skipped");
+
+                if (testCase.failure->kind == FailureKind::failure && testCase.failure->type)
+                    failureNode.append_attribute("type").set_value(testCase.failure->type->c_str());
+
+                if (testCase.failure->message)
+                    failureNode.append_attribute("message").set_value(testCase.failure->message->c_str());
+
+                if (testCase.failure->stack)
+                    failureNode.append_child(pugi::node_cdata).set_value(testCase.failure->stack->c_str());
+            }
+        }
+
+        void AddSystemOut(const ReportTestCase& testCase, pugi::xml_node& testCaseNode)
+        {
+            if (!testCase.output.empty())
+                testCaseNode.append_child("system-out")
+                    .append_child(pugi::node_cdata)
+                    .set_value(testCase.output.c_str());
+        }
+
+        void AddTestCases(const ReportSuite& report, pugi::xml_node& testSuiteNode)
+        {
+            for (const auto& testCase : report.testCases)
+            {
+                auto testCaseNode = testSuiteNode.append_child("testcase");
+                testCaseNode.append_attribute("classname").set_value(testCase.classname.c_str());
+                testCaseNode.append_attribute("name").set_value(testCase.name.c_str());
+                testCaseNode.append_attribute("time").set_value(testCase.time / 1000.0f);
+
+                AddFailure(testCase, testCaseNode);
+                AddSystemOut(testCase, testCaseNode);
+            }
+        }
     }
 
     JunitXmlFormatter::Options::Options(const nlohmann::json& formatOptions)
@@ -165,48 +220,19 @@ namespace cucumber_cpp::library::formatter
     void JunitXmlFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
         if (envelope.test_run_finished)
-        {
-            const auto& report = MakeReport(query, options.testClassName);
+            HandleTestRunFinished();
+    }
 
-            testSuite.append_attribute("name").set_value(options.suiteName.c_str());
-            testSuite.append_attribute("time").set_value(report.time / 1000.0f);
-            testSuite.append_attribute("tests").set_value(static_cast<unsigned int>(report.tests));
-            testSuite.append_attribute("skipped").set_value(static_cast<unsigned int>(report.skipped));
-            testSuite.append_attribute("failures").set_value(static_cast<unsigned int>(report.failures));
-            testSuite.append_attribute("errors").set_value(static_cast<unsigned int>(report.errors));
+    void JunitXmlFormatter::HandleTestRunFinished()
+    {
+        const auto& report = MakeReport(query, options.testClassName);
 
-            if (report.timestamp)
-                testSuite.append_attribute("timestamp").set_value(report.timestamp->c_str());
+        AddTestSuiteAttributes(report, options.suiteName, testSuiteNode);
 
-            for (const auto& testCase : report.testCases)
-            {
-                auto testCaseNode = testSuite.append_child("testcase");
-                testCaseNode.append_attribute("classname").set_value(testCase.classname.c_str());
-                testCaseNode.append_attribute("name").set_value(testCase.name.c_str());
-                testCaseNode.append_attribute("time").set_value(testCase.time / 1000.0f);
+        AddTimestamp(report, testSuiteNode);
 
-                if (testCase.failure)
-                {
-                    auto failureNode = testCaseNode.append_child(testCase.failure->kind == FailureKind::failure ? "failure" : "skipped");
+        AddTestCases(report, testSuiteNode);
 
-                    if (testCase.failure->kind == FailureKind::failure && testCase.failure->type)
-                        failureNode.append_attribute("type").set_value(testCase.failure->type->c_str());
-
-                    if (testCase.failure->message)
-                        failureNode.append_attribute("message").set_value(testCase.failure->message->c_str());
-
-                    if (testCase.failure->stack)
-                        failureNode.append_child(pugi::node_cdata).set_value(testCase.failure->stack->c_str());
-                }
-
-                if (!testCase.output.empty())
-                {
-                    auto systemOutNode = testCaseNode.append_child("system-out");
-                    systemOutNode.append_child(pugi::node_cdata).set_value(testCase.output.c_str());
-                }
-            }
-
-            doc.save(outputStream);
-        }
+        doc.save(outputStream);
     }
 }
