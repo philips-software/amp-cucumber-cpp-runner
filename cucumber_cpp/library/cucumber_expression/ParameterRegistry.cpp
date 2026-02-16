@@ -89,7 +89,7 @@ namespace cucumber_cpp::library::cucumber_expression
             AddParameter(Parameter{ parameter.params.name, { std::string(parameter.params.regex) }, false, parameter.params.useForSnippets, parameter.location });
     }
 
-    const std::map<std::string, const Parameter>& ParameterRegistry::GetParameters() const
+    const std::map<std::string, const Parameter, std::less<>>& ParameterRegistry::GetParameters() const
     {
         return parametersByName;
     }

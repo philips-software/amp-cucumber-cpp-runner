@@ -144,7 +144,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         virtual ~ParameterRegistry() = default;
 
-        const std::map<std::string, const Parameter>& GetParameters() const;
+        const std::map<std::string, const Parameter, std::less<>>& GetParameters() const;
 
         const Parameter& Lookup(const std::string& name) const;
 
@@ -162,7 +162,7 @@ namespace cucumber_cpp::library::cucumber_expression
         template<class T>
         void AddParameter(Parameter parameter, std::function<T(const cucumber::messages::group&)> converter);
 
-        std::map<std::string, const Parameter> parametersByName;
+        std::map<std::string, const Parameter, std::less<>> parametersByName;
     };
 
     template<class T>
