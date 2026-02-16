@@ -20,18 +20,18 @@ STEP(R"(the following table is transposed:)")
 STEP(R"(it should be:)")
 {
     const auto& actualTable = context.Get<cucumber::messages::pickle_table>();
-    const auto& expectedTalbe = dataTable;
+    const auto& expectedTable = dataTable;
 
     const auto rows = actualTable.rows.size();
-    ASSERT_THAT(rows, testing::Eq(expectedTalbe->rows.size()));
+    ASSERT_THAT(rows, testing::Eq(expectedTable->rows.size()));
 
     for (auto rowIdx = 0; rowIdx < rows; ++rowIdx)
     {
-        const auto columns = expectedTalbe->rows[rowIdx].cells.size();
+        const auto columns = expectedTable->rows[rowIdx].cells.size();
         ASSERT_THAT(columns, testing::Eq(actualTable.rows[rowIdx].cells.size()));
         for (auto colIdx = 0; colIdx < columns; ++colIdx)
         {
-            const auto& expectedCell = expectedTalbe->rows[rowIdx].cells[colIdx];
+            const auto& expectedCell = expectedTable->rows[rowIdx].cells[colIdx];
             const auto& actualCell = actualTable.rows[rowIdx].cells[colIdx];
             EXPECT_THAT(expectedCell.value, testing::StrEq(actualCell.value)) << "at row " << rowIdx << " column " << colIdx;
         }
