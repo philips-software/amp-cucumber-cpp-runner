@@ -1,5 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
-#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 HOOK_BEFORE_SCENARIO()
 {
@@ -13,7 +13,7 @@ WHEN(R"(a step passes)")
 
 WHEN(R"(a step fails)")
 {
-    ASSERT_THAT(true, false);
+    FAIL();
 }
 
 HOOK_AFTER_SCENARIO()

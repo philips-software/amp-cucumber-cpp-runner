@@ -1,5 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
-#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 HOOK_BEFORE_ALL()
 {
@@ -8,7 +8,7 @@ HOOK_BEFORE_ALL()
 
 HOOK_BEFORE_ALL()
 {
-    ASSERT_THAT(true, false);
+    FAIL();
 }
 
 HOOK_BEFORE_ALL()
