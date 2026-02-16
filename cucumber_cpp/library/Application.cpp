@@ -41,7 +41,7 @@ namespace cucumber_cpp::library
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        void CollectFilesFromDirectory(std::set<std::filesystem::path, std::less<>>& foundFiles, std::filesystem::path folder, Application::Options& options)
+        void CollectFilesFromDirectory(std::set<std::filesystem::path, std::less<>>& foundFiles, const std::filesystem::path& folder, const Application::Options& options)
         {
             if (options.recursive)
                 for (const auto& entry : std::filesystem::recursive_directory_iterator{ folder } | std::views::filter(IsFeatureFile))
@@ -55,7 +55,7 @@ namespace cucumber_cpp::library
         {
             std::set<std::filesystem::path, std::less<>> foundFiles;
 
-            for (const auto feature : options.paths)
+            for (const auto& feature : options.paths)
                 if (std::filesystem::is_directory(feature))
                     CollectFilesFromDirectory(foundFiles, feature, options);
                 else if (IsFeatureFile(std::filesystem::directory_entry{ feature }))
