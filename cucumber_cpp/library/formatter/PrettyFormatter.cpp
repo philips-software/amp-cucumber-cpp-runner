@@ -16,7 +16,6 @@
 #include <cstdlib>
 #include <map>
 #include <optional>
-#include <ostream>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -141,6 +140,7 @@ namespace cucumber_cpp::library::formatter
             helper::PrintStepArgument(outputStream, *pickleStep, scenarioIndent, options.useStatusIcon, options.theme);
             helper::PrintAmbiguousStep(outputStream, query, testStepFinished, testStep, scenarioIndent, options.useStatusIcon, options.theme);
         }
+
         helper::PrintError(outputStream, testStepFinished, scenarioIndent, options.useStatusIcon, options.theme);
     }
 
@@ -151,5 +151,4 @@ namespace cucumber_cpp::library::formatter
         if (!content.empty())
             fmt::println(outputStream, "{}", content);
     }
-
 }

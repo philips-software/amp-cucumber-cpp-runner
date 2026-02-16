@@ -3,7 +3,6 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "fmt/format.h"
 #include <cstddef>
-#include <format>
 #include <ranges>
 #include <span>
 #include <stdexcept>
