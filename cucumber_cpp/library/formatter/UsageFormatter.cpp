@@ -18,8 +18,10 @@
 #include <cstddef>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <map>
+#include <numeric>
 #include <optional>
 #include <ostream>
 #include <ranges>
@@ -63,7 +65,6 @@ namespace cucumber_cpp::library::formatter
             std::map<std::string, Usage, std::less<>> mapping;
 
             for (const auto& [id, stepDefinition] : query.StepDefinitions())
-            {
                 mapping[id] = Usage{
                     .line = stepDefinition.source_reference.location.value_or(cucumber::messages::location{}).line,
                     .matches = {},
@@ -72,7 +73,6 @@ namespace cucumber_cpp::library::formatter
                     .uri = stepDefinition.source_reference.uri.value_or(""),
                     .meanDuration = {},
                 };
-            }
 
             return mapping;
         }
@@ -124,20 +124,23 @@ namespace cucumber_cpp::library::formatter
             if (matches.empty())
                 return std::chrono::nanoseconds{ -1 };
 
-            std::chrono::nanoseconds totalDuration{};
-            std::size_t countDuration{};
+            auto validDurations = matches |
+                                  std::views::filter([](const UsageMatch& m)
+                                      {
+                                          return m.duration.has_value();
+                                      }) |
+                                  std::views::transform([](const UsageMatch& m)
+                                      {
+                                          return m.duration.value();
+                                      });
 
-            for (const auto& match : matches)
-                if (match.duration.has_value())
-                {
-                    ++countDuration;
-                    totalDuration += match.duration.value();
-                }
+            const auto count = std::ranges::distance(validDurations);
 
-            if (countDuration != 0)
-                return totalDuration / countDuration;
+            if (count == 0)
+                return std::nullopt;
 
-            return std::nullopt;
+            const auto total = std::accumulate(validDurations.begin(), validDurations.end(), std::chrono::nanoseconds{});
+            return total / count;
         }
 
         void PopulateMappingWithMatches(const query::Query& query, std::map<std::string, Usage, std::less<>>& mapping)
