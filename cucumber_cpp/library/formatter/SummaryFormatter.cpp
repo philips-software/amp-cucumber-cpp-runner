@@ -22,6 +22,7 @@
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <functional>
 #include <map>
 #include <numeric>
 #include <ostream>
@@ -44,6 +45,82 @@ namespace cucumber_cpp::library::formatter
         {
             return status == cucumber::messages::test_step_result_status::PENDING ||
                    (status == cucumber::messages::test_step_result_status::FAILED && willBeRetried);
+        }
+
+        struct SummaryData
+        {
+            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> warningTestStepResults;
+            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> failedTestStepResults;
+            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> scenarioCounts;
+            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> stepCounts;
+            cucumber::messages::duration totalStepDuration{};
+        };
+
+        void ClassifyTestCaseResult(
+            const std::string& id,
+            const cucumber::messages::test_case_started& testCaseStarted,
+            const cucumber::messages::test_step_result* testStepResult,
+            bool willBeRetried,
+            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>>& warningResults,
+            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>>& failedResults)
+        {
+            if (testStepResult == nullptr)
+                return;
+
+            if (IsWarning(testStepResult->status, willBeRetried))
+                warningResults[id] = &testCaseStarted;
+
+            if (IsFailure(testStepResult->status, willBeRetried))
+                failedResults[id] = &testCaseStarted;
+        }
+
+        void CountScenarioResult(
+            const query::Query& query,
+            const cucumber::messages::test_case_finished& testCaseFinished,
+            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& scenarioCounts)
+        {
+            if (const auto& testStepResultPtr = query.FindMostSevereTestStepResultBy(testCaseFinished); testStepResultPtr.has_value())
+                ++scenarioCounts[testStepResultPtr.value()->status];
+            else
+                ++scenarioCounts[cucumber::messages::test_step_result_status::PASSED];
+        }
+
+        void CountStepResults(
+            const query::Query& query,
+            const cucumber::messages::test_case_started& testCaseStarted,
+            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& stepCounts,
+            cucumber::messages::duration& totalStepDuration)
+        {
+            const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
+            for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
+            {
+                if (testStep->pickle_step_id.has_value())
+                {
+                    ++stepCounts[testStepFinished->test_step_result.status];
+                    totalStepDuration += testStepFinished->test_step_result.duration;
+                }
+            }
+        }
+
+        SummaryData CollectSummaryData(const query::Query& query)
+        {
+            SummaryData data;
+
+            for (const auto& [id, testCaseStarted] : query.TestCaseStarted())
+            {
+                const auto& testCaseFinished = query.TestCaseFinishedByTestCaseStartedId().at(testCaseStarted.id);
+                const auto* testStepResult = query.FindMostSevereTestStepResultBy(testCaseStarted).value_or(nullptr);
+
+                ClassifyTestCaseResult(id, testCaseStarted, testStepResult, testCaseFinished.will_be_retried, data.warningTestStepResults, data.failedTestStepResults);
+
+                if (!testCaseFinished.will_be_retried)
+                {
+                    CountScenarioResult(query, testCaseFinished, data.scenarioCounts);
+                    CountStepResults(query, testCaseStarted, data.stepCounts, data.totalStepDuration);
+                }
+            }
+
+            return data;
         }
 
         std::size_t CalculateLength(const query::Query& query, const cucumber::messages::pickle& pickle, const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished, const cucumber::messages::scenario& scenario, const cucumber::messages::test_case& testCase, bool useStatusIcon, const helper::Theme& theme)
@@ -135,7 +212,7 @@ namespace cucumber_cpp::library::formatter
             HandleTestSteps(stream, query, testCaseStarted, scenarioIndent, maxContentLength, useStatusIcon, theme);
         }
 
-        void HandleTestCaseStartedList(std::ostream& stream, const query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::test_case_started*> testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestCaseStartedList(std::ostream& stream, const query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
         {
             if (testCaseStartedList.empty())
                 return;
@@ -146,7 +223,7 @@ namespace cucumber_cpp::library::formatter
                 HandleTestCaseStarted(stream, query, *testCaseStarted, useStatusIcon, theme);
         }
 
-        void HandleSummary(std::ostream& stream, const std::string& summary, const std::map<cucumber::messages::test_step_result_status, std::size_t>& counts, const helper::Theme& theme)
+        void HandleSummary(std::ostream& stream, const std::string& summary, const std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& counts, const helper::Theme& theme)
         {
             const auto countToStatusString = [&theme](const auto& pair)
             {
@@ -180,49 +257,13 @@ namespace cucumber_cpp::library::formatter
 
     void SummaryFormatter::LogSummary(const cucumber::messages::duration& testRunDuration)
     {
-        std::map<std::string, const cucumber::messages::test_case_started*> warningTestStepResults{};
-        std::map<std::string, const cucumber::messages::test_case_started*> failedTestStepResults{};
+        const auto data = CollectSummaryData(query);
 
-        std::map<cucumber::messages::test_step_result_status, std::size_t> scenarioCounts;
-        std::map<cucumber::messages::test_step_result_status, std::size_t> stepCounts;
+        HandleTestCaseStartedList(outputStream, query, "Warnings", data.warningTestStepResults, options.useStatusIcon, options.theme);
+        HandleTestCaseStartedList(outputStream, query, "Failures", data.failedTestStepResults, options.useStatusIcon, options.theme);
+        HandleSummary(outputStream, "scenarios", data.scenarioCounts, options.theme);
+        HandleSummary(outputStream, "steps", data.stepCounts, options.theme);
 
-        cucumber::messages::duration totalStepDuration{};
-
-        for (const auto& [id, testCaseStarted] : query.TestCaseStarted())
-        {
-            const auto& testCaseFinished = query.TestCaseFinishedByTestCaseStartedId().at(testCaseStarted.id);
-            const auto* testStepResult = query.FindMostSevereTestStepResultBy(testCaseStarted).value_or(nullptr);
-
-            if (testStepResult != nullptr && IsWarning(testStepResult->status, testCaseFinished.will_be_retried))
-                warningTestStepResults[id] = &testCaseStarted;
-
-            if (testStepResult != nullptr && IsFailure(testStepResult->status, testCaseFinished.will_be_retried))
-                failedTestStepResults[id] = &testCaseStarted;
-
-            if (!testCaseFinished.will_be_retried)
-            {
-                if (const auto& testStepResultPtr = query.FindMostSevereTestStepResultBy(testCaseFinished); testStepResultPtr.has_value())
-                    ++scenarioCounts[testStepResultPtr.value()->status];
-                else
-                    ++scenarioCounts[cucumber::messages::test_step_result_status::PASSED];
-
-                const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
-                for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
-                {
-                    if (testStep->pickle_step_id.has_value())
-                    {
-                        ++stepCounts[testStepFinished->test_step_result.status];
-                        totalStepDuration += testStepFinished->test_step_result.duration;
-                    }
-                }
-            }
-        }
-
-        HandleTestCaseStartedList(outputStream, query, "Warnings", warningTestStepResults, options.useStatusIcon, options.theme);
-        HandleTestCaseStartedList(outputStream, query, "Failures", failedTestStepResults, options.useStatusIcon, options.theme);
-        HandleSummary(outputStream, "scenarios", scenarioCounts, options.theme);
-        HandleSummary(outputStream, "steps", stepCounts, options.theme);
-
-        fmt::println(outputStream, "{:%Mm %S}s (executing steps: {:%Mm %S}s)", util::DurationToMilliseconds(testRunDuration), util::DurationToMilliseconds(totalStepDuration));
+        fmt::println(outputStream, "{:%Mm %S}s (executing steps: {:%Mm %S}s)", util::DurationToMilliseconds(testRunDuration), util::DurationToMilliseconds(data.totalStepDuration));
     }
 }
