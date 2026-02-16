@@ -56,7 +56,7 @@ namespace cucumber_cpp::library
             std::vector<std::string> tags{};
         };
 
-        Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
 
         [[nodiscard]] int Run(int argc, const char* const* argv);
 
