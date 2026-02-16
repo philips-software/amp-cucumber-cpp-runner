@@ -136,7 +136,7 @@ namespace cucumber_cpp::library::api
         {
             const auto createOrderedPickleList = [](auto ordered) -> std::list<support::PickleSource>
             {
-                return { ordered.begin(), ordered.end() };
+                return { std::begin(ordered), std::end(ordered) };
             };
 
             if (sources.ordering == support::RunOptions::Ordering::defined)
@@ -145,7 +145,7 @@ namespace cucumber_cpp::library::api
                 return createOrderedPickleList(pickles | std::views::reverse);
         };
 
-        void signal_handler(int signal)
+        [[noreturn]] void SignalHandler(int signal)
         {
             if (signal == SIGABRT)
                 std::cerr << "SIGABRT received\n";
@@ -156,13 +156,17 @@ namespace cucumber_cpp::library::api
 
         struct OverrideAbortSignalHandler
         {
+            OverrideAbortSignalHandler() = default;
+            OverrideAbortSignalHandler(const OverrideAbortSignalHandler&) = delete;
+            OverrideAbortSignalHandler(OverrideAbortSignalHandler&&) = delete;
+
             ~OverrideAbortSignalHandler()
             {
                 std::signal(SIGABRT, original);
             }
 
             using signal_handler_t = void (*)(int);
-            signal_handler_t original{ std::signal(SIGABRT, signal_handler) };
+            signal_handler_t original{ std::signal(SIGABRT, SignalHandler) };
         };
     }
 
