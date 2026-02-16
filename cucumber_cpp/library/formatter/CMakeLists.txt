@@ -15,6 +15,10 @@ target_sources(cucumber_cpp.library.formatter PRIVATE
     UsageFormatter.hpp
 )
 
+target_compile_definitions(cucumber_cpp.library.formatter PRIVATE
+    SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 target_include_directories(cucumber_cpp.library.formatter PUBLIC
     ../../..
 )

@@ -13,12 +13,15 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <filesystem>
 #include <functional>
 #include <list>
 #include <map>
 #include <optional>
+#include <ostream>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -161,6 +164,101 @@ namespace cucumber_cpp::library::formatter
 
             return usageList;
         }
+
+        struct ColumnWidths
+        {
+            std::size_t pattern;
+            std::size_t duration;
+            std::size_t location;
+        };
+
+        std::string FormatLocation(const std::string& uri, std::size_t line)
+        {
+            return fmt::format("{}:{}", uri, line);
+        }
+
+        std::string FormatLocation(std::string_view base, const std::string& uri, std::size_t line)
+        {
+            return fmt::format("{}:{}", std::filesystem::relative(uri, base).make_preferred().string(), line);
+        }
+
+        std::string FormatDuration(const std::optional<std::chrono::nanoseconds>& duration)
+        {
+            if (duration.has_value())
+                return fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(duration.value()));
+            return "-";
+        }
+
+        ColumnWidths CalculateColumnWidths(const std::list<Usage>& usageList)
+        {
+            ColumnWidths widths{
+                .pattern = std::string("Pattern / Text").size(),
+                .duration = std::string("Duration").size(),
+                .location = std::string("Location").size()
+            };
+
+            for (const auto& usage : usageList)
+            {
+                widths.pattern = std::max(widths.pattern, usage.pattern.size());
+                widths.location = std::max(widths.location, FormatLocation(usage.uri, usage.line).size());
+                widths.duration = std::max(widths.duration, FormatDuration(usage.meanDuration).size());
+
+                for (const auto& match : usage.matches)
+                {
+                    widths.pattern = std::max(widths.pattern, match.text.size() + 2);
+                    widths.location = std::max(widths.location, FormatLocation(match.uri, match.line).size());
+                }
+            }
+
+            return widths;
+        }
+
+        void PrintRow(std::ostream& stream, const ColumnWidths& widths, const auto& col1, const auto& col2, const auto& col3, const helper::Theme& theme)
+        {
+            fmt::println(stream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", theme.table.vertical, col1, widths.pattern, col2, widths.duration, col3, widths.location);
+        }
+
+        void PrintTableHeader(std::ostream& stream, const ColumnWidths& widths, const std::string& topRow, const helper::Theme& theme)
+        {
+            fmt::println(stream, fmt::runtime(topRow), "", widths.pattern, "", widths.duration, "", widths.location);
+
+            PrintRow(stream, widths, "Pattern / Text", "Duration", "Location", theme);
+        }
+
+        void PrintUsagePattern(std::ostream& stream, const Usage& usage, const ColumnWidths& widths, const helper::Theme& theme)
+        {
+            if (usage.matches.empty())
+                PrintRow(stream, widths, usage.pattern, "UNUSED", FormatLocation(SOURCE_DIR, usage.uri, usage.line), theme);
+            else
+                PrintRow(stream, widths, usage.pattern, FormatDuration(usage.meanDuration), FormatLocation(SOURCE_DIR, usage.uri, usage.line), theme);
+        }
+
+        void PrintUsageMatch(std::ostream& stream, const UsageMatch& match, const ColumnWidths& widths, const helper::Theme& theme)
+        {
+            PrintRow(stream, widths, match.text, FormatDuration(match.duration), FormatLocation(match.uri, match.line), theme);
+        }
+
+        void PrintUsageWithMatches(std::ostream& stream, const Usage& usage, const ColumnWidths& widths, const std::string& divider, const helper::Theme& theme)
+        {
+            fmt::println(stream, "{}", divider);
+            PrintUsagePattern(stream, usage, widths, theme);
+
+            for (const auto& match : usage.matches)
+                PrintUsageMatch(stream, match, widths, theme);
+        }
+
+        void PrintUsageTable(std::ostream& stream, const std::list<Usage>& usageList, const std::string& topRow, const std::string& middleRow, const std::string& bottomRow, const helper::Theme& theme)
+        {
+            const auto widths = CalculateColumnWidths(usageList);
+            const auto divider = fmt::format(fmt::runtime(middleRow), "", widths.pattern, "", widths.duration, "", widths.location);
+
+            PrintTableHeader(stream, widths, topRow, theme);
+
+            for (const auto& usage : usageList)
+                PrintUsageWithMatches(stream, usage, widths, divider, theme);
+
+            fmt::println(stream, fmt::runtime(bottomRow), "", widths.pattern, "", widths.duration, "", widths.location);
+        }
     }
 
     UsageFormatter::Options::Options(const nlohmann::json& json)
@@ -172,54 +270,6 @@ namespace cucumber_cpp::library::formatter
     void UsageFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
     {
         if (envelope.test_run_finished.has_value())
-        {
-            const auto& mapping = GetUsage(query, options.unusedOnly);
-
-            auto patternWidth = std::string("Pattern / Text").size();
-            auto durationWidth = std::string("Duration").size();
-            auto locationWidth = std::string("Location").size();
-
-            for (const auto& usage : mapping)
-            {
-                patternWidth = std::max(patternWidth, usage.pattern.size());
-                locationWidth = std::max(locationWidth, fmt::format("{}:{}", usage.uri, usage.line).size());
-
-                if (usage.meanDuration.has_value())
-                    durationWidth = std::max(durationWidth, fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value())).size());
-                else
-                    durationWidth = std::max(durationWidth, std::string("-").size());
-
-                for (const auto& match : usage.matches)
-                {
-                    patternWidth = std::max(patternWidth, match.text.size() + 2);
-                    locationWidth = std::max(locationWidth, fmt::format("{}:{}", match.uri, match.line).size());
-                }
-            }
-
-            fmt::println(outputStream, fmt::runtime(topRow), "", patternWidth, "", durationWidth, "", locationWidth);
-            fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, "Pattern / Text", patternWidth, "Duration", durationWidth, "Location", locationWidth);
-
-            const auto horizontalDivider = fmt::format(fmt::runtime(middleRow), "", patternWidth, "", durationWidth, "", locationWidth);
-
-            for (const auto& usage : mapping)
-            {
-                fmt::println(outputStream, "{}", horizontalDivider);
-
-                if (usage.matches.empty())
-                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, "UNUSED", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
-                else if (usage.meanDuration.has_value())
-                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, std::chrono::duration_cast<std::chrono::milliseconds>(usage.meanDuration.value()), durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
-                else
-                    fmt::println(outputStream, "{0} {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, usage.pattern, patternWidth, "-", durationWidth, fmt::format("{}:{}", usage.uri, usage.line), locationWidth);
-
-                for (const auto& match : usage.matches)
-                    if (match.duration.has_value())
-                        fmt::println(outputStream, "{0}   {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, match.text, patternWidth - 2, std::chrono::duration_cast<std::chrono::milliseconds>(match.duration.value()), durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
-                    else
-                        fmt::println(outputStream, "{0}   {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", options.theme.table.vertical, match.text, patternWidth - 2, "-", durationWidth, fmt::format("{}:{}", match.uri, match.line), locationWidth);
-            }
-
-            fmt::println(outputStream, fmt::runtime(bottomRow), "", patternWidth, "", durationWidth, "", locationWidth);
-        }
+            PrintUsageTable(outputStream, GetUsage(query, options.unusedOnly), topRow, middleRow, bottomRow, options.theme);
     }
 }
