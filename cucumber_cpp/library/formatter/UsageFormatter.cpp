@@ -2,6 +2,9 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/step_definition_pattern_type.hpp"
+#include "cucumber/messages/test_case.hpp"
+#include "cucumber/messages/test_step.hpp"
+#include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
@@ -74,10 +77,71 @@ namespace cucumber_cpp::library::formatter
             return mapping;
         }
 
-        std::map<std::string, Usage, std::less<>> BuildMapping(const query::Query& query)
+        bool ShouldProcessTestStep(const cucumber::messages::test_step& testStep)
         {
-            auto mapping = BuildEmptyMapping(query);
+            return testStep.step_definition_ids.has_value() && testStep.step_definition_ids.value().size() == 1;
+        }
 
+        UsageMatch CreateUsageMatch(
+            const query::Query& query,
+            const cucumber::messages::test_step_finished& testStepFinished,
+            const cucumber::messages::test_step& testStep,
+            const cucumber::messages::test_case& testCase)
+        {
+            const auto& pickleStep = query.FindPickleStepById(testStep.pickle_step_id.value());
+            const auto& pickle = query.FindPickleById(testCase.pickle_id);
+            const auto& step = query.FindStepBy(pickleStep);
+            const auto& lineage = query.FindLineageByPickle(pickle);
+
+            std::optional<std::chrono::nanoseconds> duration{};
+            if (HasExecuted(testStepFinished.test_step_result.status))
+                duration = util::DurationToNanoSeconds(query.FindTestStepDurationByTestStepId(testStepFinished.test_step_id));
+
+            return UsageMatch{
+                .duration = duration,
+                .line = step.location.line,
+                .text = pickleStep.text,
+                .uri = lineage.gherkinDocument->uri.value_or("")
+            };
+        }
+
+        void AddUsageMatchToMapping(
+            const query::Query& query,
+            const cucumber::messages::test_step_finished& testStepFinished,
+            const cucumber::messages::test_step& testStep,
+            const cucumber::messages::test_case& testCase,
+            std::map<std::string, Usage, std::less<>>& mapping)
+        {
+            if (!ShouldProcessTestStep(testStep))
+                return;
+
+            const auto& stepDefinitionId = testStep.step_definition_ids.value().front();
+            mapping.at(stepDefinitionId).matches.emplace_back(CreateUsageMatch(query, testStepFinished, testStep, testCase));
+        }
+
+        std::optional<std::chrono::nanoseconds> CalculateMeanDuration(const std::list<UsageMatch>& matches)
+        {
+            if (matches.empty())
+                return std::chrono::nanoseconds{ -1 };
+
+            std::chrono::nanoseconds totalDuration{};
+            std::size_t countDuration{};
+
+            for (const auto& match : matches)
+                if (match.duration.has_value())
+                {
+                    ++countDuration;
+                    totalDuration += match.duration.value();
+                }
+
+            if (countDuration != 0)
+                return totalDuration / countDuration;
+
+            return std::nullopt;
+        }
+
+        void PopulateMappingWithMatches(const query::Query& query, std::map<std::string, Usage, std::less<>>& mapping)
+        {
             for (const auto& [testCaseStartedId, testCaseFinished] : query.TestCaseFinishedByTestCaseStartedId())
             {
                 const auto& testCaseStarted = query.FindTestCaseStartedById(testCaseStartedId);
@@ -85,48 +149,21 @@ namespace cucumber_cpp::library::formatter
                 const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
                 for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
-                {
-                    if (!testStep->step_definition_ids.has_value() || testStep->step_definition_ids.value().size() != 1)
-                        continue;
-
-                    const auto& pickleStep = query.FindPickleStepById(testStep->pickle_step_id.value());
-                    const auto& pickle = query.FindPickleById(testCase.pickle_id);
-                    const auto& step = query.FindStepBy(pickleStep);
-                    const auto& stepDefinitionId = testStep->step_definition_ids.value().front();
-                    const auto& lineage = query.FindLineageByPickle(pickle);
-
-                    std::optional<std::chrono::nanoseconds> duration{};
-                    if (HasExecuted(testStepFinished->test_step_result.status))
-                        duration = util::DurationToNanoSeconds(query.FindTestStepDurationByTestStepId(testStepFinished->test_step_id));
-
-                    mapping.at(stepDefinitionId).matches.emplace_back(duration, step.location.line, pickleStep.text, lineage.gherkinDocument->uri.value_or(""));
-                }
+                    AddUsageMatchToMapping(query, *testStepFinished, *testStep, testCase, mapping);
             }
+        }
 
+        void FinalizeMappingWithMeanDurations(std::map<std::string, Usage, std::less<>>& mapping)
+        {
             for (auto& usage : mapping | std::views::values)
-            {
+                usage.meanDuration = CalculateMeanDuration(usage.matches);
+        }
 
-                if (usage.matches.empty())
-                    usage.meanDuration = std::chrono::nanoseconds{ -1 };
-                else
-                {
-                    std::chrono::nanoseconds totalDuration{};
-                    std::size_t countDuration{};
-
-                    for (const auto& match : usage.matches)
-                    {
-                        if (match.duration.has_value())
-                        {
-                            ++countDuration;
-                            totalDuration += match.duration.value_or(std::chrono::nanoseconds{});
-                        }
-                    }
-
-                    if (countDuration != 0)
-                        usage.meanDuration = totalDuration / countDuration;
-                }
-            }
-
+        std::map<std::string, Usage, std::less<>> BuildMapping(const query::Query& query)
+        {
+            auto mapping = BuildEmptyMapping(query);
+            PopulateMappingWithMatches(query, mapping);
+            FinalizeMappingWithMeanDurations(mapping);
             return mapping;
         }
 
