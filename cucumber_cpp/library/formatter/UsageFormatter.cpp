@@ -235,7 +235,7 @@ namespace cucumber_cpp::library::formatter
 
         void PrintUsageMatch(std::ostream& stream, const UsageMatch& match, const ColumnWidths& widths, const helper::Theme& theme)
         {
-            PrintRow(stream, widths, match.text, FormatDuration(match.duration), FormatLocation(match.uri, match.line), theme);
+            fmt::println(stream, "{0}   {1:<{2}} {0} {3:<{4}} {0} {5:<{6}} {0}", theme.table.vertical, match.text, widths.pattern - 2, FormatDuration(match.duration), widths.duration, FormatLocation(match.uri, match.line), widths.location);
         }
 
         void PrintUsageWithMatches(std::ostream& stream, const Usage& usage, const ColumnWidths& widths, const std::string& divider, const helper::Theme& theme)
