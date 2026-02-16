@@ -9,7 +9,9 @@
 struct LoadMeOnConstruction
 {
     void Tadaa() const
-    {}
+    {
+        // no-op
+    }
 };
 
 struct CustomFixture : cucumber_cpp::library::engine::StepBase
