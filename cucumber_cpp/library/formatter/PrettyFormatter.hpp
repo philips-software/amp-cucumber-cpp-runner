@@ -1,25 +1,18 @@
-#ifndef FORMATTER_PRETTY_PRINTER_HPP
-#define FORMATTER_PRETTY_PRINTER_HPP
+#ifndef FORMATTER_PRETTY_FORMATTER_HPP
+#define FORMATTER_PRETTY_FORMATTER_HPP
 
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/pickle_step.hpp"
 #include "cucumber/messages/rule.hpp"
-#include "cucumber/messages/scenario.hpp"
-#include "cucumber/messages/step.hpp"
-#include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/test_case_started.hpp"
 #include "cucumber/messages/test_run_finished.hpp"
-#include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_finished.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include <cstddef>
 #include <map>
 #include <nlohmann/json_fwd.hpp>
-#include <optional>
 #include <set>
 #include <string>
 
