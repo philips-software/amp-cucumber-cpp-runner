@@ -214,7 +214,11 @@ $ example --format pretty -- ./feature/acceptance ./feature/integration
 
 # executes all tests matching the exact tag expression in the ./feature/acceptance and ./feature/integration folders
 $ example --format pretty --tags @smoke and not @ignore -- ./feature/acceptance ./feature/integration
+
+# On windows you might need to enclose the tags in quotes:
+$ example --format pretty --tags "@smoke and not @ignore" -- ./feature/acceptance ./feature/integration
 ```
+
 > ℹ️ use --help to see all available arguments and options
 
 ## Contributing
