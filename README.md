@@ -154,6 +154,8 @@ STEP(R"(the value should be {string})", (const std::string& expected_value))
 }
 ```
 
+> ℹ️ amp-cucumber-cpp-runner has been configured to throw on a failed `ASSERT_`'s. However, failed `EXPECT_`'s continue execution.
+
 If asserting (or expecting) is not an option then it is also safe to throw exceptions.
 
 ## Writing hook definitions
@@ -213,6 +215,7 @@ $ example --format pretty -- ./feature/acceptance ./feature/integration
 # executes all tests matching the exact tag expression in the ./feature/acceptance and ./feature/integration folders
 $ example --format pretty --tags @smoke and not @ignore -- ./feature/acceptance ./feature/integration
 ```
+> ℹ️ use --help to see all available arguments and options
 
 ## Contributing
 
