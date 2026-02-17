@@ -4,7 +4,7 @@ add_test(NAME cucumber_cpp.library.engine.test COMMAND cucumber_cpp.library.engi
 target_link_libraries(cucumber_cpp.library.engine.test PUBLIC
     cucumber_cpp.library
     cucumber_cpp.library.engine
-    gmock_main
+    GTest::gmock_main
     # cucumber_cpp.library.engine.test_helper
     # cucumber_cpp.library.engine.test_helper.steps
 )

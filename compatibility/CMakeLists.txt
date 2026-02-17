@@ -8,7 +8,7 @@ function(add_compatibility_kit name)
 
     target_link_libraries(${libname} PRIVATE
         cucumber_cpp
-        gtest_main
+        GTest::gtest_main
     )
 
     target_include_directories(${libname} PUBLIC
