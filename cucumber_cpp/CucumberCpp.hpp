@@ -7,14 +7,14 @@
 #include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/Steps.hpp"
 #include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
-#include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 
 namespace cucumber_cpp
 {
     using cucumber_cpp::library::Application;
     using cucumber_cpp::library::Context;
+    using cucumber_cpp::library::cucumber_expression::StringTo;
     using cucumber_cpp::library::engine::StepBase;
-    using cucumber_cpp::library::engine::StringTo;
 }
 
 #endif

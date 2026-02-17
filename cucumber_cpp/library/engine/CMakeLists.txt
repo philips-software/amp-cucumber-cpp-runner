@@ -7,7 +7,6 @@ target_sources(cucumber_cpp.library.engine PRIVATE
     Hook.hpp
     Step.cpp
     Step.hpp
-    StringTo.hpp
 )
 
 target_include_directories(cucumber_cpp.library.engine PUBLIC

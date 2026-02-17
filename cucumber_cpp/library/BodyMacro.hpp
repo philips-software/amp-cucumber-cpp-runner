@@ -3,7 +3,6 @@
 
 #include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/StringTo.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
