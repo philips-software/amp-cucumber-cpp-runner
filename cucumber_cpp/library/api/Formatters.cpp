@@ -7,7 +7,7 @@
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <filesystem>
 #include <fstream>
 #include <functional>

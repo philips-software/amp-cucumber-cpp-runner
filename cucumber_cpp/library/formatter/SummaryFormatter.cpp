@@ -19,7 +19,7 @@
 #include "cucumber_cpp/library/util/ToLower.hpp"
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <functional>

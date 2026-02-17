@@ -10,7 +10,7 @@
 #include "cucumber_cpp/library/formatter/helper/PrintMessages.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "fmt/ostream.h"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>

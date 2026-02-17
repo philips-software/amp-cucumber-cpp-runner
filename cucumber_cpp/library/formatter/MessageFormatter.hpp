@@ -3,7 +3,7 @@
 
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <optional>
 #include <string>
 

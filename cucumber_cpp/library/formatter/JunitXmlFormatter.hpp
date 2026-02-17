@@ -2,9 +2,8 @@
 #define FORMATTER_JUNIT_XML_FORMATTER_HPP
 
 #include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include "pugixml.hpp"
 #include <optional>
 #include <string>

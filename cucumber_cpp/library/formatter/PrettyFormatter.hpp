@@ -12,7 +12,7 @@
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include <cstddef>
 #include <map>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
 #include <string>
 

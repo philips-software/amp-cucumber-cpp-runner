@@ -10,7 +10,6 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "nlohmann/json.hpp"
-#include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <chrono>

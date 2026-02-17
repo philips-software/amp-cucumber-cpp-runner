@@ -6,7 +6,7 @@
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "fmt/base.h"
 #include "fmt/format.h"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <string>
 
 namespace cucumber_cpp::library::formatter

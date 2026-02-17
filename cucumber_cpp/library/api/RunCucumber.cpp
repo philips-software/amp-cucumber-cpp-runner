@@ -17,7 +17,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <csignal>
 #include <cstdlib>
 #include <functional>

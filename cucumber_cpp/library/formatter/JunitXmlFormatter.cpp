@@ -13,7 +13,7 @@
 #include "cucumber_cpp/library/util/Trim.hpp"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include "pugixml.hpp"
 #include <algorithm>
 #include <cctype>

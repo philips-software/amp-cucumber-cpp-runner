@@ -5,7 +5,7 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <cstddef>
 
 namespace cucumber_cpp::library::formatter

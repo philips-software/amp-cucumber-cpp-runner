@@ -12,7 +12,7 @@
 #include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
