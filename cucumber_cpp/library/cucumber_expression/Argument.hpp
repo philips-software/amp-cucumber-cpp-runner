@@ -4,6 +4,7 @@
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <span>
+#include <string>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -22,8 +23,8 @@ namespace cucumber_cpp::library::cucumber_expression
             return ConverterTypeMap<T>::Instance().at(parameter.name)(group);
         }
 
-        cucumber::messages::group Group() const;
-        std::string Name() const;
+        [[nodiscard]] cucumber::messages::group Group() const;
+        [[nodiscard]] std::string Name() const;
 
     private:
         cucumber::messages::group group;

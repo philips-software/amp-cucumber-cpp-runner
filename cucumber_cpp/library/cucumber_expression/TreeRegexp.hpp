@@ -16,16 +16,16 @@ namespace cucumber_cpp::library::cucumber_expression
         void Add(GroupBuilder groupBuilder);
 
         void SetNonCapturing();
-        bool IsCapturing() const;
+        [[nodiscard]] bool IsCapturing() const;
 
         void SetPattern(std::string_view pattern);
 
         void MoveChildrenTo(GroupBuilder& target);
 
-        const std::list<GroupBuilder>& Children() const;
-        std::string_view Pattern() const;
+        [[nodiscard]] const std::list<GroupBuilder>& Children() const;
+        [[nodiscard]] std::string_view Pattern() const;
 
-        cucumber::messages::group Build(const std::smatch& match, std::size_t& index) const;
+        [[nodiscard]] cucumber::messages::group Build(const std::smatch& match, std::size_t& index) const;
 
     private:
         std::string_view pattern;
@@ -37,13 +37,11 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         explicit TreeRegexp(std::string_view pattern);
 
-        const GroupBuilder& RootBuilder() const;
+        [[nodiscard]] const GroupBuilder& RootBuilder() const;
 
-        std::optional<cucumber::messages::group> MatchToGroup(const std::string& text) const;
+        [[nodiscard]] std::optional<cucumber::messages::group> MatchToGroup(const std::string& text) const;
 
     private:
-        GroupBuilder CreateGroupBuilder(std::string_view pattern);
-
         GroupBuilder rootGroupBuilder;
         std::regex regex;
     };

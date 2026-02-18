@@ -11,7 +11,7 @@ namespace cucumber_cpp::library::cucumber_expression
 {
     struct ExpressionTokenizer
     {
-        std::vector<Token> Tokenize(std::string_view string);
+        std::vector<Token> Tokenize(std::string_view expressionToTokenize);
 
     private:
         [[nodiscard]] TokenType TokenTypeOf(char ch, bool treatAsText) const;

@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include "cucumber/messages/group.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <list>
 #include <optional>
@@ -59,7 +60,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         struct PatternGroupParser
         {
-            enum class State
+            enum class State : std::uint8_t
             {
                 nonGroup,
                 groupStart,
@@ -88,6 +89,39 @@ namespace cucumber_cpp::library::cucumber_expression
             bool escaping{ false };
             bool charClass{ false };
         };
+
+        GroupBuilder CreateGroupBuilder(std::string_view pattern)
+        {
+            std::deque<GroupBuilder> stack;
+            std::deque<std::size_t> groupStartStack;
+            PatternGroupParser patternParser;
+
+            stack.emplace_back();
+
+            for (std::size_t i = 0; i < pattern.size(); ++i)
+            {
+                const char c = pattern[i];
+
+                switch (patternParser.Parse(c))
+                {
+                    case PatternGroupParser::State::groupStart:
+                        StartGroup(stack, groupStartStack, pattern, i);
+                        break;
+
+                    case PatternGroupParser::State::groupClose:
+                        FinalizeGroup(stack, groupStartStack, pattern, i);
+                        break;
+
+                    case PatternGroupParser::State::nonGroup:
+                        break;
+                }
+            }
+
+            if (stack.empty())
+                throw std::runtime_error("Empty stack");
+
+            return stack.back();
+        }
     }
 
     void GroupBuilder::Add(GroupBuilder groupBuilder)
@@ -130,16 +164,17 @@ namespace cucumber_cpp::library::cucumber_expression
     cucumber::messages::group GroupBuilder::Build(const std::smatch& match, std::size_t& index) const
     {
         const auto groupIndex = index++;
+        const auto& matchGroup = match[groupIndex];
+
         const auto children = this->children | std::views::transform([&match, &index](const auto& child)
                                                    {
                                                        return child.Build(match, index);
                                                    });
-        const auto value = match[groupIndex].matched ? std::make_optional(match[groupIndex].str()) : std::nullopt;
 
         return {
             .children = std::vector<cucumber::messages::group>(children.begin(), children.end()),
-            .start = match[groupIndex].matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
-            .value = value,
+            .start = matchGroup.matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
+            .value = matchGroup.matched ? std::make_optional(matchGroup.str()) : std::nullopt,
         };
     }
 
@@ -163,38 +198,4 @@ namespace cucumber_cpp::library::cucumber_expression
         std::size_t index = 0;
         return rootGroupBuilder.Build(match, index);
     }
-
-    GroupBuilder TreeRegexp::CreateGroupBuilder(std::string_view pattern)
-    {
-        std::deque<GroupBuilder> stack;
-        std::deque<std::size_t> groupStartStack;
-        PatternGroupParser patternParser;
-
-        stack.emplace_back();
-
-        for (std::size_t i = 0; i < pattern.size(); ++i)
-        {
-            const char c = pattern[i];
-
-            switch (patternParser.Parse(c))
-            {
-                case PatternGroupParser::State::groupStart:
-                    StartGroup(stack, groupStartStack, pattern, i);
-                    break;
-
-                case PatternGroupParser::State::groupClose:
-                    FinalizeGroup(stack, groupStartStack, pattern, i);
-                    break;
-
-                case PatternGroupParser::State::nonGroup:
-                    break;
-            }
-        }
-
-        if (stack.empty())
-            throw std::runtime_error("Empty stack");
-
-        return stack.back();
-    }
-
 }

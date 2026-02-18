@@ -11,20 +11,23 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    std::string PointAt(std::size_t column)
+    namespace
     {
-        return std::string(column, ' ') + "^";
-    }
-
-    std::string PointAtLocated(const auto& node)
-    {
-        auto pointer = PointAt(node.Start());
-        if (node.Start() + 1 < node.End())
+        std::string PointAt(std::size_t column)
         {
-            pointer.resize(node.End() - 1, '-');
-            pointer += "^";
+            return std::string(column, ' ') + "^";
         }
-        return pointer;
+
+        std::string PointAtLocated(const auto& node)
+        {
+            auto pointer = PointAt(node.Start());
+            if (node.Start() + 1 < node.End())
+            {
+                pointer.resize(node.End() - 1, '-');
+                pointer += "^";
+            }
+            return pointer;
+        }
     }
 
     Error::Error(std::size_t column, std::string_view expression, std::string_view pointer, std::string_view problem, std::string_view solution)

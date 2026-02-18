@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -34,7 +35,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         CustomParameterEntryParams params;
 
-        std::size_t localId;
+        std::size_t localId{};
 
         std::source_location location;
 
@@ -168,13 +169,13 @@ namespace cucumber_cpp::library::cucumber_expression
     template<class T>
     void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
     {
-        AddParameter(Parameter{ name, regex, false, false, location }, converter);
+        AddParameter(Parameter{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = false, .useForSnippets = false, .location = location }, converter);
     }
 
     template<class T>
     void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
     {
-        AddParameter(Parameter{ name, regex, true, false, location }, converter);
+        AddParameter(Parameter{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = true, .useForSnippets = false, .location = location }, converter);
     }
 
     template<class T>

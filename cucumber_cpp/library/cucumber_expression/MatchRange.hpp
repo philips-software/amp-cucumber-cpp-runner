@@ -4,6 +4,7 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include <cstddef>
 #include <regex>
 #include <utility>
 
@@ -13,10 +14,10 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         using std::pair<std::smatch::const_iterator, std::smatch::const_iterator>::pair;
 
-        std::smatch::const_iterator begin() const;
-        std::smatch::const_iterator end() const;
+        [[nodiscard]] std::smatch::const_iterator begin() const;
+        [[nodiscard]] std::smatch::const_iterator end() const;
 
-        const std::ssub_match& operator[](std::size_t index) const;
+        [[nodiscard]] const std::ssub_match& operator[](std::ptrdiff_t index) const;
     };
 }
 

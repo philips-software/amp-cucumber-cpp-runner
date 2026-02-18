@@ -1,4 +1,3 @@
-
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
@@ -17,6 +16,61 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
+    namespace
+    {
+        std::string EscapeRegex(std::string_view text)
+        {
+            using namespace std::literals;
+            std::string escapedText{};
+            escapedText.reserve(text.size() * 2);
+            const auto escapePattern = R"(\^[({$.|?*+})])"sv;
+
+            for (const auto& character : text)
+            {
+                if (std::ranges::find(escapePattern, character) != escapePattern.end())
+                    escapedText += '\\';
+                escapedText += character;
+            }
+
+            return escapedText;
+        }
+
+        std::string CreateEmptyRegexString(const Node& node)
+        {
+            std::string partialRegex{};
+            partialRegex.reserve(node.Children().size() * 10);
+            return partialRegex;
+        }
+
+        auto GetNodesWithType(const Node& node, NodeType type)
+        {
+            return std::views::filter(node.Children(), [type](const Node& child)
+                {
+                    return child.Type() == type;
+                });
+        }
+
+        bool NodesAreEmpty(const Node& node)
+        {
+            return GetNodesWithType(node, NodeType::text).empty();
+        }
+
+        bool ContainsNodeWithType(const Node& node, NodeType type)
+        {
+            return !GetNodesWithType(node, type).empty();
+        }
+
+        bool ContainsNodeWithParameters(const Node& node)
+        {
+            return ContainsNodeWithType(node, NodeType::parameter);
+        }
+
+        bool ContainsNodeWithOptionals(const Node& node)
+        {
+            return ContainsNodeWithType(node, NodeType::optional);
+        }
+    }
+
     Expression::Expression(std::string expression, ParameterRegistry& parameterRegistry)
         : expression{ std::move(expression) }
         , parameterRegistry{ parameterRegistry }
@@ -63,23 +117,6 @@ namespace cucumber_cpp::library::cucumber_expression
         }
 
         throw InvalidNodeType{ "Invalid node type" };
-    }
-
-    std::string Expression::EscapeRegex(std::string_view text) const
-    {
-        using namespace std::literals;
-        std::string escapedText{};
-        escapedText.reserve(text.size() * 2);
-        const auto escapePattern = R"(\^[({$.|?*+})])"sv;
-
-        for (const auto& character : text)
-        {
-            if (std::ranges::find(escapePattern, character) != escapePattern.end())
-                escapedText += '\\';
-            escapedText += character;
-        }
-
-        return escapedText;
     }
 
     std::string Expression::RewriteOptional(const Node& node)
@@ -166,33 +203,5 @@ namespace cucumber_cpp::library::cucumber_expression
             partialRegex += RewriteToRegex(child);
 
         return fmt::format("^{}$", partialRegex);
-    }
-
-    std::string Expression::CreateEmptyRegexString(const Node& node) const
-    {
-        std::string partialRegex{};
-        partialRegex.reserve(node.Children().size() * 10);
-        return partialRegex;
-    }
-
-    bool Expression::NodesAreEmpty(const Node& node) const
-    {
-        auto results = GetNodesWithType(node, NodeType::text);
-        return results.empty();
-    }
-
-    bool Expression::ContainsNodeWithParameters(const Node& node) const
-    {
-        return ContainsNodeWithType(node, NodeType::parameter);
-    }
-
-    bool Expression::ContainsNodeWithOptionals(const Node& node) const
-    {
-        return ContainsNodeWithType(node, NodeType::optional);
-    }
-
-    bool Expression::ContainsNodeWithType(const Node& node, NodeType type) const
-    {
-        return !GetNodesWithType(node, type).empty();
     }
 }
