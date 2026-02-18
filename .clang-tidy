@@ -1,12 +1,14 @@
 ---
 Checks:          '
+    bugprone-*,
     clang-analyzer-*,
     cppcoreguidelines*,
-    -cppcoreguidelines-pro-bounds-constant-array-index,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
+    -cppcoreguidelines-avoid-magic-numbers,
     -cppcoreguidelines-non-private-member-variables-in-classes,
-    -cppcoreguidelines-pro-type-cstyle-cast
-    -cppcoreguidelines-special-member-functions
+    -cppcoreguidelines-pro-bounds-constant-array-index,
+    -cppcoreguidelines-pro-type-cstyle-cast,
+    -cppcoreguidelines-special-member-functions,
     misc-*,
     -misc-no-recursion,
     -misc-non-private-member-variables-in-classes,
@@ -17,10 +19,14 @@ Checks:          '
     readability*,
     -readability-else-after-return,
     -readability-identifier-length,
-    -readability-braces-around-statements'
+    -readability-magic-numbers,
+    -readability-uppercase-literal-suffix,
+    -readability-braces-around-statements
+    '
+
 WarningsAsErrors: ''
-AnalyzeTemporaryDtors: false
 HeaderFilterRegex: '.*'
 FormatStyle: file
 CheckOptions:
     AllowSoleDefaultDtor: true
+...
