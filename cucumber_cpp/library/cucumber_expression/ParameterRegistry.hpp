@@ -1,7 +1,6 @@
 #ifndef CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
-#include "cucumber/messages/group.hpp"
 #include "fmt/format.h"
 #include <algorithm>
 #include <cctype>

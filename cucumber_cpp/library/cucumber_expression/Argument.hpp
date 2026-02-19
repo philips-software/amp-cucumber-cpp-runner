@@ -1,8 +1,6 @@
 #ifndef CUCUMBER_EXPRESSION_ARGUMENT_HPP
 #define CUCUMBER_EXPRESSION_ARGUMENT_HPP
 
-#include "cucumber/messages/group.hpp"
-#include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <optional>

@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "fmt/format.h"
 #include "fmt/ranges.h"

@@ -30,7 +30,6 @@ target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
-    cucumber_gherkin_lib
     fmt::fmt
 )
 

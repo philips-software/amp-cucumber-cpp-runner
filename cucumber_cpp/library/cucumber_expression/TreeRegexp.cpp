@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
-#include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include <cstddef>
 #include <cstdint>

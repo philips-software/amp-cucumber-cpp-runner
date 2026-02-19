@@ -1,5 +1,4 @@
 
-#include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
