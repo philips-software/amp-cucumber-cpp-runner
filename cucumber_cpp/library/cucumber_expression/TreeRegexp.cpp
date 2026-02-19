@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -161,7 +162,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return pattern;
     }
 
-    cucumber::messages::group GroupBuilder::Build(const std::smatch& match, std::size_t& index) const
+    ArgumentGroup GroupBuilder::Build(const std::smatch& match, std::size_t& index) const
     {
         const auto groupIndex = index++;
         const auto& matchGroup = match[groupIndex];
@@ -172,9 +173,9 @@ namespace cucumber_cpp::library::cucumber_expression
                                                    });
 
         return {
-            .children = std::vector<cucumber::messages::group>(children.begin(), children.end()),
-            .start = matchGroup.matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
             .value = matchGroup.matched ? std::make_optional(matchGroup.str()) : std::nullopt,
+            .start = matchGroup.matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
+            .children = std::vector<ArgumentGroup>(children.begin(), children.end()),
         };
     }
 
@@ -189,7 +190,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return rootGroupBuilder;
     }
 
-    std::optional<cucumber::messages::group> TreeRegexp::MatchToGroup(const std::string& text) const
+    std::optional<ArgumentGroup> TreeRegexp::MatchToGroup(const std::string& text) const
     {
         std::smatch match;
         if (!std::regex_search(text, match, regex))

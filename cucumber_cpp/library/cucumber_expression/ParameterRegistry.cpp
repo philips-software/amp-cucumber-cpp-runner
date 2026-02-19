@@ -2,6 +2,8 @@
 #include "cucumber/messages/group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "fmt/format.h"
+#include "fmt/ranges.h"
+#include <algorithm>
 #include <cctype>
 #include <compare>
 #include <cstdint>
@@ -9,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <ranges>
 #include <regex>
 #include <set>
 #include <string>
@@ -20,23 +23,24 @@ namespace cucumber_cpp::library::cucumber_expression
     namespace
     {
         template<class T>
-        std::function<T(const cucumber::messages::group&)> CreateStreamConverter()
+        std::function<std::optional<T>(const ConvertFunctionArg&)> CreateStreamConverter()
         {
-            return [](const cucumber::messages::group& matches) -> T
+            return [](const ConvertFunctionArg& matches) -> std::optional<T>
             {
-                if (matches.value.has_value())
-                    return StringTo<T>(matches.value.value());
-                return {};
+                if (matches[0].has_value())
+                    return StringTo<T>(matches[0].value());
+
+                return std::nullopt;
             };
         };
 
-        std::function<std::string(const cucumber::messages::group&)> CreateStringConverter()
+        std::function<std::optional<std::string>(const ConvertFunctionArg&)> CreateStringConverter()
         {
-            return [](const cucumber::messages::group& matches)
+            return [](const ConvertFunctionArg& matches) -> std::optional<std::string>
             {
-                std::string str = matches.children.front().value.has_value()
-                                      ? matches.children.front().value.value()
-                                      : matches.children.back().value.value();
+                std::string str = matches[0].has_value()
+                                      ? matches[0].value()
+                                      : matches[1].value();
 
                 str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
                 str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
@@ -45,14 +49,26 @@ namespace cucumber_cpp::library::cucumber_expression
             };
         }
 
-        std::function<std::int8_t(const cucumber::messages::group&)> CreateByteConverter()
+        std::function<std::optional<std::int8_t>(const ConvertFunctionArg&)> CreateByteConverter()
         {
-            return [](const cucumber::messages::group& matches) -> std::int8_t
+            return [](const ConvertFunctionArg& matches) -> std::optional<std::int8_t>
             {
-                if (matches.value.has_value())
-                    return static_cast<std::int8_t>(StringTo<std::int32_t>(matches.value.value()));
-                return {};
+                if (matches[0].has_value())
+                    return static_cast<std::int8_t>(StringTo<std::int32_t>(matches[0].value()));
+
+                return std::nullopt;
             };
+        }
+
+        int SortMappedByRegex(const ParameterType* lhs, const ParameterType* rhs)
+        {
+            if (lhs->preferForRegexMatch && !rhs->preferForRegexMatch)
+                return -1;
+
+            if (!lhs->preferForRegexMatch && rhs->preferForRegexMatch)
+                return 1;
+
+            return lhs->name.compare(rhs->name);
         }
     }
 
@@ -68,12 +84,13 @@ namespace cucumber_cpp::library::cucumber_expression
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
         const static std::string stringRegex{ R"__("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
+        const static std::string anonymousRegex{ R"__(.*)__" };
 
-        AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
+        AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>(), true);
         AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
         AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
         AddBuiltinParameter("string", { stringRegex }, CreateStringConverter());
-        AddBuiltinParameter("", { ".*" }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("", { anonymousRegex }, CreateStreamConverter<std::string>());
         AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
         AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
         AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateByteConverter());
@@ -85,22 +102,44 @@ namespace cucumber_cpp::library::cucumber_expression
         AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
 
         for (const auto& parameter : customParameters)
-            AddParameter(Parameter{ .name = parameter.params.name, .regex = { std::string(parameter.params.regex) }, .isBuiltin = false, .useForSnippets = parameter.params.useForSnippets, .location = parameter.location });
+            AddParameter(ParameterType{ .name = parameter.params.name, .regex = { std::string(parameter.params.regex) }, .isBuiltin = false, .useForSnippets = parameter.params.useForSnippets, .location = parameter.location });
     }
 
-    const std::map<std::string, const Parameter, std::less<>>& ParameterRegistry::GetParameters() const
+    const std::map<std::string, const ParameterType, std::less<>>& ParameterRegistry::GetParameters() const
     {
-        return parametersByName;
+        return parameterTypesByName;
     }
 
-    const Parameter& ParameterRegistry::Lookup(const std::string& name) const
+    const ParameterType& ParameterRegistry::Lookup(const std::string& name) const
     {
-        return parametersByName.at(name);
+        return parameterTypesByName.at(name);
+    }
+
+    const ParameterType* ParameterRegistry::LookupByRegexp(const std::string& regex) const
+    {
+        if (!parameterTypesByRegex.contains(regex))
+            return nullptr;
+
+        const auto& parameters = parameterTypesByRegex.at(regex);
+
+        if (parameters.size() == 0)
+            return nullptr;
+
+        if (parameters.size() > 1 && !parameters[0]->preferForRegexMatch)
+            throw CucumberExpressionError{ fmt::format("There are multiple parameter types but none are prefered for the regexp \"{}\": {}",
+                regex,
+                fmt::join(parameters | std::views::transform([](const ParameterType* parameter)
+                                           {
+                                               return parameter->name;
+                                           }),
+                    ", ")) };
+
+        return parameters[0];
     }
 
     void ParameterRegistry::AssertParameterIsUnique(const std::string& name) const
     {
-        if (parametersByName.contains(name))
+        if (parameterTypesByName.contains(name))
         {
             if (name.empty())
                 throw CucumberExpressionError{ "The anonymous parameter type has already been defined" };
@@ -109,10 +148,21 @@ namespace cucumber_cpp::library::cucumber_expression
         }
     }
 
-    void ParameterRegistry::AddParameter(Parameter parameter)
+    void ParameterRegistry::AddParameter(ParameterType parameter)
     {
         AssertParameterIsUnique(parameter.name);
 
-        parametersByName.emplace(parameter.name, parameter);
+        const auto& [iter, _] = parameterTypesByName.try_emplace(parameter.name, parameter);
+        const auto& [key, value] = *iter;
+
+        for (const auto& regex : parameter.regex)
+        {
+            auto& existingParametersByRegex = parameterTypesByRegex[regex];
+            if (existingParametersByRegex.size() > 0 && existingParametersByRegex[0]->preferForRegexMatch && parameter.preferForRegexMatch)
+                throw CucumberExpressionError{ fmt::format("There can only be one preferential parameter type per regexp.\nThe regexp \"{}\" is used for two preferential parameter types, {} and {}", regex, existingParametersByRegex[0]->name, parameter.name) };
+
+            existingParametersByRegex.push_back(&value);
+            std::ranges::sort(existingParametersByRegex);
+        }
     }
 }

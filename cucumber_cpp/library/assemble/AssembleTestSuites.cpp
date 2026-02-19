@@ -10,6 +10,7 @@
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <functional>
 #include <list>
@@ -61,7 +62,7 @@ namespace cucumber_cpp::library::assemble
                     testStep.step_definition_ids.value().push_back(id);
                     auto& argumentList = testStep.step_match_arguments_lists.value().emplace_back();
                     for (const auto& result : *match)
-                        argumentList.step_match_arguments.emplace_back(result.Group(), result.Name().empty() ? std::nullopt : std::make_optional(result.Name()));
+                        argumentList.step_match_arguments.emplace_back(util::ArgumentGroupToMessageGroup(result.Group()), result.Name().empty() ? std::nullopt : std::make_optional(result.Name()));
                 }
             }
         }

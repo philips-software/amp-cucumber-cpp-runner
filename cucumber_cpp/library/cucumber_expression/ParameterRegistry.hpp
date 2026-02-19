@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <source_location>
 #include <sstream>
@@ -114,28 +115,34 @@ namespace cucumber_cpp::library::cucumber_expression
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
     }
 
-    struct Parameter
+    struct ParameterType
     {
         std::string name;
         std::vector<std::string> regex;
         bool isBuiltin{ false };
         bool useForSnippets{ false };
+        bool preferForRegexMatch{ false };
         std::source_location location;
     };
 
+    using ConvertFunctionArg = std::vector<std::optional<std::string>>;
+
     template<class T>
-    using TypeMap = std::map<std::string, std::function<T(const cucumber::messages::group&)>>;
+    using ConverterFunction = std::function<T(const ConvertFunctionArg&)>;
+
+    template<class T>
+    using TypeMap = std::map<std::string, ConverterFunction<T>>;
 
     template<class T>
     struct ConverterTypeMap
     {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>>& Instance();
+        static TypeMap<T>& Instance();
     };
 
     template<class T>
-    std::map<std::string, std::function<T(const cucumber::messages::group&)>>& ConverterTypeMap<T>::Instance()
+    TypeMap<T>& ConverterTypeMap<T>::Instance()
     {
-        static std::map<std::string, std::function<T(const cucumber::messages::group&)>> typeMap;
+        static TypeMap<T> typeMap;
         return typeMap;
     }
 
@@ -145,41 +152,43 @@ namespace cucumber_cpp::library::cucumber_expression
 
         virtual ~ParameterRegistry() = default;
 
-        const std::map<std::string, const Parameter, std::less<>>& GetParameters() const;
+        [[nodiscard]] const std::map<std::string, const ParameterType, std::less<>>& GetParameters() const;
 
-        const Parameter& Lookup(const std::string& name) const;
+        [[nodiscard]] const ParameterType& Lookup(const std::string& name) const;
+        [[nodiscard]] const ParameterType* LookupByRegexp(const std::string& regex) const;
 
         template<class T>
-        void AddParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location = std::source_location::current());
+        void AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location = std::source_location::current());
 
         void AssertParameterIsUnique(const std::string& name) const;
 
     private:
-        void AddParameter(Parameter parameter);
+        void AddParameter(ParameterType parameter);
 
         template<class T>
-        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location = std::source_location::current());
+        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch = false, std::source_location location = std::source_location::current());
 
         template<class T>
-        void AddParameter(Parameter parameter, std::function<T(const cucumber::messages::group&)> converter);
+        void AddParameter(ParameterType parameter, ConverterFunction<T> converter);
 
-        std::map<std::string, const Parameter, std::less<>> parametersByName;
+        std::map<std::string, const ParameterType, std::less<>> parameterTypesByName;
+        std::map<std::string, std::vector<const ParameterType*>, std::less<>> parameterTypesByRegex;
     };
 
     template<class T>
-    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
+    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location)
     {
-        AddParameter(Parameter{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = false, .useForSnippets = false, .location = location }, converter);
+        AddParameter(ParameterType{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = false, .useForSnippets = false, .location = location }, converter);
     }
 
     template<class T>
-    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, std::function<T(const cucumber::messages::group&)> converter, std::source_location location)
+    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch, std::source_location location)
     {
-        AddParameter(Parameter{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = true, .useForSnippets = false, .location = location }, converter);
+        AddParameter(ParameterType{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = true, .useForSnippets = false, .preferForRegexMatch = preferForRegexMatch, .location = location }, converter);
     }
 
     template<class T>
-    void ParameterRegistry::AddParameter(Parameter parameter, std::function<T(const cucumber::messages::group&)> converter)
+    void ParameterRegistry::AddParameter(ParameterType parameter, ConverterFunction<T> converter)
     {
         AssertParameterIsUnique(parameter.name);
 

@@ -2,33 +2,48 @@
 #define CUCUMBER_EXPRESSION_ARGUMENT_HPP
 
 #include "cucumber/messages/group.hpp"
+#include "cucumber/messages/step_match_argument.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
+    template<class T>
+    T TransformArg([[maybe_unused]] const T& _, const std::string& name, const cucumber_expression::ConvertFunctionArg& match)
+    {
+        return ConverterTypeMap<std::optional<T>>::Instance().at(name)(match).value();
+    }
+
+    template<class T>
+    std::optional<T> TransformArg([[maybe_unused]] const std::optional<T>& _, const std::string& name, const cucumber_expression::ConvertFunctionArg& match)
+    {
+        return ConverterTypeMap<std::optional<T>>::Instance().at(name)(match);
+    }
+
     struct Argument
     {
     private:
-        Argument(cucumber::messages::group group, const Parameter& parameter);
+        Argument(ArgumentGroup group, const ParameterType& parameter);
 
     public:
-        static std::vector<Argument> BuildArguments(const cucumber::messages::group& group, std::span<const Parameter> parameters);
+        static std::vector<Argument> BuildArguments(const ArgumentGroup& group, std::span<const ParameterType> parameters);
 
         template<class T>
         T GetValue() const
         {
-            return ConverterTypeMap<T>::Instance().at(parameter.name)(group);
+            return TransformArg(T{}, Name(), group.Values());
         }
 
-        [[nodiscard]] cucumber::messages::group Group() const;
+        [[nodiscard]] ArgumentGroup Group() const;
         [[nodiscard]] std::string Name() const;
 
     private:
-        cucumber::messages::group group;
-        const Parameter& parameter;
+        ArgumentGroup group;
+        const ParameterType& parameter;
     };
 }
 

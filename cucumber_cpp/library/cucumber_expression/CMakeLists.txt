@@ -13,10 +13,13 @@ target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     ExpressionParser.hpp
     ExpressionTokenizer.cpp
     ExpressionTokenizer.hpp
+    Group.cpp
+    Group.hpp
     MatchRange.cpp
     MatchRange.hpp
     ParameterRegistry.cpp
     ParameterRegistry.hpp
+    RegularExpression.cpp
     RegularExpression.hpp
     TreeRegexp.cpp
     TreeRegexp.hpp

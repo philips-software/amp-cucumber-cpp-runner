@@ -1,3 +1,18 @@
+add_library(compatibility.base)
+target_sources(compatibility.base PRIVATE
+    BaseCompatibility.cpp
+    BaseCompatibility.hpp
+)
+
+target_link_libraries(compatibility.base PUBLIC
+    cucumber_cpp
+    GTest::gtest
+)
+
+target_include_directories(compatibility.base PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
 function(add_compatibility_kit name)
     set(libname compatibility.${name}.test)
     add_executable(${libname})
@@ -7,8 +22,8 @@ function(add_compatibility_kit name)
     endif()
 
     target_link_libraries(${libname} PRIVATE
-        cucumber_cpp
         GTest::gtest_main
+        compatibility.base
     )
 
     target_include_directories(${libname} PUBLIC
@@ -16,7 +31,7 @@ function(add_compatibility_kit name)
     )
 
     target_sources(${libname} PRIVATE
-        compatibility.cpp
+        TestCompatibility.cpp
     )
 
 

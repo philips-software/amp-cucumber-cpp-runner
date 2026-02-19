@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "fmt/format.h"
 #include <cstddef>
@@ -12,18 +13,18 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    Argument::Argument(cucumber::messages::group group, const Parameter& parameter)
+    Argument::Argument(ArgumentGroup group, const ParameterType& parameter)
         : group{ std::move(group) }
         , parameter{ parameter }
     {}
 
-    std::vector<Argument> Argument::BuildArguments(const cucumber::messages::group& group, std::span<const Parameter> parameters)
+    std::vector<Argument> Argument::BuildArguments(const ArgumentGroup& group, std::span<const ParameterType> parameters)
     {
         if (group.children.size() != parameters.size())
             throw std::runtime_error(fmt::format("Mismatch between number of groups ({}) and parameters ({})", group.children.size(), parameters.size()));
 
         std::size_t index{ 0 };
-        auto converted = parameters | std::views::transform([&group, &index](const Parameter& parameter) -> Argument
+        auto converted = parameters | std::views::transform([&group, &index](const ParameterType& parameter) -> Argument
                                           {
                                               return { group.children[index++], parameter };
                                           });
@@ -31,7 +32,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return { converted.begin(), converted.end() };
     }
 
-    cucumber::messages::group Argument::Group() const
+    ArgumentGroup Argument::Group() const
     {
         return group;
     }

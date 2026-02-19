@@ -33,7 +33,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         std::string expression;
         ParameterRegistry& parameterRegistry;
-        std::vector<Parameter> parameters;
+        std::vector<ParameterType> parameters;
         std::string pattern;
 
         TreeRegexp treeRegexp;

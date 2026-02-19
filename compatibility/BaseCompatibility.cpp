@@ -1,3 +1,4 @@
+#include "BaseCompatibility.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/CucumberCpp.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
@@ -10,13 +11,12 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "nlohmann/json.hpp"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "nlohmann/json_fwd.hpp"
 #include <chrono>
-#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <gmock/gmock.h>
 #include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -28,56 +28,22 @@
 #include <string>
 #include <utility>
 
-#ifndef KIT_FOLDER
-#error KIT_FOLDER is not defined
-#define KIT_FOLDER ""
-#endif
-
-#ifndef KIT_NDJSON_FILE
-#error KIT_NDJSON_FILE is not defined
-#define KIT_NDJSON_FILE ""
-#endif
-
 namespace compatibility
 {
     namespace
     {
-        struct Devkit
-        {
-            std::set<std::filesystem::path, std::less<>> paths;
-            std::string tagExpression;
-            std::size_t retry;
-            std::filesystem::path ndjsonFile;
-        };
-
-        Devkit LoadDevkit()
-        {
-            return {
-                .paths = { KIT_FOLDER },
-                .tagExpression = "",
-                .retry = 0,
-                .ndjsonFile = KIT_NDJSON_FILE
-            };
-        }
-
-        void RemoveIncompatibilities(nlohmann::json& json)
+        void RemoveIncompatibilities(nlohmann::json& json, const Devkit& devkit)
         {
             for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
                 const auto& key = jsonIter.key();
                 auto& value = jsonIter.value();
 
-                if (key == "exception")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "message")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "line")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "snippets")
+                if (key == "exception" || key == "message" || key == "line" || key == "snippets")
                     jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
-                    RemoveIncompatibilities(value);
+                    RemoveIncompatibilities(value, devkit);
                     ++jsonIter;
                 }
                 else if (value.is_array())
@@ -85,7 +51,7 @@ namespace compatibility
                     for (auto valueIter = value.begin(); valueIter != value.end();)
                     {
                         if (valueIter->is_object())
-                            RemoveIncompatibilities(*valueIter);
+                            RemoveIncompatibilities(*valueIter, devkit);
 
                         ++valueIter;
                     }
@@ -101,7 +67,7 @@ namespace compatibility
                 {
                     auto uri = value.get<std::string>();
 
-                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), KIT_FOLDER);
+                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), devkit.folder);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
                     json[key] = std::filesystem::canonical(uri).string();
@@ -149,19 +115,19 @@ namespace compatibility
                 actualEnvelopes.emplace_back(std::move(actualJson));
             }
 
-            void CompareEnvelopes()
+            void CompareEnvelopes(const Devkit& devkit)
             {
                 EXPECT_THAT(actualEnvelopes.size(), testing::Eq(expectedEnvelopes.size()));
 
                 for (auto& json : actualEnvelopes)
                 {
-                    RemoveIncompatibilities(json);
+                    RemoveIncompatibilities(json, devkit);
                     actualOfs << json.dump() << "\n";
                 }
 
                 for (auto& json : expectedEnvelopes)
                 {
-                    RemoveIncompatibilities(json);
+                    RemoveIncompatibilities(json, devkit);
                     expectedOfs << json.dump() << "\n";
                 }
 
@@ -197,11 +163,11 @@ namespace compatibility
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(std::set<std::filesystem::path, std::less<>> paths)
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(const std::set<std::filesystem::path, std::less<>>& paths)
         {
             std::set<std::filesystem::path, std::less<>> files;
 
-            for (const auto feature : paths)
+            for (const auto& feature : paths)
                 if (std::filesystem::is_directory(feature))
                     for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
                     {
@@ -242,49 +208,41 @@ namespace compatibility
 
             std::chrono::milliseconds current{ 0 };
         };
-
-        void RunDevkit(Devkit devkit)
-        {
-            devkit.paths = GetFeatureFiles(devkit.paths);
-            const auto isReversed = std::string{ KIT_STRING }.ends_with("-reversed");
-
-            cucumber_cpp::library::support::RunOptions runOptions{
-                .sources = {
-                    .paths = devkit.paths,
-                    .tagExpression = cucumber_cpp::library::tag_expression::Parse(devkit.tagExpression),
-                    .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
-                },
-                .runtime = {
-                    .retry = std::string{ KIT_STRING }.starts_with("retry") ? 2u : 0u,
-                    .strict = true,
-                    .retryTagExpression = cucumber_cpp::library::tag_expression::Parse(""),
-                },
-            };
-
-            cucumber_cpp::library::cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
-
-            auto contextStorageFactory{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>() };
-            auto programContext{ std::make_unique<cucumber_cpp::Context>(contextStorageFactory) };
-
-            cucumber_cpp::library::util::Broadcaster broadcaster;
-
-            BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
-
-            cucumber_cpp::library::api::Formatters formatters;
-            cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "junit", "message", "pretty", "summary", "usage" }, {});
-
-            broadcastListener.CompareEnvelopes();
-        }
     }
-}
 
-TEST(CompatibilityTest, KIT_NAME)
-{
-#ifdef SKIP_TEST
-    GTEST_SKIP();
-#endif
+    void RunDevkit(Devkit devkit)
+    {
+        compatibility::StopwatchIncremental stopwatch;
+        compatibility::TimestampGeneratorIncremental timestampGenerator;
 
-    compatibility::StopwatchIncremental stopwatch;
-    compatibility::TimestampGeneratorIncremental timestampGenerator;
-    compatibility::RunDevkit(compatibility::LoadDevkit());
+        devkit.paths = GetFeatureFiles(devkit.paths);
+        const auto isReversed = devkit.kitString.ends_with("-reversed");
+
+        cucumber_cpp::library::support::RunOptions runOptions{
+            .sources = {
+                .paths = devkit.paths,
+                .tagExpression = cucumber_cpp::library::tag_expression::Parse(devkit.tagExpression),
+                .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
+            },
+            .runtime = {
+                .retry = devkit.kitString.starts_with("retry") ? 2u : 0u,
+                .strict = true,
+                .retryTagExpression = cucumber_cpp::library::tag_expression::Parse(""),
+            },
+        };
+
+        cucumber_cpp::library::cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+
+        auto contextStorageFactory{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>() };
+        auto programContext{ std::make_unique<cucumber_cpp::Context>(contextStorageFactory) };
+
+        cucumber_cpp::library::util::Broadcaster broadcaster;
+
+        BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
+
+        cucumber_cpp::library::api::Formatters formatters;
+        cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "junit", "message", "pretty", "summary", "usage" }, {});
+
+        broadcastListener.CompareEnvelopes(devkit);
+    }
 }

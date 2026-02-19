@@ -1,18 +1,39 @@
 #ifndef CUCUMBER_CPP_BODYMACRO_HPP
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
+#include "cucumber/messages/group.hpp"
 #include "cucumber/messages/step_match_argument.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
+#include <concepts>
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <optional>
+#include <ranges>
+#include <string>
 
 namespace cucumber_cpp::library::detail
 {
+    inline std::optional<std::string> ToString(const cucumber::messages::group& group)
+    {
+        return group.value;
+    }
+
+    inline cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
+    {
+        if (group.children.empty())
+            return { group.value };
+
+        auto strings = group.children | std::views::transform(ToString);
+
+        return { strings.begin(), strings.end() };
+    }
+
     template<class T>
     T TransformArg(const cucumber::messages::step_match_argument& match)
     {
-        return cucumber_cpp::library::cucumber_expression::ConverterTypeMap<T>::Instance().at(match.parameter_type_name.value_or(""))(match.group);
+        return cucumber_expression::TransformArg(T{}, match.parameter_type_name.value_or(""), GroupToArgumentGroup(match.group));
     }
 }
 

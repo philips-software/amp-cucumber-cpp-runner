@@ -187,12 +187,12 @@ namespace cucumber_cpp::library::cucumber_expression
             std::optional<std::int64_t> number;
         };
 
-        parameterRegistry.AddParameter<CustomType>("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" },
-            [](const cucumber::messages::group& matches) -> CustomType
+        parameterRegistry.AddParameter<std::optional<CustomType>>("textAndOrNumber", { R"(([A-Z]+)?(?: )?([0-9]+)?)" },
+            [](const ConvertFunctionArg& matches) -> std::optional<CustomType>
             {
-                std::optional<std::string> text{ matches.children[0].value };
-                std::optional<std::int64_t> number{ matches.children[1].value ? StringTo<std::int64_t>(matches.children[1].value.value()) : std::optional<std::int64_t>{ std::nullopt } };
-                return CustomType{ text, number };
+                std::optional<std::string> text{ matches[0] };
+                std::optional<std::int64_t> number{ matches[1].has_value() ? StringTo<std::int64_t>(matches[1].value()) : std::optional<std::int64_t>{ std::nullopt } };
+                return CustomType{ .text = text, .number = number };
             });
 
         auto matchString{ Match<CustomType>(R"__({textAndOrNumber})__", R"__(ABC)__") };
@@ -259,9 +259,9 @@ namespace cucumber_cpp::library::cucumber_expression
         try
         {
             parameterRegistry.AddParameter<std::string>("", { ".*" },
-                [](const cucumber::messages::group& matches) -> std::string
+                [](const ConvertFunctionArg& matches) -> std::string
                 {
-                    return matches.value.value();
+                    return matches[0].value();
                 });
             FAIL() << "Expected CucumberExpressionError to be thrown";
         }
@@ -276,9 +276,9 @@ namespace cucumber_cpp::library::cucumber_expression
         try
         {
             parameterRegistry.AddParameter<std::string>("word", { ".*" },
-                [](const cucumber::messages::group& matches) -> std::string
+                [](const ConvertFunctionArg& matches) -> std::string
                 {
-                    return matches.value.value();
+                    return matches[0].value();
                 });
             FAIL() << "Expected CucumberExpressionError to be thrown";
         }

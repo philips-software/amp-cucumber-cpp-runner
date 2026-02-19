@@ -1,6 +1,8 @@
 add_library(cucumber_cpp.library.util ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.util PRIVATE
+    ArgumentGroupToMessageGroup.cpp
+    ArgumentGroupToMessageGroup.hpp
     Broadcaster.cpp
     Broadcaster.hpp
     Duration.cpp

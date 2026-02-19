@@ -1,7 +1,7 @@
 #ifndef CUCUMBER_EXPRESSION_TREE_REGEXP_HPP
 #define CUCUMBER_EXPRESSION_TREE_REGEXP_HPP
 
-#include "cucumber/messages/group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Group.hpp"
 #include <cstddef>
 #include <list>
 #include <optional>
@@ -25,7 +25,7 @@ namespace cucumber_cpp::library::cucumber_expression
         [[nodiscard]] const std::list<GroupBuilder>& Children() const;
         [[nodiscard]] std::string_view Pattern() const;
 
-        [[nodiscard]] cucumber::messages::group Build(const std::smatch& match, std::size_t& index) const;
+        [[nodiscard]] ArgumentGroup Build(const std::smatch& match, std::size_t& index) const;
 
     private:
         std::string_view pattern;
@@ -39,7 +39,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         [[nodiscard]] const GroupBuilder& RootBuilder() const;
 
-        [[nodiscard]] std::optional<cucumber::messages::group> MatchToGroup(const std::string& text) const;
+        [[nodiscard]] std::optional<ArgumentGroup> MatchToGroup(const std::string& text) const;
 
     private:
         GroupBuilder rootGroupBuilder;
