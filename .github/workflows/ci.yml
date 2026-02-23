@@ -112,7 +112,7 @@ jobs:
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - run: |
           bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
-      - uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f # v2.22.0
+      - uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
         if: always()
         with:
           files: test-report.xml
