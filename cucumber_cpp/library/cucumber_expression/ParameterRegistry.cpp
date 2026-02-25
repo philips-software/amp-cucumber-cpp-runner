@@ -59,15 +59,15 @@ namespace cucumber_cpp::library::cucumber_expression
             };
         }
 
-        int SortMappedByRegex(const ParameterType* lhs, const ParameterType* rhs)
+        bool SortMappedByRegex(const ParameterType* lhs, const ParameterType* rhs)
         {
             if (lhs->preferForRegexMatch && !rhs->preferForRegexMatch)
-                return -1;
+                return true;
 
             if (!lhs->preferForRegexMatch && rhs->preferForRegexMatch)
-                return 1;
+                return false;
 
-            return lhs->name.compare(rhs->name);
+            return lhs->name < rhs->name;
         }
     }
 
@@ -161,7 +161,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 throw CucumberExpressionError{ fmt::format("There can only be one preferential parameter type per regexp.\nThe regexp \"{}\" is used for two preferential parameter types, {} and {}", regex, existingParametersByRegex[0]->name, parameter.name) };
 
             existingParametersByRegex.push_back(&value);
-            std::ranges::sort(existingParametersByRegex);
+            std::ranges::sort(existingParametersByRegex, SortMappedByRegex);
         }
     }
 }
