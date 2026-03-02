@@ -10,7 +10,7 @@
 
 namespace cucumber_cpp::library::engine
 {
-    StepBase::StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
+    StepBase::StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString)
         : ExecutionContext{ broadCaster, context, stepOrHookStarted }
         , nestedTestCaseRunner{ nestedTestCaseRunner }
         , dataTable{ dataTable }
@@ -22,18 +22,18 @@ namespace cucumber_cpp::library::engine
         nestedTestCaseRunner.Step(step);
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<cucumber::messages::pickle_doc_string>& docString) const
+    void StepBase::Step(const std::string& step, const std::optional<util::DocString>& docString) const
     {
-        nestedTestCaseRunner.Step(step, docString);
+        // nestedTestCaseRunner.Step(step, docString);
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<cucumber::messages::pickle_table>& dataTable) const
+    void StepBase::Step(const std::string& step, const std::optional<util::Table>& dataTable) const
     {
-        nestedTestCaseRunner.Step(step, dataTable);
+        // nestedTestCaseRunner.Step(step, dataTable);
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString) const
+    void StepBase::Step(const std::string& step, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString) const
     {
-        nestedTestCaseRunner.Step(step, dataTable, docString);
+        // nestedTestCaseRunner.Step(step, dataTable, docString);
     }
 }

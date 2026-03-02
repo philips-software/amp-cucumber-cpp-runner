@@ -42,6 +42,42 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
+        cucumber::messages::test_step_result_status RunnerToMessages(support::TestStepResultStatus status)
+        {
+            switch (status)
+            {
+                case support::TestStepResultStatus::UNKNOWN:
+                    return cucumber::messages::test_step_result_status::UNKNOWN;
+                case support::TestStepResultStatus::PASSED:
+                    return cucumber::messages::test_step_result_status::PASSED;
+                case support::TestStepResultStatus::SKIPPED:
+                    return cucumber::messages::test_step_result_status::SKIPPED;
+                case support::TestStepResultStatus::PENDING:
+                    return cucumber::messages::test_step_result_status::PENDING;
+                case support::TestStepResultStatus::UNDEFINED:
+                    return cucumber::messages::test_step_result_status::UNDEFINED;
+                case support::TestStepResultStatus::AMBIGUOUS:
+                    return cucumber::messages::test_step_result_status::AMBIGUOUS;
+                case support::TestStepResultStatus::FAILED:
+                    return cucumber::messages::test_step_result_status::FAILED;
+            }
+
+            return cucumber::messages::test_step_result_status::UNKNOWN;
+        }
+
+        cucumber::messages::test_step_result RunnerToMessage(support::TestStepResult result)
+        {
+            return {
+                .duration = cucumber::messages::duration{
+                    .seconds = result.duration.seconds,
+                    .nanos = result.duration.nanos,
+                },
+                .message = result.message,
+                .status = RunnerToMessages(result.status),
+                .exception = result.exception.has_value() ? std::make_optional<cucumber::messages::exception>(result.exception->type, result.exception->message) : std::nullopt,
+            };
+        }
+
         std::optional<std::string> ToString(const cucumber::messages::group& group)
         {
             return group.value;
@@ -260,7 +296,7 @@ namespace cucumber_cpp::library::runtime
 
     cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
     {
-        return body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args));
+        return RunnerToMessage(body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args)));
     }
 
     cucumber::messages::test_step_result TestCaseRunner::GetWorstStepResult() const

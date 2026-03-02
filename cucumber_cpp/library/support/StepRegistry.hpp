@@ -14,6 +14,8 @@
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/TransformDocString.hpp"
+#include "cucumber_cpp/library/util/TransformTable.hpp"
 #include <any>
 #include <cstddef>
 #include <cstdint>
@@ -39,13 +41,13 @@ namespace cucumber_cpp::library::runtime
 
 namespace cucumber_cpp::library::support
 {
-
     using StepFactory = std::unique_ptr<Body> (&)(const runtime::NestedTestCaseRunner&, util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
 
     template<class T>
     std::unique_ptr<Body> StepBodyFactory(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
     {
-        return std::make_unique<T>(nestedTestCaseRunner, broadCaster, context, stepOrHookStarted, dataTable, docString);
+        return std::make_unique<T>(nestedTestCaseRunner, broadCaster, context, stepOrHookStarted, util::TransformTable(dataTable),
+            util::TransformDocString(docString));
     }
 
     struct StepMatch

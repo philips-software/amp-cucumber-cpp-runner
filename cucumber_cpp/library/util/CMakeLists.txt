@@ -12,6 +12,10 @@ target_sources(cucumber_cpp.library.util PRIVATE
     Immoveable.hpp
     Timestamp.cpp
     Timestamp.hpp
+    TransformDocString.cpp
+    TransformDocString.hpp
+    TransformTable.cpp
+    TransformTable.hpp
     Trim.hpp
 )
 

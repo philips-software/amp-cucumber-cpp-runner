@@ -1,26 +1,23 @@
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber/gherkin/demangle.hpp"
-#include "cucumber/messages/exception.hpp"
-#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "fmt/format.h"
+#include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <cstddef>
 #include <exception>
 #include <filesystem>
-#include <gtest/gtest-spi.h>
-#include <gtest/gtest.h>
 #include <string>
 
 namespace cucumber_cpp::library::support
 {
     struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
     {
-        explicit CucumberResultReporter(cucumber::messages::test_step_result& testStepResult)
+        explicit CucumberResultReporter(TestStepResult& testStepResult)
             : testing::ScopedFakeTestPartResultReporter{ nullptr }
             , testStepResult{ testStepResult }
         {
@@ -30,7 +27,7 @@ namespace cucumber_cpp::library::support
         {
             if (testPartResult.failed())
             {
-                testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
+                testStepResult.status = TestStepResultStatus::FAILED;
 
                 auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
 
@@ -45,12 +42,12 @@ namespace cucumber_cpp::library::support
         }
 
     private:
-        cucumber::messages::test_step_result& testStepResult;
+        TestStepResult& testStepResult;
     };
 
-    cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
+    TestStepResult Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
     {
-        cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
+        TestStepResult testStepResult{ .status = TestStepResultStatus::PASSED };
         CucumberResultReporter reportListener{ testStepResult };
 
         const auto startTime = util::Stopwatch::Instance().Start();
@@ -60,7 +57,7 @@ namespace cucumber_cpp::library::support
         }
         catch (const runtime::NestedTestCaseRunnerError& e)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
+            testStepResult.status = TestStepResultStatus::FAILED;
 
             if (e.status.status != cucumber::messages::test_step_result_status::PASSED)
             {
@@ -82,32 +79,32 @@ namespace cucumber_cpp::library::support
         }
         catch (const StepSkipped& e)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::SKIPPED;
+            testStepResult.status = TestStepResultStatus::SKIPPED;
             if (!e.message.empty())
                 testStepResult.message = e.message;
         }
         catch (const StepPending& e)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::PENDING;
+            testStepResult.status = TestStepResultStatus::PENDING;
             if (!e.message.empty())
                 testStepResult.message = e.message;
         }
         catch ([[maybe_unused]] const FatalError& error)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
+            testStepResult.status = TestStepResultStatus::FAILED;
         }
         catch (std::exception& e)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
-            testStepResult.exception = cucumber::messages::exception{
+            testStepResult.status = TestStepResultStatus::FAILED;
+            testStepResult.exception = TestException{
                 .type = cucumber::gherkin::detail::demangle(typeid(e).name()).get(),
                 .message = e.what(),
             };
         }
         catch (...)
         {
-            testStepResult.status = cucumber::messages::test_step_result_status::FAILED;
-            testStepResult.exception = cucumber::messages::exception{
+            testStepResult.status = TestStepResultStatus::FAILED;
+            testStepResult.exception = TestException{
                 .type = "unknown",
                 .message = "unknown exception",
             };

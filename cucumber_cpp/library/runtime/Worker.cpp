@@ -1,5 +1,7 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/exception.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -11,6 +13,7 @@
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -32,6 +35,42 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
+        cucumber::messages::test_step_result_status RunnerToMessages(support::TestStepResultStatus status)
+        {
+            switch (status)
+            {
+                case support::TestStepResultStatus::UNKNOWN:
+                    return cucumber::messages::test_step_result_status::UNKNOWN;
+                case support::TestStepResultStatus::PASSED:
+                    return cucumber::messages::test_step_result_status::PASSED;
+                case support::TestStepResultStatus::SKIPPED:
+                    return cucumber::messages::test_step_result_status::SKIPPED;
+                case support::TestStepResultStatus::PENDING:
+                    return cucumber::messages::test_step_result_status::PENDING;
+                case support::TestStepResultStatus::UNDEFINED:
+                    return cucumber::messages::test_step_result_status::UNDEFINED;
+                case support::TestStepResultStatus::AMBIGUOUS:
+                    return cucumber::messages::test_step_result_status::AMBIGUOUS;
+                case support::TestStepResultStatus::FAILED:
+                    return cucumber::messages::test_step_result_status::FAILED;
+            }
+
+            return cucumber::messages::test_step_result_status::UNKNOWN;
+        }
+
+        cucumber::messages::test_step_result RunnerToMessage(support::TestStepResult result)
+        {
+            return {
+                .duration = cucumber::messages::duration{
+                    .seconds = result.duration.seconds,
+                    .nanos = result.duration.nanos,
+                },
+                .message = result.message,
+                .status = RunnerToMessages(result.status),
+                .exception = result.exception.has_value() ? std::make_optional<cucumber::messages::exception>(result.exception->type, result.exception->message) : std::nullopt,
+            };
+        }
+
         const inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
             cucumber::messages::test_step_result_status::AMBIGUOUS,
             cucumber::messages::test_step_result_status::FAILED,
@@ -177,7 +216,7 @@ namespace cucumber_cpp::library::runtime
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
         if (!options.dryRun)
         {
-            result = definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions();
+            result = RunnerToMessage(definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions());
 
             if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", definition.hook.to_string(), result.to_string()) };

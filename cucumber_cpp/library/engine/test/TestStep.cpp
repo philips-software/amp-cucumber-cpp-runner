@@ -11,6 +11,8 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/TransformDocString.hpp"
+#include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -50,10 +52,10 @@ namespace cucumber_cpp::library::engine
         support::HookRegistry hookRegistry{ idGenerator };
 
         support::SupportCodeLibrary supportCodeLibrary{
-            hookRegistry,
-            stepRegistry,
-            parameterRegistry,
-            undefinedParameters
+            .hookRegistry = hookRegistry,
+            .stepRegistry = stepRegistry,
+            .parameterRegistry = parameterRegistry,
+            .undefinedParameters = undefinedParameters
         };
         runtime::NestedTestCaseRunner nestedTestCaseRunner{
             0,
@@ -68,8 +70,8 @@ namespace cucumber_cpp::library::engine
             broadcaster,
             context,
             stepOrHookStarted,
-            pickleStepArgument.data_table,
-            pickleStepArgument.doc_string,
+            util::TransformTable(pickleStepArgument.data_table),
+            util::TransformDocString(pickleStepArgument.doc_string),
         };
     };
 
