@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 namespace cucumber_cpp::library::detail
@@ -16,17 +17,6 @@ namespace cucumber_cpp::library::detail
     {
         return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
     }
-
-    struct Arg
-    {
-        template<class U>
-        operator U() const
-        {
-            return TransformArg<U>(argument.converterName, argument.converterArgs);
-        }
-
-        const support::Argument& argument;
-    };
 
     template<class Base>
     struct BodyCrtp : support::Body
@@ -44,7 +34,7 @@ namespace cucumber_cpp::library::detail
             {
                 [this, &args]<std::size_t... I>(std::index_sequence<I...> /*unused*/)
                 {
-                    static_cast<Base*>(this)->ExecuteImpl(Arg{ args[I] }...);
+                    static_cast<Base*>(this)->ExecuteImpl(TransformArg<std::remove_cvref_t<TArgs>>(args[I].converterName, args[I].converterArgs)...);
                 }(std::make_index_sequence<sizeof...(TArgs)>{});
             }(&Base::ExecuteImpl);
         }
