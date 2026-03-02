@@ -2,7 +2,6 @@
 #define API_FORMATTERS_HPP
 
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <functional>
@@ -15,6 +14,11 @@
 #include <string>
 #include <string_view>
 #include <utility>
+
+namespace cucumber_cpp::library::query
+{
+    struct Query;
+}
 
 namespace cucumber_cpp::library::api
 {

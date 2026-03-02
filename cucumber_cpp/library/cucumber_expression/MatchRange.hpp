@@ -1,7 +1,7 @@
 #ifndef CUCUMBER_EXPRESSION_MATCH_RANGE_HPP
 #define CUCUMBER_EXPRESSION_MATCH_RANGE_HPP
 
-// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include <cstddef>

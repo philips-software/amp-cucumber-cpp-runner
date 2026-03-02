@@ -1,4 +1,4 @@
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include <gtest/gtest.h>
 
 struct Airport

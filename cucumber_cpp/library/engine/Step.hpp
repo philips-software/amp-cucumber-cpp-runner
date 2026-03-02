@@ -1,7 +1,7 @@
 #ifndef ENGINE_STEP_HPP
 #define ENGINE_STEP_HPP
 
-// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber/messages/pickle_doc_string.hpp"

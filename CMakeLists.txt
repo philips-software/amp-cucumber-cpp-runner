@@ -21,6 +21,7 @@ endif()
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
+option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -48,6 +49,12 @@ if (CCR_ENABLE_COVERAGE)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating code coverage report in LCOV format"
     )
+endif()
+
+if (CCR_ENABLE_TIME_PROFILE)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-ftime-trace)
+    endif()
 endif()
 
 set(CMAKE_CXX_STANDARD 20)

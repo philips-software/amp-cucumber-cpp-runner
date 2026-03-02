@@ -1,5 +1,5 @@
 #include "cucumber/messages/pickle_table.hpp"
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include <cstddef>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

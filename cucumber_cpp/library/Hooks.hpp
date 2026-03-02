@@ -1,7 +1,7 @@
 #ifndef CUCUMBER_CPP_HOOKS_HPP
 #define CUCUMBER_CPP_HOOKS_HPP
 
-// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/BodyMacro.hpp"

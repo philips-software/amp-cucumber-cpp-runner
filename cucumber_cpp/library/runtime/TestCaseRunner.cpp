@@ -3,8 +3,10 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
+#include "cucumber/messages/group.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
+#include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/suggestion.hpp"
 #include "cucumber/messages/test_case.hpp"
@@ -16,6 +18,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
@@ -32,10 +35,43 @@
 #include <ranges>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
 {
+    namespace
+    {
+        std::optional<std::string> ToString(const cucumber::messages::group& group)
+        {
+            return group.value;
+        }
+
+        cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
+        {
+            if (group.children.empty())
+                return { group.value };
+
+            auto strings = group.children | std::views::transform(ToString);
+
+            return { strings.begin(), strings.end() };
+        }
+
+        support::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
+        {
+            return {
+                .converterName = argument.parameter_type_name.value_or(""),
+                .converterArgs = GroupToArgumentGroup(argument.group),
+            };
+        }
+
+        support::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
+        {
+            auto strings = args.step_match_arguments | std::views::transform(ToArgument);
+            return { strings.begin(), strings.end() };
+        }
+    }
+
     TestCaseRunner::TestCaseRunner(util::Broadcaster& broadcaster,
         cucumber::gherkin::id_generator_ptr idGenerator,
         const cucumber::messages::gherkin_document& gherkinDocument,
@@ -46,7 +82,7 @@ namespace cucumber_cpp::library::runtime
         support::SupportCodeLibrary& supportCodeLibrary,
         Context& testSuiteContext)
         : broadcaster{ broadcaster }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
         , gherkinDocument{ gherkinDocument }
         , pickle{ pickle }
         , testCase{ testCase }
@@ -224,7 +260,7 @@ namespace cucumber_cpp::library::runtime
 
     cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
     {
-        return body->ExecuteAndCatchExceptions(args);
+        return body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args));
     }
 
     cucumber::messages::test_step_result TestCaseRunner::GetWorstStepResult() const

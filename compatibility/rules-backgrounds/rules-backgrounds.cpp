@@ -1,4 +1,4 @@
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include <string>
 
 GIVEN(R"(an order for {string})", (const std::string& order))

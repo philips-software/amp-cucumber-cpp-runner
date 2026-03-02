@@ -1,7 +1,9 @@
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/group.hpp"
 #include "cucumber/messages/pickle_doc_string.hpp"
 #include "cucumber/messages/pickle_table.hpp"
+#include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step.hpp"
 #include "cucumber/messages/test_step_result.hpp"
@@ -10,17 +12,16 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <cstddef>
-#include <iterator>
 #include <memory>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
@@ -28,8 +29,38 @@
 
 namespace cucumber_cpp::library::runtime
 {
+
     namespace
     {
+        std::optional<std::string> ToString(const cucumber::messages::group& group)
+        {
+            return group.value;
+        }
+
+        cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
+        {
+            if (group.children.empty())
+                return { group.value };
+
+            auto strings = group.children | std::views::transform(ToString);
+
+            return { strings.begin(), strings.end() };
+        }
+
+        support::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
+        {
+            return {
+                .converterName = argument.parameter_type_name.value_or(""),
+                .converterArgs = GroupToArgumentGroup(argument.group),
+            };
+        }
+
+        support::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
+        {
+            auto strings = args.step_match_arguments | std::views::transform(ToArgument);
+            return { strings.begin(), strings.end() };
+        }
+
         auto TransformToMatch(const std::string& text)
         {
             return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
@@ -69,9 +100,9 @@ namespace cucumber_cpp::library::runtime
 
         void Invoke(std::size_t nesting, const std::string& step, std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
         {
-            const auto status = body->ExecuteAndCatchExceptions(args);
+            const auto status = body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args));
             if (status.status != cucumber::messages::test_step_result_status::PASSED)
-                throw NestedTestCaseRunnerError{ nesting, status, step };
+                throw NestedTestCaseRunnerError{ .nesting = nesting, .status = status, .text = step };
         }
 
         void Run(std::size_t nesting, const std::string& step, const cucumber::messages::test_step& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)

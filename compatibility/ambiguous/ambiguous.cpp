@@ -1,4 +1,4 @@
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include <string>
 
 STEP(R"(^a (.*?) with (.*?)$)", (const std::string& arg1, const std::string& arg2))

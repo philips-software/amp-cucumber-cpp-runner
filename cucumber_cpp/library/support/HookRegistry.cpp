@@ -1,16 +1,14 @@
 
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/hook.hpp"
 #include "cucumber/messages/hook_type.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/tag.hpp"
-#include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <map>
@@ -51,7 +49,7 @@ namespace cucumber_cpp::library::support
             };
         }
 
-        std::map<HookType, cucumber::messages::hook_type> HookTypeMap{
+        const std::map<HookType, cucumber::messages::hook_type> HookTypeMap{
             { HookType::beforeAll, cucumber::messages::hook_type::BEFORE_TEST_RUN },
             { HookType::afterAll, cucumber::messages::hook_type::AFTER_TEST_RUN },
             // { HookType::beforeFeature, cucumber::messages::hook_type::BEFORE_TEST_CASE },
@@ -102,6 +100,22 @@ namespace cucumber_cpp::library::support
     {
         auto ids = registry | std::views::filter(TypeFilter(hookType)) | std::views::filter(Matches(tags)) | std::views::keys;
         return { ids.begin(), ids.end() };
+    }
+
+    [[nodiscard]] std::vector<cucumber::messages::hook> HookRegistry::HooksByType(HookType hookType) const
+    {
+        auto filtered = registry |
+                        std::views::values |
+                        std::views::filter([hookType](const Definition& definition)
+                            {
+                                return definition.type == hookType;
+                            }) |
+                        std::views::transform([](const Definition& definition)
+                            {
+                                return definition.hook;
+                            });
+
+        return { filtered.begin(), filtered.end() };
     }
 
     std::size_t HookRegistry::Size() const

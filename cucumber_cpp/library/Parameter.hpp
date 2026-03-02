@@ -1,7 +1,7 @@
 #ifndef LIBRARY_PARAMETER_HPP
 #define LIBRARY_PARAMETER_HPP
 
-// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"

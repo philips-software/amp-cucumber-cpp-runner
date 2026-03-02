@@ -1,21 +1,25 @@
 #ifndef CUCUMBER_CPP_BODY_HPP
 #define CUCUMBER_CPP_BODY_HPP
 
-#include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/test_step_result.hpp"
-#include <any>
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include <concepts>
 #include <exception>
 #include <source_location>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::support
 {
-    using ExecuteArgs = std::variant<std::vector<std::string>, std::vector<std::any>>;
+    struct Argument
+    {
+        std::string converterName;
+        cucumber_expression::ConvertFunctionArg converterArgs;
+    };
+
+    using ExecuteArgs = std::vector<Argument>;
 
     struct FatalError : std::runtime_error
     {
@@ -50,10 +54,10 @@ namespace cucumber_cpp::library::support
     {
         virtual ~Body() = default;
 
-        cucumber::messages::test_step_result ExecuteAndCatchExceptions(const cucumber::messages::step_match_arguments_list& args = {});
+        cucumber::messages::test_step_result ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
 
     protected:
-        virtual void Execute(const cucumber::messages::step_match_arguments_list& args) = 0;
+        virtual void Execute(const ExecuteArgs& args) = 0;
     };
 
     template<typename T>

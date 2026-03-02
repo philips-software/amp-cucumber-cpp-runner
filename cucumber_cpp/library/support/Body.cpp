@@ -48,7 +48,7 @@ namespace cucumber_cpp::library::support
         cucumber::messages::test_step_result& testStepResult;
     };
 
-    cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const cucumber::messages::step_match_arguments_list& args)
+    cucumber::messages::test_step_result Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
     {
         cucumber::messages::test_step_result testStepResult{ .status = cucumber::messages::test_step_result_status::PASSED };
         CucumberResultReporter reportListener{ testStepResult };

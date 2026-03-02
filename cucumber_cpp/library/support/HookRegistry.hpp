@@ -70,30 +70,16 @@ namespace cucumber_cpp::library::support
 
         void LoadHooks();
 
-        std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags = {}) const;
-        std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::tag> tags) const;
+        [[nodiscard]] std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::pickle_tag> tags = {}) const;
+        [[nodiscard]] std::vector<std::string> FindIds(HookType hookType, std::span<const cucumber::messages::tag> tags) const;
 
-        std::vector<cucumber::messages::hook> HooksByType(HookType hookType) const
-        {
-            auto filtered = registry |
-                            std::views::values |
-                            std::views::filter([hookType](const Definition& definition)
-                                {
-                                    return definition.type == hookType;
-                                }) |
-                            std::views::transform([](const Definition& definition)
-                                {
-                                    return definition.hook;
-                                });
-
-            return { filtered.begin(), filtered.end() };
-        }
+        [[nodiscard]] std::vector<cucumber::messages::hook> HooksByType(HookType hookType) const;
 
         [[nodiscard]] std::size_t Size() const;
         [[nodiscard]] std::size_t Size(HookType hookType) const;
 
-        HookFactory GetFactoryById(const std::string& id) const;
-        const Definition& GetDefinitionById(const std::string& id) const;
+        [[nodiscard]] HookFactory GetFactoryById(const std::string& id) const;
+        [[nodiscard]] const Definition& GetDefinitionById(const std::string& id) const;
 
     private:
         void Register(const std::string& id, HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, HookFactory factory, std::source_location sourceLocation);
