@@ -11,6 +11,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "gmock/gmock.h"
@@ -62,7 +63,7 @@ namespace cucumber_cpp::library::engine
             supportCodeLibrary,
             broadcaster,
             context,
-            std::get<cucumber::messages::test_step_started>(stepOrHookStarted),
+            std::get<util::TestStepStarted>(stepOrHookStarted),
         };
 
         StepMock step{

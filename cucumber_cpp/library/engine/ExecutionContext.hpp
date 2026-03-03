@@ -1,17 +1,20 @@
 #ifndef ENGINE_EXECUTION_CONTEXT_HPP
 #define ENGINE_EXECUTION_CONTEXT_HPP
 
-#include "cucumber/messages/attachment_content_encoding.hpp"
-#include "cucumber/messages/test_run_hook_started.hpp"
-#include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
+#include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include <istream>
 #include <optional>
 #include <source_location>
 #include <string>
 #include <variant>
+
+namespace cucumber_cpp::library::util
+{
+    struct Broadcaster;
+}
 
 namespace cucumber_cpp::library::engine
 {
@@ -25,7 +28,7 @@ namespace cucumber_cpp::library::engine
     };
 
     using OptionsOrMediaType = std::variant<std::string, AttachOptions>;
-    using StepOrHookStarted = std::variant<cucumber::messages::test_step_started, cucumber::messages::test_run_hook_started>;
+    using StepOrHookStarted = std::variant<util::TestStepStarted, util::TestRunHookStarted>;
 
     struct ExecutionContext
     {
@@ -43,8 +46,6 @@ namespace cucumber_cpp::library::engine
         Context& context;
 
     private:
-        void Attach(std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType);
-
         util::Broadcaster& broadCaster;
         StepOrHookStarted stepOrHookStarted;
     };

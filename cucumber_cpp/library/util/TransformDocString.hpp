@@ -8,6 +8,7 @@
 namespace cucumber_cpp::library::util
 {
     std::optional<DocString> TransformDocString(const std::optional<cucumber::messages::pickle_doc_string>& pickleDocString);
+    std::optional<cucumber::messages::pickle_doc_string> TransformDocString(const std::optional<DocString>& docString);
 }
 
 #endif

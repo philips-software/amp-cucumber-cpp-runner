@@ -1,31 +1,17 @@
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
-#include "cucumber/messages/pickle_tag.hpp"
-#include "cucumber/messages/tag.hpp"
 #include "fmt/format.h"
-#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <regex>
 #include <set>
-#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::tag_expression
 {
-    bool TrueExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
-    {
-        return true;
-    }
-
-    bool TrueExpression::Evaluate(std::span<const cucumber::messages::pickle_tag> tags) const
-    {
-        return true;
-    }
-
-    bool TrueExpression::Evaluate(std::span<const cucumber::messages::tag> tags) const
+    bool TrueExpression::Evaluate(const std::set<std::string, std::less<>>& /*tags*/) const
     {
         return true;
     }
@@ -42,16 +28,6 @@ namespace cucumber_cpp::library::tag_expression
     bool LiteralExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
     {
         return tags.contains(name);
-    }
-
-    bool LiteralExpression::Evaluate(std::span<const cucumber::messages::pickle_tag> tags) const
-    {
-        return std::ranges::find(tags, name, &cucumber::messages::pickle_tag::name) != tags.end();
-    }
-
-    bool LiteralExpression::Evaluate(std::span<const cucumber::messages::tag> tags) const
-    {
-        return std::ranges::find(tags, name, &cucumber::messages::tag::name) != tags.end();
     }
 
     LiteralExpression::operator std::string() const
@@ -89,16 +65,6 @@ namespace cucumber_cpp::library::tag_expression
         return left->Evaluate(tags) && right->Evaluate(tags);
     }
 
-    bool AndExpression::Evaluate(std::span<const cucumber::messages::pickle_tag> tags) const
-    {
-        return left->Evaluate(tags) && right->Evaluate(tags);
-    }
-
-    bool AndExpression::Evaluate(std::span<const cucumber::messages::tag> tags) const
-    {
-        return left->Evaluate(tags) && right->Evaluate(tags);
-    }
-
     AndExpression::operator std::string() const
     {
         if (!left || !right)
@@ -113,16 +79,6 @@ namespace cucumber_cpp::library::tag_expression
     {}
 
     bool OrExpression::Evaluate(const std::set<std::string, std::less<>>& tags) const
-    {
-        return left->Evaluate(tags) || right->Evaluate(tags);
-    }
-
-    bool OrExpression::Evaluate(std::span<const cucumber::messages::pickle_tag> tags) const
-    {
-        return left->Evaluate(tags) || right->Evaluate(tags);
-    }
-
-    bool OrExpression::Evaluate(std::span<const cucumber::messages::tag> tags) const
     {
         return left->Evaluate(tags) || right->Evaluate(tags);
     }
@@ -144,22 +100,12 @@ namespace cucumber_cpp::library::tag_expression
         return !operand->Evaluate(tags);
     }
 
-    bool NotExpression::Evaluate(std::span<const cucumber::messages::pickle_tag> tags) const
-    {
-        return !operand->Evaluate(tags);
-    }
-
-    bool NotExpression::Evaluate(std::span<const cucumber::messages::tag> tags) const
-    {
-        return !operand->Evaluate(tags);
-    }
-
     NotExpression::operator std::string() const
     {
         if (!operand)
             return "";
 
-        if (const auto& ref = *operand.get(); typeid(ref) == typeid(AndExpression) || typeid(ref) == typeid(OrExpression))
+        if (const auto& ref = *operand; typeid(ref) == typeid(AndExpression) || typeid(ref) == typeid(OrExpression))
             return fmt::format(R"(not {})", static_cast<std::string>(*operand));
 
         return fmt::format(R"(not ( {} ))", static_cast<std::string>(*operand));

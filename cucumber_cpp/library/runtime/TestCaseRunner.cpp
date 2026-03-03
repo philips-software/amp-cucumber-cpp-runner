@@ -2,6 +2,7 @@
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/group.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -28,6 +29,9 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
+#include "cucumber_cpp/library/util/TransformTestStepResultStatus.hpp"
+#include "cucumber_cpp/library/util/TransformTestStepStarted.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -42,42 +46,6 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        cucumber::messages::test_step_result_status RunnerToMessages(support::TestStepResultStatus status)
-        {
-            switch (status)
-            {
-                case support::TestStepResultStatus::UNKNOWN:
-                    return cucumber::messages::test_step_result_status::UNKNOWN;
-                case support::TestStepResultStatus::PASSED:
-                    return cucumber::messages::test_step_result_status::PASSED;
-                case support::TestStepResultStatus::SKIPPED:
-                    return cucumber::messages::test_step_result_status::SKIPPED;
-                case support::TestStepResultStatus::PENDING:
-                    return cucumber::messages::test_step_result_status::PENDING;
-                case support::TestStepResultStatus::UNDEFINED:
-                    return cucumber::messages::test_step_result_status::UNDEFINED;
-                case support::TestStepResultStatus::AMBIGUOUS:
-                    return cucumber::messages::test_step_result_status::AMBIGUOUS;
-                case support::TestStepResultStatus::FAILED:
-                    return cucumber::messages::test_step_result_status::FAILED;
-            }
-
-            return cucumber::messages::test_step_result_status::UNKNOWN;
-        }
-
-        cucumber::messages::test_step_result RunnerToMessage(support::TestStepResult result)
-        {
-            return {
-                .duration = cucumber::messages::duration{
-                    .seconds = result.duration.seconds,
-                    .nanos = result.duration.nanos,
-                },
-                .message = result.message,
-                .status = RunnerToMessages(result.status),
-                .exception = result.exception.has_value() ? std::make_optional<cucumber::messages::exception>(result.exception->type, result.exception->message) : std::nullopt,
-            };
-        }
-
         std::optional<std::string> ToString(const cucumber::messages::group& group)
         {
             return group.value;
@@ -211,7 +179,7 @@ namespace cucumber_cpp::library::runtime
                 .status = cucumber::messages::test_step_result_status::SKIPPED,
             };
 
-        return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, testStepStarted));
+        return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted)));
     }
 
     std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, support::HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
@@ -223,7 +191,7 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
         {
             const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
-            results.emplace_back(InvokeStep(definition.factory(broadcaster, testCaseContext, testStepStarted)));
+            results.emplace_back(InvokeStep(definition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted))));
         }
 
         return results;
@@ -274,8 +242,8 @@ namespace cucumber_cpp::library::runtime
 
             const auto& definition = stepDefinitions.front();
             const auto result = InvokeStep(definition.factory(
-                                               NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted },
-                                               broadcaster, testCaseContext, testStepStarted, dataTable, docString),
+                                               NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted) },
+                                               broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), dataTable, docString),
                 testStep.step_match_arguments_lists->front());
             stepResults.push_back(result);
         }
@@ -296,7 +264,7 @@ namespace cucumber_cpp::library::runtime
 
     cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
     {
-        return RunnerToMessage(body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args)));
+        return util::TransformTestStepResult(body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args)));
     }
 
     cucumber::messages::test_step_result TestCaseRunner::GetWorstStepResult() const

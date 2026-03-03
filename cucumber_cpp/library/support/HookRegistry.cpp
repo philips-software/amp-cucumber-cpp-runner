@@ -9,6 +9,8 @@
 #include "cucumber/messages/tag.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "cucumber_cpp/library/util/TransformPickleTag.hpp"
+#include "cucumber_cpp/library/util/TransformTag.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <map>
@@ -37,7 +39,7 @@ namespace cucumber_cpp::library::support
         {
             return [tags](const auto& keyValue)
             {
-                return keyValue.second.tagExpression->Evaluate(tags);
+                return keyValue.second.tagExpression->Evaluate(util::TransformPickleTags(tags));
             };
         }
 
@@ -45,7 +47,7 @@ namespace cucumber_cpp::library::support
         {
             return [tags](const auto& keyValue)
             {
-                return keyValue.second.tagExpression->Evaluate(tags);
+                return keyValue.second.tagExpression->Evaluate(util::TransformTags(tags));
             };
         }
 

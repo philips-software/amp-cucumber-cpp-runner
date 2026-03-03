@@ -5,17 +5,38 @@ target_sources(cucumber_cpp.library.util PRIVATE
     ArgumentGroupToMessageGroup.hpp
     Broadcaster.cpp
     Broadcaster.hpp
+    DocString.hpp
     Duration.cpp
     Duration.hpp
     GetWorstTestStepResult.cpp
     GetWorstTestStepResult.hpp
     Immoveable.hpp
+    Table.hpp
+    TestDuration.hpp
+    TestException.hpp
+    TestRunHookStarted.hpp
+    TestStepResult.hpp
+    TestStepResultStatus.hpp
+    TestStepStarted.hpp
     Timestamp.cpp
     Timestamp.hpp
+    ToLower.hpp
     TransformDocString.cpp
     TransformDocString.hpp
+    TransformPickleTag.cpp
+    TransformPickleTag.hpp
     TransformTable.cpp
     TransformTable.hpp
+    TransformTag.cpp
+    TransformTag.hpp
+    TransformTestRunHookStarted.cpp
+    TransformTestRunHookStarted.hpp
+    TransformTestStepResult.cpp
+    TransformTestStepResult.hpp
+    TransformTestStepResultStatus.cpp
+    TransformTestStepResultStatus.hpp
+    TransformTestStepStarted.cpp
+    TransformTestStepStarted.hpp
     Trim.hpp
 )
 

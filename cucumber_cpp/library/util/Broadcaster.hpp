@@ -1,9 +1,13 @@
 #ifndef LIBRARY_20EVENT_EMITTER_HPP
 #define LIBRARY_20EVENT_EMITTER_HPP
 
-#include "cucumber/messages/envelope.hpp"
 #include <functional>
 #include <vector>
+
+namespace cucumber::messages
+{
+    struct envelope;
+}
 
 namespace cucumber_cpp::library::util
 {

@@ -2,6 +2,7 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
+#include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
@@ -18,6 +19,7 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <csignal>
 #include <cstdlib>
 #include <functional>
@@ -28,6 +30,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace cucumber_cpp::library::api
 {
@@ -109,7 +112,7 @@ namespace cucumber_cpp::library::api
                 broadcaster.BroadcastEvent({ .hook = std::move(hook) });
         }
 
-        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
         {
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
 
@@ -124,11 +127,22 @@ namespace cucumber_cpp::library::api
             EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }
 
+        const std::string& TransformPickleTagName(const cucumber::messages::pickle_tag& tag)
+        {
+            return tag.name;
+        }
+
+        std::set<std::string, std::less<>> PickleTagsToSet(const std::vector<cucumber::messages::pickle_tag>& tags)
+        {
+            auto tagNames = tags | std::views::transform(TransformPickleTagName);
+            return { std::begin(tagNames), std::end(tagNames) };
+        }
+
         auto FilterByTagExpression(const support::RunOptions::Sources& sources)
         {
             return [&sources](const support::PickleSource& pickle)
             {
-                return sources.tagExpression->Evaluate(pickle.pickle->tags);
+                return sources.tagExpression->Evaluate(PickleTagsToSet(pickle.pickle->tags));
             };
         }
 

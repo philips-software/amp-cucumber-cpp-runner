@@ -6,12 +6,20 @@
 
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
-#include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/DocString.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
 #include <optional>
 #include <string>
+
+namespace cucumber_cpp::library::runtime
+{
+    struct NestedTestCaseRunner;
+}
+
+namespace cucumber_cpp::library::util
+{
+    struct Broadcaster;
+}
 
 namespace cucumber_cpp::library::engine
 {

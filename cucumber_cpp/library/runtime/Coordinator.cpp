@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/runtime/Coordinator.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/test_run_finished.hpp"
 #include "cucumber/messages/test_run_started.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
@@ -19,9 +20,9 @@ namespace cucumber_cpp::library::runtime
         cucumber::gherkin::id_generator_ptr idGenerator,
         std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
         support::SupportCodeLibrary& supportCodeLibrary)
-        : testRunStartedId{ testRunStartedId }
+        : testRunStartedId{ std::move(testRunStartedId) }
         , broadcaster{ broadcaster }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
         , runtimeAdapter{ std::move(runtimeAdapter) }
         , supportCodeLibrary{ supportCodeLibrary }
     {}

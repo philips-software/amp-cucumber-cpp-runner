@@ -5,10 +5,10 @@
 
 namespace cucumber_cpp::library::util
 {
-    Table TransformTable(const std::optional<cucumber::messages::pickle_table>& pickleTable)
+    std::optional<Table> TransformTable(const std::optional<cucumber::messages::pickle_table>& pickleTable)
     {
         if (!pickleTable.has_value())
-            return {};
+            return std::nullopt;
 
         Table table;
 
@@ -22,4 +22,8 @@ namespace cucumber_cpp::library::util
         return table;
     }
 
+    std::optional<cucumber::messages::pickle_table> TransformTable(const std::optional<Table>& table)
+    {
+        return std::nullopt; // TODO: implement this method
+    }
 }

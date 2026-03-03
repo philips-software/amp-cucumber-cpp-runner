@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/duration.hpp"
-#include "cucumber/messages/exception.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/feature.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
 #include "cucumber/messages/pickle.hpp"
@@ -20,6 +19,9 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "cucumber_cpp/library/util/TransformPickleTag.hpp"
+#include "cucumber_cpp/library/util/TransformTestRunHookStarted.hpp"
+#include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include "fmt/format.h"
 #include <cstddef>
 #include <memory>
@@ -35,42 +37,6 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        cucumber::messages::test_step_result_status RunnerToMessages(support::TestStepResultStatus status)
-        {
-            switch (status)
-            {
-                case support::TestStepResultStatus::UNKNOWN:
-                    return cucumber::messages::test_step_result_status::UNKNOWN;
-                case support::TestStepResultStatus::PASSED:
-                    return cucumber::messages::test_step_result_status::PASSED;
-                case support::TestStepResultStatus::SKIPPED:
-                    return cucumber::messages::test_step_result_status::SKIPPED;
-                case support::TestStepResultStatus::PENDING:
-                    return cucumber::messages::test_step_result_status::PENDING;
-                case support::TestStepResultStatus::UNDEFINED:
-                    return cucumber::messages::test_step_result_status::UNDEFINED;
-                case support::TestStepResultStatus::AMBIGUOUS:
-                    return cucumber::messages::test_step_result_status::AMBIGUOUS;
-                case support::TestStepResultStatus::FAILED:
-                    return cucumber::messages::test_step_result_status::FAILED;
-            }
-
-            return cucumber::messages::test_step_result_status::UNKNOWN;
-        }
-
-        cucumber::messages::test_step_result RunnerToMessage(support::TestStepResult result)
-        {
-            return {
-                .duration = cucumber::messages::duration{
-                    .seconds = result.duration.seconds,
-                    .nanos = result.duration.nanos,
-                },
-                .message = result.message,
-                .status = RunnerToMessages(result.status),
-                .exception = result.exception.has_value() ? std::make_optional<cucumber::messages::exception>(result.exception->type, result.exception->message) : std::nullopt,
-            };
-        }
-
         const inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
             cucumber::messages::test_step_result_status::AMBIGUOUS,
             cucumber::messages::test_step_result_status::FAILED,
@@ -81,7 +47,7 @@ namespace cucumber_cpp::library::runtime
         {
             if (options.retry == 0)
                 return 0;
-            else if (options.retryTagExpression->Evaluate(pickle.tags))
+            else if (options.retryTagExpression->Evaluate(util::TransformPickleTags(pickle.tags)))
                 return options.retry;
             else
                 return 0;
@@ -216,7 +182,7 @@ namespace cucumber_cpp::library::runtime
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
         if (!options.dryRun)
         {
-            result = RunnerToMessage(definition.factory(broadcaster, context, testRunHookStarted)->ExecuteAndCatchExceptions());
+            result = util::TransformTestStepResult(definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted))->ExecuteAndCatchExceptions());
 
             if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", definition.hook.to_string(), result.to_string()) };

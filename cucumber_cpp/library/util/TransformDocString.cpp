@@ -12,4 +12,12 @@ namespace cucumber_cpp::library::util
 
         return DocString{ .mediaType = pickleDocString->media_type, .content = pickleDocString->content };
     }
+
+    std::optional<cucumber::messages::pickle_doc_string> TransformDocString(const std::optional<DocString>& docString)
+    {
+        if (!docString.has_value())
+            return std::nullopt;
+
+        return cucumber::messages::pickle_doc_string{ .media_type = docString->mediaType, .content = docString->content };
+    }
 }

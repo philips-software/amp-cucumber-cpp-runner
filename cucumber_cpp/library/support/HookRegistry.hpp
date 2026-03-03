@@ -16,7 +16,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <source_location>
 #include <span>
 #include <string>
@@ -25,7 +24,7 @@
 
 namespace cucumber_cpp::library::support
 {
-    enum struct HookType
+    enum struct HookType : std::int8_t
     {
         beforeAll,
         afterAll,

@@ -3,7 +3,11 @@
 
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
+
+namespace cucumber_cpp::library::util
+{
+    struct Broadcaster;
+}
 
 namespace cucumber_cpp::library::engine
 {

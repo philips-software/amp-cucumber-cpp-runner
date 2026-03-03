@@ -2,10 +2,11 @@
 #include "base64.hpp"
 #include "cucumber/messages/attachment.hpp"
 #include "cucumber/messages/attachment_content_encoding.hpp"
-#include "cucumber/messages/test_run_hook_started.hpp"
-#include "cucumber/messages/test_step_started.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
+#include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <istream>
 #include <iterator>
@@ -46,11 +47,11 @@ namespace cucumber_cpp::library::engine
 
         std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestStepStartedIds(StepOrHookStarted stepOrHookStarted)
         {
-            if (std::holds_alternative<cucumber::messages::test_step_started>(stepOrHookStarted))
+            if (std::holds_alternative<util::TestStepStarted>(stepOrHookStarted))
             {
                 return {
-                    std::get<cucumber::messages::test_step_started>(stepOrHookStarted).test_case_started_id,
-                    std::get<cucumber::messages::test_step_started>(stepOrHookStarted).test_step_id,
+                    std::get<util::TestStepStarted>(stepOrHookStarted).testCaseStartedId,
+                    std::get<util::TestStepStarted>(stepOrHookStarted).testStepId,
                 };
             }
 
@@ -59,10 +60,33 @@ namespace cucumber_cpp::library::engine
 
         std::optional<std::string> ReadTestRunHookStartedIds(StepOrHookStarted stepOrHookStarted)
         {
-            if (std::holds_alternative<cucumber::messages::test_run_hook_started>(stepOrHookStarted))
-                return std::get<cucumber::messages::test_run_hook_started>(stepOrHookStarted).id;
+            if (std::holds_alternative<util::TestRunHookStarted>(stepOrHookStarted))
+                return std::get<util::TestRunHookStarted>(stepOrHookStarted).testRunStartedId;
 
             return std::nullopt;
+        }
+
+        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType, const StepOrHookStarted& stepOrHookStarted)
+        {
+            auto options = std::holds_alternative<std::string>(mediaType)
+                               ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
+                               : std::get<AttachOptions>(mediaType);
+
+            auto [test_case_started_id, test_step_id] = ReadTestStepStartedIds(stepOrHookStarted);
+            auto test_run_hook_started_id = ReadTestRunHookStartedIds(stepOrHookStarted);
+
+            broadCaster.BroadcastEvent({
+                .attachment = cucumber::messages::attachment{
+                    .body = std::move(data),
+                    .content_encoding = encoding,
+                    .file_name = std::move(options.fileName),
+                    .media_type = std::move(options.mediaType),
+                    .test_case_started_id = std::move(test_case_started_id),
+                    .test_step_id = std::move(test_step_id),
+                    .test_run_hook_started_id = std::move(test_run_hook_started_id),
+                    .timestamp = util::TimestampNow(),
+                },
+            });
         }
     }
 
@@ -74,7 +98,7 @@ namespace cucumber_cpp::library::engine
 
     void ExecutionContext::Attach(std::string data, OptionsOrMediaType mediaType)
     {
-        Attach(std::move(data), cucumber::messages::attachment_content_encoding::IDENTITY, std::move(mediaType));
+        BroadcastAttachment(broadCaster, std::move(data), cucumber::messages::attachment_content_encoding::IDENTITY, std::move(mediaType), stepOrHookStarted);
     }
 
     void ExecutionContext::Attach(std::istream& data, OptionsOrMediaType mediaType)
@@ -83,7 +107,7 @@ namespace cucumber_cpp::library::engine
 
         buffer = base64::to_base64(buffer);
 
-        Attach(std::move(buffer), cucumber::messages::attachment_content_encoding::BASE64, mediaType);
+        BroadcastAttachment(broadCaster, std::move(buffer), cucumber::messages::attachment_content_encoding::BASE64, std::move(mediaType), stepOrHookStarted);
     }
 
     void ExecutionContext::Log(std::string text)
@@ -107,28 +131,5 @@ namespace cucumber_cpp::library::engine
     void ExecutionContext::Pending(const std::string& message, std::source_location current) noexcept(false)
     {
         throw StepPending{ message, current };
-    }
-
-    void ExecutionContext::Attach(std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType)
-    {
-        const auto options = std::holds_alternative<std::string>(mediaType)
-                                 ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
-                                 : std::get<AttachOptions>(mediaType);
-
-        auto [test_case_started_id, test_step_id] = ReadTestStepStartedIds(stepOrHookStarted);
-        auto test_run_hook_started_id = ReadTestRunHookStartedIds(stepOrHookStarted);
-
-        broadCaster.BroadcastEvent({
-            .attachment = cucumber::messages::attachment{
-                .body = std::move(data),
-                .content_encoding = encoding,
-                .file_name = std::move(options.fileName),
-                .media_type = std::move(options.mediaType),
-                .test_case_started_id = std::move(test_case_started_id),
-                .test_step_id = std::move(test_step_id),
-                .test_run_hook_started_id = std::move(test_run_hook_started_id),
-                .timestamp = util::TimestampNow(),
-            },
-        });
     }
 }

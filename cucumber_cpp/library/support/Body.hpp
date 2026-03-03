@@ -2,11 +2,9 @@
 #define CUCUMBER_CPP_BODY_HPP
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include <concepts>
-#include <cstddef>
-#include <cstdint>
 #include <exception>
-#include <optional>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -52,45 +50,11 @@ namespace cucumber_cpp::library::support
         std::source_location sourceLocation;
     };
 
-    enum class TestStepResultStatus : std::uint8_t
-    {
-        UNKNOWN,
-        PASSED,
-        SKIPPED,
-        PENDING,
-        UNDEFINED,
-        AMBIGUOUS,
-        FAILED
-    };
-
-    struct TestException
-    {
-        std::string type;
-        std::optional<std::string> message;
-    };
-
-    struct TestDuration
-    {
-        std::size_t seconds{};
-        std::size_t nanos{};
-    };
-
-    struct TestStepResult
-    {
-        TestDuration duration{};
-
-        std::optional<std::string> message;
-
-        TestStepResultStatus status{};
-
-        std::optional<TestException> exception;
-    };
-
     struct Body
     {
         virtual ~Body() = default;
 
-        TestStepResult ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
+        util::TestStepResult ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
 
     protected:
         virtual void Execute(const ExecuteArgs& args) = 0;

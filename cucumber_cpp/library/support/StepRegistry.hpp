@@ -59,8 +59,8 @@ namespace cucumber_cpp::library::support
         {}
 
         StepFactory factory;
-        std::variant<std::vector<std::string>, std::vector<std::any>> matches{};
-        std::string_view stepRegexStr{};
+        std::variant<std::vector<std::string>, std::vector<std::any>> matches;
+        std::string_view stepRegexStr;
     };
 
     struct StepRegistry
@@ -113,10 +113,10 @@ namespace cucumber_cpp::library::support
 
         [[nodiscard]] std::size_t Size() const;
 
-        StepFactory GetFactoryById(const std::string& id) const;
-        Definition GetDefinitionById(const std::string& id) const;
+        [[nodiscard]] StepFactory GetFactoryById(const std::string& id) const;
+        [[nodiscard]] Definition GetDefinitionById(const std::string& id) const;
 
-        const std::list<Definition>& StepDefinitions() const;
+        [[nodiscard]] const std::list<Definition>& StepDefinitions() const;
 
     private:
         void Register(std::string id, const std::string& matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation);
