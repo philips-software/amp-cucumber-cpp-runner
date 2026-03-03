@@ -31,8 +31,10 @@ namespace cucumber_cpp::library::detail
         {
             cucumber_cpp::library::support::SetUpTearDownWrapper wrapper{ *static_cast<Base*>(this) };
 
+            // IILE to extract the argument types from the `Base::ExecuteImpl` function
             [this, &args]<class... TArgs>(void (Base::* /* unused */)(TArgs...))
             {
+                // IILE to call `Base::ExecuteImpl` with each argument transformed using `TransformArg`
                 [this, &args]<std::size_t... I>(std::index_sequence<I...> /*unused*/)
                 {
                     static_cast<Base*>(this)->ExecuteImpl(TransformArg<std::remove_cvref_t<TArgs>>(args[I].converterName, args[I].converterArgs)...);

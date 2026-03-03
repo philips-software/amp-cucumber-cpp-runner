@@ -3,7 +3,6 @@ add_library(cucumber_cpp.library ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library PRIVATE
     Application.cpp
     Application.hpp
-    BodyMacro.cpp
     BodyMacro.hpp
     Context.hpp
     Errors.hpp
