@@ -5,7 +5,6 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include <optional>
-#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -23,7 +22,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
     private:
         std::string expression;
-        std::regex regex;
 
         TreeRegexp treeRegexp;
         std::vector<ParameterType> parameters;

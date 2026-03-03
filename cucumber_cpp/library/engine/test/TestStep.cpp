@@ -1,6 +1,5 @@
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/pickle_step_argument.hpp"
-#include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"

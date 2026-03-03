@@ -1,3 +1,6 @@
+#ifndef COMPATIBILITY_BASE_COMPATIBILITY_HPP
+#define COMPATIBILITY_BASE_COMPATIBILITY_HPP
+
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -20,3 +23,5 @@ namespace compatibility
 
     void RunDevkit(Devkit devkit);
 }
+
+#endif

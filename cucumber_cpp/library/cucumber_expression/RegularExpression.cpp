@@ -3,8 +3,6 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include <optional>
-#include <ranges>
-#include <regex>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -15,7 +13,6 @@ namespace cucumber_cpp::library::cucumber_expression
 {
     RegularExpression::RegularExpression(std::string expression, const ParameterRegistry& parameterRegistry)
         : expression{ std::move(expression) }
-        , regex{ this->expression }
         , treeRegexp{ this->expression }
     {
         for (const auto& groupBuilder : treeRegexp.RootBuilder().Children())

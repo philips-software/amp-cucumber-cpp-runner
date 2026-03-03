@@ -3,12 +3,10 @@
 
 #ifndef KIT_FOLDER
 #error KIT_FOLDER is not defined
-#define KIT_FOLDER ""
 #endif
 
 #ifndef KIT_NDJSON_FILE
 #error KIT_NDJSON_FILE is not defined
-#define KIT_NDJSON_FILE ""
 #endif
 
 TEST(CompatibilityTest, KIT_NAME)
