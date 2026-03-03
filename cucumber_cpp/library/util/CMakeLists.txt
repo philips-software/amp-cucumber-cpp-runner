@@ -3,6 +3,8 @@ add_library(cucumber_cpp.library.util ${CCR_EXCLUDE_FROM_ALL})
 target_sources(cucumber_cpp.library.util PRIVATE
     ArgumentGroupToMessageGroup.cpp
     ArgumentGroupToMessageGroup.hpp
+    Body.cpp
+    Body.hpp
     Broadcaster.cpp
     Broadcaster.hpp
     DocString.hpp
@@ -10,7 +12,12 @@ target_sources(cucumber_cpp.library.util PRIVATE
     Duration.hpp
     GetWorstTestStepResult.cpp
     GetWorstTestStepResult.hpp
+    HookData.hpp
+    HookFactory.hpp
     Immoveable.hpp
+    NestedTestCaseRunnerError.hpp
+    StepFactory.hpp
+    StepOrHookStarted.hpp
     Table.hpp
     TestDuration.hpp
     TestException.hpp
@@ -23,6 +30,8 @@ target_sources(cucumber_cpp.library.util PRIVATE
     ToLower.hpp
     TransformDocString.cpp
     TransformDocString.hpp
+    TransformHookData.cpp
+    TransformHookData.hpp
     TransformPickleTag.cpp
     TransformPickleTag.hpp
     TransformTable.cpp
@@ -47,6 +56,7 @@ target_include_directories(cucumber_cpp.library.util PUBLIC
 target_link_libraries(cucumber_cpp.library.util PUBLIC
     cucumber_gherkin_lib
     fmt::fmt
+    GTest::gtest
 )
 
 if (CCR_BUILD_TESTS)

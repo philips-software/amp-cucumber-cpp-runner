@@ -7,8 +7,9 @@ if (CCR_STANDALONE)
 endif()
 
 target_sources(cucumber_cpp.library.support PRIVATE
-    Body.cpp
     Body.hpp
+    DefinitionRegistration.cpp
+    DefinitionRegistration.hpp
     HookRegistry.cpp
     HookRegistry.hpp
     StepRegistry.cpp

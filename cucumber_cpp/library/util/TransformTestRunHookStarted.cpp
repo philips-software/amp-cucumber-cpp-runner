@@ -8,7 +8,7 @@ namespace cucumber_cpp::library::util
     TestRunHookStarted TransformTestRunHookStarted(const cucumber::messages::test_run_hook_started& testRunHookStarted)
     {
         return {
-            .testRunStartedId = testRunHookStarted.test_run_started_id,
+            .testRunStartedId = testRunHookStarted.id,
         };
     }
 }

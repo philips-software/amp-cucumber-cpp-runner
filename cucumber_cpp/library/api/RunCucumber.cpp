@@ -1,23 +1,28 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
 #include "cucumber/messages/step_definition_pattern.hpp"
+#include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <csignal>
@@ -74,7 +79,7 @@ namespace cucumber_cpp::library::api
                                                  .id = stepDefinition.id,
                                                  .pattern = cucumber::messages::step_definition_pattern{
                                                      .source = stepDefinition.pattern,
-                                                     .type = stepDefinition.patternType,
+                                                     .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION : cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION,
                                                  },
                                                  .source_reference = {
                                                      .uri = stepDefinition.uri.string(),
@@ -88,28 +93,28 @@ namespace cucumber_cpp::library::api
 
         void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::before);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
             for (auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
 
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::after);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
             for (auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
         }
 
         void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::beforeAll);
+            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
             for (auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
 
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(support::HookType::afterAll);
+            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
             for (auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent({ .hook = std::move(hook) });
+                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
         }
 
         void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)

@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
+#include "cucumber_cpp/library/util/Body.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <string>
@@ -19,14 +20,14 @@ namespace cucumber_cpp::library::detail
     }
 
     template<class Base>
-    struct BodyCrtp : support::Body
+    struct BodyCrtp : util::Body
     {
     private:
         BodyCrtp() = default;
         friend Base;
 
     public:
-        void Execute(const support::ExecuteArgs& args) override
+        void Execute(const util::ExecuteArgs& args) override
         {
             cucumber_cpp::library::support::SetUpTearDownWrapper wrapper{ *static_cast<Base*>(this) };
 

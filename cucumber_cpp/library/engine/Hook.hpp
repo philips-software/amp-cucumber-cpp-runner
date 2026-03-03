@@ -3,6 +3,7 @@
 
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 
 namespace cucumber_cpp::library::util
 {
@@ -13,7 +14,7 @@ namespace cucumber_cpp::library::engine
 {
     struct HookBase : engine::ExecutionContext
     {
-        HookBase(util::Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted);
+        HookBase(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted);
 
         virtual ~HookBase() = default;
 

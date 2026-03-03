@@ -8,7 +8,7 @@ namespace cucumber_cpp::library::util
 {
     struct TableCell
     {
-        const std::string& value;
+        std::string value;
     };
 
     struct TableRow

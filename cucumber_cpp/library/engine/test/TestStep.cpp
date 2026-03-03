@@ -6,6 +6,7 @@
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -43,7 +44,7 @@ namespace cucumber_cpp::library::engine
         util::Broadcaster broadcaster;
         std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorageFactory };
-        engine::StepOrHookStarted stepOrHookStarted;
+        util::StepOrHookStarted stepOrHookStarted;
         cucumber::messages::pickle_step_argument pickleStepArgument;
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };

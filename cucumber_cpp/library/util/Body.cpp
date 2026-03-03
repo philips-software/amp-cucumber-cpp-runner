@@ -1,66 +1,69 @@
-#include "cucumber_cpp/library/support/Body.hpp"
+
+#include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber/gherkin/demangle.hpp"
-#include "cucumber/messages/test_step_result.hpp"
 #include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
 #include "cucumber_cpp/library/util/TestException.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "fmt/format.h"
-#include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
-#include <chrono>
 #include <cstddef>
 #include <exception>
 #include <filesystem>
+#include <gtest/gtest-spi.h>
 #include <string>
 
-namespace cucumber_cpp::library::support
+namespace cucumber_cpp::library::util
 {
-    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
+    namespace
     {
-        explicit CucumberResultReporter(util::TestStepResult& testStepResult)
-            : testing::ScopedFakeTestPartResultReporter{ nullptr }
-            , testStepResult{ testStepResult }
-        {
-        }
 
-        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override
+        struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
         {
-            if (testPartResult.failed())
+            explicit CucumberResultReporter(util::TestStepResult& testStepResult)
+                : testing::ScopedFakeTestPartResultReporter{ nullptr }
+                , testStepResult{ testStepResult }
             {
-                testStepResult.status = util::TestStepResultStatus::FAILED;
-
-                auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
-
-                if (testStepResult.message)
-                    testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
-                else
-                    testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
             }
 
-            if (testPartResult.fatally_failed())
-                throw FatalError{ testPartResult.message() };
-        }
+            void ReportTestPartResult(const testing::TestPartResult& testPartResult) override
+            {
+                if (testPartResult.failed())
+                {
+                    testStepResult.status = util::TestStepResultStatus::FAILED;
 
-    private:
-        util::TestStepResult& testStepResult;
-    };
+                    auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
 
-    util::TestStepResult Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
+                    if (testStepResult.message)
+                        testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
+                    else
+                        testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
+                }
+
+                if (testPartResult.fatally_failed())
+                    throw FatalError{ testPartResult.message() };
+            }
+
+        private:
+            util::TestStepResult& testStepResult;
+        };
+    }
+
+    TestStepResult Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
     {
-        util::TestStepResult testStepResult{ .status = util::TestStepResultStatus::PASSED };
+        TestStepResult testStepResult{ .status = TestStepResultStatus::PASSED };
         CucumberResultReporter reportListener{ testStepResult };
 
-        const auto startTime = util::Stopwatch::Instance().Start();
+        const auto startTime = Stopwatch::Instance().Start();
         try
         {
             Execute(args);
         }
-        catch (const runtime::NestedTestCaseRunnerError& e)
+        catch (const util::NestedTestCaseRunnerError& e)
         {
-            testStepResult.status = util::TestStepResultStatus::FAILED;
+            testStepResult.status = TestStepResultStatus::FAILED;
 
             if (e.status.status != cucumber::messages::test_step_result_status::PASSED)
             {
@@ -82,38 +85,38 @@ namespace cucumber_cpp::library::support
         }
         catch (const StepSkipped& e)
         {
-            testStepResult.status = util::TestStepResultStatus::SKIPPED;
+            testStepResult.status = TestStepResultStatus::SKIPPED;
             if (!e.message.empty())
                 testStepResult.message = e.message;
         }
         catch (const StepPending& e)
         {
-            testStepResult.status = util::TestStepResultStatus::PENDING;
+            testStepResult.status = TestStepResultStatus::PENDING;
             if (!e.message.empty())
                 testStepResult.message = e.message;
         }
         catch ([[maybe_unused]] const FatalError& error)
         {
-            testStepResult.status = util::TestStepResultStatus::FAILED;
+            testStepResult.status = TestStepResultStatus::FAILED;
         }
         catch (std::exception& e)
         {
-            testStepResult.status = util::TestStepResultStatus::FAILED;
-            testStepResult.exception = util::TestException{
+            testStepResult.status = TestStepResultStatus::FAILED;
+            testStepResult.exception = TestException{
                 .type = cucumber::gherkin::detail::demangle(typeid(e).name()).get(),
                 .message = e.what(),
             };
         }
         catch (...)
         {
-            testStepResult.status = util::TestStepResultStatus::FAILED;
-            testStepResult.exception = util::TestException{
+            testStepResult.status = TestStepResultStatus::FAILED;
+            testStepResult.exception = TestException{
                 .type = "unknown",
                 .message = "unknown exception",
             };
         }
 
-        auto nanoseconds = util::Stopwatch::Instance().Duration(startTime);
+        auto nanoseconds = Stopwatch::Instance().Duration(startTime);
         static constexpr std::size_t nanosecondsPerSecond = 1e9;
         testStepResult.duration = {
             .seconds = nanoseconds.count() / nanosecondsPerSecond,

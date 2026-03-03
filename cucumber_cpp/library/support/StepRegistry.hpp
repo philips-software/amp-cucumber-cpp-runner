@@ -2,20 +2,11 @@
 #define CUCUMBER_CPP_STEPREGISTRY_HPP
 
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/pickle_doc_string.hpp"
-#include "cucumber/messages/pickle_table.hpp"
-#include "cucumber/messages/step_definition_pattern_type.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
-#include "cucumber_cpp/library/support/UndefinedParameters.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/TransformDocString.hpp"
-#include "cucumber_cpp/library/util/TransformTable.hpp"
+#include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <any>
 #include <cstddef>
 #include <cstdint>
@@ -24,8 +15,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <memory>
-#include <optional>
 #include <source_location>
 #include <span>
 #include <string>
@@ -41,26 +30,29 @@ namespace cucumber_cpp::library::runtime
 
 namespace cucumber_cpp::library::support
 {
-    using StepFactory = std::unique_ptr<Body> (&)(const runtime::NestedTestCaseRunner&, util::Broadcaster& broadCaster, Context&, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>&, const std::optional<cucumber::messages::pickle_doc_string>&);
+    struct UndefinedParameters;
+}
 
-    template<class T>
-    std::unique_ptr<Body> StepBodyFactory(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<cucumber::messages::pickle_table>& dataTable, const std::optional<cucumber::messages::pickle_doc_string>& docString)
-    {
-        return std::make_unique<T>(nestedTestCaseRunner, broadCaster, context, stepOrHookStarted, util::TransformTable(dataTable),
-            util::TransformDocString(docString));
-    }
+namespace cucumber_cpp::library::support
+{
 
     struct StepMatch
     {
-        StepMatch(StepFactory factory, std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
+        StepMatch(util::StepFactory factory, std::variant<std::vector<std::string>, std::vector<std::any>> matches, std::string_view stepRegexStr)
             : factory(factory)
             , matches(std::move(matches))
             , stepRegexStr(stepRegexStr)
         {}
 
-        StepFactory factory;
+        util::StepFactory factory;
         std::variant<std::vector<std::string>, std::vector<std::any>> matches;
         std::string_view stepRegexStr;
+    };
+
+    enum class ExpressionPatternType : std::uint8_t
+    {
+        cucumberExpression,
+        regularExpression,
     };
 
     struct StepRegistry
@@ -81,7 +73,7 @@ namespace cucumber_cpp::library::support
 
         struct Definition
         {
-            StepFactory factory;
+            util::StepFactory factory;
             std::string id;
             std::size_t line;
             std::filesystem::path uri;
@@ -89,7 +81,7 @@ namespace cucumber_cpp::library::support
             StepType type;
             std::string pattern;
             cucumber_expression::Matcher regex;
-            cucumber::messages::step_definition_pattern_type patternType;
+            ExpressionPatternType patternType;
 
             std::uint32_t used{ 0 };
         };
@@ -113,13 +105,13 @@ namespace cucumber_cpp::library::support
 
         [[nodiscard]] std::size_t Size() const;
 
-        [[nodiscard]] StepFactory GetFactoryById(const std::string& id) const;
+        [[nodiscard]] util::StepFactory GetFactoryById(const std::string& id) const;
         [[nodiscard]] Definition GetDefinitionById(const std::string& id) const;
 
         [[nodiscard]] const std::list<Definition>& StepDefinitions() const;
 
     private:
-        void Register(std::string id, const std::string& matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation);
+        void Register(std::string id, const std::string& matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation);
 
         cucumber_expression::ParameterRegistry& parameterRegistry;
         support::UndefinedParameters& undefinedParameters;
@@ -139,7 +131,7 @@ namespace cucumber_cpp::library::support
 
         struct Entry
         {
-            Entry(StepType type, std::string regex, StepFactory factory, std::source_location sourceLocation)
+            Entry(StepType type, std::string regex, util::StepFactory factory, std::source_location sourceLocation)
                 : type{ type }
                 , regex{ std::move(regex) }
                 , factory{ factory }
@@ -148,7 +140,7 @@ namespace cucumber_cpp::library::support
 
             StepType type{};
             std::string regex;
-            StepFactory factory;
+            util::StepFactory factory;
             std::source_location sourceLocation;
             std::string id{ "unassigned" };
         };
@@ -170,7 +162,7 @@ namespace cucumber_cpp::library::support
     template<class T>
     std::size_t StepStringRegistration::Register(const std::string& matcher, StepType stepType, std::source_location sourceLocation)
     {
-        Instance().registry.emplace_back(stepType, matcher, StepBodyFactory<T>, sourceLocation);
+        Instance().registry.emplace_back(stepType, matcher, util::StepBodyFactory<T>, sourceLocation);
 
         return Instance().registry.size();
     }

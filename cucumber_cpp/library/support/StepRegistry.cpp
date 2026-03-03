@@ -7,9 +7,11 @@
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/RegularExpression.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
+#include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
 #include <iterator>
 #include <list>
@@ -28,7 +30,7 @@ namespace cucumber_cpp::library::support
     StepRegistry::StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::id_generator_ptr idGenerator)
         : parameterRegistry{ parameterRegistry }
         , undefinedParameters{ undefinedParameters }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
     {
     }
 
@@ -64,7 +66,7 @@ namespace cucumber_cpp::library::support
         return registry.size();
     }
 
-    StepFactory StepRegistry::GetFactoryById(const std::string& id) const
+    util::StepFactory StepRegistry::GetFactoryById(const std::string& id) const
     {
         return idToDefinitionMap.at(id)->factory;
     }
@@ -79,7 +81,7 @@ namespace cucumber_cpp::library::support
         return registry;
     }
 
-    void StepRegistry::Register(std::string id, const std::string& matcher, StepType stepType, StepFactory factory, std::source_location sourceLocation)
+    void StepRegistry::Register(std::string id, const std::string& matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation)
     {
         try
         {
@@ -95,8 +97,8 @@ namespace cucumber_cpp::library::support
                                              parameterRegistry,
                                          };
             auto cucumberMatcherType = std::holds_alternative<cucumber_expression::RegularExpression>(cucumberMatcher)
-                                           ? cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION
-                                           : cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION;
+                                           ? ExpressionPatternType::regularExpression
+                                           : ExpressionPatternType::cucumberExpression;
 
             registry.emplace_back(factory,
                 id,

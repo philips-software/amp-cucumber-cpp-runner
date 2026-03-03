@@ -40,11 +40,11 @@ namespace cucumber_cpp::library::runtime
 
         cucumber::messages::test_step_result RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
-        std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, support::HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
+        std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, util::HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
         cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted);
 
-        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args = {});
+        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args = {});
         cucumber::messages::test_step_result GetWorstStepResult() const;
 
         bool ShouldSkipHook(bool isBeforeHook);

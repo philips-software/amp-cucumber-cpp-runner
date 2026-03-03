@@ -6,7 +6,7 @@
 
 namespace cucumber_cpp::library::engine
 {
-    HookBase::HookBase(util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted)
+    HookBase::HookBase(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted)
         : engine::ExecutionContext{ broadCaster, context, std::move(stepOrHookStarted) }
     {}
 }

@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/util/DocString.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
 #include <optional>
 #include <string>
@@ -25,7 +26,7 @@ namespace cucumber_cpp::library::engine
 {
     struct StepBase : ExecutionContext
     {
-        StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString);
+        StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString);
         virtual ~StepBase() = default;
 
         virtual void SetUp()
@@ -46,8 +47,8 @@ namespace cucumber_cpp::library::engine
 
         const runtime::NestedTestCaseRunner& nestedTestCaseRunner;
 
-        const std::optional<util::Table>& dataTable;
-        const std::optional<util::DocString>& docString;
+        std::optional<util::Table> dataTable;
+        std::optional<util::DocString> docString;
     };
 }
 

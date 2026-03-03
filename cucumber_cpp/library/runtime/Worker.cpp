@@ -18,8 +18,11 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
+#include "cucumber_cpp/library/util/TransformTag.hpp"
 #include "cucumber_cpp/library/util/TransformTestRunHookStarted.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include "fmt/format.h"
@@ -79,7 +82,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeAllHooks()
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeAll);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeAll);
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, programContext));
 
@@ -89,7 +92,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunAfterAllHooks()
     {
         std::vector<cucumber::messages::test_step_result> results;
-        auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterAll);
+        auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::afterAll);
         for (const auto& id : ids | std::views::reverse)
             results.emplace_back(RunTestHook(id, programContext));
 
@@ -146,7 +149,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::beforeFeature, feature.tags);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeFeature, util::TransformTags(feature.tags));
 
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
@@ -157,7 +160,7 @@ namespace cucumber_cpp::library::runtime
     std::vector<cucumber::messages::test_step_result> Worker::RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
     {
         std::vector<cucumber::messages::test_step_result> results;
-        const auto ids = supportCodeLibrary.hookRegistry.FindIds(support::HookType::afterFeature, feature.tags);
+        const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::afterFeature, util::TransformTags(feature.tags));
 
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
@@ -173,7 +176,7 @@ namespace cucumber_cpp::library::runtime
         const auto testRunHookStarted = cucumber::messages::test_run_hook_started{
             .id = testRunHookStartedId,
             .test_run_started_id = std::string{ testRunStartedId },
-            .hook_id = definition.hook.id,
+            .hook_id = definition.data.id,
             .timestamp = util::TimestampNow(),
         };
 
@@ -185,7 +188,7 @@ namespace cucumber_cpp::library::runtime
             result = util::TransformTestStepResult(definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted))->ExecuteAndCatchExceptions());
 
             if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
-                throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", definition.hook.to_string(), result.to_string()) };
+                throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
         broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{

@@ -14,13 +14,6 @@
 
 namespace cucumber_cpp::library::runtime
 {
-    struct NestedTestCaseRunnerError
-    {
-        std::size_t nesting;
-        cucumber::messages::test_step_result status;
-        std::string text;
-    };
-
     struct NestedTestCaseRunner
     {
         NestedTestCaseRunner(std::size_t nesting, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, util::TestStepStarted testStepStarted);

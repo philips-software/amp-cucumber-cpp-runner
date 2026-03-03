@@ -5,6 +5,7 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
@@ -45,7 +46,7 @@ namespace cucumber_cpp::library::engine
         constexpr auto LogMediaType{ "text/x.cucumber.log+plain" };
         constexpr auto LinkMediaType{ "text/uri-list" };
 
-        std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestStepStartedIds(StepOrHookStarted stepOrHookStarted)
+        std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestStepStartedIds(util::StepOrHookStarted stepOrHookStarted)
         {
             if (std::holds_alternative<util::TestStepStarted>(stepOrHookStarted))
             {
@@ -58,7 +59,7 @@ namespace cucumber_cpp::library::engine
             return { std::nullopt, std::nullopt };
         }
 
-        std::optional<std::string> ReadTestRunHookStartedIds(StepOrHookStarted stepOrHookStarted)
+        std::optional<std::string> ReadTestRunHookStartedIds(util::StepOrHookStarted stepOrHookStarted)
         {
             if (std::holds_alternative<util::TestRunHookStarted>(stepOrHookStarted))
                 return std::get<util::TestRunHookStarted>(stepOrHookStarted).testRunStartedId;
@@ -66,7 +67,7 @@ namespace cucumber_cpp::library::engine
             return std::nullopt;
         }
 
-        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType, const StepOrHookStarted& stepOrHookStarted)
+        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
         {
             auto options = std::holds_alternative<std::string>(mediaType)
                                ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
@@ -90,7 +91,7 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    ExecutionContext::ExecutionContext(util::Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted)
+    ExecutionContext::ExecutionContext(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted)
         : context{ context }
         , broadCaster{ broadCaster }
         , stepOrHookStarted{ std::move(stepOrHookStarted) }

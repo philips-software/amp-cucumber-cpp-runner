@@ -2,9 +2,8 @@
 #define ENGINE_EXECUTION_CONTEXT_HPP
 
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
-#include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
-#include "cucumber_cpp/library/util/TestStepStarted.hpp"
+#include "cucumber_cpp/library/util/Body.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include <istream>
 #include <optional>
 #include <source_location>
@@ -18,8 +17,8 @@ namespace cucumber_cpp::library::util
 
 namespace cucumber_cpp::library::engine
 {
-    using StepSkipped = support::StepSkipped;
-    using StepPending = support::StepPending;
+    using StepSkipped = util::StepSkipped;
+    using StepPending = util::StepPending;
 
     struct AttachOptions
     {
@@ -28,11 +27,10 @@ namespace cucumber_cpp::library::engine
     };
 
     using OptionsOrMediaType = std::variant<std::string, AttachOptions>;
-    using StepOrHookStarted = std::variant<util::TestStepStarted, util::TestRunHookStarted>;
 
     struct ExecutionContext
     {
-        ExecutionContext(util::Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted);
+        ExecutionContext(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted);
 
     protected:
         void Attach(std::string data, OptionsOrMediaType mediaType);
@@ -47,7 +45,7 @@ namespace cucumber_cpp::library::engine
 
     private:
         util::Broadcaster& broadCaster;
-        StepOrHookStarted stepOrHookStarted;
+        util::StepOrHookStarted stepOrHookStarted;
     };
 }
 

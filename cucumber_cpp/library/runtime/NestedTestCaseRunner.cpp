@@ -11,16 +11,18 @@
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
+#include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
+#include "cucumber_cpp/library/util/TransformDocString.hpp"
+#include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include <cstddef>
-#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -47,7 +49,7 @@ namespace cucumber_cpp::library::runtime
             return { strings.begin(), strings.end() };
         }
 
-        support::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
+        util::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
         {
             return {
                 .converterName = argument.parameter_type_name.value_or(""),
@@ -55,7 +57,7 @@ namespace cucumber_cpp::library::runtime
             };
         }
 
-        support::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
+        util::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
         {
             auto strings = args.step_match_arguments | std::views::transform(ToArgument);
             return { strings.begin(), strings.end() };
@@ -98,11 +100,11 @@ namespace cucumber_cpp::library::runtime
             return testStep;
         }
 
-        void Invoke(std::size_t nesting, const std::string& step, std::unique_ptr<support::Body> body, const cucumber::messages::step_match_arguments_list& args)
+        void Invoke(std::size_t nesting, const std::string& step, std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args)
         {
             const auto status = body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args));
             if (status.status != util::TestStepResultStatus::PASSED)
-                throw NestedTestCaseRunnerError{
+                throw util::NestedTestCaseRunnerError{
                     .nesting = nesting,
                     .status = util::TransformTestStepResult(status),
                     .text = step,
@@ -117,23 +119,23 @@ namespace cucumber_cpp::library::runtime
                                                                          });
 
             if (testStep.step_definition_ids->size() == 0)
-                throw NestedTestCaseRunnerError{ .nesting = nesting, .status = {
-                                                                         .duration = cucumber::messages::duration{},
-                                                                         .status = cucumber::messages::test_step_result_status::UNDEFINED,
-                                                                     },
+                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
+                                                                               .duration = cucumber::messages::duration{},
+                                                                               .status = cucumber::messages::test_step_result_status::UNDEFINED,
+                                                                           },
                     .text = step };
 
             else if (testStep.step_definition_ids->size() > 1)
-                throw NestedTestCaseRunnerError{ .nesting = nesting, .status = {
-                                                                         .duration = cucumber::messages::duration{},
-                                                                         .message = "Ambiguous step definitions",
-                                                                         .status = cucumber::messages::test_step_result_status::AMBIGUOUS,
-                                                                     },
+                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
+                                                                               .duration = cucumber::messages::duration{},
+                                                                               .message = "Ambiguous step definitions",
+                                                                               .status = cucumber::messages::test_step_result_status::AMBIGUOUS,
+                                                                           },
                     .text = step };
             else
             {
                 const auto& definition = stepDefinitions.front();
-                Invoke(nesting, step, definition.factory(NestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted }, broadcaster, testCaseContext, testStepStarted, dataTable, docString), testStep.step_match_arguments_lists->front());
+                Invoke(nesting, step, definition.factory(NestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted }, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString)), testStep.step_match_arguments_lists->front());
             }
         }
     }

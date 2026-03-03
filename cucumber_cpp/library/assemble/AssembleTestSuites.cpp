@@ -12,6 +12,8 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/TransformPickleTag.hpp"
 #include <functional>
 #include <list>
 #include <map>
@@ -69,8 +71,8 @@ namespace cucumber_cpp::library::assemble
 
         void AssembleTestSteps(const support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::test_case& testCase, cucumber::gherkin::id_generator_ptr idGenerator)
         {
-            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(support::HookType::before, pickleSource.pickle->tags);
-            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(support::HookType::after, pickleSource.pickle->tags);
+            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::before, util::TransformPickleTags((pickleSource.pickle->tags)));
+            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::after, util::TransformPickleTags((pickleSource.pickle->tags)));
 
             testCase.test_steps.reserve(beforeHooks.size() + pickleSource.pickle->steps.size() + afterHooks.size());
 

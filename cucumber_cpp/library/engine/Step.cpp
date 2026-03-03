@@ -13,7 +13,7 @@
 
 namespace cucumber_cpp::library::engine
 {
-    StepBase::StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, engine::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString)
+    StepBase::StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString)
         : ExecutionContext{ broadCaster, context, std::move(stepOrHookStarted) }
         , nestedTestCaseRunner{ nestedTestCaseRunner }
         , dataTable{ dataTable }

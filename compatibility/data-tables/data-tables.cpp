@@ -1,4 +1,3 @@
-#include "cucumber/messages/pickle_table.hpp"
 #include "cucumber_cpp/Steps.hpp"
 #include <cstddef>
 #include <gmock/gmock.h>
@@ -7,7 +6,7 @@
 
 STEP(R"(the following table is transposed:)")
 {
-    auto transposedTable = context.Emplace<cucumber::messages::pickle_table>();
+    auto transposedTable = context.Emplace<cucumber_cpp::Table>();
     transposedTable->rows.reserve(this->dataTable->rows[0].cells.size());
     for (std::size_t colIdx = 0; colIdx < this->dataTable->rows[0].cells.size(); ++colIdx)
         transposedTable->rows.emplace_back().cells.resize(this->dataTable->rows.size());
@@ -19,7 +18,7 @@ STEP(R"(the following table is transposed:)")
 
 STEP(R"(it should be:)")
 {
-    const auto& actualTable = context.Get<cucumber::messages::pickle_table>();
+    const auto& actualTable = context.Get<cucumber_cpp::Table>();
     const auto& expectedTable = dataTable;
 
     const auto rows = actualTable.rows.size();
