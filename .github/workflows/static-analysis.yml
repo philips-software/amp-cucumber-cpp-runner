@@ -18,7 +18,7 @@ jobs:
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.0@sha256:5c6d33d6d4642163481eb5cab49ccd861be6b558c45b4902616bc653c7e22e2a # v6.8.0
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
     env:
       SONAR_SERVER_URL: "https://sonarcloud.io"
     steps:
@@ -67,7 +67,7 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.0@sha256:5c6d33d6d4642163481eb5cab49ccd861be6b558c45b4902616bc653c7e22e2a # v6.8.0
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
     permissions:
       security-events: write
     steps:
@@ -77,7 +77,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: ${{ github.job }}
-      - uses: github/codeql-action/init@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
+      - uses: github/codeql-action/init@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
         with:
           languages: cpp
       - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
@@ -85,4 +85,4 @@ jobs:
           configurePreset: "Host"
           buildPreset: "Host-Debug"
           configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
-      - uses: github/codeql-action/analyze@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
+      - uses: github/codeql-action/analyze@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
