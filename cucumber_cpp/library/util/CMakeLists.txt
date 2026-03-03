@@ -28,12 +28,16 @@ target_sources(cucumber_cpp.library.util PRIVATE
     Timestamp.cpp
     Timestamp.hpp
     ToLower.hpp
+    TransformArgument.cpp
+    TransformArgument.hpp
     TransformDocString.cpp
     TransformDocString.hpp
     TransformHookData.cpp
     TransformHookData.hpp
     TransformPickleTag.cpp
     TransformPickleTag.hpp
+    TransformStepMatchArgumentsList.cpp
+    TransformStepMatchArgumentsList.hpp
     TransformTable.cpp
     TransformTable.hpp
     TransformTag.cpp

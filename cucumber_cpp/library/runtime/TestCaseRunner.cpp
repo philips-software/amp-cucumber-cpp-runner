@@ -4,10 +4,8 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/gherkin_document.hpp"
-#include "cucumber/messages/group.hpp"
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/step_match_argument.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber/messages/suggestion.hpp"
 #include "cucumber/messages/test_case.hpp"
@@ -19,9 +17,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -29,12 +25,13 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
+#include "cucumber_cpp/library/util/TransformStepMatchArgumentsList.hpp"
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
-#include "cucumber_cpp/library/util/TransformTestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepStarted.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -50,33 +47,9 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        std::optional<std::string> ToString(const cucumber::messages::group& group)
+        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args = {})
         {
-            return group.value;
-        }
-
-        cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
-        {
-            if (group.children.empty())
-                return { group.value };
-
-            auto strings = group.children | std::views::transform(ToString);
-
-            return { strings.begin(), strings.end() };
-        }
-
-        util::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
-        {
-            return {
-                .converterName = argument.parameter_type_name.value_or(""),
-                .converterArgs = GroupToArgumentGroup(argument.group),
-            };
-        }
-
-        util::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
-        {
-            auto strings = args.step_match_arguments | std::views::transform(ToArgument);
-            return { strings.begin(), strings.end() };
+            return util::TransformTestStepResult(body->ExecuteAndCatchExceptions(util::StepMatchArgumentsListToExecuteArgs(args)));
         }
     }
 
@@ -123,12 +96,12 @@ namespace cucumber_cpp::library::runtime
         const auto currentTestCaseStartedId = idGenerator->next_id();
         bool willRetry = false;
 
-        broadcaster.BroadcastEvent({ .test_case_started = cucumber::messages::test_case_started{
-                                         .attempt = attempt,
-                                         .id = currentTestCaseStartedId,
-                                         .test_case_id = testCase.id,
-                                         .timestamp = util::TimestampNow(),
-                                     } });
+        broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case_started = cucumber::messages::test_case_started{
+                                                                     .attempt = attempt,
+                                                                     .id = currentTestCaseStartedId,
+                                                                     .test_case_id = testCase.id,
+                                                                     .timestamp = util::TimestampNow(),
+                                                                 } });
 
         bool seenSteps = false;
         bool error = false;
@@ -140,7 +113,7 @@ namespace cucumber_cpp::library::runtime
                 .test_step_id = testStep.id,
                 .timestamp = util::TimestampNow(),
             };
-            broadcaster.BroadcastEvent({ .test_step_started = testStepStarted });
+            broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_step_started = testStepStarted });
 
             cucumber::messages::test_step_result testStepResult;
 
@@ -156,26 +129,26 @@ namespace cucumber_cpp::library::runtime
             }
             testStepResults.emplace_back(testStepResult);
 
-            broadcaster.BroadcastEvent({ .test_step_finished = cucumber::messages::test_step_finished{
-                                             .test_case_started_id = currentTestCaseStartedId,
-                                             .test_step_id = testStep.id,
-                                             .test_step_result = testStepResult,
-                                             .timestamp = util::TimestampNow(),
-                                         } });
+            broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_step_finished = cucumber::messages::test_step_finished{
+                                                                         .test_case_started_id = currentTestCaseStartedId,
+                                                                         .test_step_id = testStep.id,
+                                                                         .test_step_result = testStepResult,
+                                                                         .timestamp = util::TimestampNow(),
+                                                                     } });
         }
 
         willRetry = GetWorstStepResult().status == cucumber::messages::test_step_result_status::FAILED && moreAttemptsAvailable;
 
-        broadcaster.BroadcastEvent({ .test_case_finished = cucumber::messages::test_case_finished{
-                                         .test_case_started_id = currentTestCaseStartedId,
-                                         .timestamp = util::TimestampNow(),
-                                         .will_be_retried = willRetry,
-                                     } });
+        broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case_finished = cucumber::messages::test_case_finished{
+                                                                     .test_case_started_id = currentTestCaseStartedId,
+                                                                     .timestamp = util::TimestampNow(),
+                                                                     .will_be_retried = willRetry,
+                                                                 } });
 
         return willRetry;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    cucumber::messages::test_step_result TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted)
     {
         if (ShouldSkipHook(isBeforeHook))
             return {
@@ -186,7 +159,7 @@ namespace cucumber_cpp::library::runtime
         return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted)));
     }
 
-    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& pickleStep, util::HookType hookType, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& /*pickleStep*/, util::HookType hookType, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted)
     {
         auto ids = supportCodeLibrary.hookRegistry.FindIds(hookType, util::TransformPickleTags(pickle.tags));
         std::vector<cucumber::messages::test_step_result> results;
@@ -201,7 +174,7 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, cucumber::messages::test_step_started testStepStarted)
+    cucumber::messages::test_step_result TestCaseRunner::RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted)
     {
         auto stepDefinitions = (*testStep.step_definition_ids) | std::views::transform([this](const std::string& id)
                                                                      {
@@ -210,11 +183,11 @@ namespace cucumber_cpp::library::runtime
 
         if (const auto count = testStep.step_definition_ids->size(); count == 0)
         {
-            broadcaster.BroadcastEvent({ .suggestion = cucumber::messages::suggestion{
-                                             .id = idGenerator->next_id(),
-                                             .pickle_step_id = pickleStep.id,
-                                             .snippets = {},
-                                         } });
+            broadcaster.BroadcastEvent(cucumber::messages::envelope{ .suggestion = cucumber::messages::suggestion{
+                                                                         .id = idGenerator->next_id(),
+                                                                         .pickle_step_id = pickleStep.id,
+                                                                         .snippets = {},
+                                                                     } });
 
             return {
                 .duration = cucumber::messages::duration{},
@@ -264,11 +237,6 @@ namespace cucumber_cpp::library::runtime
 
         finalStepResult.duration = finalDuration;
         return finalStepResult;
-    }
-
-    cucumber::messages::test_step_result TestCaseRunner::InvokeStep(std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args)
-    {
-        return util::TransformTestStepResult(body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args)));
     }
 
     cucumber::messages::test_step_result TestCaseRunner::GetWorstStepResult() const

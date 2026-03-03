@@ -19,10 +19,13 @@
 #include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
+#include "cucumber_cpp/library/util/TransformArgument.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
+#include "cucumber_cpp/library/util/TransformStepMatchArgumentsList.hpp"
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -34,35 +37,6 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        std::optional<std::string> ToString(const cucumber::messages::group& group)
-        {
-            return group.value;
-        }
-
-        cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
-        {
-            if (group.children.empty())
-                return { group.value };
-
-            auto strings = group.children | std::views::transform(ToString);
-
-            return { strings.begin(), strings.end() };
-        }
-
-        util::Argument ToArgument(const cucumber::messages::step_match_argument& argument)
-        {
-            return {
-                .converterName = argument.parameter_type_name.value_or(""),
-                .converterArgs = GroupToArgumentGroup(argument.group),
-            };
-        }
-
-        util::ExecuteArgs StepMatchArgumentsListToExecuteArgs(const cucumber::messages::step_match_arguments_list& args)
-        {
-            auto strings = args.step_match_arguments | std::views::transform(ToArgument);
-            return { strings.begin(), strings.end() };
-        }
-
         auto TransformToMatch(const std::string& text)
         {
             return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
@@ -102,7 +76,7 @@ namespace cucumber_cpp::library::runtime
 
         void Invoke(std::size_t nesting, const std::string& step, std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args)
         {
-            const auto status = body->ExecuteAndCatchExceptions(StepMatchArgumentsListToExecuteArgs(args));
+            const auto status = body->ExecuteAndCatchExceptions(util::StepMatchArgumentsListToExecuteArgs(args));
             if (status.status != util::TestStepResultStatus::PASSED)
                 throw util::NestedTestCaseRunnerError{
                     .nesting = nesting,
@@ -145,7 +119,7 @@ namespace cucumber_cpp::library::runtime
         , supportCodeLibrary{ supportCodeLibrary }
         , broadcaster{ broadcaster }
         , testCaseContext{ testCaseContext }
-        , testStepStarted{ testStepStarted }
+        , testStepStarted{ std::move(testStepStarted) }
     {}
 
     void NestedTestCaseRunner::Step(const std::string& step) const
