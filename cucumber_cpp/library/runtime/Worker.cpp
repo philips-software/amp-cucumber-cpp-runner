@@ -34,6 +34,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
@@ -73,7 +74,7 @@ namespace cucumber_cpp::library::runtime
         Context& programContext)
         : testRunStartedId{ testRunStartedId }
         , broadcaster{ broadcaster }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
         , options{ options }
         , supportCodeLibrary{ supportCodeLibrary }
         , programContext{ programContext }
@@ -83,6 +84,9 @@ namespace cucumber_cpp::library::runtime
     {
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeAll);
+
+        results.reserve(ids.size());
+
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, programContext));
 
@@ -150,6 +154,7 @@ namespace cucumber_cpp::library::runtime
     {
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeFeature, util::TransformTags(feature.tags));
+        results.reserve(ids.size());
 
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
@@ -161,6 +166,7 @@ namespace cucumber_cpp::library::runtime
     {
         std::vector<cucumber::messages::test_step_result> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::afterFeature, util::TransformTags(feature.tags));
+        results.reserve(ids.size());
 
         for (const auto& id : ids)
             results.emplace_back(RunTestHook(id, context));
@@ -185,7 +191,7 @@ namespace cucumber_cpp::library::runtime
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
         if (!options.dryRun)
         {
-            result = util::TransformTestStepResult(definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted))->ExecuteAndCatchExceptions());
+            result = util::TransformTestStepResult(definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), false)->ExecuteAndCatchExceptions());
 
             if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };

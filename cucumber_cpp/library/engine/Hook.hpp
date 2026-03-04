@@ -14,7 +14,7 @@ namespace cucumber_cpp::library::engine
 {
     struct HookBase : engine::ExecutionContext
     {
-        HookBase(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted);
+        HookBase(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted, bool hasError);
 
         virtual ~HookBase() = default;
 
@@ -27,6 +27,9 @@ namespace cucumber_cpp::library::engine
         {
             /* nothing to do */
         }
+
+    protected:
+        const bool hasError;
     };
 }
 

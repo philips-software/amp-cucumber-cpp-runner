@@ -9,12 +9,12 @@
 
 namespace cucumber_cpp::library::util
 {
-    using HookFactory = std::unique_ptr<Body> (&)(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted);
+    using HookFactory = std::unique_ptr<Body> (&)(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, bool hasError);
 
     template<class T>
-    std::unique_ptr<Body> HookBodyFactory(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted)
+    std::unique_ptr<Body> HookBodyFactory(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, bool hasError)
     {
-        return std::make_unique<T>(broadCaster, context, stepOrHookStarted);
+        return std::make_unique<T>(broadCaster, context, stepOrHookStarted, hasError);
     }
 }
 
