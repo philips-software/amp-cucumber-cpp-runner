@@ -1,34 +1,38 @@
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Ast.hpp"
+#include "fmt/format.h"
 #include <cstddef>
-#include <format>
 #include <numeric>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    std::string PointAt(std::size_t column)
+    namespace
     {
-        return std::string(column, ' ') + "^";
-    }
-
-    std::string PointAtLocated(const auto& node)
-    {
-        auto pointer = PointAt(node.Start());
-        if (node.Start() + 1 < node.End())
+        std::string PointAt(std::size_t column)
         {
-            pointer.resize(node.End() - 1, '-');
-            pointer += "^";
+            return std::string(column, ' ') + "^";
         }
-        return pointer;
+
+        std::string PointAtLocated(const auto& node)
+        {
+            auto pointer = PointAt(node.Start());
+            if (node.Start() + 1 < node.End())
+            {
+                pointer.resize(node.End() - 1, '-');
+                pointer += "^";
+            }
+            return pointer;
+        }
     }
 
     Error::Error(std::size_t column, std::string_view expression, std::string_view pointer, std::string_view problem, std::string_view solution)
         : std::runtime_error{
-            std::format(
+            fmt::format(
                 "This Cucumber Expression has a problem at column {}:\n"
                 "\n"
                 "{}\n"
@@ -89,14 +93,14 @@ Otherwise rephrase your expression or consider using a regular expression instea
             token.Start(),
             expression,
             PointAtLocated(token),
-            std::format(R"(The '{}' does not have a matching '{}')", Token::SymbolOf(beginToken), Token::SymbolOf(endToken)),
-            std::format(R"(If you did not intend to use {} you can use '\\{}' to escape the {})", Token::PurposeOf(beginToken), Token::SymbolOf(beginToken), Token::PurposeOf(beginToken)),
+            fmt::format(R"(The '{}' does not have a matching '{}')", Token::SymbolOf(beginToken), Token::SymbolOf(endToken)),
+            fmt::format(R"(If you did not intend to use {} you can use '\\{}' to escape the {})", Token::PurposeOf(beginToken), Token::SymbolOf(beginToken), Token::PurposeOf(beginToken)),
         }
     {}
 
     NoEligibleParsers::NoEligibleParsers(std::span<const Token> tokens)
         : std::runtime_error{
-            std::format("No eligible parsers for [{}]", std::accumulate(tokens.begin() + 1, tokens.end(), Token::NameOf(tokens.begin()->Type()),
+            fmt::format("No eligible parsers for [{}]", std::accumulate(tokens.begin() + 1, tokens.end(), Token::NameOf(tokens.begin()->Type()),
                                                             [](const auto& acc, const auto& token) -> std::string
                                                             {
                                                                 return acc + ", " + Token::NameOf(token.Type());
@@ -155,13 +159,15 @@ For more complicated expressions consider using a regular expression instead.)",
         }
     {}
 
-    UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName)
+    UndefinedParameterTypeError::UndefinedParameterTypeError(const Node& node, std::string expression, std::string undefinedParameterName)
         : Error{
             node.Start(),
             expression,
             PointAtLocated(node),
-            std::format(R"(Undefined parameter type '{}')", undefinedParameterName),
-            std::format(R"(Please register a ParameterType for '{}')", undefinedParameterName),
+            fmt::format(R"(Undefined parameter type '{}')", undefinedParameterName),
+            fmt::format(R"(Please register a ParameterType for '{}')", undefinedParameterName),
         }
+        , expression{ std::move(expression) }
+        , undefinedParameterName{ std::move(undefinedParameterName) }
     {}
 }

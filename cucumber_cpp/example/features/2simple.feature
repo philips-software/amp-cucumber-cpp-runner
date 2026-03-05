@@ -13,6 +13,13 @@ Feature: Simple feature file
     When I eat <y> cucumbers
     Then I should have <z> cucumbers
 
+    @ex:1
+    Examples:
+      | x  | y | z |
+      | 10 | 5 | 5 |
+      | 11 | 3 | 8 |
+
+    @ex:2
     Examples:
       | x  | y | z |
       | 10 | 5 | 5 |
@@ -31,6 +38,10 @@ Feature: Simple feature file
       | x  | y | z |
       | 10 | 4 | 5 |
       | 11 | 3 | 6 |
+
+  @result:FAILED
+  Scenario: Assert and Expect
+    Given expect and assert
 
   @result:UNDEFINED
   Scenario: a scenario with a missing step

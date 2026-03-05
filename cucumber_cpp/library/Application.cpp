@@ -1,139 +1,138 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "cucumber/gherkin/demangle.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
+#include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
-#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
-#include "cucumber_cpp/library/engine/FeatureInfo.hpp"
-#include "cucumber_cpp/library/engine/HookExecutor.hpp"
-#include "cucumber_cpp/library/engine/Result.hpp"
-#include "cucumber_cpp/library/engine/TestExecution.hpp"
-#include "cucumber_cpp/library/engine/TestRunner.hpp"
-#include "cucumber_cpp/library/report/JunitReport.hpp"
-#include "cucumber_cpp/library/report/Report.hpp"
-#include "cucumber_cpp/library/report/StdOutReport.hpp"
+#include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "fmt/base.h"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
+#include <CLI/App.hpp>
 #include <CLI/Error.hpp>
 #include <CLI/Option.hpp>
 #include <CLI/Validators.hpp>
 #include <CLI/impl/App_inl.hpp>
 #include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <functional>
+#include <gtest/gtest.h>
 #include <iostream>
-#include <iterator>
+#include <map>
 #include <memory>
-#include <numeric>
-#include <optional>
-#include <ostream>
 #include <ranges>
+#include <set>
 #include <string>
-#include <string_view>
-#include <type_traits>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace cucumber_cpp::library
 {
     namespace
     {
-        template<class Range>
-        std::string Join(const Range& range, std::string_view delim)
-        {
-            if (range.empty())
-                return "";
-
-            return std::accumulate(std::next(range.begin()), range.end(), range.front(), [&delim](const auto& lhs, const auto& rhs)
-                {
-                    return std::format("{}{}{}", lhs, delim, rhs);
-                });
-        }
-
-        std::filesystem::path ToFileSystemPath(const std::string_view& sv)
-        {
-            return { sv };
-        }
-
         bool IsFeatureFile(const std::filesystem::directory_entry& entry)
         {
             return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
         }
 
-        std::vector<std::filesystem::path> GetFeatureFiles(Application::Options& options)
+        void CollectFilesFromDirectory(std::set<std::filesystem::path, std::less<>>& foundFiles, const std::filesystem::path& folder, const Application::Options& options)
         {
-            std::vector<std::filesystem::path> files;
+            if (options.recursive)
+                for (const auto& entry : std::filesystem::recursive_directory_iterator{ folder } | std::views::filter(IsFeatureFile))
+                    foundFiles.emplace(entry.path());
+            else
+                for (const auto& entry : std::filesystem::directory_iterator{ folder } | std::views::filter(IsFeatureFile))
+                    foundFiles.emplace(entry.path());
+        }
 
-            for (const auto feature : options.features | std::views::transform(ToFileSystemPath))
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(Application::Options& options)
+        {
+            std::set<std::filesystem::path, std::less<>> foundFiles;
+
+            for (const auto& feature : options.paths)
                 if (std::filesystem::is_directory(feature))
-                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
-                        files.emplace_back(entry.path());
-                else
-                    files.emplace_back(feature);
+                    CollectFilesFromDirectory(foundFiles, feature, options);
+                else if (IsFeatureFile(std::filesystem::directory_entry{ feature }))
+                    foundFiles.emplace(feature);
 
-            return files;
+            return foundFiles;
         }
     }
 
-    ReportHandlerValidator::ReportHandlerValidator(const report::Reporters& reporters)
-        : CLI::Validator("ReportHandler", [&reporters, cachedAvailableReporters = std::optional<std::vector<std::string>>{}](const std::string& str) mutable
-              {
-                  if (!cachedAvailableReporters)
-                      cachedAvailableReporters = reporters.AvailableReporters();
-
-                  if (std::ranges::find(*cachedAvailableReporters, str) == cachedAvailableReporters->end())
-                      return std::string{ "'" + str + "' is not a reporter" };
-                  else
-                      return std::string{};
-              })
-    {}
-
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
-        : contextManager{ std::move(contextStorageFactory) }
-        , reporters{ contextManager }
-        , reportHandlerValidator{ reporters }
+        : contextStorageFactory{ contextStorageFactory }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
-
     {
-        gherkin.include_source(false);
-        gherkin.include_ast(true);
-        gherkin.include_pickles(true);
-
-        cli.require_subcommand(1);
-
-        runCommand = cli.add_subcommand("run")->parse_complete_callback([this]
-            {
-                RunFeatures();
-            });
-
-        runCommand->add_option("-t,--tag", options.tags, "Cucumber tag expression");
-        runCommand->add_option("-f,--feature", options.features, "Feature file or folder with feature files")->required()->check(CLI::ExistingPath);
-
-        runCommand->add_option("-r,--report", options.reporters, "Name of the report generator: ")->required()->group("report generation")->check(reportHandlerValidator);
-        runCommand->add_option("--outputfolder", options.outputfolder, "Specifies the output folder for generated report files")->group("report generation");
-        runCommand->add_option("--reportfile", options.reportfile, "Specifies the output name for generated report files")->group("report generation");
-        runCommand->add_flag("--dry", options.dryrun, "Generate report without running tests");
-        runCommand->add_flag("--unused", options.printStepsNotUsed, "Show step definitions that were not used");
-
-        reporters.Add("console", std::make_unique<report::StdOutReport>());
-        reporters.Add("junit-xml", std::make_unique<report::JunitReport>(options.outputfolder, options.reportfile));
-
-        ProgramContext().InsertRef(options);
+        cli.set_config("--config", "cucumber.toml");
     }
 
     int Application::Run(int argc, const char* const* argv)
     {
+        const auto formattersSet = formatters.GetAvailableFormatterNames();
+
+        const auto formatterDescription = fmt::format("{{{}}}", fmt::join(formattersSet | std::views::transform([](const auto& pair)
+                                                                                              {
+                                                                                                  if (pair.second)
+                                                                                                      return fmt::format("{}<<:output>>", pair.first);
+                                                                                                  else
+                                                                                                      return pair.first;
+                                                                                              }),
+                                                                    ","));
+
+        CLI::Validator formatValidator{ [&formattersSet](const std::string& str) -> std::string
+            {
+                const api::FormatterOption option{ str };
+                const auto iter = std::ranges::find(formattersSet, option.name, &std::pair<std::string, bool>::first);
+
+                if (iter == formattersSet.end())
+                    return fmt::format("'{}' is not a valid formatter", option.name);
+                else
+                    return "";
+            },
+            formatterDescription };
+
         try
         {
-            const auto reportDescription = runCommand->get_option("--report")->get_description();
-            const auto joinedReporters = reportDescription + Join(reporters.AvailableReporters(), ", ");
+            const std::map<std::string, support::RunOptions::Ordering, std::less<>> orderingMap{
+                { "defined", support::RunOptions::Ordering::defined },
+                { "reverse", support::RunOptions::Ordering::reverse },
+            };
 
-            runCommand->get_option("--report")->description(joinedReporters);
+            cli.add_flag("--dump-config", options.dumpConfig, "Dump the configuration");
+
+            cli.add_flag("-d,--dry-run", options.dryRun, "Perform a dry run without executing steps")->default_val(options.dryRun);
+            cli.add_flag("--fail-fast", options.failFast, "Stop execution on first failure")->default_val(options.failFast);
+            cli.add_flag("--fail-global-hook-fast", options.failGlobalHookFast, "Stop execution on first global hook failure")->default_val(options.failGlobalHookFast);
+            cli.add_option("--format", options.format, "specify the output format, optionally supply PATH to redirect formatter output.")->check(formatValidator)->default_val(options.format);
+            cli.add_option("--format-options", options.formatOptions, "provide options for formatters")->default_val(options.formatOptions);
+            cli.add_option("--language", options.language, "Default language for feature files, eg 'en'")->default_str(options.language);
+            cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case))->default_val(options.ordering);
+            auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
+            cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
+            cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
+            cli.add_flag("--feature-hooks,!--no-feature-hooks", options.featureHooks, "Run Before/After Feature hooks, note these are non-standard and are not supported by messages")->default_val(options.featureHooks);
+            cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
+
+            CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
+            cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
+
+            CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are"), "paths");
+            cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \"./features\"")->default_val(options.paths);
+
+            ProgramContext().InsertRef(options);
+
             cli.parse(argc, argv);
+
+            if (options.dumpConfig)
+                std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
+
+            return RunFeatures();
         }
         catch (const CLI::ParseError& e)
         {
@@ -141,127 +140,68 @@ namespace cucumber_cpp::library
         }
         catch (const InternalError& error)
         {
-            std::cout << "Internal error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
-        }
-        catch (const UnsupportedAsteriskError& error)
-        {
-            std::cout << "UnsupportedAsteriskError error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << fmt::format("InternalError error:\n{}\n", error.what());
+            return EXIT_FAILURE;
         }
         catch (const cucumber_expression::Error& error)
         {
-            std::cout << "Cucumber Expression error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << fmt::format("Cucumber Expression error:\n{}\n", error.what());
+            return EXIT_FAILURE;
         }
         catch (const std::exception& error)
         {
-            std::cout << "Generic error:\n\n";
-            std::cout << error.what() << std::endl;
-            return GetExitCode(engine::Result::failed);
+            std::cout << fmt::format("{}:\n{}\n", cucumber::gherkin::detail::demangle(typeid(error).name()).get(), error.what());
+            return EXIT_FAILURE;
         }
         catch (...)
         {
             std::cout << "Unknown error";
-            return GetExitCode(engine::Result::failed);
+            return EXIT_FAILURE;
         }
-
-        return GetExitCode();
     }
 
     CLI::App& Application::CliParser()
     {
-        return *runCommand;
+        return cli;
     }
 
     Context& Application::ProgramContext()
     {
-        return contextManager.ProgramContext();
+        return programContextRef;
     }
 
-    cucumber_expression::ParameterRegistration& Application::ParameterRegistration()
+    cucumber_expression::ParameterRegistry& Application::ParameterRegistration()
     {
         return parameterRegistry;
     }
 
-    void Application::AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter)
+    api::Formatters& Application::Formatters()
     {
-        reporters.Add(name, std::move(reporter));
+        return formatters;
     }
 
-    void Application::RunFeatures()
+    int Application::RunFeatures()
     {
-        for (const auto& selectedReporter : options.reporters)
-            reporters.Use(selectedReporter);
+        fmt::println("Running with tags: {}", options.tags);
 
-        auto tagExpression = Join(options.tags, " ");
-        engine::HookExecutorImpl hookExecution{ contextManager };
-
-        const auto& runPolicy = (options.dryrun) ? static_cast<const engine::TestExecution::Policy&>(engine::dryRunPolicy)
-                                                 : static_cast<const engine::TestExecution::Policy&>(engine::executeRunPolicy);
-
-        std::unique_ptr<engine::TestExecutionImpl> testExecution;
-        if (removeDefaultGoogleTestListener)
-            testExecution = std::make_unique<engine::TestExecutionImplWithoutDefaultGoogleListener>(contextManager, reporters, hookExecution, runPolicy);
-        else
-            testExecution = std::make_unique<engine::TestExecutionImpl>(contextManager, reporters, hookExecution, runPolicy);
-
-        StepRegistry stepRegistry{ parameterRegistry };
-        engine::FeatureTreeFactory featureTreeFactory{ stepRegistry };
-
-        engine::TestRunnerImpl testRunner{ featureTreeFactory, *testExecution };
-
-        testRunner.Run(GetFeatureTree(featureTreeFactory, tagExpression));
-
-        if (options.printStepsNotUsed)
-            PrintStepsNotUsed(stepRegistry);
-
-        std::cout << '\n'
-                  << std::flush;
-    }
-
-    void Application::PrintStepsNotUsed(const StepRegistry& stepRegistry) const
-    {
-        auto isUnused = [](const StepRegistry::EntryView& entry)
-        {
-            return entry.used == 0;
+        const auto runOptions = support::RunOptions{
+            .sources = {
+                .paths = GetFeatureFiles(options),
+                .tagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.tags, " "))),
+                .ordering = options.ordering,
+            },
+            .runtime = {
+                .dryRun = options.dryRun,
+                .failFast = options.failFast,
+                .failGlobalHookFast = options.failGlobalHookFast,
+                .retry = options.retry,
+                .strict = options.strict,
+                .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
+                .featureHooks = options.featureHooks,
+            },
         };
 
-        auto unusedSteps = stepRegistry.List() | std::views::filter(isUnused);
-
-        if (std::ranges::empty(unusedSteps))
-            std::cout << "\nAll steps have been used.";
-        else
-        {
-            std::cout << "\nThe following steps have not been used:";
-            for (const auto& entry : unusedSteps)
-                std::cout << "\n - " << std::visit(cucumber_expression::SourceVisitor{}, entry.stepRegex);
-        }
-    }
-
-    std::vector<std::unique_ptr<engine::FeatureInfo>> Application::GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression)
-    {
-
-        const auto featureFiles = GetFeatureFiles(options);
-        std::vector<std::unique_ptr<engine::FeatureInfo>> vec;
-        vec.reserve(featureFiles.size());
-
-        for (const auto& featurePath : featureFiles)
-            vec.push_back(featureTreeFactory.Create(featurePath, tagExpression));
-
-        return vec;
-    }
-
-    int Application::GetExitCode() const
-    {
-        return GetExitCode(contextManager.ProgramContext().ExecutionStatus());
-    }
-
-    int Application::GetExitCode(engine::Result result) const
-    {
-        return static_cast<std::underlying_type_t<engine::Result>>(result) - static_cast<std::underlying_type_t<engine::Result>>(engine::Result::passed);
+        const auto runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
+        return runPassed ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 }

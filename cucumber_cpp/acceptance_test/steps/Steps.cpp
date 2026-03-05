@@ -1,10 +1,21 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "fmt/format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+GIVEN("an ambiguous step")
+{
+    // empty
+}
+
+GIVEN("a(n) ambiguous step")
+{
+    // empty
+}
 
 GIVEN("a background step")
 {
@@ -33,12 +44,23 @@ STEP("a step step")
 
 WHEN("I print {string}", (const std::string& str))
 {
-    std::cout << "print: " << str;
+    std::cout << fmt::format("print: {}\n", str);
 }
 
 THEN("an assertion is raised")
 {
+    EXPECT_THAT(1, testing::Eq(2));
     ASSERT_THAT(false, testing::IsTrue());
+}
+
+THEN("an exception is thrown")
+{
+    struct CustomException : public std::runtime_error
+    {
+        using runtime_error::runtime_error;
+    };
+
+    throw CustomException{ "This is a custom exception" };
 }
 
 THEN("two expectations are raised")
@@ -59,8 +81,8 @@ THEN("this should be skipped")
 
 GIVEN("Next block of text enclosed in \"\"\" characters")
 {
-
-    ASSERT_THAT(docString, testing::Eq("Multiline\nDocstring"));
+    ASSERT_THAT(docString, testing::IsTrue());
+    ASSERT_THAT(docString->content, testing::StrEq("Multiline\nDocstring"));
 }
 
 WHEN("this step is being used")
@@ -91,4 +113,30 @@ THEN("the next scenario is executed")
 GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
 {
     EXPECT_THAT(a, testing::Eq(b));
+}
+
+GIVEN(R"(a step calls another step with {string})", (const std::string& str))
+{
+    Step(fmt::format(R"(I store "{}")", str));
+}
+
+GIVEN(R"(I store {string})", (const std::string& str))
+{
+    Step(fmt::format(R"(I store "{}" again)", str));
+}
+
+GIVEN(R"(I store {string} again)", (const std::string& str))
+{
+    context.InsertAt("storedstring", str);
+}
+
+THEN(R"(the stored string is {string})", (const std::string& expected))
+{
+    const auto& stored = context.Get<std::string>("storedstring");
+    EXPECT_THAT(stored, testing::StrEq(expected));
+}
+
+GIVEN(R"(I attach a link to {string})", (const std::string& url))
+{
+    Link(url, "title");
 }

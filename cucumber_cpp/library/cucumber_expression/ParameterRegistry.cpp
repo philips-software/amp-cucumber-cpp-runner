@@ -1,18 +1,20 @@
-
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include <any>
+#include "fmt/format.h"
+#include "fmt/ranges.h"
+#include <algorithm>
 #include <cctype>
-#include <cstddef>
+#include <compare>
 #include <cstdint>
 #include <cstdlib>
-#include <format>
 #include <functional>
-#include <iterator>
 #include <map>
+#include <optional>
+#include <ranges>
 #include <regex>
+#include <set>
 #include <string>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -20,88 +22,146 @@ namespace cucumber_cpp::library::cucumber_expression
     namespace
     {
         template<class T>
-        std::function<std::any(MatchRange)> CreateStreamConverter()
+        std::function<std::optional<T>(const ConvertFunctionArg&)> CreateStreamConverter()
         {
-            return [](const MatchRange& matches)
+            return [](const ConvertFunctionArg& matches) -> std::optional<T>
             {
-                return StringTo<T>(matches.begin()->str());
-            };
-        }
+                if (matches[0].has_value())
+                    return StringTo<T>(matches[0].value());
 
-        std::function<std::any(MatchRange)> CreateStringConverter()
+                return std::nullopt;
+            };
+        };
+
+        std::function<std::optional<std::string>(const ConvertFunctionArg&)> CreateStringConverter()
         {
-            return [](const MatchRange& matches)
+            return [](const ConvertFunctionArg& matches) -> std::optional<std::string>
             {
-                std::string str = matches[1].matched ? matches[1].str() : matches[3].str();
+                std::string str = matches[0].has_value()
+                                      ? matches[0].value()
+                                      : matches[1].value();
+
                 str = std::regex_replace(str, std::regex(R"__(\\")__"), "\"");
                 str = std::regex_replace(str, std::regex(R"__(\\')__"), "'");
+
                 return str;
             };
         }
+
+        std::function<std::optional<std::int8_t>(const ConvertFunctionArg&)> CreateByteConverter()
+        {
+            return [](const ConvertFunctionArg& matches) -> std::optional<std::int8_t>
+            {
+                if (matches[0].has_value())
+                    return static_cast<std::int8_t>(StringTo<std::int32_t>(matches[0].value()));
+
+                return std::nullopt;
+            };
+        }
+
+        bool SortMappedByRegex(const ParameterType* lhs, const ParameterType* rhs)
+        {
+            if (lhs->preferForRegexMatch && !rhs->preferForRegexMatch)
+                return true;
+
+            if (!lhs->preferForRegexMatch && rhs->preferForRegexMatch)
+                return false;
+
+            return lhs->name < rhs->name;
+        }
     }
 
-    std::smatch::const_iterator MatchRange::begin() const
+    std::strong_ordering CustomParameterEntry::operator<=>(const CustomParameterEntry& other) const
     {
-        return first;
+        return std::tie(params.name, params.regex) <=> std::tie(other.params.name, other.params.regex);
     }
 
-    std::smatch::const_iterator MatchRange::end() const
-    {
-        return second;
-    }
-
-    const std::ssub_match& MatchRange::operator[](std::size_t index) const
-    {
-        return *std::next(begin(), index);
-    }
-
-    Converter::Converter(std::size_t matches, std::function<std::any(MatchRange)> converter)
-        : matches{ matches }
-        , converter{ std::move(converter) }
-    {}
-
-    ParameterRegistry::ParameterRegistry()
+    ParameterRegistry::ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters)
     {
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
         const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
-        const static std::string stringDoubleRegex{ R"__("([^\"\\]*(\\.[^\"\\]*)*)")__" };
-        const static std::string stringSingleRegex{ R"__('([^'\\]*(\\.[^'\\]*)*)')__" };
+        const static std::string stringRegex{ R"__("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
+        const static std::string anonymousRegex{ R"__(.*)__" };
 
-        AddParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>());
-        AddParameter("float", { floatRegex }, CreateStreamConverter<float>());
-        AddParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
-        AddParameter("string", { stringDoubleRegex, stringSingleRegex }, CreateStringConverter());
-        AddParameter("", { ".*" }, CreateStreamConverter<std::string>());
-        AddParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
-        AddParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int32_t>());
-        AddParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
-        AddParameter("double", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("int", { integerNegativeRegex, integerPositiveRegex }, CreateStreamConverter<std::int32_t>(), true);
+        AddBuiltinParameter("float", { floatRegex }, CreateStreamConverter<float>());
+        AddBuiltinParameter("word", { wordRegex }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("string", { stringRegex }, CreateStringConverter());
+        AddBuiltinParameter("", { anonymousRegex }, CreateStreamConverter<std::string>());
+        AddBuiltinParameter("bigdecimal", { floatRegex }, CreateStreamConverter<double>());
+        AddBuiltinParameter("biginteger", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("byte", { { integerNegativeRegex, integerPositiveRegex } }, CreateByteConverter());
+        AddBuiltinParameter("short", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int16_t>());
+        AddBuiltinParameter("long", { { integerNegativeRegex, integerPositiveRegex } }, CreateStreamConverter<std::int64_t>());
+        AddBuiltinParameter("double", { floatRegex }, CreateStreamConverter<double>());
 
         // extension
-        AddParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+        AddBuiltinParameter("bool", { wordRegex }, CreateStreamConverter<bool>());
+
+        for (const auto& parameter : customParameters)
+            AddParameter(ParameterType{ .name = parameter.params.name, .regex = { std::string(parameter.params.regex) }, .isBuiltin = false, .useForSnippets = parameter.params.useForSnippets, .location = parameter.location });
     }
 
-    Parameter ParameterRegistry::Lookup(const std::string& name) const
+    const std::map<std::string, const ParameterType, std::less<>>& ParameterRegistry::GetParameters() const
     {
-        if (parameters.contains(name))
-            return parameters.at(name);
-        return {};
+        return parameterTypesByName;
     }
 
-    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter)
+    const ParameterType& ParameterRegistry::Lookup(const std::string& name) const
     {
-        if (parameters.contains(name))
+        return parameterTypesByName.at(name);
+    }
+
+    const ParameterType* ParameterRegistry::LookupByRegexp(const std::string& regex) const
+    {
+        if (!parameterTypesByRegex.contains(regex))
+            return nullptr;
+
+        const auto& parameters = parameterTypesByRegex.at(regex);
+
+        if (parameters.size() == 0)
+            return nullptr;
+
+        if (parameters.size() > 1 && !parameters[0]->preferForRegexMatch)
+            throw CucumberExpressionError{ fmt::format("There are multiple parameter types but none are prefered for the regexp \"{}\": {}",
+                regex,
+                fmt::join(parameters | std::views::transform([](const ParameterType* parameter)
+                                           {
+                                               return parameter->name;
+                                           }),
+                    ", ")) };
+
+        return parameters[0];
+    }
+
+    void ParameterRegistry::AssertParameterIsUnique(const std::string& name) const
+    {
+        if (parameterTypesByName.contains(name))
         {
             if (name.empty())
                 throw CucumberExpressionError{ "The anonymous parameter type has already been defined" };
             else
-                throw CucumberExpressionError{ std::format("There is already a parameter with name {}", name) };
+                throw CucumberExpressionError{ fmt::format("There is already a parameter with name {}", name) };
         }
+    }
 
-        parameters[name] = Parameter{ name, std::move(regex), std::move(converter) };
+    void ParameterRegistry::AddParameter(ParameterType parameter)
+    {
+        AssertParameterIsUnique(parameter.name);
+
+        const auto& [iter, _] = parameterTypesByName.try_emplace(parameter.name, parameter);
+        const auto& [key, value] = *iter;
+
+        for (const auto& regex : parameter.regex)
+        {
+            auto& existingParametersByRegex = parameterTypesByRegex[regex];
+            if (existingParametersByRegex.size() > 0 && existingParametersByRegex[0]->preferForRegexMatch && parameter.preferForRegexMatch)
+                throw CucumberExpressionError{ fmt::format("There can only be one preferential parameter type per regexp.\nThe regexp \"{}\" is used for two preferential parameter types, {} and {}", regex, existingParametersByRegex[0]->name, parameter.name) };
+
+            existingParametersByRegex.push_back(&value);
+            std::ranges::sort(existingParametersByRegex, SortMappedByRegex);
+        }
     }
 }

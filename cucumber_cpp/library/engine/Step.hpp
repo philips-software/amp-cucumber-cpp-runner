@@ -1,34 +1,33 @@
 #ifndef ENGINE_STEP_HPP
 #define ENGINE_STEP_HPP
 
-// IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
+// IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/engine/Table.hpp"
-#include <exception>
-#include <source_location>
+#include "cucumber_cpp/library/engine/ExecutionContext.hpp"
+#include "cucumber_cpp/library/util/DocString.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
+#include "cucumber_cpp/library/util/Table.hpp"
+#include <optional>
 #include <string>
-#include <utility>
+
+namespace cucumber_cpp::library::runtime
+{
+    struct NestedTestCaseRunner;
+}
+
+namespace cucumber_cpp::library::util
+{
+    struct Broadcaster;
+}
 
 namespace cucumber_cpp::library::engine
 {
-    struct Step
+    struct StepBase : ExecutionContext
     {
-        struct StepPending : std::exception
-        {
-            StepPending(std::string message, std::source_location sourceLocation)
-                : message{ std::move(message) }
-                , sourceLocation{ sourceLocation }
-            {
-            }
-
-            std::string message;
-            std::source_location sourceLocation;
-        };
-
-        Step(Context& context, const Table& table, const std::string& docString);
-        virtual ~Step() = default;
+        StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString);
+        virtual ~StepBase() = default;
 
         virtual void SetUp()
         {
@@ -41,15 +40,15 @@ namespace cucumber_cpp::library::engine
         }
 
     protected:
-        void Given(const std::string& step) const;
-        void When(const std::string& step) const;
-        void Then(const std::string& step) const;
+        void Step(const std::string& step) const;
+        void Step(const std::string& step, const std::optional<util::DocString>& docString) const;
+        void Step(const std::string& step, const std::optional<util::Table>& dataTable) const;
+        void Step(const std::string& step, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString) const;
 
-        [[noreturn]] static void Pending(const std::string& message, std::source_location current = std::source_location::current()) noexcept(false);
+        const runtime::NestedTestCaseRunner& nestedTestCaseRunner;
 
-        Context& context;
-        const Table& table;
-        const std::string& docString;
+        std::optional<util::Table> dataTable;
+        std::optional<util::DocString> docString;
     };
 }
 

@@ -44,7 +44,7 @@ jobs:
 
       - name: Run acceptance tests
         run: |
-          bats --formatter junit cucumber_cpp/acceptance_test/coverage.bats | tee test-report.xml
+          bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
 
       - name: Collect coverage
         run: |

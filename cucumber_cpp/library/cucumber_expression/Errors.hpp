@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <span>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 namespace cucumber_cpp::library::cucumber_expression
@@ -90,7 +91,10 @@ namespace cucumber_cpp::library::cucumber_expression
     struct UndefinedParameterTypeError
         : Error
     {
-        UndefinedParameterTypeError(const Node& node, std::string_view expression, std::string_view undefinedParameterName);
+        UndefinedParameterTypeError(const Node& node, std::string expression, std::string undefinedParameterName);
+
+        std::string expression;
+        std::string undefinedParameterName;
     };
 
     struct InvalidTokenType

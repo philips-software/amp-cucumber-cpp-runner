@@ -16,7 +16,19 @@ Feature: Simple feature file
     Then an assertion is raised
     Then a then step
 
+  @result:FAILED
+  Scenario: A failing scenario
+    Given a given step
+    When a when step
+    Then an exception is thrown
+    Then a then step
+
   @result:UNDEFINED
   Scenario: A scenario with undefined step
     Given a missing step
+    Then this should be skipped
+
+  @result:AMBIGUOUS
+  Scenario: A scenario with ambiguous step
+    Given an ambiguous step
     Then this should be skipped

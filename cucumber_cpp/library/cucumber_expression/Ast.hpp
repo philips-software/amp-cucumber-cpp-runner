@@ -2,13 +2,14 @@
 #define CUCUMBER_EXPRESSION_AST_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    enum class NodeType
+    enum class NodeType : std::uint8_t
     {
         text,
         optional,
@@ -18,7 +19,7 @@ namespace cucumber_cpp::library::cucumber_expression
         expression,
     };
 
-    enum class TokenType
+    enum class TokenType : std::uint8_t
     {
         startOfLine,
         endOfLine,
@@ -39,17 +40,17 @@ namespace cucumber_cpp::library::cucumber_expression
             std::size_t end,
             std::variant<std::string, std::vector<Node>> children);
 
-        NodeType Type() const;
-        std::size_t Start() const;
-        std::size_t End() const;
+        [[nodiscard]] NodeType Type() const;
+        [[nodiscard]] std::size_t Start() const;
+        [[nodiscard]] std::size_t End() const;
 
-        std::string Text();
-        std::string Text() const;
+        [[nodiscard]] std::string Text();
+        [[nodiscard]] std::string Text() const;
 
-        std::vector<Node>& Children();
-        const std::vector<Node>& Children() const;
+        [[nodiscard]] std::vector<Node>& Children();
+        [[nodiscard]] const std::vector<Node>& Children() const;
 
-        const std::variant<std::string, std::vector<Node>>& GetLeafNodes() const;
+        [[nodiscard]] const std::variant<std::string, std::vector<Node>>& GetLeafNodes() const;
 
         bool operator==(const Node& other) const = default;
 
@@ -64,17 +65,17 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         Token(TokenType type, std::string text, std::size_t start, std::size_t end);
 
-        TokenType Type() const;
-        std::string Text() const;
-        std::size_t Start() const;
-        std::size_t End() const;
+        [[nodiscard]] TokenType Type() const;
+        [[nodiscard]] std::string Text() const;
+        [[nodiscard]] std::size_t Start() const;
+        [[nodiscard]] std::size_t End() const;
 
-        static bool IsEscapeCharacter(char ch);
-        static TokenType TypeOf(char ch);
-        static bool CanEscape(char ch);
-        static std::string NameOf(TokenType type);
-        static std::string SymbolOf(TokenType type);
-        static std::string PurposeOf(TokenType type);
+        [[nodiscard]] static bool IsEscapeCharacter(char ch);
+        [[nodiscard]] static TokenType TypeOf(char ch);
+        [[nodiscard]] static bool CanEscape(char ch);
+        [[nodiscard]] static std::string NameOf(TokenType type);
+        [[nodiscard]] static std::string SymbolOf(TokenType type);
+        [[nodiscard]] static std::string PurposeOf(TokenType type);
 
         bool operator==(const Token& other) const = default;
 

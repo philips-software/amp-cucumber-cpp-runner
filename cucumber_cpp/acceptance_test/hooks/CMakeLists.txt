@@ -7,5 +7,5 @@ target_sources(cucumber_cpp.acceptance_test.hooks PRIVATE
 )
 
 target_link_libraries(cucumber_cpp.acceptance_test.hooks PRIVATE
-    cucumber_cpp.library
+    cucumber_cpp
 )

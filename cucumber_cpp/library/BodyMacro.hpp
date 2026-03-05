@@ -1,11 +1,48 @@
 #ifndef CUCUMBER_CPP_BODYMACRO_HPP
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
-#include "cucumber_cpp/library/Body.hpp"
-#include "cucumber_cpp/library/engine/FailureHandler.hpp"
-#include "cucumber_cpp/library/engine/StringTo.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
+#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/Body.hpp"
+#include "cucumber_cpp/library/util/Body.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+namespace cucumber_cpp::library::detail
+{
+    template<class T>
+    T TransformArg(const std::string& parameterName, const cucumber_expression::ConvertFunctionArg& parameterArgs)
+    {
+        return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
+    }
+
+    template<class Base>
+    struct BodyCrtp : util::Body
+    {
+    private:
+        BodyCrtp() = default;
+        friend Base;
+
+    public:
+        void Execute(const util::ExecuteArgs& args) override
+        {
+            cucumber_cpp::library::support::SetUpTearDownWrapper wrapper{ *static_cast<Base*>(this) };
+
+            // IILE to extract the argument types from the `Base::ExecuteImpl` function
+            [this, &args]<class... TArgs>(void (Base::* /* unused */)(TArgs...))
+            {
+                // IILE to call `Base::ExecuteImpl` with each argument transformed using `TransformArg`
+                [this, &args]<std::size_t... I>(std::index_sequence<I...> /*unused*/)
+                {
+                    static_cast<Base*>(this)->ExecuteImpl(TransformArg<std::remove_cvref_t<TArgs>>(args[I].converterName, args[I].converterArgs)...);
+                }(std::make_index_sequence<sizeof...(TArgs)>{});
+            }(&Base::ExecuteImpl);
+        }
+    };
+}
 
 #define BODY_MATCHER(matcher, ...) matcher
 #define BODY_ARGS(matcher, args, ...) args
@@ -15,50 +52,24 @@
 
 #define BODY_STRUCT CONCAT(BodyImpl, __LINE__)
 
-#define BODY(matcher, type, targs, registration, base)                                                                                       \
-    namespace                                                                                                                                \
-    {                                                                                                                                        \
-        struct BODY_STRUCT : cucumber_cpp::library::Body                                                                                     \
-            , base                                                                                                                           \
-        {                                                                                                                                    \
-            /* Workaround namespaces in `base`. For example `base` = Foo::Bar. */                                                            \
-            /* Then the result would be Foo::Bar::Foo::Bar which is invalid */                                                               \
-            using myBase = base;                                                                                                             \
-            using myBase::myBase;                                                                                                            \
-                                                                                                                                             \
-            void Execute(const std::variant<std::vector<std::string>, std::vector<std::any>>& args) override                                 \
-            {                                                                                                                                \
-                cucumber_cpp::library::SetUpTearDownWrapper wrapper{ *this };                                                                \
-                ASSERT_NO_THROW(ExecuteWithArgs(args, static_cast<void(*) targs>(nullptr)));                                                 \
-            }                                                                                                                                \
-                                                                                                                                             \
-            template<class... TArgs>                                                                                                         \
-            void ExecuteWithArgs(const std::variant<std::vector<std::string>, std::vector<std::any>>& args, void (* /* unused */)(TArgs...)) \
-            {                                                                                                                                \
-                if (std::holds_alternative<std::vector<std::string>>(args))                                                                  \
-                    ExecuteWithArgs<TArgs...>(std::get<std::vector<std::string>>(args), std::make_index_sequence<sizeof...(TArgs)>{});       \
-                else                                                                                                                         \
-                    ExecuteWithArgs<TArgs...>(std::get<std::vector<std::any>>(args), std::make_index_sequence<sizeof...(TArgs)>{});          \
-            }                                                                                                                                \
-                                                                                                                                             \
-            template<class... TArgs, std::size_t... I>                                                                                       \
-            void ExecuteWithArgs(const std::vector<std::string>& args, std::index_sequence<I...> /*unused*/)                                 \
-            {                                                                                                                                \
-                ExecuteWithArgs(cucumber_cpp::library::engine::StringTo<std::remove_cvref_t<TArgs>>(args[I])...);                            \
-            }                                                                                                                                \
-                                                                                                                                             \
-            template<class... TArgs, std::size_t... I>                                                                                       \
-            void ExecuteWithArgs(const std::vector<std::any>& args, std::index_sequence<I...> /*unused*/)                                    \
-            {                                                                                                                                \
-                ExecuteWithArgs(std::any_cast<std::remove_cvref_t<TArgs>>(args[I])...);                                                      \
-            }                                                                                                                                \
-                                                                                                                                             \
-        private:                                                                                                                             \
-            void ExecuteWithArgs targs;                                                                                                      \
-            static const std::size_t ID;                                                                                                     \
-        };                                                                                                                                   \
-    }                                                                                                                                        \
-    const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type);                                                            \
-    void BODY_STRUCT::ExecuteWithArgs targs
+#define BODY(matcher, type, targs, registration, base)                            \
+    namespace                                                                     \
+    {                                                                             \
+        struct BODY_STRUCT : cucumber_cpp::library::detail::BodyCrtp<BODY_STRUCT> \
+            , base                                                                \
+        {                                                                         \
+            /* Workaround namespaces in `base`. For example `base` = Foo::Bar. */ \
+            /* Then the result would be Foo::Bar::Foo::Bar which is invalid */    \
+            using myBase = base;                                                  \
+            using myBase::myBase;                                                 \
+                                                                                  \
+        private:                                                                  \
+            friend BodyCrtp;                                                      \
+            void ExecuteImpl targs;                                               \
+            static const std::size_t ID;                                          \
+        };                                                                        \
+    }                                                                             \
+    const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type); \
+    void BODY_STRUCT::ExecuteImpl targs
 
 #endif

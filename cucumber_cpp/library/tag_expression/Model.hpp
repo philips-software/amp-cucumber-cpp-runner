@@ -12,13 +12,15 @@ namespace cucumber_cpp::library::tag_expression
     {
         virtual ~Expression() = default;
 
-        virtual bool Evaluate(const std::set<std::string, std::less<>>& tags) const = 0;
+        [[nodiscard]] virtual bool Evaluate(const std::set<std::string, std::less<>>& tags) const = 0;
+
         virtual explicit operator std::string() const = 0;
     };
 
     struct TrueExpression : Expression
     {
-        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+        [[nodiscard]] bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+
         explicit operator std::string() const override;
     };
 
@@ -26,7 +28,8 @@ namespace cucumber_cpp::library::tag_expression
     {
         explicit LiteralExpression(std::string name);
 
-        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+        [[nodiscard]] bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+
         explicit operator std::string() const override;
 
     private:
@@ -37,7 +40,8 @@ namespace cucumber_cpp::library::tag_expression
     {
         AndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
-        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+        [[nodiscard]] bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+
         explicit operator std::string() const override;
 
     private:
@@ -49,7 +53,8 @@ namespace cucumber_cpp::library::tag_expression
     {
         OrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
 
-        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+        [[nodiscard]] bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+
         explicit operator std::string() const override;
 
     private:
@@ -61,7 +66,8 @@ namespace cucumber_cpp::library::tag_expression
     {
         explicit NotExpression(std::unique_ptr<Expression> operand);
 
-        bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+        [[nodiscard]] bool Evaluate(const std::set<std::string, std::less<>>& tags) const override;
+
         explicit operator std::string() const override;
 
     private:

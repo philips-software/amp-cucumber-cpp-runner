@@ -18,7 +18,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         struct Result
         {
-            std::size_t consumed;
+            std::size_t consumed{};
             std::optional<Node> node;
         };
 
@@ -34,17 +34,17 @@ namespace cucumber_cpp::library::cucumber_expression
             std::function<Result(const ParserState& parser, const SubParser& subParser)> parser;
             std::vector<std::reference_wrapper<SubParser>> subParsers;
 
-            Result Parse(const ParserState& parser) const;
+            [[nodiscard]] Result Parse(const ParserState& parser) const;
         };
 
     private:
         using Parsers = std::vector<std::function<Result(ParserState)>>;
         using Tokens = std::vector<Token>;
 
-        SubParser ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken) const;
+        [[nodiscard]] SubParser ParseBetweenGenerator(NodeType type, TokenType beginToken, TokenType endToken) const;
 
-        std::tuple<std::size_t, std::vector<Node>> ParseTokensUntil(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt, const std::vector<TokenType>& endTokens) const;
-        Result ParseToken(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt) const;
+        [[nodiscard]] std::tuple<std::size_t, std::vector<Node>> ParseTokensUntil(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt, const std::vector<TokenType>& endTokens) const;
+        [[nodiscard]] Result ParseToken(std::string_view expression, std::span<const std::reference_wrapper<SubParser>> parsers, std::size_t startAt) const;
 
         Tokens tokens;
     };

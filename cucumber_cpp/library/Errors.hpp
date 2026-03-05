@@ -9,11 +9,6 @@ namespace cucumber_cpp::library
     {
         using runtime_error::runtime_error;
     };
-
-    struct UnsupportedAsteriskError : std::runtime_error
-    {
-        using runtime_error::runtime_error;
-    };
 }
 
 #endif

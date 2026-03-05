@@ -1,17 +1,18 @@
 #ifndef CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 #define CUCUMBER_EXPRESSION_PARAMETERREGISTRY_HPP
 
+#include "fmt/format.h"
 #include <algorithm>
-#include <any>
 #include <cctype>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <format>
 #include <functional>
-#include <iostream>
 #include <map>
-#include <regex>
+#include <optional>
+#include <set>
+#include <source_location>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -22,6 +23,24 @@
 namespace cucumber_cpp::library::cucumber_expression
 {
     using namespace std::literals;
+
+    struct CustomParameterEntryParams
+    {
+        std::string name;
+        std::string regex;
+        bool useForSnippets;
+    };
+
+    struct CustomParameterEntry
+    {
+        CustomParameterEntryParams params;
+
+        std::size_t localId{};
+
+        std::source_location location;
+
+        std::strong_ordering operator<=>(const CustomParameterEntry& other) const;
+    };
 
     struct ConversionError : std::runtime_error
     {
@@ -38,7 +57,7 @@ namespace cucumber_cpp::library::cucumber_expression
         To to{};
         stream >> to;
         if (stream.fail())
-            throw ConversionError{ std::format("Cannot convert parameter {} in to {}", s, typeid(To).name()) };
+            throw ConversionError{ fmt::format("Cannot convert parameter {} in to {}", s, typeid(To).name()) };
 
         return to;
     }
@@ -95,52 +114,87 @@ namespace cucumber_cpp::library::cucumber_expression
         return iequals(s, "true") || iequals(s, "1") || iequals(s, "yes") || iequals(s, "on") || iequals(s, "enabled") || iequals(s, "active");
     }
 
-    struct MatchRange : std::pair<std::smatch::const_iterator, std::smatch::const_iterator>
-    {
-        using std::pair<std::smatch::const_iterator, std::smatch::const_iterator>::pair;
-
-        std::smatch::const_iterator begin() const;
-        std::smatch::const_iterator end() const;
-
-        const std::ssub_match& operator[](std::size_t index) const;
-    };
-
-    struct Converter
-    {
-        Converter(std::size_t matches, std::function<std::any(MatchRange)> converter);
-
-        std::size_t matches;
-        std::function<std::any(MatchRange)> converter;
-    };
-
-    struct Parameter
+    struct ParameterType
     {
         std::string name;
         std::vector<std::string> regex;
-        std::function<std::any(MatchRange)> converter;
+        bool isBuiltin{ false };
+        bool useForSnippets{ false };
+        bool preferForRegexMatch{ false };
+        std::source_location location;
     };
 
-    struct ParameterRegistration
-    {
-    protected:
-        ~ParameterRegistration() = default;
+    using ConvertFunctionArg = std::vector<std::optional<std::string>>;
 
-    public:
-        virtual void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) = 0;
+    template<class T>
+    using ConverterFunction = std::function<T(const ConvertFunctionArg&)>;
+
+    template<class T>
+    using TypeMap = std::map<std::string, ConverterFunction<T>>;
+
+    template<class T>
+    struct ConverterTypeMap
+    {
+        static TypeMap<T>& Instance();
     };
 
-    struct ParameterRegistry : ParameterRegistration
+    template<class T>
+    TypeMap<T>& ConverterTypeMap<T>::Instance()
     {
-        ParameterRegistry();
+        static TypeMap<T> typeMap;
+        return typeMap;
+    }
+
+    struct ParameterRegistry
+    {
+        explicit ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters);
 
         virtual ~ParameterRegistry() = default;
 
-        Parameter Lookup(const std::string& name) const;
-        void AddParameter(std::string name, std::vector<std::string> regex, std::function<std::any(MatchRange)> converter) override;
+        [[nodiscard]] const std::map<std::string, const ParameterType, std::less<>>& GetParameters() const;
+
+        [[nodiscard]] const ParameterType& Lookup(const std::string& name) const;
+        [[nodiscard]] const ParameterType* LookupByRegexp(const std::string& regex) const;
+
+        template<class T>
+        void AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location = std::source_location::current());
+
+        void AssertParameterIsUnique(const std::string& name) const;
 
     private:
-        std::map<std::string, Parameter, std::less<>> parameters{};
+        void AddParameter(ParameterType parameter);
+
+        template<class T>
+        void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch = false, std::source_location location = std::source_location::current());
+
+        template<class T>
+        void AddParameter(ParameterType parameter, ConverterFunction<T> converter);
+
+        std::map<std::string, const ParameterType, std::less<>> parameterTypesByName;
+        std::map<std::string, std::vector<const ParameterType*>, std::less<>> parameterTypesByRegex;
     };
+
+    template<class T>
+    void ParameterRegistry::AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location)
+    {
+        AddParameter(ParameterType{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = false, .useForSnippets = false, .location = location }, converter);
+    }
+
+    template<class T>
+    void ParameterRegistry::AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch, std::source_location location)
+    {
+        AddParameter(ParameterType{ .name = std::move(name), .regex = std::move(regex), .isBuiltin = true, .useForSnippets = false, .preferForRegexMatch = preferForRegexMatch, .location = location }, converter);
+    }
+
+    template<class T>
+    void ParameterRegistry::AddParameter(ParameterType parameter, ConverterFunction<T> converter)
+    {
+        AssertParameterIsUnique(parameter.name);
+
+        AddParameter(parameter);
+
+        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+    }
 }
 
 #endif

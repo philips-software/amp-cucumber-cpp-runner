@@ -1,6 +1,8 @@
-add_library(cucumber_cpp.library.cucumber_expression STATIC ${CCR_EXCLUDE_FROM_ALL})
+add_library(cucumber_cpp.library.cucumber_expression ${CCR_EXCLUDE_FROM_ALL})
 
 target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
+    Argument.cpp
+    Argument.hpp
     Ast.cpp
     Ast.hpp
     Errors.cpp
@@ -11,12 +13,24 @@ target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     ExpressionParser.hpp
     ExpressionTokenizer.cpp
     ExpressionTokenizer.hpp
+    Group.cpp
+    Group.hpp
+    MatchRange.cpp
+    MatchRange.hpp
     ParameterRegistry.cpp
     ParameterRegistry.hpp
+    RegularExpression.cpp
+    RegularExpression.hpp
+    TreeRegexp.cpp
+    TreeRegexp.hpp
 )
 
 target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
     ../../..
+)
+
+target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
+    fmt::fmt
 )
 
 if (CCR_BUILD_TESTS)

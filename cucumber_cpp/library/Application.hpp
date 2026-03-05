@@ -4,79 +4,90 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
-#include "cucumber/gherkin/app.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/StepRegistry.hpp"
+#include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/engine/ContextManager.hpp"
-#include "cucumber_cpp/library/engine/FeatureFactory.hpp"
-#include "cucumber_cpp/library/engine/FeatureInfo.hpp"
-#include "cucumber_cpp/library/engine/Result.hpp"
-#include "cucumber_cpp/library/report/Report.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
+#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <CLI/App.hpp>
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
+#include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <memory>
+#include <set>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library
 {
-    struct ReportHandlerValidator : public CLI::Validator
-    {
-        explicit ReportHandlerValidator(const report::Reporters& reporters);
-    };
-
     struct Application
     {
         struct Options
         {
+            bool dumpConfig{ false };
+
+            std::set<std::string, std::less<>> paths{ { (std::filesystem::path(".") / "features").string() } };
+
+            bool dryRun{ false };
+            bool failFast{ false };
+            bool failGlobalHookFast{ false };
+
+            std::set<std::string, std::less<>> format{ "summary" };
+            std::string formatOptions{ R"({})" };
+
+            std::string language{ "en" };
+
+            enum support::RunOptions::Ordering ordering{ support::RunOptions::Ordering::defined };
+
+            std::size_t retry{ 0 };
+            std::vector<std::string> retryTagFilter{};
+
+            bool strict{ true };
+
+            bool featureHooks{ false };
+
+            bool recursive{ true };
+
             std::vector<std::string> tags{};
-            std::vector<std::string> features{};
-            std::vector<std::string> reporters{};
-
-            std::string outputfolder{ "./out" };
-            std::string reportfile{ "TestReport" };
-
-            bool dryrun{ false };
-            bool printStepsNotUsed{ false };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
 
-        int Run(int argc, const char* const* argv);
+        [[nodiscard]] int Run(int argc, const char* const* argv);
 
         CLI::App& CliParser();
         Context& ProgramContext();
-        cucumber_expression::ParameterRegistration& ParameterRegistration();
-
-        void AddReportHandler(const std::string& name, std::unique_ptr<report::ReportHandlerV2>&& reporter);
+        cucumber_expression::ParameterRegistry& ParameterRegistration();
+        api::Formatters& Formatters();
 
     private:
         void DryRunFeatures();
-        void RunFeatures();
-        [[nodiscard]] engine::Result RunFeature(const std::filesystem::path& path, std::string_view tagExpression, report::ReportHandlerV2& reportHandler);
-        void PrintStepsNotUsed(const StepRegistry& stepRegistry) const;
-        [[nodiscard]] std::vector<std::unique_ptr<engine::FeatureInfo>> GetFeatureTree(const engine::FeatureTreeFactory& featureTreeFactory, std::string_view tagExpression);
-
-        [[nodiscard]] int GetExitCode() const;
-        [[nodiscard]] int GetExitCode(engine::Result result) const;
+        [[nodiscard]] int RunFeatures();
 
         Options options;
+
         CLI::App cli;
-        CLI::App* runCommand;
 
-        engine::ContextManager contextManager;
+        std::shared_ptr<ContextStorageFactory> contextStorageFactory;
+        std::unique_ptr<Context> programContext{ std::make_unique<Context>(contextStorageFactory) };
+        Context& programContextRef{ *programContext };
 
-        report::ReportForwarderImpl reporters;
-        ReportHandlerValidator reportHandlerValidator;
+        api::Formatters formatters;
 
-        cucumber::gherkin::app gherkin;
+        util::Broadcaster broadcaster;
 
-        cucumber_expression::ParameterRegistry parameterRegistry;
+        cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
+        util::StopWatchHighResolutionClock stopwatchHighResolutionClock;
+        util::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
+
+        bool runPassed{ false };
     };
 }
 
