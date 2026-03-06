@@ -51,8 +51,8 @@ namespace cucumber_cpp::library::query
 {
     struct Lineage
     {
-        std::string GetUniqueFeatureName() const;
-        std::string GetScenarioAndOrRuleName() const;
+        [[nodiscard]] std::string GetUniqueFeatureName() const;
+        [[nodiscard]] std::string GetScenarioAndOrRuleName() const;
 
         std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument;
         std::shared_ptr<const cucumber::messages::feature> feature;
@@ -65,44 +65,44 @@ namespace cucumber_cpp::library::query
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument)
         {
-            lineage.gherkinDocument = gherkinDocument;
-            return std::move(lineage);
+            lineage.gherkinDocument = std::move(gherkinDocument);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::feature> feature)
         {
-            lineage.feature = feature;
-            return std::move(lineage);
+            lineage.feature = std::move(feature);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::rule> rule)
         {
-            lineage.rule = rule;
-            return std::move(lineage);
+            lineage.rule = std::move(rule);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::scenario> scenario)
         {
-            lineage.scenario = scenario;
-            return std::move(lineage);
+            lineage.scenario = std::move(scenario);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::examples> examples)
         {
-            lineage.examples = examples;
-            return std::move(lineage);
+            lineage.examples = std::move(examples);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::shared_ptr<const cucumber::messages::table_row> tableRow)
         {
-            lineage.tableRow = tableRow;
-            return std::move(lineage);
+            lineage.tableRow = std::move(tableRow);
+            return lineage;
         }
 
         friend Lineage operator+(Lineage lineage, std::uint32_t featureIndex)
         {
             lineage.featureIndex = featureIndex;
-            return std::move(lineage);
+            return lineage;
         }
     };
 
@@ -117,61 +117,61 @@ namespace cucumber_cpp::library::query
     {
         explicit Query(util::Broadcaster& broadcaster);
 
-        auto GetPickles() const
+        [[nodiscard]] auto GetPickles() const
         {
             return pickleById | std::views::values;
         }
 
-        const Lineage& FindLineageByPickle(const cucumber::messages::pickle& pickle) const;
-        const Lineage& FindLineageByUri(const std::string&) const;
+        [[nodiscard]] const Lineage& FindLineageByPickle(const cucumber::messages::pickle& pickle) const;
+        [[nodiscard]] const Lineage& FindLineageByUri(const std::string&) const;
 
-        const cucumber::messages::parameter_type& FindParameterTypeById(const std::string& id) const;
-        const cucumber::messages::parameter_type& FindParameterTypeByName(const std::string& name) const;
-        bool ContainsParameterTypeByName(const std::string& name) const;
+        [[nodiscard]] const cucumber::messages::parameter_type& FindParameterTypeById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::parameter_type& FindParameterTypeByName(const std::string& name) const;
+        [[nodiscard]] bool ContainsParameterTypeByName(const std::string& name) const;
 
-        const cucumber::messages::test_case& FindTestCaseBy(const cucumber::messages::test_case_started& testCaseStarted) const;
-        const cucumber::messages::test_case& FindTestCaseById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::test_case& FindTestCaseBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        [[nodiscard]] const cucumber::messages::test_case& FindTestCaseById(const std::string& id) const;
 
-        const cucumber::messages::pickle& FindPickleBy(const cucumber::messages::test_case_started& testCaseStarted) const;
-        const cucumber::messages::pickle& FindPickleById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::pickle& FindPickleBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        [[nodiscard]] const cucumber::messages::pickle& FindPickleById(const std::string& id) const;
 
-        const cucumber::messages::pickle_step* FindPickleStepBy(const cucumber::messages::test_step& testStep) const;
-        const cucumber::messages::pickle_step& FindPickleStepById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::pickle_step* FindPickleStepBy(const cucumber::messages::test_step& testStep) const;
+        [[nodiscard]] const cucumber::messages::pickle_step& FindPickleStepById(const std::string& id) const;
 
-        const cucumber::messages::test_step& FindTestStepBy(const cucumber::messages::test_step_finished& testStepFinished) const;
+        [[nodiscard]] const cucumber::messages::test_step& FindTestStepBy(const cucumber::messages::test_step_finished& testStepFinished) const;
 
-        const cucumber::messages::step& FindStepBy(const cucumber::messages::pickle_step& pickleStep) const;
+        [[nodiscard]] const cucumber::messages::step& FindStepBy(const cucumber::messages::pickle_step& pickleStep) const;
 
-        const cucumber::messages::step_definition& FindStepDefinitionById(const std::string& id) const;
-        std::list<const cucumber::messages::step_definition*> FindStepDefinitionsById(const cucumber::messages::test_step& testStep) const;
+        [[nodiscard]] const cucumber::messages::step_definition& FindStepDefinitionById(const std::string& id) const;
+        [[nodiscard]] std::list<const cucumber::messages::step_definition*> FindStepDefinitionsById(const cucumber::messages::test_step& testStep) const;
 
-        const cucumber::messages::hook& FindHookById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::hook& FindHookById(const std::string& id) const;
 
-        std::optional<cucumber::messages::location> FindLocationOf(const cucumber::messages::pickle& pickle) const;
+        [[nodiscard]] std::optional<cucumber::messages::location> FindLocationOf(const cucumber::messages::pickle& pickle) const;
 
-        const cucumber::messages::test_case_started& FindTestCaseStartedById(const std::string& id) const;
+        [[nodiscard]] const cucumber::messages::test_case_started& FindTestCaseStartedById(const std::string& id) const;
 
-        const std::map<std::string, cucumber::messages::step_definition, std::less<>>& StepDefinitions() const;
-        const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;
-        const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
+        [[nodiscard]] const std::map<std::string, cucumber::messages::step_definition, std::less<>>& StepDefinitions() const;
+        [[nodiscard]] const std::map<std::string, cucumber::messages::test_case_started, std::less<>>& TestCaseStarted() const;
+        [[nodiscard]] const std::map<std::string, cucumber::messages::test_case_finished, std::less<>>& TestCaseFinishedByTestCaseStartedId() const;
 
-        std::size_t CountTestCasesStarted() const;
+        [[nodiscard]] std::size_t CountTestCasesStarted() const;
 
-        std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> CountMostSevereTestStepResultStatus() const;
-        std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_started& testCaseStarted) const;
-        std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
+        [[nodiscard]] std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> CountMostSevereTestStepResultStatus() const;
+        [[nodiscard]] std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        [[nodiscard]] std::optional<const cucumber::messages::test_step_result*> FindMostSevereTestStepResultBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
 
-        std::list<const cucumber::messages::test_case_started*> FindAllTestCaseStarted() const;
-        std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        [[nodiscard]] std::list<const cucumber::messages::test_case_started*> FindAllTestCaseStarted() const;
+        [[nodiscard]] std::list<std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>> FindTestStepFinishedAndTestStepBy(const cucumber::messages::test_case_started& testCaseStarted) const;
 
-        const cucumber::messages::test_run_started& FindTestRunStarted() const;
-        cucumber::messages::duration FindTestRunDuration() const;
+        [[nodiscard]] const cucumber::messages::test_run_started& FindTestRunStarted() const;
+        [[nodiscard]] cucumber::messages::duration FindTestRunDuration() const;
 
-        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted) const;
-        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
-        cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const;
+        [[nodiscard]] cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted) const;
+        [[nodiscard]] cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_finished& testCaseFinished) const;
+        [[nodiscard]] cucumber::messages::duration FindTestCaseDurationBy(const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished) const;
 
-        cucumber::messages::duration FindTestStepDurationByTestStepId(const std::string& testStepId) const;
+        [[nodiscard]] cucumber::messages::duration FindTestStepDurationByTestStepId(const std::string& testStepId) const;
 
     private:
         void operator+=(const cucumber::messages::envelope& envelope);
