@@ -36,6 +36,7 @@
 #include "fmt/format.h"
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <list>
@@ -79,10 +80,36 @@ namespace cucumber_cpp::library::query
 
     std::string NamingStrategy::Reduce(const Lineage& lineage, const cucumber::messages::pickle& pickle)
     {
-        std::vector<std::string> parts;
-        parts.reserve(10);
+        enum class NamingStrategyLength : std::uint8_t
+        {
+            longName,
+            shortName,
+        };
+        enum class NamingStrategyFeatureName : std::uint8_t
+        {
+            include,
+            exclude,
+        };
+        enum class NamingStrategyExampleName : std::uint8_t
+        {
+            number,
+            pickle,
+            numberAndPickleIfParameterized
+        };
 
-        if (!lineage.feature)
+        struct Options
+        {
+            NamingStrategyLength length;
+            NamingStrategyFeatureName featureName;
+            NamingStrategyExampleName exampleName;
+        };
+
+        Options options{};
+
+        std::vector<std::string> parts;
+        parts.reserve(5);
+
+        if (lineage.feature && options.featureName == NamingStrategyFeatureName::include)
             parts.emplace_back(lineage.feature->name);
 
         if (lineage.rule)
@@ -95,6 +122,9 @@ namespace cucumber_cpp::library::query
 
         if (lineage.examples)
             parts.emplace_back(lineage.examples->name);
+
+        if (options.length == NamingStrategyLength::shortName)
+            return parts.back();
 
         if (parts.size() == 1)
             return parts.front();
