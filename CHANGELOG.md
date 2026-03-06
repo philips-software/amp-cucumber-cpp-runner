@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.1.1...v4.0.0) (2026-03-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* rewrite to use cucumber messages ([#273](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/273))
+
+### Features
+
+* Rewrite to use cucumber messages ([#273](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/273)) ([751ffd9](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/751ffd90bb9dc94828e3beab95f7cf98dc26c668))
+
 ## [3.1.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.1.0...v3.1.1) (2025-11-21)
 
 
