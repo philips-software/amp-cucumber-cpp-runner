@@ -79,7 +79,6 @@ namespace cucumber_cpp::library::cucumber_expression
                     const auto expression = Expression{ testdata["expression"].as<std::string>(), parameterRegistry };
                     const auto matchOpt = expression.MatchToArguments(testdata["text"].as<std::string>());
 
-                    const auto arguments = expression.MatchToArguments(testdata["text"].as<std::string>());
 
                     ASSERT_THAT(matchOpt, testing::IsTrue()) << FormatTestFailureMessage(file, testdata, expression);
 

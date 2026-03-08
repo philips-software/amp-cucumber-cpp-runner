@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         const static std::string integerNegativeRegex{ R"__(-?\d+)__" };
         const static std::string integerPositiveRegex{ R"__(\d+)__" };
-        const static std::string floatRegex{ R"__((?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*(?:\d+[E][+-]?\d+)?)__" };
+        const static std::string floatRegex{ R"__([-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[E][+-]?\d+)?)__" };
         const static std::string stringRegex{ R"__("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)')__" };
         const static std::string wordRegex{ R"__([^\s]+)__" };
         const static std::string anonymousRegex{ R"__(.*)__" };
