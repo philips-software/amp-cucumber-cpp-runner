@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.0.0...v4.0.1) (2026-03-12)
+
+
+### Chores
+
+* Add [[nodiscard]] attribute to relevant methods for better optimization and added std::move where needed ([#299](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/299)) ([bfefd04](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/bfefd0442ba1069fc43f15253bf2da6a104f951b))
+
 ## [4.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.1.1...v4.0.0) (2026-03-05)
 
 
