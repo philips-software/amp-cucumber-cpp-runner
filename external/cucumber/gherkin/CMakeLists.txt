@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cucumber_gherkin
     GIT_REPOSITORY https://github.com/cucumber/gherkin.git
-    GIT_TAG "v37.0.0"
+    GIT_TAG 6fe0a3be9df9388209cca37bc3f254be10a6014e # v39.0.0
 )
 
 FetchContent_MakeAvailable(cucumber_gherkin)
