@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cli11
     GIT_REPOSITORY https://github.com/CLIUtils/CLI11
-    GIT_TAG f4d0731cebb123ff0ace712c099dffbcd2c58e5a # v2.4.1
+    GIT_TAG 37bb6edc5317e99af72ef48405e65d9ca5218861 # v2.6.2
 )
 
 set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL On)

@@ -19,10 +19,10 @@ namespace cucumber_cpp::library::util
 
         cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::group& group)
         {
-            if (group.children.empty())
+            if (!group.children.has_value() || group.children->empty())
                 return { group.value };
 
-            auto strings = group.children | std::views::transform(ToString);
+            auto strings = group.children.value() | std::views::transform(ToString);
 
             return { strings.begin(), strings.end() };
         }

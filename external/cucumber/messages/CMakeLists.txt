@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cucumber_messages
     GIT_REPOSITORY https://github.com/cucumber/messages.git
-    GIT_TAG "v31.0.0"
+    GIT_TAG 6582661d5b1c44a628f8eab65d3aca539f99c4ab # v32.2.0
     OVERRIDE_FIND_PACKAGE
 )
 
