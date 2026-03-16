@@ -98,9 +98,9 @@ struct Flight
     std::string to;
 };
 
-PARAMETER(Flight, "flight", "([A-Z]{3})-([A-Z]{3})", true)
+PARAMETER(Flight, ("flight", "([A-Z]{3})-([A-Z]{3})", true), (const std::string& from, const std::string& to))
 {
-    return { group.children[0].value.value(), group.children[1].value.value() };
+    return Flight{ .from = from, .to = to };
 }
 
 STEP(R"({flight} has been delayed)", (const Flight& flight))
@@ -112,11 +112,20 @@ STEP(R"({flight} has been delayed)", (const Flight& flight))
 
 The `PARAMETER` macro API is as follows:
 ```
-PARAMETER(<return type>, <name>, <regular expression>, <use for snippets>)
+PARAMETER(<return type>, (<name>, <regular expression>, <use for snippets>), (<capture1, capture2, ...>))
 ```
 > ℹ️ \<use for snippets\> is not supported yet
 
-The `PARAMETER` function body receives an [`const cucumber::messages::group& group`](https://github.com/cucumber/messages/blob/37af3aa8c54ccaf4e61c7cd168d05e39a19c1959/cpp/include/messages/cucumber/messages/group.hpp#L21) as argument.
+The `PARAMETER` arguments' arity has to match the number of top-level capture groups. Capture groups can be optional. Then a `std::optional<std::string>` has to be used instead.
+
+```cpp
+PARAMETER(int, ("optint", "([0-9]+)?", false), (const std::optional<std::string>& opt))
+{
+    if (!opt)
+        return 0;
+    // ...
+}
+```
 
 ### Custom step fixtures
 
