@@ -98,9 +98,9 @@ struct Flight
     std::string to;
 };
 
-PARAMETER(Flight, "flight", "([A-Z]{3})-([A-Z]{3})", true)
+PARAMETER(Flight, ("flight", "([A-Z]{3})-([A-Z]{3})", true), (const std::string& from, const std::string& to))
 {
-    return { group.children[0].value.value(), group.children[1].value.value() };
+    return Flight{ .from = from, .to = to };
 }
 
 STEP(R"({flight} has been delayed)", (const Flight& flight))
