@@ -44,7 +44,7 @@ WHEN(R"(an array with {int} bytes is attached as {string})", (std::int32_t size,
 WHEN(R"(a PDF document is attached and renamed)")
 {
     std::ifstream pdfFile{ currentCompileDir / "document.pdf", std::ios::binary };
-    Attach(pdfFile, cucumber_cpp::library::engine::AttachOptions{ "application/pdf", "renamed.pdf" });
+    Attach(pdfFile, cucumber_cpp::AttachOptions{ .mediaType = "application/pdf", .fileName = "renamed.pdf" });
 }
 
 WHEN(R"(a link to {string} is attached)", (const std::string& url))
