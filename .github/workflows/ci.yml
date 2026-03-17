@@ -34,7 +34,7 @@ jobs:
           key: cache-winsdk-10.0.26100-14.43.17.13
       - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -49,7 +49,7 @@ jobs:
     runs-on: [ubuntu-24.04]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -73,7 +73,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -101,7 +101,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}-${{ matrix.os }}
           max-size: 2G
