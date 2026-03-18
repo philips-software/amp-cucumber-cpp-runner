@@ -148,9 +148,9 @@ namespace cucumber_cpp::library::api
             };
         }
 
-        std::list<support::PickleSource> OrderPickles(const support::RunOptions::Sources& sources, auto&& pickles)
+        std::list<support::PickleSource> OrderPickles(const support::RunOptions::Sources& sources, auto pickles)
         {
-            const auto createOrderedPickleList = [](auto&& ordered) -> std::list<support::PickleSource>
+            const auto createOrderedPickleList = [](auto ordered) -> std::list<support::PickleSource>
             {
                 return { std::begin(ordered), std::end(ordered) };
             };
