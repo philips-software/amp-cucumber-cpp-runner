@@ -163,36 +163,10 @@ namespace cucumber_cpp::library::api
             else
                 return createOrderedPickleList(pickles | std::views::reverse);
         };
-
-        [[noreturn]] void SignalHandler(int signal)
-        {
-            if (signal == SIGABRT)
-                std::cerr << "SIGABRT received\n";
-            else
-                std::cerr << "Unexpected signal " << signal << " received\n";
-            std::_Exit(EXIT_FAILURE);
-        }
-
-        struct OverrideAbortSignalHandler
-        {
-            OverrideAbortSignalHandler() = default;
-            OverrideAbortSignalHandler(const OverrideAbortSignalHandler&) = delete;
-            OverrideAbortSignalHandler(OverrideAbortSignalHandler&&) = delete;
-
-            ~OverrideAbortSignalHandler()
-            {
-                std::signal(SIGABRT, original);
-            }
-
-            using signal_handler_t = void (*)(int);
-            signal_handler_t original{ std::signal(SIGABRT, SignalHandler) };
-        };
     }
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
-        OverrideAbortSignalHandler overrideSignalHandler;
-
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
         support::UndefinedParameters undefinedParameters;
