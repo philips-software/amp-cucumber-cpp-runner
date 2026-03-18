@@ -25,30 +25,27 @@
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
-#include <csignal>
-#include <cstdlib>
 #include <functional>
-#include <iostream>
+#include <iterator>
 #include <list>
 #include <memory>
 #include <ranges>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::api
 {
     namespace
     {
-        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, cucumber::gherkin::id_generator_ptr idGenerator)
+        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
                 if (parameter.isBuiltin)
                     continue;
 
-                broadcaster.BroadcastEvent({
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{
                     .parameter_type = cucumber::messages::parameter_type{
                         .name = parameter.name,
                         .regular_expressions = parameter.regex,
@@ -68,26 +65,26 @@ namespace cucumber_cpp::library::api
         void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
-                broadcaster.BroadcastEvent({ .undefined_parameter_type = parameter });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .undefined_parameter_type = parameter });
         }
 
         void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
-                broadcaster.BroadcastEvent({ .step_definition = cucumber::messages::step_definition{
-                                                 .id = stepDefinition.id,
-                                                 .pattern = cucumber::messages::step_definition_pattern{
-                                                     .source = stepDefinition.pattern,
-                                                     .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION : cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION,
-                                                 },
-                                                 .source_reference = {
-                                                     .uri = stepDefinition.uri.string(),
-                                                     .location = cucumber::messages::location{
-                                                         .line = stepDefinition.line,
-                                                     },
-                                                 },
-                                             } });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .step_definition = cucumber::messages::step_definition{
+                                                                             .id = stepDefinition.id,
+                                                                             .pattern = cucumber::messages::step_definition_pattern{
+                                                                                 .source = stepDefinition.pattern,
+                                                                                 .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION : cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION,
+                                                                             },
+                                                                             .source_reference = {
+                                                                                 .uri = stepDefinition.uri.string(),
+                                                                                 .location = cucumber::messages::location{
+                                                                                     .line = stepDefinition.line,
+                                                                                 },
+                                                                             },
+                                                                         } });
             }
         }
 
@@ -96,12 +93,12 @@ namespace cucumber_cpp::library::api
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
             for (auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
             for (auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
         }
 
         void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
@@ -109,12 +106,12 @@ namespace cucumber_cpp::library::api
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
             for (auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
             for (auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent({ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
         }
 
         void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
@@ -163,36 +160,10 @@ namespace cucumber_cpp::library::api
             else
                 return createOrderedPickleList(pickles | std::views::reverse);
         };
-
-        [[noreturn]] void SignalHandler(int signal)
-        {
-            if (signal == SIGABRT)
-                std::cerr << "SIGABRT received\n";
-            else
-                std::cerr << "Unexpected signal " << signal << " received\n";
-            std::_Exit(EXIT_FAILURE);
-        }
-
-        struct OverrideAbortSignalHandler
-        {
-            OverrideAbortSignalHandler() = default;
-            OverrideAbortSignalHandler(const OverrideAbortSignalHandler&) = delete;
-            OverrideAbortSignalHandler(OverrideAbortSignalHandler&&) = delete;
-
-            ~OverrideAbortSignalHandler()
-            {
-                std::signal(SIGABRT, original);
-            }
-
-            using signal_handler_t = void (*)(int);
-            signal_handler_t original{ std::signal(SIGABRT, SignalHandler) };
-        };
     }
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
-        OverrideAbortSignalHandler overrideSignalHandler;
-
         cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
 
         support::UndefinedParameters undefinedParameters;
