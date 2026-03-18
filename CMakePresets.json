@@ -13,9 +13,7 @@
             "installDir": "${sourceDir}/.install/${presetName}",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
-                "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Release",
-                "CMAKE_C_COMPILER_LAUNCHER": "ccache",
-                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+                "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Release"
             }
         },
         {

@@ -25,6 +25,15 @@ option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measure
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+find_program(CCACHE_FOUND ccache)
+find_program(SCCACHE_FOUND sccache)
+
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+elseif(SCCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE sccache)
+endif()
+
 if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
     if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
         add_compile_options(-fsanitize=address -fsanitize=undefined)
