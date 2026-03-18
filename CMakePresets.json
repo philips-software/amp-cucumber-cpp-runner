@@ -148,6 +148,7 @@
         {
             "name": "host-single-Debug-synchronous",
             "configurePreset": "host-single-Debug-synchronous",
+            "configuration": "Debug",
             "inherits": "defaults"
         }
     ]
