@@ -40,7 +40,7 @@ namespace cucumber_cpp::library::engine
 
     struct TestStep : testing::Test
     {
-        util::Broadcaster broadcaster;
+        util::BroadcasterImpl broadcaster;
         std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorageFactory };
         util::StepOrHookStarted stepOrHookStarted;

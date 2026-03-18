@@ -33,6 +33,14 @@
             "generator": "Ninja Multi-Config"
         },
         {
+            "name": "Host-Parallel",
+            "inherits": "Host",
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
+            }
+        },
+        {
             "name": "host-single-Debug",
             "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
             "inherits": "defaults",
@@ -68,6 +76,13 @@
                 "CCACHE_COMPILERTYPE": "clang-cl"
             },
             "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "Windows-Parallel",
+            "inherits": "Windows",
+            "cacheVariables": {
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
+            }
         }
     ],
     "buildPresets": [
