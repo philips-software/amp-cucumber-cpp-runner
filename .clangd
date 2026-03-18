@@ -1,6 +1,6 @@
 ---
 CompileFlags:
-  CompilationDatabase: .build/
+  CompilationDatabase: /root/.amp/compile_commands.json
 Diagnostics:
   UnusedIncludes: Strict
   MissingIncludes: Strict
