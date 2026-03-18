@@ -33,8 +33,8 @@
             "generator": "Ninja Multi-Config"
         },
         {
-            "name": "host-single-Debug",
-            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
+            "name": "host-single-Debug-synchronous",
+            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug, synchronous",
             "inherits": "defaults",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -92,9 +92,9 @@
             "configurePreset": "Host-Iwyu"
         },
         {
-            "name": "host-single-Debug",
+            "name": "host-single-Debug-synchronous",
             "configuration": "Debug",
-            "configurePreset": "host-single-Debug"
+            "configurePreset": "host-single-Debug-synchronous"
         },
         {
             "name": "host-single-time-profile",
@@ -148,9 +148,8 @@
             "inherits": "defaults"
         },
         {
-            "name": "host-single-Debug",
-            "configurePreset": "host-single-Debug",
-            "configuration": "Debug",
+            "name": "host-single-Debug-synchronous",
+            "configurePreset": "host-single-Debug-synchronous",
             "inherits": "defaults"
         }
     ]
