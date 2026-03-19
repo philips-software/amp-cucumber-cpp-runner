@@ -34,6 +34,7 @@
             "name": "host-single-Debug-synchronous",
             "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug, synchronous",
             "inherits": "defaults",
+            "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
@@ -42,6 +43,7 @@
             "name": "host-single-time-profile",
             "displayName": "Configuration time profiling",
             "inherits": "defaults",
+            "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
