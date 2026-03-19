@@ -76,32 +76,27 @@ jobs:
 
   host_build_test:
     name: Host Build & Test
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-${{ matrix.version}}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos, windows, ubuntu]
+        version: [latest]
         type: [synchronous]
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - if: ${{ matrix.os == 'windows-latest' }}
-        uses: TheMrMilchmann/setup-msvc-dev@79dac248aac9d0059f86eae9d8b5bfab4e95e97c # v4.0.0
-        with:
-          arch: x64
       - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
-          key: ${{ github.job }}-${{ matrix.os }}
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}
           max-size: 2G
       - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
         with:
-          configurePreset: "host-single-Debug-${{ matrix.type }}"
-          buildPreset: "host-single-Debug-${{ matrix.type }}"
-          testPreset: "host-single-Debug-${{ matrix.type }}"
+          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}"
       - name: Upload test logs
         if: ${{ failure() }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test-logs
-          path: .build/host-single-Debug-${{ matrix.type }}/Testing/Temporary/
+          path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}/Testing/Temporary/

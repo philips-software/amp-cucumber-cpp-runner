@@ -32,12 +32,31 @@
         },
         {
             "name": "host-single-Debug-synchronous",
-            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug, synchronous",
+            "hidden": true,
             "inherits": "defaults",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
+        },
+        {
+            "name": "linux-Debug-synchronous",
+            "displayName": "Configuration for Linux Debug and Tests, Single Config Generator, synchronous",
+            "inherits": "host-single-Debug-synchronous"
+        },
+        {
+            "name": "windows-Debug-synchronous",
+            "displayName": "Configuration for Windows Debug and Tests, Single Config Generator, synchronous",
+            "inherits": "host-single-Debug-synchronous",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "macos-Debug-synchronous",
+            "displayName": "Configuration for macOS Debug and Tests, Single Config Generator, synchronous",
+            "inherits": "host-single-Debug-synchronous"
         },
         {
             "name": "host-single-time-profile",
@@ -92,9 +111,19 @@
             "configurePreset": "Host-Iwyu"
         },
         {
-            "name": "host-single-Debug-synchronous",
+            "name": "linux-Debug-synchronous",
             "configuration": "Debug",
-            "configurePreset": "host-single-Debug-synchronous"
+            "configurePreset": "linux-Debug-synchronous"
+        },
+        {
+            "name": "windows-Debug-synchronous",
+            "configuration": "Debug",
+            "configurePreset": "windows-Debug-synchronous"
+        },
+        {
+            "name": "macos-Debug-synchronous",
+            "configuration": "Debug",
+            "configurePreset": "macos-Debug-synchronous"
         },
         {
             "name": "host-single-time-profile",
@@ -148,10 +177,75 @@
             "inherits": "defaults"
         },
         {
-            "name": "host-single-Debug-synchronous",
-            "configurePreset": "host-single-Debug-synchronous",
+            "name": "linux-Debug-synchronous",
+            "configurePreset": "linux-Debug-synchronous",
             "configuration": "Debug",
             "inherits": "defaults"
+        },
+        {
+            "name": "windows-Debug-synchronous",
+            "configurePreset": "windows-Debug-synchronous",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "macos-Debug-synchronous",
+            "configurePreset": "macos-Debug-synchronous",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "linux-Debug-synchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "linux-Debug-synchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "linux-Debug-synchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "linux-Debug-synchronous"
+                }
+            ]
+        },
+        {
+            "name": "windows-Debug-synchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "windows-Debug-synchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "windows-Debug-synchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "windows-Debug-synchronous"
+                }
+            ]
+        },
+        {
+            "name": "macos-Debug-synchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "macos-Debug-synchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "macos-Debug-synchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "macos-Debug-synchronous"
+                }
+            ]
         }
     ]
 }
