@@ -40,7 +40,7 @@
             }
         },
         {
-            "name": "linux-Debug-synchronous",
+            "name": "ubuntu-Debug-synchronous",
             "displayName": "Configuration for Linux Debug and Tests, Single Config Generator, synchronous",
             "inherits": "host-single-Debug-synchronous"
         },
@@ -111,9 +111,9 @@
             "configurePreset": "Host-Iwyu"
         },
         {
-            "name": "linux-Debug-synchronous",
+            "name": "ubuntu-Debug-synchronous",
             "configuration": "Debug",
-            "configurePreset": "linux-Debug-synchronous"
+            "configurePreset": "ubuntu-Debug-synchronous"
         },
         {
             "name": "windows-Debug-synchronous",
@@ -177,8 +177,8 @@
             "inherits": "defaults"
         },
         {
-            "name": "linux-Debug-synchronous",
-            "configurePreset": "linux-Debug-synchronous",
+            "name": "ubuntu-Debug-synchronous",
+            "configurePreset": "ubuntu-Debug-synchronous",
             "configuration": "Debug",
             "inherits": "defaults"
         },
@@ -197,19 +197,19 @@
     ],
     "workflowPresets": [
         {
-            "name": "linux-Debug-synchronous",
+            "name": "ubuntu-Debug-synchronous",
             "steps": [
                 {
                     "type": "configure",
-                    "name": "linux-Debug-synchronous"
+                    "name": "ubuntu-Debug-synchronous"
                 },
                 {
                     "type": "build",
-                    "name": "linux-Debug-synchronous"
+                    "name": "ubuntu-Debug-synchronous"
                 },
                 {
                     "type": "test",
-                    "name": "linux-Debug-synchronous"
+                    "name": "ubuntu-Debug-synchronous"
                 }
             ]
         },

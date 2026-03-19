@@ -87,6 +87,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+
+      - if: ${{ matrix.os == 'windows' }}
+        name: Compile Visual Studio project with MSBuild
+        shell: cmd
+        run: ${{ '"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"' }}
       - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}
