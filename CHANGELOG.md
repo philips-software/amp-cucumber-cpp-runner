@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.0.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.0.0...v4.0.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* Update custom parameter type in the README.md ([#306](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/306)) ([8133173](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/8133173aade5a838cc7aeab03398e9ba5b08b994))
+
+
+### Chores
+
+* Add [[nodiscard]] attribute to relevant methods for better optimization and added std::move where needed ([#299](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/299)) ([bfefd04](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/bfefd0442ba1069fc43f15253bf2da6a104f951b))
+* Add ExecutionContext to Steps.hpp ([#304](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/304)) ([637b3c2](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/637b3c20008210974db838c441473f6fc33902a8))
+* Update dependencies ([#305](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/305)) ([325fb4c](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/325fb4ca3f55aff346f976f4b91ea8100ea0fb65))
+
 ## [4.0.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v3.1.1...v4.0.0) (2026-03-05)
 
 
