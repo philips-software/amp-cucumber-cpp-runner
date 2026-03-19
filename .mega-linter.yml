@@ -3,7 +3,6 @@ ENABLE:
   - ACTION
   - CPP
   - DOCKERFILE
-  - JSON
   - MARKDOWN
   - REPOSITORY
   - SPELL
