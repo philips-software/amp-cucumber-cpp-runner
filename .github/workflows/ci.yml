@@ -86,6 +86,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - if: ${{ matrix.os == 'windows-latest' }}
+        uses: TheMrMilchmann/setup-msvc-dev@79dac248aac9d0059f86eae9d8b5bfab4e95e97c # v4.0.0
+        with:
+          arch: x64
       - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
           key: ${{ github.job }}-${{ matrix.os }}
