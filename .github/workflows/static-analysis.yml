@@ -38,7 +38,6 @@ jobs:
           configurePreset: "Coverage"
           buildPreset: "Coverage"
           testPreset: "Coverage"
-          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
@@ -84,5 +83,4 @@ jobs:
         with:
           configurePreset: "Host"
           buildPreset: "Host-Debug"
-          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
       - uses: github/codeql-action/analyze@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v4.33.0
