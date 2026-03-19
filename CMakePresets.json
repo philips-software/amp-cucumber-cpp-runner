@@ -48,10 +48,7 @@
             "name": "windows-Debug-synchronous",
             "displayName": "Configuration for Windows Debug and Tests, Single Config Generator, synchronous",
             "inherits": "host-single-Debug-synchronous",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe"
-            }
+            "toolchainFile": "${sourceDir}/cmake/Windows.MSVC.toolchain.cmake"
         },
         {
             "name": "macos-Debug-synchronous",
