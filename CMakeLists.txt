@@ -25,26 +25,6 @@ option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measure
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (CCR_STANDALONE AND NOT CMAKE_C_COMPILER_LAUNCHER AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
-    find_program(CCACHE_FOUND ccache)
-    find_program(SCCACHE_FOUND sccache)
-
-    if (SCCACHE_FOUND)
-        set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_FOUND}")
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_FOUND}")
-        message(STATUS "Using \"${SCCACHE_FOUND}\" for compilation")
-
-        if(MSVC)
-            set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
-            cmake_policy(SET CMP0141 NEW)
-        endif()
-    elseif (CCACHE_FOUND)
-        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_FOUND}")
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_FOUND}")
-        message(STATUS "Using \"${CCACHE_FOUND}\" for compilation")
-    endif()
-endif()
-
 if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
     if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
         add_compile_options(-fsanitize=address -fsanitize=undefined)
