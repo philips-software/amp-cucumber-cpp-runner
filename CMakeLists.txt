@@ -35,7 +35,8 @@ if (CCR_STANDALONE AND NOT CMAKE_C_COMPILER_LAUNCHER AND NOT CMAKE_CXX_COMPILER_
         message(STATUS "Using \"${SCCACHE_FOUND}\" for compilation")
 
         if(MSVC)
-            add_compile_options(/FS)
+            add_compile_options("/FS")
+            add_link_options("/FS")
         endif()
     elseif (CCACHE_FOUND)
         set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_FOUND}")
