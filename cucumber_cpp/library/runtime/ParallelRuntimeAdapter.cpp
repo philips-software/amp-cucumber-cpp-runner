@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/runtime/ParallelRuntimeAdapter.hpp"
-#include ".build/Host-Iwyu/_deps/libfmt-src/include/fmt/format.h"
 #include "coro/task.hpp"
 #include "coro/thread_pool.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
@@ -147,7 +146,7 @@ namespace cucumber_cpp::library::runtime
 
             auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
 
-            coro::latch taskLatch{ 10 * std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite)
+            coro::latch taskLatch{ 10 * std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite) -> std::list<AssembledTestCase>&
                                                                                         {
                                                                                             return suite.testCases;
                                                                                         }) |

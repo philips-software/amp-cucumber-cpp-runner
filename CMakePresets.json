@@ -33,7 +33,7 @@
             "generator": "Ninja Multi-Config"
         },
         {
-            "name": "Host-Parallel",
+            "name": "Host-Asynchronous",
             "inherits": "Host",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
@@ -78,7 +78,7 @@
             "generator": "Ninja Multi-Config"
         },
         {
-            "name": "Windows-Parallel",
+            "name": "Windows-Asynchronous",
             "inherits": "Windows",
             "cacheVariables": {
                 "CCR_ENABLE_PARALLEL_SUPPORT": "On"
@@ -99,6 +99,17 @@
             "name": "Host-Debug",
             "configuration": "Debug",
             "configurePreset": "Host",
+            "jobs": 4
+        },
+        {
+            "name": "Host-Asynchronous-Release",
+            "configuration": "Release",
+            "configurePreset": "Host-Asynchronous"
+        },
+        {
+            "name": "Host-Asynchronous-Debug",
+            "configuration": "Debug",
+            "configurePreset": "Host-Asynchronous",
             "jobs": 4
         },
         {
