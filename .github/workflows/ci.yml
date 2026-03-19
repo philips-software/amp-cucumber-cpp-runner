@@ -41,7 +41,7 @@ jobs:
         run: ./get-winsdk.sh
       - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
         with:
-          key: ${{ github.job }}
+          key: ${{ github.job }}-${{ matrix.target }}
           max-size: 2G
       - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
         with:
