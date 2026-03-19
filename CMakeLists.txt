@@ -30,7 +30,7 @@ if (CCR_STANDALONE)
     if (CCACHE_FOUND)
         set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_FOUND}")
         set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_FOUND}")
-        message(STATUS "Using ccache for compilation")
+        message(STATUS "Using \"${CCACHE_FOUND}\" for compilation")
     endif()
 endif()
 
