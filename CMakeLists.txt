@@ -35,8 +35,8 @@ if (CCR_STANDALONE AND NOT CMAKE_C_COMPILER_LAUNCHER AND NOT CMAKE_CXX_COMPILER_
         message(STATUS "Using \"${SCCACHE_FOUND}\" for compilation")
 
         if(MSVC)
-            add_compile_options("/FS")
-            add_link_options("/FS")
+            set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+            cmake_policy(SET CMP0141 NEW)
         endif()
     elseif (CCACHE_FOUND)
         set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_FOUND}")
