@@ -146,7 +146,7 @@ namespace cucumber_cpp::library::runtime
 
             auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
 
-            coro::latch taskLatch{ 10 * std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite) -> std::list<AssembledTestCase>&
+            coro::latch taskLatch{ 10 * std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite) -> const std::list<assemble::AssembledTestCase>&
                                                                                         {
                                                                                             return suite.testCases;
                                                                                         }) |
