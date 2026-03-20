@@ -154,8 +154,7 @@ namespace cucumber_cpp::library::runtime
 
             for (const auto& assembledTestSuite : assembledTestSuites)
                 for (const auto& assembledTestCase : assembledTestSuite.testCases)
-                    for (auto i{ 0 }; i < 10; ++i)
-                        tasks.emplace_back(RunTestCase(threadPool, taskLatch, parallelWorker, assembledTestSuite.gherkinDocument, assembledTestCase, programContext, failing));
+                    tasks.emplace_back(RunTestCase(threadPool, taskLatch, parallelWorker, assembledTestSuite.gherkinDocument, assembledTestCase, programContext, failing));
 
             tasks.emplace_back(parallelBroadcaster.ShutdownTask(taskLatch));
 
