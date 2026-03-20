@@ -33,10 +33,20 @@ namespace cucumber_cpp::library::util
 
     struct Broadcaster
     {
-        void AddListener(Listener* listener);
-        void RemoveListener(Listener* listener);
+        virtual ~Broadcaster() = default;
 
-        void BroadcastEvent(const cucumber::messages::envelope& envelope);
+        virtual void AddListener(Listener* listener) = 0;
+        virtual void RemoveListener(Listener* listener) = 0;
+
+        virtual void BroadcastEvent(const cucumber::messages::envelope& envelope) = 0;
+    };
+
+    struct BroadcasterImpl : Broadcaster
+    {
+        void AddListener(Listener* listener) override;
+        void RemoveListener(Listener* listener) override;
+
+        void BroadcastEvent(const cucumber::messages::envelope& envelope) override;
 
     private:
         std::vector<Listener*> listeners;

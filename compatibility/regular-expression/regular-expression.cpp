@@ -2,7 +2,7 @@
 #include <optional>
 #include <string>
 
-STEP(R"(^a (.*?)(?: and a (.*?))?(?: and a (.*?))?$)", (const std::optional<std::string>& vegetable1, const std::optional<std::string>& vegetable2, const std::optional<std::string>& vegetable3))
+STEP(R"(^a (.*?)(?: and a (.*?))?(?: and a (.*?))?$)", ([[maybe_unused]] const std::optional<std::string>& vegetable1, [[maybe_unused]] const std::optional<std::string>& vegetable2, [[maybe_unused]] const std::optional<std::string>& vegetable3))
 {
     // no-op
 }

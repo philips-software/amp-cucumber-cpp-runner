@@ -3,7 +3,6 @@
 #include "fmt/color.h"
 #include <functional>
 #include <map>
-#include <optional>
 #include <regex>
 #include <string>
 #include <string_view>
@@ -41,11 +40,6 @@ namespace cucumber_cpp::library::formatter::helper
             { cucumber::messages::test_step_result_status::UNDEFINED, "U" },
             { cucumber::messages::test_step_result_status::UNKNOWN, "?" },
         };
-
-        std::optional<fmt::text_style> GetColorStyle(std::optional<fmt::text_style> def)
-        {
-            return def;
-        }
 
         const std::regex ansiEscape{ "\033\\[[^m]+m" };
     }

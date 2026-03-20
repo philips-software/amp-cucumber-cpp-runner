@@ -46,7 +46,10 @@
             "args": [
                 "--format",
                 "pretty",
-                "summary",
+                // "summary",
+                "--parallel",
+                "2",
+                "--fail-fast",
                 "--retry",
                 "1",
                 "--tags",

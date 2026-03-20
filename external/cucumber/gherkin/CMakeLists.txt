@@ -1,14 +1,9 @@
 FetchContent_Declare(
     cucumber_gherkin
     GIT_REPOSITORY https://github.com/cucumber/gherkin.git
-    GIT_TAG 6fe0a3be9df9388209cca37bc3f254be10a6014e # v39.0.0
+    GIT_TAG 5e4222e3956d52c8758f41727b14a1ab2dce5060 # unrelease PR
 )
 
 FetchContent_MakeAvailable(cucumber_gherkin)
 
 add_subdirectory(${cucumber_gherkin_SOURCE_DIR}/cpp ${cucumber_gherkin_BINARY_DIR}/cpp)
-
-# The usage of designated initializers requires c++20 in MSVC
-set_target_properties(cucumber_gherkin_lib PROPERTIES CXX_STANDARD 20)
-set_target_properties(cucumber_gherkin_bin PROPERTIES CXX_STANDARD 20)
-set_target_properties(cucumber_gherkin_generate_tokens_bin PROPERTIES CXX_STANDARD 20)

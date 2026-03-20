@@ -9,19 +9,39 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
+
+#if defined(ENABLE_PARALLEL_SUPPORT)
+#include "cucumber_cpp/library/runtime/ParallelRuntimeAdapter.hpp"
+#endif
 
 namespace cucumber_cpp::library::runtime
 {
-    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
+    namespace
     {
-        return std::make_unique<runtime::SerialRuntimeAdapter>(
-            testRunStartedId,
-            broadcaster,
-            idGenerator,
-            sourcedPickles,
-            options,
-            supportCodeLibrary,
-            programContext);
+        std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
+        {
+#if defined(ENABLE_PARALLEL_SUPPORT)
+            if (options.parallel > 0)
+                return std::make_unique<runtime::ParallelRuntimeAdapter>(
+                    std::move(testRunStartedId),
+                    broadcaster,
+                    std::move(idGenerator),
+                    sourcedPickles,
+                    options,
+                    supportCodeLibrary,
+                    programContext);
+            else
+#endif
+                return std::make_unique<runtime::SerialRuntimeAdapter>(
+                    std::move(testRunStartedId),
+                    broadcaster,
+                    std::move(idGenerator),
+                    sourcedPickles,
+                    options,
+                    supportCodeLibrary,
+                    programContext);
+        }
     }
 
     std::unique_ptr<support::Runtime> MakeRuntime(const support::RunOptions::Runtime& options, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
