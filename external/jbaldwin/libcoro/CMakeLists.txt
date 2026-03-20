@@ -1,4 +1,3 @@
-add_compile_options(-Wno-missing-field-initializers)
 
 FetchContent_Declare(
     libcoro
@@ -13,4 +12,10 @@ set(LIBCORO_BUILD_EXAMPLES OFF CACHE STRING "")
 
 FetchContent_MakeAvailable(libcoro)
 
-target_compile_options(libcoro INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-extra>)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    # libcoro sets public Wall and Wextra warnings, but we want to disable them for our project
+    target_compile_options(libcoro INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-extra>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
+    )
+endif()
