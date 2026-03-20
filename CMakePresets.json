@@ -24,7 +24,8 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CCR_ENABLE_COVERAGE": "On"
+                "CCR_ENABLE_COVERAGE": "On",
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
             }
         },
         {
@@ -217,7 +218,9 @@
             "name": "defaults",
             "hidden": true,
             "output": {
-                "outputOnFailure": true
+                "outputOnFailure": true,
+                "verbosity": "extra",
+                "debug": true
             },
             "execution": {
                 "noTestsAction": "error",

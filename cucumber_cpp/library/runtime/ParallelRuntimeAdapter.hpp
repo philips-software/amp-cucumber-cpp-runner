@@ -6,12 +6,7 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <coro/latch.hpp>
-#include <coro/queue.hpp>
-#include <coro/task.hpp>
-#include <coro/thread_pool.hpp>
 #include <list>
-#include <memory>
 #include <string>
 
 namespace cucumber_cpp::library::runtime
@@ -36,8 +31,6 @@ namespace cucumber_cpp::library::runtime
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary& supportCodeLibrary;
         Context& programContext;
-
-        std::unique_ptr<coro::thread_pool> threadPool;
     };
 }
 

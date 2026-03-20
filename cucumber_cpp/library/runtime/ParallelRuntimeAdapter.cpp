@@ -125,12 +125,14 @@ namespace cucumber_cpp::library::runtime
         , options{ options }
         , supportCodeLibrary{ supportCodeLibrary }
         , programContext{ programContext }
-        , threadPool{ coro::thread_pool::make_unique(coro::thread_pool::options{ .thread_count = options.parallel }) }
     {
     }
 
     bool ParallelRuntimeAdapter::Run()
     {
+        std::unique_ptr<coro::thread_pool> workerThreadPool{ coro::thread_pool::make_unique(coro::thread_pool::options{ .thread_count = options.parallel }) };
+        std::unique_ptr<coro::thread_pool> supportThreadPool{ coro::thread_pool::make_unique(coro::thread_pool::options{ .thread_count = 2 }) };
+
         std::vector<coro::task<void>> tasks;
         bool failing = false;
         runtime::Worker synchronousWorker{ testRunStartedId, broadcaster, idGenerator, options, supportCodeLibrary, programContext };
@@ -139,22 +141,22 @@ namespace cucumber_cpp::library::runtime
 
         if (!failing)
         {
-            ParallelBroadcaster parallelBroadcaster{ broadcaster, threadPool };
+            ParallelBroadcaster parallelBroadcaster{ broadcaster, supportThreadPool };
             tasks.emplace_back(parallelBroadcaster.BroadcastEventTask());
 
             runtime::Worker parallelWorker{ testRunStartedId, parallelBroadcaster, idGenerator, options, supportCodeLibrary, programContext };
 
             auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
 
-            coro::latch taskLatch{ 10 * std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite) -> const std::list<assemble::AssembledTestCase>&
-                                                                                        {
-                                                                                            return suite.testCases;
-                                                                                        }) |
-                                                              std::views::join) };
+            coro::latch taskLatch{ std::ranges::distance(assembledTestSuites | std::views::transform([](const auto& suite) -> const std::list<assemble::AssembledTestCase>&
+                                                                                   {
+                                                                                       return suite.testCases;
+                                                                                   }) |
+                                                         std::views::join) };
 
             for (const auto& assembledTestSuite : assembledTestSuites)
                 for (const auto& assembledTestCase : assembledTestSuite.testCases)
-                    tasks.emplace_back(RunTestCase(threadPool, taskLatch, parallelWorker, assembledTestSuite.gherkinDocument, assembledTestCase, programContext, failing));
+                    tasks.emplace_back(RunTestCase(workerThreadPool, taskLatch, parallelWorker, assembledTestSuite.gherkinDocument, assembledTestCase, programContext, failing));
 
             tasks.emplace_back(parallelBroadcaster.ShutdownTask(taskLatch));
 

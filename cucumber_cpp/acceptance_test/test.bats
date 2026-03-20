@@ -243,3 +243,13 @@ teardown() {
     refute_output --partial "HOOK_BEFORE_FEATURE"
     refute_output --partial "HOOK_AFTER_FEATURE"
 }
+
+@test "Successful asynchronous test" {
+    run $acceptance_test --format summary pretty message junit --parallel 2 --tags "@result:OK" -- cucumber_cpp/acceptance_test/features
+    assert_success
+}
+
+@test "Failed asynchronous tests" {
+    run $acceptance_test --format summary pretty message junit --parallel 2 --tags "@smoke and @result:FAILED" -- cucumber_cpp/acceptance_test/features
+    assert_failure
+}
