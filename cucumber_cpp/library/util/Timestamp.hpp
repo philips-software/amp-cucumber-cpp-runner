@@ -4,14 +4,13 @@
 #include "cucumber/messages/duration.hpp"
 #include "cucumber/messages/timestamp.hpp"
 #include <chrono>
-#include <cstddef>
 #include <string>
 
 namespace cucumber_cpp::library::util
 {
-    constexpr std::size_t millisecondsPerSecond = 1e3;
-    constexpr std::size_t nanosecondsPerMillisecond = 1e6;
-    constexpr std::size_t nanosecondsPerSecond = 1e9;
+    constexpr auto millisecondsPerSecond{ 1000u };
+    constexpr auto nanosecondsPerMillisecond{ 1000000u };
+    constexpr auto nanosecondsPerSecond{ 1000000000u };
 
     struct TimestampGenerator
     {
