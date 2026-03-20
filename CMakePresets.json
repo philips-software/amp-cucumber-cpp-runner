@@ -64,11 +64,7 @@
         {
             "name": "macos-Debug-synchronous",
             "displayName": "Configuration for macOS Debug and Tests, Single Config Generator, synchronous",
-            "inherits": "host-single-Debug-synchronous",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "$(brew --prefix llvm@18)/bin/clang",
-                "CMAKE_CXX_COMPILER": "$(brew --prefix llvm@18)/bin/clang++"
-            }
+            "inherits": "host-single-Debug-synchronous"
         },
         {
             "name": "host-single-Debug-asynchronous",
@@ -94,11 +90,7 @@
         {
             "name": "macos-Debug-asynchronous",
             "displayName": "Configuration for macOS Debug and Tests, Single Config Generator, asynchronous",
-            "inherits": "host-single-Debug-asynchronous",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "$(brew --prefix llvm@18)/bin/clang",
-                "CMAKE_CXX_COMPILER": "$(brew --prefix llvm@18)/bin/clang++"
-            }
+            "inherits": "host-single-Debug-asynchronous"
         },
         {
             "name": "host-single-time-profile",
