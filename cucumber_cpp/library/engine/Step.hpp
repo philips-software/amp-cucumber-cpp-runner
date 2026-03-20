@@ -41,9 +41,9 @@ namespace cucumber_cpp::library::engine
 
     protected:
         void Step(const std::string& step) const;
-        void Step(const std::string& step, const std::optional<util::DocString>& docString) const;
-        void Step(const std::string& step, const std::optional<util::Table>& dataTable) const;
-        void Step(const std::string& step, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString) const;
+        void Step(const std::string& step, const std::optional<util::DocString>& nestedDocString) const;
+        void Step(const std::string& step, const std::optional<util::Table>& nestedDataTable) const;
+        void Step(const std::string& step, const std::optional<util::Table>& nestedDataTable, const std::optional<util::DocString>& nestedDocString) const;
 
         const runtime::NestedTestCaseRunner& nestedTestCaseRunner;
 
