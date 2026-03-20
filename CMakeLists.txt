@@ -77,6 +77,7 @@ else()
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
     find_package(fmt REQUIRED)
+    find_package(base64 REQUIRED)
 
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)
