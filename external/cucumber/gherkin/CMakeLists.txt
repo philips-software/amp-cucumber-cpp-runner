@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cucumber_gherkin
     GIT_REPOSITORY https://github.com/cucumber/gherkin.git
-    GIT_TAG 5e4222e3956d52c8758f41727b14a1ab2dce5060 # unrelease PR
+    GIT_TAG 9f99514f288381e0f614cfb74c856710f1584574 # unreleased main
 )
 
 FetchContent_MakeAvailable(cucumber_gherkin)
