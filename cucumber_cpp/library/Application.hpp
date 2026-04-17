@@ -17,6 +17,7 @@
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -45,8 +46,8 @@ namespace cucumber_cpp::library
 
             enum support::RunOptions::Ordering ordering{ support::RunOptions::Ordering::defined };
 
-            std::size_t retry{ 0 };
-            std::vector<std::string> retryTagFilter{};
+            std::uint32_t retry{ 0 };
+            std::vector<std::string> retryTagFilter;
 
             bool strict{ true };
 
@@ -54,7 +55,9 @@ namespace cucumber_cpp::library
 
             bool recursive{ true };
 
-            std::vector<std::string> tags{};
+            std::vector<std::string> tags;
+
+            std::uint32_t parallel{ 0 };
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
@@ -80,14 +83,12 @@ namespace cucumber_cpp::library
 
         api::Formatters formatters;
 
-        util::Broadcaster broadcaster;
+        util::BroadcasterImpl broadcaster;
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
         util::StopWatchHighResolutionClock stopwatchHighResolutionClock;
         util::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
-
-        bool runPassed{ false };
     };
 }
 

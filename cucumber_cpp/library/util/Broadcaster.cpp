@@ -23,19 +23,19 @@ namespace cucumber_cpp::library::util
             onEvent(envelope);
     }
 
-    void Broadcaster::AddListener(Listener* listener)
+    void BroadcasterImpl::AddListener(Listener* listener)
     {
         listeners.push_back(listener);
     }
 
-    void Broadcaster::RemoveListener(Listener* listener)
+    void BroadcasterImpl::RemoveListener(Listener* listener)
     {
         std::erase(listeners, listener);
     }
 
-    void Broadcaster::BroadcastEvent(const cucumber::messages::envelope& envelope)
+    void BroadcasterImpl::BroadcastEvent(const cucumber::messages::envelope& envelope)
     {
-        for (auto& listener : listeners)
+        for (const auto& listener : listeners)
             listener->Invoke(envelope);
     }
 }

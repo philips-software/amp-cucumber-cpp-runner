@@ -9,9 +9,9 @@
 
 namespace cucumber_cpp::library::util
 {
-    constexpr std::size_t millisecondsPerSecond = 1e3;
-    constexpr std::size_t nanosecondsPerMillisecond = 1e6;
-    constexpr std::size_t nanosecondsPerSecond = 1e9;
+    constexpr std::size_t millisecondsPerSecond{ 1000u };
+    constexpr std::size_t nanosecondsPerMillisecond{ 1000000u };
+    constexpr std::size_t nanosecondsPerSecond{ 1000000000u };
 
     struct TimestampGenerator
     {

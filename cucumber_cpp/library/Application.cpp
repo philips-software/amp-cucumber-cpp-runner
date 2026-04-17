@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "CLI/CLI.hpp"
 #include "cucumber/gherkin/demangle.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
@@ -119,6 +120,10 @@ namespace cucumber_cpp::library
             cli.add_flag("--feature-hooks,!--no-feature-hooks", options.featureHooks, "Run Before/After Feature hooks, note these are non-standard and are not supported by messages")->default_val(options.featureHooks);
             cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
 
+#if defined(ENABLE_PARALLEL_SUPPORT)
+            cli.add_option("--parallel", options.parallel, "Number of parallel workers to run scenarios. Default 0 (no parallelism)")->default_val(options.parallel);
+#endif
+
             CLI::deprecate_option(cli.add_option("--tag", options.tags, "Cucumber tag expression"), "-t,--tags");
             cli.add_option("-t,--tags", options.tags, "Cucumber tag expression");
 
@@ -198,6 +203,7 @@ namespace cucumber_cpp::library
                 .strict = options.strict,
                 .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
                 .featureHooks = options.featureHooks,
+                .parallel = options.parallel,
             },
         };
 
