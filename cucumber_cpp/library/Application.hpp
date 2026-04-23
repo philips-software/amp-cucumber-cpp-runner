@@ -48,6 +48,9 @@ namespace cucumber_cpp::library
             std::size_t retry{ 0 };
             std::vector<std::string> retryTagFilter{};
 
+            std::size_t repeat{ 1 };
+            std::vector<std::string> repeatTagFilter{};
+
             bool strict{ true };
 
             bool featureHooks{ false };

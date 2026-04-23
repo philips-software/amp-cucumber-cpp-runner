@@ -197,6 +197,8 @@ namespace cucumber_cpp::library
                 .retry = options.retry,
                 .strict = options.strict,
                 .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
+                .repeat = options.repeat,
+                .repeatTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.repeatTagFilter, " "))),
                 .featureHooks = options.featureHooks,
             },
         };

@@ -39,6 +39,8 @@ namespace cucumber_cpp::library::support
             std::size_t retry{ 0 };
             bool strict{ true };
             std::unique_ptr<tag_expression::Expression> retryTagExpression{};
+            std::size_t repeat{ 1 };
+            std::unique_ptr<tag_expression::Expression> repeatTagExpression{};
             bool featureHooks{ false };
         } runtime;
 
