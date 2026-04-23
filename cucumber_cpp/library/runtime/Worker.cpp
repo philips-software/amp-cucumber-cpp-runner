@@ -143,6 +143,7 @@ namespace cucumber_cpp::library::runtime
     bool Worker::RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
     {
         const auto repeats = RepeatsForPickle(assembledTestCase.pickle, options);
+        const auto retries = RetriesForPickle(assembledTestCase.pickle, options);
         bool allPassed = true;
 
         for (std::size_t r = 0; r < repeats; ++r)
@@ -153,7 +154,7 @@ namespace cucumber_cpp::library::runtime
                 gherkinDocument,
                 assembledTestCase.pickle,
                 assembledTestCase.testCase,
-                RetriesForPickle(assembledTestCase.pickle, options),
+                retries,
                 options.dryRun || (options.failFast && failing),
                 supportCodeLibrary,
                 testSuiteContext,
