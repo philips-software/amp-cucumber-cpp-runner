@@ -228,6 +228,8 @@ namespace compatibility
                 .retry = devkit.kitString.starts_with("retry") ? 2u : 0u,
                 .strict = true,
                 .retryTagExpression = cucumber_cpp::library::tag_expression::Parse(""),
+                .repeat = devkit.kitString.starts_with("repeat") ? 3u : 1u,
+                .repeatTagExpression = cucumber_cpp::library::tag_expression::Parse(devkit.kitString.starts_with("repeat") ? "@Performance" : ""),
             },
         };
 

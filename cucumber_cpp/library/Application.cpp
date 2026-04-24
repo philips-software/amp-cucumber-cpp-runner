@@ -115,6 +115,8 @@ namespace cucumber_cpp::library
             cli.add_option("--order", options.ordering, "Run scenarios in specificed order")->transform(CLI::CheckedTransformer(orderingMap, CLI::ignore_case))->default_val(options.ordering);
             auto* retryOpt = cli.add_option("--retry", options.retry, "Number of times to retry failed scenarios")->default_val(options.retry);
             cli.add_option("--retry-tag-filter", options.retryTagFilter, "Only retry scenarios matching this tag expression")->needs(retryOpt);
+            auto* repeatOpt = cli.add_option("--repeat", options.repeat, "Number of times to repeat scenarios")->default_val(options.repeat)->check(CLI::PositiveNumber);
+            cli.add_option("--repeat-tag-filter", options.repeatTagFilter, "Only repeat scenarios matching this tag expression")->needs(repeatOpt);
             cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
             cli.add_flag("--feature-hooks,!--no-feature-hooks", options.featureHooks, "Run Before/After Feature hooks, note these are non-standard and are not supported by messages")->default_val(options.featureHooks);
             cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
@@ -197,6 +199,8 @@ namespace cucumber_cpp::library
                 .retry = options.retry,
                 .strict = options.strict,
                 .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
+                .repeat = options.repeat,
+                .repeatTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.repeatTagFilter, " "))),
                 .featureHooks = options.featureHooks,
             },
         };

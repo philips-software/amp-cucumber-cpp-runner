@@ -57,6 +57,15 @@ namespace cucumber_cpp::library::runtime
                 return 0;
         }
 
+        std::size_t RepeatsForPickle(const cucumber::messages::pickle& pickle, const support::RunOptions::Runtime& options)
+        {
+            if (options.repeat <= 1)
+                return 1;
+            if (options.repeatTagExpression->Evaluate(util::TransformPickleTags(pickle.tags)))
+                return options.repeat;
+            return 1;
+        }
+
         bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
         {
             if (dryRun)
@@ -133,21 +142,31 @@ namespace cucumber_cpp::library::runtime
 
     bool Worker::RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
     {
-        TestCaseRunner testCaseRunner{
-            broadcaster,
-            idGenerator,
-            gherkinDocument,
-            assembledTestCase.pickle,
-            assembledTestCase.testCase,
-            RetriesForPickle(assembledTestCase.pickle, options),
-            options.dryRun || (options.failFast && failing),
-            supportCodeLibrary,
-            testSuiteContext,
-        };
+        const auto repeats = RepeatsForPickle(assembledTestCase.pickle, options);
+        const auto retries = RetriesForPickle(assembledTestCase.pickle, options);
+        bool allPassed = true;
 
-        const auto status = testCaseRunner.Run();
+        for (std::size_t r = 0; r < repeats; ++r)
+        {
+            TestCaseRunner testCaseRunner{
+                broadcaster,
+                idGenerator,
+                gherkinDocument,
+                assembledTestCase.pickle,
+                assembledTestCase.testCase,
+                retries,
+                options.dryRun || (options.failFast && failing),
+                supportCodeLibrary,
+                testSuiteContext,
+            };
 
-        return !IsStatusFailed(status);
+            if (const auto status = testCaseRunner.Run(); IsStatusFailed(status))
+            {
+                allPassed = false;
+            }
+        }
+
+        return allPassed;
     }
 
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
