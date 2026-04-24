@@ -5,6 +5,7 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include <cstddef>
 #include <optional>
 #include <string>

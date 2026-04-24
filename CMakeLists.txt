@@ -6,22 +6,21 @@ project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.0.1) # x-release-please-ve
 include(ccr_test_helpers)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CCR_STANDALONE On)
-endif()
-
-if (CCR_STANDALONE)
     set(CCR_DEFAULTOPT On)
-    set(CCR_EXCLUDE_FROM_ALL "")
-    set(CMAKE_COMPILE_WARNING_AS_ERROR On)
-else()
-    set(CCR_DEFAULTOPT Off)
-    set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
+option(CCR_STANDALONE "Build cucumber-cpp-runner as a standalone project" ${CCR_DEFAULTOPT})
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
+
+if (CCR_STANDALONE)
+    set(CCR_EXCLUDE_FROM_ALL "")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR On)
+else()
+    set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -77,6 +76,7 @@ else()
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
     find_package(fmt REQUIRED)
+    find_package(base64 REQUIRED)
 
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)
