@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::formatter
             };
         }
 
-        std::string FormatStep(const cucumber::messages::step& gherkinStep, const cucumber::messages::pickle_step& pickleStep, cucumber::messages::test_step_result_status status)
+        std::string FormatStep(const cucumber::messages::step& gherkinStep, const cucumber::messages::pickle_step& pickleStep, cucumber::messages::test_step_result_status status, std::chrono::milliseconds duration)
         {
             auto statusString = std::string{ cucumber::messages::to_string(status) };
             std::transform(statusString.begin(), statusString.end(), statusString.begin(), [](unsigned char c)
@@ -88,7 +88,7 @@ namespace cucumber_cpp::library::formatter
                     return std::tolower(c);
                 });
 
-            return fmt::format("{:.<76}{}", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString);
+            return fmt::format("{:.<76}{} ({} ms)", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString, duration.count());
         }
 
         std::string MakeOutput(query::Query& query, const cucumber::messages::test_case_started& testCaseStarted)
@@ -105,7 +105,8 @@ namespace cucumber_cpp::library::formatter
                                       const auto [testStepFinished, testStep] = pair;
                                       const auto& pickleStep = *query.FindPickleStepBy(*testStep);
                                       const auto& gherkinStep = query.FindStepBy(pickleStep);
-                                      return FormatStep(gherkinStep, pickleStep, testStepFinished->test_step_result.status);
+                                      const auto durationMs = util::DurationToMilliseconds(query.FindTestStepDurationByTestStepId(testStepFinished->test_step_id));
+                                      return FormatStep(gherkinStep, pickleStep, testStepFinished->test_step_result.status, durationMs);
                                   });
 
             return fmt::format("\n{}\n", fmt::join(outputView, "\n"));
