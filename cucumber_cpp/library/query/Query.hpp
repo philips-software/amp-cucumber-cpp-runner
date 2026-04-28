@@ -112,7 +112,7 @@ namespace cucumber_cpp::library::query
     };
 
     struct Query
-        : util::Broadcaster
+        : util::BroadcasterImpl
         , util::Listener
     {
         explicit Query(util::Broadcaster& broadcaster);

@@ -181,7 +181,7 @@ namespace cucumber_cpp::library::formatter
             const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
             auto isBeforeHook = true;
-            for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
+            for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
             {
                 if (testStep->hook_id.has_value())
                     HandleHookStep(stream, query, *testStepFinished, *testStep, scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
@@ -201,8 +201,6 @@ namespace cucumber_cpp::library::formatter
             const auto& pickle = query.FindPickleBy(testCaseStarted);
             const auto& lineage = query.FindLineageByPickle(pickle);
             const auto& scenario = lineage.scenario;
-            const auto& rule = lineage.rule;
-            const auto& feature = lineage.feature;
             const auto& testCase = query.FindTestCaseBy(testCaseStarted);
 
             const auto maxContentLength = CalculateLength(query, pickle, testCaseStarted, testCaseFinished, *scenario, testCase, useStatusIcon, theme);

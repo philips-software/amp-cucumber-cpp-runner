@@ -6,6 +6,7 @@
 #include "cucumber/messages/pickle.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -17,7 +18,7 @@ namespace cucumber_cpp::library::support
 {
     struct RunOptions
     {
-        enum class Ordering
+        enum class Ordering : std::uint8_t
         {
             defined,
             reverse,
@@ -25,7 +26,7 @@ namespace cucumber_cpp::library::support
 
         struct Sources
         {
-            std::set<std::filesystem::path, std::less<>> paths{};
+            std::set<std::filesystem::path, std::less<>> paths;
             std::unique_ptr<tag_expression::Expression> tagExpression;
             Ordering ordering{ Ordering::defined };
 
@@ -38,8 +39,9 @@ namespace cucumber_cpp::library::support
             bool failGlobalHookFast{ false };
             std::size_t retry{ 0 };
             bool strict{ true };
-            std::unique_ptr<tag_expression::Expression> retryTagExpression{};
+            std::unique_ptr<tag_expression::Expression> retryTagExpression;
             bool featureHooks{ false };
+            std::uint32_t parallel{ 0 };
         } runtime;
 
         struct RunEnvironment

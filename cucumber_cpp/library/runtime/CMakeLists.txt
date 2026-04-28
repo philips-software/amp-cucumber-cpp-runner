@@ -27,6 +27,22 @@ target_link_libraries(cucumber_cpp.library.runtime PUBLIC
     fmt::fmt
 )
 
+if (CCR_ENABLE_PARALLEL_SUPPORT)
+    target_sources(cucumber_cpp.library.runtime PRIVATE
+        ParallelRuntimeAdapter.cpp
+        ParallelRuntimeAdapter.hpp
+    )
+
+    target_link_libraries(cucumber_cpp.library.runtime PUBLIC
+        libcoro
+    )
+
+    target_compile_definitions(cucumber_cpp.library.runtime PUBLIC
+        ENABLE_PARALLEL_SUPPORT
+    )
+endif()
+
+
 if (CCR_BUILD_TESTS)
     add_subdirectory(test)
     # add_subdirectory(test_helper)
