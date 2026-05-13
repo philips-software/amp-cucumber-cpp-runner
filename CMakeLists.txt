@@ -81,6 +81,9 @@ else()
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)
     endif()
+
+    find_package(absl)
+    find_package(re2)
 endif()
 
 add_subdirectory(cucumber_cpp)
