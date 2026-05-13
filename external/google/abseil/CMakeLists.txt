@@ -6,6 +6,6 @@ FetchContent_Declare(
 )
 
 set(ABSL_PROPAGATE_CXX_STD On CACHE BOOL "" FORCE)
-set(ABSL_ENABLE_INSTALL Off CACHE BOOL "" FORCE)
+set(ABSL_ENABLE_INSTALL On CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(absl)
