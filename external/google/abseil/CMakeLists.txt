@@ -1,7 +1,7 @@
 FetchContent_Declare(
     absl
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-    GIT_TAG 20240722.0
+    GIT_TAG 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a # 20250814.2
     OVERRIDE_FIND_PACKAGE
 )
 
