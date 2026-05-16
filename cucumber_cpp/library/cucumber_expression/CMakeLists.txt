@@ -19,10 +19,13 @@ target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     MatchRange.hpp
     ParameterRegistry.cpp
     ParameterRegistry.hpp
+    Re2RegexStrategy.cpp
+    Re2RegexStrategy.hpp
+    RegexStrategy.hpp
     RegularExpression.cpp
     RegularExpression.hpp
-    RegexStrategy.cpp
-    RegexStrategy.hpp
+    StdRegexStrategy.cpp
+    StdRegexStrategy.hpp
     TreeRegexp.cpp
     TreeRegexp.hpp
 )

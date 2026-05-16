@@ -1,4 +1,5 @@
-#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
+#include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
+#include "cucumber_cpp/library/cucumber_expression/StdRegexStrategy.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <optional>
@@ -8,18 +9,23 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
-    // StdRegexStrategy
+    template<typename T>
+    struct TestRegexStrategy : testing::Test
+    {};
 
-    TEST(StdRegexStrategy, ReturnsNulloptWhenNoMatch)
+    using RegexStrategyTypes = testing::Types<StdRegexStrategy, Re2RegexStrategy>;
+    TYPED_TEST_SUITE(TestRegexStrategy, RegexStrategyTypes);
+
+    TYPED_TEST(TestRegexStrategy, ReturnsNulloptWhenNoMatch)
     {
-        StdRegexStrategy strategy{ R"__(hello)__" };
+        TypeParam strategy{ R"__(hello)__" };
 
         EXPECT_THAT(strategy.Match("world"), testing::IsFalse());
     }
 
-    TEST(StdRegexStrategy, ReturnsVectorWhenPatternMatches)
+    TYPED_TEST(TestRegexStrategy, ReturnsVectorWhenPatternMatches)
     {
-        StdRegexStrategy strategy{ R"__((\d+))__" };
+        TypeParam strategy{ R"__((\d+))__" };
 
         const auto result = strategy.Match("abc 42 def");
 
@@ -28,9 +34,9 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THAT(result->at(1), testing::StrEq("42")); // first capture group
     }
 
-    TEST(StdRegexStrategy, WholeMatchIsAtIndexZero)
+    TYPED_TEST(TestRegexStrategy, WholeMatchIsAtIndexZero)
     {
-        StdRegexStrategy strategy{ R"__((\w+)\s+(\w+))__" };
+        TypeParam strategy{ R"__((\w+)\s+(\w+))__" };
 
         const auto result = strategy.Match("hello world");
 
@@ -41,9 +47,9 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THAT(result->at(2), testing::StrEq("world"));       // second capture group
     }
 
-    TEST(StdRegexStrategy, MatchesNegativeInteger)
+    TYPED_TEST(TestRegexStrategy, MatchesNegativeInteger)
     {
-        StdRegexStrategy strategy{ R"__((-?\d+))__" };
+        TypeParam strategy{ R"__((-?\d+))__" };
 
         const auto result = strategy.Match("-22");
 
@@ -51,62 +57,9 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THAT(result->at(1), testing::StrEq("-22"));
     }
 
-    TEST(StdRegexStrategy, MatchesEmptyCapture)
+    TYPED_TEST(TestRegexStrategy, MatchesEmptyCapture)
     {
-        StdRegexStrategy strategy{ R"__(^The value equals "([^"]*)"$)__" };
-
-        const auto result = strategy.Match(R"__(The value equals "")__");
-
-        ASSERT_THAT(result, testing::IsTrue());
-        EXPECT_THAT(result->at(1), testing::StrEq(""));
-    }
-
-    // Re2RegexStrategy
-
-    TEST(Re2RegexStrategy, ReturnsNulloptWhenNoMatch)
-    {
-        Re2RegexStrategy strategy{ R"__(hello)__" };
-
-        EXPECT_THAT(strategy.Match("world"), testing::IsFalse());
-    }
-
-    TEST(Re2RegexStrategy, ReturnsVectorWhenPatternMatches)
-    {
-        Re2RegexStrategy strategy{ R"__((\d+))__" };
-
-        const auto result = strategy.Match("abc 42 def");
-
-        ASSERT_THAT(result, testing::IsTrue());
-        EXPECT_THAT(result->at(0), testing::StrEq("42")); // whole match
-        EXPECT_THAT(result->at(1), testing::StrEq("42")); // first capture group
-    }
-
-    TEST(Re2RegexStrategy, WholeMatchIsAtIndexZero)
-    {
-        Re2RegexStrategy strategy{ R"__((\w+)\s+(\w+))__" };
-
-        const auto result = strategy.Match("hello world");
-
-        ASSERT_THAT(result, testing::IsTrue());
-        ASSERT_THAT(result->size(), testing::Eq(3));
-        EXPECT_THAT(result->at(0), testing::StrEq("hello world")); // whole match
-        EXPECT_THAT(result->at(1), testing::StrEq("hello"));       // first capture group
-        EXPECT_THAT(result->at(2), testing::StrEq("world"));       // second capture group
-    }
-
-    TEST(Re2RegexStrategy, MatchesNegativeInteger)
-    {
-        Re2RegexStrategy strategy{ R"__((-?\d+))__" };
-
-        const auto result = strategy.Match("-22");
-
-        ASSERT_THAT(result, testing::IsTrue());
-        EXPECT_THAT(result->at(1), testing::StrEq("-22"));
-    }
-
-    TEST(Re2RegexStrategy, MatchesEmptyCapture)
-    {
-        Re2RegexStrategy strategy{ R"__(^The value equals "([^"]*)"$)__" };
+        TypeParam strategy{ R"__(^The value equals "([^"]*)"$)__" };
 
         const auto result = strategy.Match(R"__(The value equals "")__");
 
@@ -119,3 +72,4 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THROW(Re2RegexStrategy{ R"__([invalid)__" }, std::invalid_argument);
     }
 }
+
