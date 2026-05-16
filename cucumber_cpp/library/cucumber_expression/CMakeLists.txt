@@ -21,6 +21,8 @@ target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     ParameterRegistry.hpp
     RegularExpression.cpp
     RegularExpression.hpp
+    RegexStrategy.cpp
+    RegexStrategy.hpp
     TreeRegexp.cpp
     TreeRegexp.hpp
 )
@@ -31,6 +33,7 @@ target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
 
 target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
     fmt::fmt
+    re2::re2
 )
 
 if (CCR_BUILD_TESTS)
