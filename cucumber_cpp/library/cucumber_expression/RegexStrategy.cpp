@@ -2,6 +2,7 @@
 #include <re2/re2.h>
 #include <optional>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -9,8 +10,7 @@
 namespace cucumber_cpp::library::cucumber_expression
 {
     StdRegexStrategy::StdRegexStrategy(std::string_view pattern)
-        : pattern{ pattern }
-        , regex{ std::string(pattern) }
+        : regex{ std::string(pattern) }
     {
     }
 
@@ -30,9 +30,10 @@ namespace cucumber_cpp::library::cucumber_expression
     }
 
     Re2RegexStrategy::Re2RegexStrategy(std::string_view pattern)
-        : pattern{ pattern }
-        , re2{ std::make_unique<re2::RE2>(pattern) }
+        : re2{ std::make_unique<re2::RE2>(pattern) }
     {
+        if (!re2->ok())
+            throw std::invalid_argument(re2->error());
     }
 
     Re2RegexStrategy::~Re2RegexStrategy() = default;

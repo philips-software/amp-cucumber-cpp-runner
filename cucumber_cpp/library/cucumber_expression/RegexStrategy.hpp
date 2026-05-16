@@ -34,7 +34,6 @@ namespace cucumber_cpp::library::cucumber_expression
         [[nodiscard]] std::optional<std::vector<std::string>> Match(std::string_view text) const override;
 
     private:
-        std::string pattern;
         std::regex regex;
     };
 
@@ -46,7 +45,6 @@ namespace cucumber_cpp::library::cucumber_expression
         [[nodiscard]] std::optional<std::vector<std::string>> Match(std::string_view text) const override;
 
     private:
-        std::string pattern;
         std::unique_ptr<re2::RE2> re2;
     };
 }

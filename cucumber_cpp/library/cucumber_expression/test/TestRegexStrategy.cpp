@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -111,5 +112,10 @@ namespace cucumber_cpp::library::cucumber_expression
 
         ASSERT_THAT(result, testing::IsTrue());
         EXPECT_THAT(result->at(1), testing::StrEq(""));
+    }
+
+    TEST(Re2RegexStrategy, ThrowsOnInvalidPattern)
+    {
+        EXPECT_THROW(Re2RegexStrategy{ R"__([invalid)__" }, std::invalid_argument);
     }
 }
