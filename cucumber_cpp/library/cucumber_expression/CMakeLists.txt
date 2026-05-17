@@ -19,9 +19,9 @@ target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
     MatchRange.hpp
     ParameterRegistry.cpp
     ParameterRegistry.hpp
-    Re2RegexStrategy.cpp
-    Re2RegexStrategy.hpp
     RegexStrategy.hpp
+    RegexStrategyFactory.cpp
+    RegexStrategyFactory.hpp
     RegularExpression.cpp
     RegularExpression.hpp
     StdRegexStrategy.cpp
@@ -36,8 +36,22 @@ target_include_directories(cucumber_cpp.library.cucumber_expression PUBLIC
 
 target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
     fmt::fmt
-    re2::re2
 )
+
+if (CCR_HAS_RE2)
+    target_sources(cucumber_cpp.library.cucumber_expression PRIVATE
+        Re2RegexStrategy.cpp
+        Re2RegexStrategy.hpp
+    )
+
+    target_compile_definitions(cucumber_cpp.library.cucumber_expression PUBLIC
+        CCR_HAS_RE2
+    )
+
+    target_link_libraries(cucumber_cpp.library.cucumber_expression PUBLIC
+        re2::re2
+    )
+endif()
 
 if (CCR_BUILD_TESTS)
     add_subdirectory(test)

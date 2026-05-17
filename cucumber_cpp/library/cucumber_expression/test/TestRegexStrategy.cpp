@@ -1,5 +1,7 @@
-#include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
 #include "cucumber_cpp/library/cucumber_expression/StdRegexStrategy.hpp"
+#ifdef CCR_HAS_RE2
+#include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
+#endif
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <optional>
@@ -13,7 +15,11 @@ namespace cucumber_cpp::library::cucumber_expression
     struct TestRegexStrategy : testing::Test
     {};
 
+#ifdef CCR_HAS_RE2
     using RegexStrategyTypes = testing::Types<StdRegexStrategy, Re2RegexStrategy>;
+#else
+    using RegexStrategyTypes = testing::Types<StdRegexStrategy>;
+#endif
     TYPED_TEST_SUITE(TestRegexStrategy, RegexStrategyTypes);
 
     TYPED_TEST(TestRegexStrategy, ReturnsNulloptWhenNoMatch)
@@ -67,9 +73,11 @@ namespace cucumber_cpp::library::cucumber_expression
         EXPECT_THAT(result->at(1), testing::StrEq(""));
     }
 
+#ifdef CCR_HAS_RE2
     TEST(Re2RegexStrategy, ThrowsOnInvalidPattern)
     {
         EXPECT_THROW(Re2RegexStrategy{ R"__([invalid)__" }, std::invalid_argument);
     }
+#endif
 }
 

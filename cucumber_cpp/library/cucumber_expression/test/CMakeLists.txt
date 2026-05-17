@@ -13,6 +13,7 @@ target_sources(cucumber_cpp.library.cucumber_expression.test PRIVATE
     TestExpressionParser.cpp
     TestExpressionTokenizer.cpp
     TestRegexStrategy.cpp
+    TestRegexStrategyFactory.cpp
     TestRegularExpression.cpp
     TestTransformation.cpp
     TestTreeRegexp.cpp

@@ -20,6 +20,7 @@ endif()
 
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
+option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 
@@ -77,6 +78,12 @@ else()
 
     find_package(absl)
     find_package(re2)
+endif()
+
+if (TARGET re2::re2)
+    set(CCR_HAS_RE2 On)
+else()
+    set(CCR_HAS_RE2 Off)
 endif()
 
 # Sanitizer flags are set after external dependencies so that fetched third-party
