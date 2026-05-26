@@ -19,6 +19,12 @@ target_sources(cucumber_cpp.library.cucumber_expression.test PRIVATE
     TestTreeRegexp.cpp
 )
 
+if (CCR_HAS_RE2)
+    target_compile_definitions(cucumber_cpp.library.cucumber_expression.test PRIVATE
+        CCR_HAS_RE2
+    )
+endif()
+
 add_custom_command(
     TARGET cucumber_cpp.library.cucumber_expression.test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
