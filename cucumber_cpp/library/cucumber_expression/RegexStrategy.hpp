@@ -1,6 +1,7 @@
 #ifndef CUCUMBER_EXPRESSION_REGEXSTRATEGY_HPP
 #define CUCUMBER_EXPRESSION_REGEXSTRATEGY_HPP
 
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -8,6 +9,14 @@
 
 namespace cucumber_cpp::library::cucumber_expression
 {
+    struct MatchGroup
+    {
+        bool matched;
+        std::string value;
+        std::size_t start;
+        std::size_t end;
+    };
+
     struct RegexStrategy
     {
         RegexStrategy() = default;
@@ -17,7 +26,7 @@ namespace cucumber_cpp::library::cucumber_expression
         RegexStrategy& operator=(RegexStrategy&&) = delete;
         virtual ~RegexStrategy() = default;
 
-        [[nodiscard]] virtual std::optional<std::vector<std::string>> Match(std::string_view text) const = 0;
+        [[nodiscard]] virtual std::optional<std::vector<MatchGroup>> Match(std::string_view text) const = 0;
     };
 }
 

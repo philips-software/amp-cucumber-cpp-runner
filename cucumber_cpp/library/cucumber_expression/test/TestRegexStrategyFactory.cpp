@@ -22,15 +22,23 @@ namespace cucumber_cpp::library::cucumber_expression
         const auto result = strategy->Match("abc 42 def");
 
         ASSERT_THAT(result, testing::IsTrue());
-        EXPECT_THAT(result->at(1), testing::StrEq("42"));
+        EXPECT_THAT(result->at(1).value, testing::StrEq("42"));
     }
 
 #ifdef CCR_HAS_RE2
-    TEST(RegexStrategyFactory, ReturnsRe2Strategy)
+    TEST(RegexStrategyFactory, ReturnsRe2StrategyForSupportedPattern)
     {
         const auto strategy = CreateRegexStrategy(R"__((\d+))__");
 
         EXPECT_THAT(dynamic_cast<Re2RegexStrategy*>(strategy.get()), testing::NotNull());
+    }
+
+    TEST(RegexStrategyFactory, FallsBackToStdStrategyForUnsupportedPattern)
+    {
+        // lookahead (?=) is not supported by RE2
+        const auto strategy = CreateRegexStrategy(R"__((?=.*\d)\d+)__");
+
+        EXPECT_THAT(dynamic_cast<StdRegexStrategy*>(strategy.get()), testing::NotNull());
     }
 #else
     TEST(RegexStrategyFactory, ReturnsStdStrategy)

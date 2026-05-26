@@ -71,7 +71,7 @@ namespace cucumber_cpp::library::support
         return idToDefinitionMap.at(id)->factory;
     }
 
-    StepRegistry::Definition StepRegistry::GetDefinitionById(const std::string& id) const
+    const StepRegistry::Definition& StepRegistry::GetDefinitionById(const std::string& id) const
     {
         return *idToDefinitionMap.at(id);
     }
