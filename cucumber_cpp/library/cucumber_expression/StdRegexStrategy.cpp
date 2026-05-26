@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/cucumber_expression/StdRegexStrategy.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <cstddef>
 #include <optional>
 #include <regex>
@@ -13,14 +14,14 @@ namespace cucumber_cpp::library::cucumber_expression
     {
     }
 
-    std::optional<std::vector<std::optional<MatchGroup>>> StdRegexStrategy::Match(std::string_view text) const
+    std::optional<Matches> StdRegexStrategy::Match(std::string_view text) const
     {
         std::smatch match;
         const std::string textStr(text);
         if (!std::regex_search(textStr, match, regex))
             return std::nullopt;
 
-        std::vector<std::optional<MatchGroup>> result;
+        Matches result;
         result.reserve(match.size());
         for (std::size_t i = 0; i < match.size(); ++i)
         {

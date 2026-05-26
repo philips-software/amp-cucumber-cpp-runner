@@ -1,7 +1,10 @@
 #include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
-#include <re2/re2.h>
+#include "absl/strings/string_view.h"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <cstddef>
+#include <memory>
 #include <optional>
+#include <re2/re2.h>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -18,7 +21,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
     Re2RegexStrategy::~Re2RegexStrategy() = default;
 
-    std::optional<std::vector<std::optional<MatchGroup>>> Re2RegexStrategy::Match(std::string_view text) const
+    std::optional<Matches> Re2RegexStrategy::Match(std::string_view text) const
     {
         const int nCaptures = re2->NumberOfCapturingGroups();
         const int nSubmatch = nCaptures + 1;
@@ -27,14 +30,12 @@ namespace cucumber_cpp::library::cucumber_expression
         if (!re2->Match(text, 0, static_cast<int>(text.size()), RE2::UNANCHORED, submatch.data(), nSubmatch))
             return std::nullopt;
 
-        std::vector<std::optional<MatchGroup>> result;
+        Matches result;
         result.reserve(static_cast<std::size_t>(nSubmatch));
         for (const auto& piece : submatch)
         {
             if (piece.data() == nullptr)
-            {
                 result.emplace_back(std::nullopt);
-            }
             else
             {
                 const auto start = static_cast<std::size_t>(piece.data() - text.data());

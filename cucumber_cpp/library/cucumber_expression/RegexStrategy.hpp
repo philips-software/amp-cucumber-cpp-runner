@@ -16,16 +16,14 @@ namespace cucumber_cpp::library::cucumber_expression
         std::size_t end;
     };
 
+    using Matches = std::vector<std::optional<MatchGroup>>;
+
     struct RegexStrategy
     {
         RegexStrategy() = default;
-        RegexStrategy(const RegexStrategy&) = delete;
-        RegexStrategy& operator=(const RegexStrategy&) = delete;
-        RegexStrategy(RegexStrategy&&) = delete;
-        RegexStrategy& operator=(RegexStrategy&&) = delete;
         virtual ~RegexStrategy() = default;
 
-        [[nodiscard]] virtual std::optional<std::vector<std::optional<MatchGroup>>> Match(std::string_view text) const = 0;
+        [[nodiscard]] virtual std::optional<Matches> Match(std::string_view text) const = 0;
     };
 }
 

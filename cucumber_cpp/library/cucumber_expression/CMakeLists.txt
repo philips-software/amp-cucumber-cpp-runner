@@ -44,7 +44,7 @@ if (CCR_HAS_RE2)
         Re2RegexStrategy.hpp
     )
 
-    target_compile_definitions(cucumber_cpp.library.cucumber_expression PUBLIC
+    target_compile_definitions(cucumber_cpp.library.cucumber_expression PRIVATE
         CCR_HAS_RE2
     )
 

@@ -7,9 +7,9 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
@@ -27,7 +27,7 @@ namespace cucumber_cpp::library::cucumber_expression
         [[nodiscard]] const std::list<GroupBuilder>& Children() const;
         [[nodiscard]] std::string_view Pattern() const;
 
-        [[nodiscard]] ArgumentGroup Build(const std::vector<std::optional<MatchGroup>>& match, std::size_t& index) const;
+        [[nodiscard]] ArgumentGroup Build(std::span<const std::optional<MatchGroup>> match, std::size_t& index) const;
 
     private:
         std::string_view pattern;

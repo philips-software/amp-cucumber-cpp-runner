@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include "cucumber_cpp/library/cucumber_expression/RegexStrategyFactory.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -7,6 +8,7 @@
 #include <list>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -161,7 +163,7 @@ namespace cucumber_cpp::library::cucumber_expression
         return pattern;
     }
 
-    ArgumentGroup GroupBuilder::Build(const std::vector<std::optional<MatchGroup>>& match, std::size_t& index) const
+    ArgumentGroup GroupBuilder::Build(std::span<const std::optional<MatchGroup>> match, std::size_t& index) const
     {
         const auto groupIndex = index++;
         const auto& matchGroupOpt = match[groupIndex];
