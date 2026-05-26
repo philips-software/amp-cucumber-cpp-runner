@@ -4,7 +4,6 @@
 #include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <memory>
 #include <optional>
-#include <string>
 #include <string_view>
 #include <vector>
 
@@ -18,7 +17,6 @@ namespace cucumber_cpp::library::cucumber_expression
     struct Re2RegexStrategy : RegexStrategy
     {
         explicit Re2RegexStrategy(std::string_view pattern);
-        ~Re2RegexStrategy() override;
 
         [[nodiscard]] std::optional<std::vector<MatchGroup>> Match(std::string_view text) const override;
 

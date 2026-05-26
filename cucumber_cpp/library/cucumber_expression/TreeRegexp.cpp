@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include "cucumber_cpp/library/cucumber_expression/RegexStrategyFactory.hpp"
 #include <cstddef>
 #include <cstdint>

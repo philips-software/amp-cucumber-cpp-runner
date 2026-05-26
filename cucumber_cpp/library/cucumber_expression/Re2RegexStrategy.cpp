@@ -1,7 +1,10 @@
 #include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
-#include <re2/re2.h>
+#include "absl/strings/string_view.h"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <cstddef>
+#include <memory>
 #include <optional>
+#include <re2/re2.h>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -15,8 +18,6 @@ namespace cucumber_cpp::library::cucumber_expression
         if (!re2->ok())
             throw std::invalid_argument(re2->error());
     }
-
-    Re2RegexStrategy::~Re2RegexStrategy() = default;
 
     std::optional<std::vector<MatchGroup>> Re2RegexStrategy::Match(std::string_view text) const
     {

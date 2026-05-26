@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/cucumber_expression/StdRegexStrategy.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <cstddef>
 #include <optional>
 #include <regex>
