@@ -14,7 +14,7 @@ namespace cucumber_cpp::library::cucumber_expression
     {
         explicit StdRegexStrategy(std::string_view pattern);
 
-        [[nodiscard]] std::optional<std::vector<MatchGroup>> Match(std::string_view text) const override;
+        [[nodiscard]] std::optional<std::vector<std::optional<MatchGroup>>> Match(std::string_view text) const override;
 
     private:
         std::regex regex;

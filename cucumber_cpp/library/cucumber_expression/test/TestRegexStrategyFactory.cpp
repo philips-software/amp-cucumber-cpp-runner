@@ -22,7 +22,7 @@ namespace cucumber_cpp::library::cucumber_expression
         const auto result = strategy->Match("abc 42 def");
 
         ASSERT_THAT(result, testing::IsTrue());
-        EXPECT_THAT(result->at(1).value, testing::StrEq("42"));
+        EXPECT_THAT(result->at(1)->value, testing::StrEq("42"));
     }
 
 #ifdef CCR_HAS_RE2

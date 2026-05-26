@@ -11,7 +11,6 @@ namespace cucumber_cpp::library::cucumber_expression
 {
     struct MatchGroup
     {
-        bool matched;
         std::string value;
         std::size_t start;
         std::size_t end;
@@ -26,7 +25,7 @@ namespace cucumber_cpp::library::cucumber_expression
         RegexStrategy& operator=(RegexStrategy&&) = delete;
         virtual ~RegexStrategy() = default;
 
-        [[nodiscard]] virtual std::optional<std::vector<MatchGroup>> Match(std::string_view text) const = 0;
+        [[nodiscard]] virtual std::optional<std::vector<std::optional<MatchGroup>>> Match(std::string_view text) const = 0;
     };
 }
 

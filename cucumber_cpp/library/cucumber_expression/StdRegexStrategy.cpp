@@ -13,25 +13,31 @@ namespace cucumber_cpp::library::cucumber_expression
     {
     }
 
-    std::optional<std::vector<MatchGroup>> StdRegexStrategy::Match(std::string_view text) const
+    std::optional<std::vector<std::optional<MatchGroup>>> StdRegexStrategy::Match(std::string_view text) const
     {
         std::smatch match;
         const std::string textStr(text);
         if (!std::regex_search(textStr, match, regex))
             return std::nullopt;
 
-        std::vector<MatchGroup> result;
+        std::vector<std::optional<MatchGroup>> result;
         result.reserve(match.size());
         for (std::size_t i = 0; i < match.size(); ++i)
         {
             const auto& m = match[i];
-            const auto start = m.matched ? static_cast<std::size_t>(match.position(static_cast<std::ptrdiff_t>(i))) : std::size_t{ 0 };
-            result.push_back({
-                .matched = m.matched,
-                .value = m.matched ? m.str() : std::string{},
-                .start = start,
-                .end = start + static_cast<std::size_t>(m.length()),
-            });
+            if (!m.matched)
+            {
+                result.emplace_back(std::nullopt);
+            }
+            else
+            {
+                const auto start = static_cast<std::size_t>(match.position(static_cast<std::ptrdiff_t>(i)));
+                result.emplace_back(MatchGroup{
+                    .value = m.str(),
+                    .start = start,
+                    .end = start + static_cast<std::size_t>(m.length()),
+                });
+            }
         }
         return result;
     }

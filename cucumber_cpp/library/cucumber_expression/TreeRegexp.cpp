@@ -161,10 +161,10 @@ namespace cucumber_cpp::library::cucumber_expression
         return pattern;
     }
 
-    ArgumentGroup GroupBuilder::Build(const std::vector<MatchGroup>& match, std::size_t& index) const
+    ArgumentGroup GroupBuilder::Build(const std::vector<std::optional<MatchGroup>>& match, std::size_t& index) const
     {
         const auto groupIndex = index++;
-        const auto& matchGroup = match[groupIndex];
+        const auto& matchGroupOpt = match[groupIndex];
 
         const auto children = this->children | std::views::transform([&match, &index](const auto& child)
                                                    {
@@ -172,9 +172,9 @@ namespace cucumber_cpp::library::cucumber_expression
                                                    });
 
         return {
-            .value = matchGroup.matched ? std::make_optional(matchGroup.value) : std::nullopt,
-            .start = matchGroup.matched ? std::make_optional(matchGroup.start) : std::nullopt,
-            .end = matchGroup.matched ? std::make_optional(matchGroup.end) : std::nullopt,
+            .value = matchGroupOpt ? std::make_optional(matchGroupOpt->value) : std::nullopt,
+            .start = matchGroupOpt ? std::make_optional(matchGroupOpt->start) : std::nullopt,
+            .end = matchGroupOpt ? std::make_optional(matchGroupOpt->end) : std::nullopt,
             .children = std::vector<ArgumentGroup>(children.begin(), children.end()),
         };
     }

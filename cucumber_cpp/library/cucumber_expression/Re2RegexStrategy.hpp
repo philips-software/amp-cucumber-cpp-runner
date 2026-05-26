@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::cucumber_expression
         explicit Re2RegexStrategy(std::string_view pattern);
         ~Re2RegexStrategy() override;
 
-        [[nodiscard]] std::optional<std::vector<MatchGroup>> Match(std::string_view text) const override;
+        [[nodiscard]] std::optional<std::vector<std::optional<MatchGroup>>> Match(std::string_view text) const override;
 
     private:
         std::unique_ptr<re2::RE2> re2;
