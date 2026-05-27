@@ -5,7 +5,6 @@
 #include <regex>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace cucumber_cpp::library::cucumber_expression
 {
@@ -23,16 +22,13 @@ namespace cucumber_cpp::library::cucumber_expression
 
         Matches result;
         result.reserve(match.size());
-        for (std::size_t i = 0; i < match.size(); ++i)
+        for (std::smatch::size_type i = 0; i < match.size(); ++i)
         {
-            const auto& m = match[i];
-            if (!m.matched)
-            {
+            if (const auto& m = match[i]; !m.matched)
                 result.emplace_back(std::nullopt);
-            }
             else
             {
-                const auto start = static_cast<std::size_t>(match.position(static_cast<std::ptrdiff_t>(i)));
+                const auto start = static_cast<std::size_t>(match.position(i));
                 result.emplace_back(MatchGroup{
                     .value = m.str(),
                     .start = start,

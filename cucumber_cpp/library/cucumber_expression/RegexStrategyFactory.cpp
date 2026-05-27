@@ -1,9 +1,12 @@
 #include "cucumber_cpp/library/cucumber_expression/RegexStrategyFactory.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include "cucumber_cpp/library/cucumber_expression/StdRegexStrategy.hpp"
+
 #ifdef CCR_HAS_RE2
 #include "cucumber_cpp/library/cucumber_expression/Re2RegexStrategy.hpp"
 #include <stdexcept>
 #endif
+
 #include <memory>
 #include <string_view>
 
