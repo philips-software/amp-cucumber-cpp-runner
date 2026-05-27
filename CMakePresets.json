@@ -66,6 +66,23 @@
             }
         },
         {
+            "name": "windows-Debug-synchronous-no-re2",
+            "displayName": "Configuration for Windows Debug and Tests, Single Config Generator, synchronous, without RE2",
+            "inherits": "host-single-Debug-synchronous",
+            "toolchainFile": "${sourceDir}/cmake/Windows.MSVC.toolchain.cmake",
+            "cacheVariables": {
+                "CCR_USE_RE2": "Off"
+            }
+        },
+        {
+            "name": "macos-Debug-synchronous-no-re2",
+            "displayName": "Configuration for macOS Debug and Tests, Single Config Generator, synchronous, without RE2",
+            "inherits": "host-single-Debug-synchronous",
+            "cacheVariables": {
+                "CCR_USE_RE2": "Off"
+            }
+        },
+        {
             "name": "host-single-time-profile",
             "displayName": "Configuration time profiling",
             "inherits": "defaults",
@@ -136,6 +153,16 @@
             "name": "ubuntu-Debug-synchronous-no-re2",
             "configuration": "Debug",
             "configurePreset": "ubuntu-Debug-synchronous-no-re2"
+        },
+        {
+            "name": "windows-Debug-synchronous-no-re2",
+            "configuration": "Debug",
+            "configurePreset": "windows-Debug-synchronous-no-re2"
+        },
+        {
+            "name": "macos-Debug-synchronous-no-re2",
+            "configuration": "Debug",
+            "configurePreset": "macos-Debug-synchronous-no-re2"
         },
         {
             "name": "host-single-time-profile",
@@ -211,6 +238,18 @@
             "configurePreset": "ubuntu-Debug-synchronous-no-re2",
             "configuration": "Debug",
             "inherits": "defaults"
+        },
+        {
+            "name": "windows-Debug-synchronous-no-re2",
+            "configurePreset": "windows-Debug-synchronous-no-re2",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "macos-Debug-synchronous-no-re2",
+            "configurePreset": "macos-Debug-synchronous-no-re2",
+            "configuration": "Debug",
+            "inherits": "defaults"
         }
     ],
     "workflowPresets": [
@@ -279,6 +318,40 @@
                 {
                     "type": "test",
                     "name": "ubuntu-Debug-synchronous-no-re2"
+                }
+            ]
+        },
+        {
+            "name": "windows-Debug-synchronous-no-re2",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "windows-Debug-synchronous-no-re2"
+                },
+                {
+                    "type": "build",
+                    "name": "windows-Debug-synchronous-no-re2"
+                },
+                {
+                    "type": "test",
+                    "name": "windows-Debug-synchronous-no-re2"
+                }
+            ]
+        },
+        {
+            "name": "macos-Debug-synchronous-no-re2",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "macos-Debug-synchronous-no-re2"
+                },
+                {
+                    "type": "build",
+                    "name": "macos-Debug-synchronous-no-re2"
+                },
+                {
+                    "type": "test",
+                    "name": "macos-Debug-synchronous-no-re2"
                 }
             ]
         }
