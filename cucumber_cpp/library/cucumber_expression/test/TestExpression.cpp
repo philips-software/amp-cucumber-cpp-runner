@@ -49,10 +49,10 @@ namespace cucumber_cpp::library::cucumber_expression
         ParameterRegistry parameterRegistry{ {} };
 
         template<class T>
-        std::optional<T> Match(std::string expr, std::string text)
+        std::optional<T> Match(const std::string& expr, const std::string& text)
         {
-            Expression expression{ std::move(expr), parameterRegistry };
-            auto args = expression.MatchToArguments(std::move(text));
+            Expression expression{ expr, parameterRegistry };
+            auto args = expression.MatchToArguments(text);
 
             if (!args.has_value())
                 return std::nullopt;
@@ -233,14 +233,15 @@ namespace cucumber_cpp::library::cucumber_expression
 
     TEST_F(TestExpression, ThrowUnknownParameterType)
     {
-        auto expr = "I have {doesnotexist} cuke(s)";
+        using namespace std::string_literals;
+        const auto expr = "I have {doesnotexist} cuke(s)"s;
 
         try
         {
             Expression expression{ expr, parameterRegistry };
             FAIL() << "Expected UndefinedParameterTypeError to be thrown";
         }
-        catch (UndefinedParameterTypeError e)
+        catch (const UndefinedParameterTypeError& e)
         {
             EXPECT_THAT(e.what(), testing::StrEq("This Cucumber Expression has a problem at column 8:\n"
                                                  "\n"
