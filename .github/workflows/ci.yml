@@ -82,20 +82,7 @@ jobs:
         os: [macos, windows, ubuntu]
         version: [latest]
         type: [synchronous]
-        preset_suffix: [""]
-        include:
-          - os: ubuntu
-            version: latest
-            type: synchronous
-            preset_suffix: "-no-re2"
-          - os: windows
-            version: latest
-            type: synchronous
-            preset_suffix: "-no-re2"
-          - os: macos
-            version: latest
-            type: synchronous
-            preset_suffix: "-no-re2"
+        preset_suffix: ["", "-no-re2"]
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
