@@ -76,8 +76,10 @@ else()
         find_package(yaml-cpp REQUIRED)
     endif()
 
-    find_package(absl)
-    find_package(re2)
+    if (CCR_USE_RE2)
+        find_package(absl)
+        find_package(re2)
+    endif()
 endif()
 
 if (TARGET re2::re2)
