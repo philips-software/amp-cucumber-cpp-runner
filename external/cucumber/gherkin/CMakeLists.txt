@@ -6,4 +6,4 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(cucumber_gherkin)
 
-add_subdirectory(${cucumber_gherkin_SOURCE_DIR}/cpp ${cucumber_gherkin_BINARY_DIR}/cpp)
+add_subdirectory(${cucumber_gherkin_SOURCE_DIR}/cpp ${cucumber_gherkin_BINARY_DIR}/cpp SYSTEM)
