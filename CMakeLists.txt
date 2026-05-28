@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.0.0) # x-release-please-version
+project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.0.1) # x-release-please-version
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
@@ -25,18 +25,12 @@ endif()
 
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
+option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 option(CCR_ENABLE_PARALLEL_SUPPORT "Enable parallel support through libcoro" Off)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
-    if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
-        add_compile_options(-fsanitize=address -fsanitize=undefined)
-        add_link_options(-fsanitize=address -fsanitize=undefined)
-    endif()
-endif()
 
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
@@ -86,6 +80,28 @@ else()
 
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)
+    endif()
+
+    if (CCR_USE_RE2)
+        find_package(absl)
+        find_package(re2)
+    endif()
+endif()
+
+if (TARGET re2::re2)
+    set(CCR_HAS_RE2 On)
+else()
+    set(CCR_HAS_RE2 Off)
+endif()
+
+# Sanitizer flags are set after external dependencies so that fetched third-party
+# libraries (abseil, re2) are not compiled with sanitizer instrumentation.
+# Abseil's constexpr function-pointer comparisons are not compatible with GCC's
+# ASan/UBSan instrumentation, which causes build failures.
+if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
+    if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
+        add_compile_options(-fsanitize=address -fsanitize=undefined)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
     endif()
 endif()
 

@@ -17,13 +17,31 @@ amp-cucumber-cpp-runner is known to build using:
 
 amp-cucumber-cpp-runner is not supposed to be used standalone. It is possible to add amp-cucumber-cpp-runner as a submodule to your own project or to use cmake's FetchContent to add amp-cucumber-cpp-runner as a cmake build dependency.
 
-En example project is provided which shows most features of amp-cucumber-cpp-runner and how to configure a cmake project to use amp-cucumber-cpp-runner. The simplest solution is to simply add a dependency on `cucumber-cpp-runner` like so:
+An example project is provided which shows most features of amp-cucumber-cpp-runner and how to configure a cmake project to use amp-cucumber-cpp-runner.
+
+### CMake options
+
+The following CMake options are supported:
+
+- `CCR_FETCH_DEPS` (default: `Off` when used as a dependency): fetch third-party dependencies via `FetchContent`.
+- `CCR_BUILD_TESTS` (default: `Off` when used as a dependency): enable building unit/integration tests in this repository.
+- `CCR_USE_RE2` (default: `Off` when used as a dependency): enable optional RE2 usage (`abseil-cpp` + `re2`).
+- `CCR_ENABLE_COVERAGE` (default: `Off`): enable compiler flags for coverage measurements.
+- `CCR_ENABLE_TIME_PROFILE` (default: `Off`): enable compiler time-trace profiling flags (Clang).
+
+### FetchContent example
+
+If you want this project to fetch its dependencies, set `CCR_FETCH_DEPS` explicitly to `On`:
 
 ```cmake
 FetchContent_Declare(cucumber_cpp
     GIT_REPOSITORY https://github.com/philips-software/amp-cucumber-cpp-runner.git
     GIT_TAG main
 )
+
+set(CCR_FETCH_DEPS On CACHE BOOL "Fetch amp-cucumber-cpp-runner dependencies")
+# optional:
+# set(CCR_USE_RE2 On CACHE BOOL "Enable RE2 backend")
 
 FetchContent_MakeAvailable(cucumber_cpp)
 

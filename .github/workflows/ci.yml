@@ -24,7 +24,7 @@ jobs:
   build-in-devcontainer:
     name: Devcontainer Build
     runs-on: [ubuntu-latest]
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.10.2@sha256:6dcb2bba0b158b055995b728631e1b92c7e8bae97119b0f171429423ed9d5e19 # v6.10.2
     strategy:
       matrix:
         target: [Host, Host-Asynchronous, Windows]
@@ -32,18 +32,18 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - if: ${{ matrix.target == 'Windows' }}
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: cache-winsdk
         with:
           path: /winsdk
           key: cache-winsdk-10.0.26100-14.43.17.13
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
+      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
         with:
           key: ${{ github.job }}-${{ matrix.target }}
           max-size: 2G
-      - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
+      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
           configurePreset: "${{ matrix.target}}"
           buildPreset: "${{ matrix.target}}-Release"
@@ -56,14 +56,14 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.8.2@sha256:8d6d0b49bef9b1f572793dee8dcc05edcbe4f44f108f075640dda284ff3e2d4e # v6.8.2
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:v6.10.2@sha256:6dcb2bba0b158b055995b728631e1b92c7e8bae97119b0f171429423ed9d5e19 # v6.10.2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
+      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
         with:
           key: ${{ github.job }}
           max-size: 2G
-      - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
+      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
           configurePreset: "Host-Asynchronous"
           buildPreset: "Host-Asynchronous-Debug"
@@ -81,22 +81,28 @@ jobs:
       matrix:
         os: [macos, windows, ubuntu]
         version: [latest]
-        type: [synchronous, asynchronous]
+        include:
+          - type: synchronous
+            preset_suffix: ""
+          - type: synchronous
+            preset_suffix: "-no-re2"
+          - type: asynchronous
+            preset_suffix: ""
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@1bbbcda0748b3e340dee71a314fa68ffcbd6df79 # v1.2.21
+      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
         with:
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}${{ matrix.preset_suffix }}
           max-size: 2G
-      - uses: lukka/run-cmake@af1be47fd7c933593f687731bc6fdbee024d3ff4 # v10.8
+      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
-          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}"
+          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
       - name: Upload test logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-logs
-          path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}/Testing/Temporary/
+          path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}/Testing/Temporary/

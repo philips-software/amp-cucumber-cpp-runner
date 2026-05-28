@@ -1,12 +1,14 @@
 #include "cucumber_cpp/library/cucumber_expression/TreeRegexp.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategyFactory.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <list>
 #include <optional>
 #include <ranges>
-#include <regex>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -161,10 +163,10 @@ namespace cucumber_cpp::library::cucumber_expression
         return pattern;
     }
 
-    ArgumentGroup GroupBuilder::Build(const std::smatch& match, std::size_t& index) const
+    ArgumentGroup GroupBuilder::Build(std::span<const std::optional<MatchGroup>> match, std::size_t& index) const
     {
         const auto groupIndex = index++;
-        const auto& matchGroup = match[groupIndex];
+        const auto& matchGroupOpt = match[groupIndex];
 
         const auto children = this->children | std::views::transform([&match, &index](const auto& child)
                                                    {
@@ -172,16 +174,36 @@ namespace cucumber_cpp::library::cucumber_expression
                                                    });
 
         return {
-            .value = matchGroup.matched ? std::make_optional(matchGroup.str()) : std::nullopt,
-            .start = matchGroup.matched ? std::make_optional(match.position(groupIndex)) : std::nullopt,
+            .value = matchGroupOpt ? std::make_optional(matchGroupOpt->value) : std::nullopt,
+            .start = matchGroupOpt ? std::make_optional(matchGroupOpt->start) : std::nullopt,
+            .end = matchGroupOpt ? std::make_optional(matchGroupOpt->end) : std::nullopt,
             .children = std::vector<ArgumentGroup>(children.begin(), children.end()),
         };
     }
 
     TreeRegexp::TreeRegexp(std::string_view pattern)
-        : rootGroupBuilder{ CreateGroupBuilder(pattern) }
-        , regex{ std::string(pattern) }
+        : storedPattern{ pattern }
+        , rootGroupBuilder{ CreateGroupBuilder(storedPattern) }
+        , regexStrategy{ CreateRegexStrategy(storedPattern) }
     {
+    }
+
+    TreeRegexp::TreeRegexp(const TreeRegexp& other)
+        : storedPattern{ other.storedPattern }
+        , rootGroupBuilder{ other.rootGroupBuilder }
+        , regexStrategy{ CreateRegexStrategy(storedPattern) }
+    {
+    }
+
+    TreeRegexp& TreeRegexp::operator=(const TreeRegexp& other)
+    {
+        if (this != &other)
+        {
+            storedPattern = other.storedPattern;
+            rootGroupBuilder = other.rootGroupBuilder;
+            regexStrategy = CreateRegexStrategy(storedPattern);
+        }
+        return *this;
     }
 
     const GroupBuilder& TreeRegexp::RootBuilder() const
@@ -191,11 +213,11 @@ namespace cucumber_cpp::library::cucumber_expression
 
     std::optional<ArgumentGroup> TreeRegexp::MatchToGroup(const std::string& text) const
     {
-        std::smatch match;
-        if (!std::regex_search(text, match, regex))
+        const auto matchResult = regexStrategy->Match(text);
+        if (!matchResult)
             return std::nullopt;
 
         std::size_t index = 0;
-        return rootGroupBuilder.Build(match, index);
+        return rootGroupBuilder.Build(*matchResult, index);
     }
 }
