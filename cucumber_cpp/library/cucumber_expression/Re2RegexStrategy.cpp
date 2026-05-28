@@ -12,7 +12,7 @@
 namespace cucumber_cpp::library::cucumber_expression
 {
     Re2RegexStrategy::Re2RegexStrategy(std::string_view pattern)
-        : re2{ pattern }
+        : re2{ absl::string_view{ pattern.data(), pattern.size() } }
     {
         if (!re2.ok())
             throw std::invalid_argument(re2.error());
