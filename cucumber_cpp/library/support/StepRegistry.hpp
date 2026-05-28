@@ -106,7 +106,7 @@ namespace cucumber_cpp::library::support
         [[nodiscard]] std::size_t Size() const;
 
         [[nodiscard]] util::StepFactory GetFactoryById(const std::string& id) const;
-        [[nodiscard]] Definition GetDefinitionById(const std::string& id) const;
+        [[nodiscard]] const Definition& GetDefinitionById(const std::string& id) const;
 
         [[nodiscard]] const std::list<Definition>& StepDefinitions() const;
 

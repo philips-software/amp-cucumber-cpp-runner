@@ -2,10 +2,12 @@
 #define CUCUMBER_EXPRESSION_TREE_REGEXP_HPP
 
 #include "cucumber_cpp/library/cucumber_expression/Group.hpp"
+#include "cucumber_cpp/library/cucumber_expression/RegexStrategy.hpp"
 #include <cstddef>
 #include <list>
+#include <memory>
 #include <optional>
-#include <regex>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -25,7 +27,7 @@ namespace cucumber_cpp::library::cucumber_expression
         [[nodiscard]] const std::list<GroupBuilder>& Children() const;
         [[nodiscard]] std::string_view Pattern() const;
 
-        [[nodiscard]] ArgumentGroup Build(const std::smatch& match, std::size_t& index) const;
+        [[nodiscard]] ArgumentGroup Build(std::span<const std::optional<MatchGroup>> match, std::size_t& index) const;
 
     private:
         std::string_view pattern;
@@ -36,14 +38,20 @@ namespace cucumber_cpp::library::cucumber_expression
     struct TreeRegexp
     {
         explicit TreeRegexp(std::string_view pattern);
+        TreeRegexp(const TreeRegexp& other);
+        TreeRegexp& operator=(const TreeRegexp& other);
+        TreeRegexp(TreeRegexp&&) = default;
+        TreeRegexp& operator=(TreeRegexp&&) = default;
+        ~TreeRegexp() = default;
 
         [[nodiscard]] const GroupBuilder& RootBuilder() const;
 
         [[nodiscard]] std::optional<ArgumentGroup> MatchToGroup(const std::string& text) const;
 
     private:
+        std::string storedPattern;
         GroupBuilder rootGroupBuilder;
-        std::regex regex;
+        std::unique_ptr<RegexStrategy> regexStrategy;
     };
 }
 

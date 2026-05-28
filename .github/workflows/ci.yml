@@ -82,6 +82,7 @@ jobs:
         os: [macos, windows, ubuntu]
         version: [latest]
         type: [synchronous]
+        preset_suffix: ["", "-no-re2"]
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -89,14 +90,14 @@ jobs:
           persist-credentials: false
       - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
         with:
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}${{ matrix.preset_suffix }}
           max-size: 2G
       - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
-          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}"
+          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
       - name: Upload test logs
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-logs
-          path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}/Testing/Temporary/
+          path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}/Testing/Temporary/
