@@ -151,7 +151,7 @@ namespace cucumber_cpp::library::formatter
                 const auto& testCase = query.FindTestCaseBy(testCaseStarted);
                 const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
-                for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
+                for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
                     AddUsageMatchToMapping(query, *testStepFinished, *testStep, testCase, mapping);
             }
         }

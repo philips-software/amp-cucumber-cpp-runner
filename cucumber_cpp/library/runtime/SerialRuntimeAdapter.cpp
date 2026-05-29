@@ -3,6 +3,7 @@
 #include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
+#include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -11,6 +12,7 @@
 #include <list>
 #include <span>
 #include <string>
+#include <utility>
 
 namespace cucumber_cpp::library::runtime
 {
@@ -32,9 +34,9 @@ namespace cucumber_cpp::library::runtime
         const support::RunOptions::Runtime& options,
         support::SupportCodeLibrary& supportCodeLibrary,
         Context& programContext)
-        : testRunStartedId{ testRunStartedId }
+        : testRunStartedId{ std::move(testRunStartedId) }
         , broadcaster{ broadcaster }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
         , sourcedPickles{ sourcedPickles }
         , options{ options }
         , supportCodeLibrary{ supportCodeLibrary }
@@ -56,10 +58,9 @@ namespace cucumber_cpp::library::runtime
             auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
 
             for (const auto& assembledTestSuite : assembledTestSuites)
-            {
                 try
                 {
-                    const auto success = worker.RunTestSuite(assembledTestSuite, failing);
+                    const auto success = RunTestSuite(worker, assembledTestSuite, failing);
                     if (!success)
                         failing = true;
                 }
@@ -67,7 +68,6 @@ namespace cucumber_cpp::library::runtime
                 {
                     failing = true;
                 }
-            }
         }
 
         const auto afterHookResults = worker.RunAfterAllHooks();
@@ -76,5 +76,33 @@ namespace cucumber_cpp::library::runtime
             failing = true;
 
         return !failing;
+    }
+
+    bool SerialRuntimeAdapter::RunTestSuite(runtime::Worker& worker, const assemble::AssembledTestSuite& assembledTestSuite, bool failing)
+    {
+        Context testSuiteContext{ &programContext };
+
+        auto failed = false;
+
+        if (options.featureHooks)
+        {
+            const auto beforeHookResults = worker.RunBeforeTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+
+            if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
+                failing = true;
+        }
+
+        for (const auto& assembledTestCase : assembledTestSuite.testCases)
+            failed |= !worker.RunTestCase(assembledTestSuite.gherkinDocument, assembledTestCase, testSuiteContext, failed || failing);
+
+        if (options.featureHooks)
+        {
+            const auto afterHookResults = worker.RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+
+            if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
+                failing = true;
+        }
+
+        return !failed;
     }
 }

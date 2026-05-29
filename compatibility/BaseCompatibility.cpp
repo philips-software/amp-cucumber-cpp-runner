@@ -236,7 +236,7 @@ namespace compatibility
         auto contextStorageFactory{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>() };
         auto programContext{ std::make_unique<cucumber_cpp::Context>(contextStorageFactory) };
 
-        cucumber_cpp::library::util::Broadcaster broadcaster;
+        cucumber_cpp::library::util::BroadcasterImpl broadcaster;
 
         BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
 

@@ -222,3 +222,34 @@ teardown() {
     assert_output --partial "|   this step is used | -        |"
     assert_output --partial "| This step is unused | UNUSED   |"
 }
+
+@test "Test feature hooks enabled" {
+    run $acceptance_test --tags "@featurehook" --feature-hooks -- cucumber_cpp/acceptance_test/features
+    assert_success
+    assert_output --partial "HOOK_BEFORE_FEATURE"
+    assert_output --partial "HOOK_AFTER_FEATURE"
+}
+
+@test "Test feature hooks disabled by default" {
+    run $acceptance_test --tags "@featurehook" -- cucumber_cpp/acceptance_test/features
+    assert_success
+    refute_output --partial "HOOK_BEFORE_FEATURE"
+    refute_output --partial "HOOK_AFTER_FEATURE"
+}
+
+@test "Test feature hooks disabled explicitly" {
+    run $acceptance_test --tags "@featurehook" --no-feature-hooks -- cucumber_cpp/acceptance_test/features
+    assert_success
+    refute_output --partial "HOOK_BEFORE_FEATURE"
+    refute_output --partial "HOOK_AFTER_FEATURE"
+}
+
+@test "Successful asynchronous test" {
+    run $acceptance_test --format summary pretty message junit --parallel 2 --tags "@result:OK" -- cucumber_cpp/acceptance_test/features
+    assert_success
+}
+
+@test "Failed asynchronous tests" {
+    run $acceptance_test --format summary pretty message junit --parallel 2 --tags "@smoke and @result:FAILED" -- cucumber_cpp/acceptance_test/features
+    assert_failure
+}

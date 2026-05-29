@@ -1,4 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -15,6 +16,16 @@ HOOK_BEFORE_ALL()
 HOOK_AFTER_ALL()
 {
     std::cout << "HOOK_AFTER_ALL\n";
+}
+
+HOOK_BEFORE_FEATURE("@featurehook")
+{
+    std::cout << "HOOK_BEFORE_FEATURE\n";
+}
+
+HOOK_AFTER_FEATURE("@featurehook")
+{
+    std::cout << "HOOK_AFTER_FEATURE\n";
 }
 
 HOOK_BEFORE_SCENARIO("@scenariohook and @bats")

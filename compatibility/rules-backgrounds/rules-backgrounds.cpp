@@ -1,7 +1,7 @@
 #include "cucumber_cpp/Steps.hpp"
 #include <string>
 
-GIVEN(R"(an order for {string})", (const std::string& order))
+GIVEN(R"(an order for {string})", ([[maybe_unused]] const std::string& order))
 {
     // no-op
 }
