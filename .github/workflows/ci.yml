@@ -27,7 +27,7 @@ jobs:
     container: ghcr.io/philips-software/amp-devcontainer-cpp:6.10.3@sha256:e1f388179dbeabaddcdd37b8b563ed89ca3cd36dcf158aa2e5c4f70eb513efec
     strategy:
       matrix:
-        target: [Host, Windows]
+        target: [Host, Host-Asynchronous, Windows]
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -65,8 +65,8 @@ jobs:
           max-size: 2G
       - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
-          configurePreset: "Host"
-          buildPreset: "Host-Debug"
+          configurePreset: "Host-Asynchronous"
+          buildPreset: "Host-Asynchronous-Debug"
       - run: |
           bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
       - uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
@@ -81,8 +81,13 @@ jobs:
       matrix:
         os: [macos, windows, ubuntu]
         version: [latest]
-        type: [synchronous]
+        type: [synchronous, asynchronous]
         preset_suffix: ["", "-no-re2"]
+        exclude:
+          - type: asynchronous
+            preset_suffix: "-no-re2"
+          - type: asynchronous
+            os: macos
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

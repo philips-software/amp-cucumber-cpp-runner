@@ -14,6 +14,7 @@ target_sources(cucumber_cpp.library.util PRIVATE
     GetWorstTestStepResult.hpp
     HookData.hpp
     HookFactory.hpp
+    IdGenerator.hpp
     Immoveable.hpp
     NestedTestCaseRunnerError.hpp
     StepFactory.hpp

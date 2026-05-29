@@ -12,3 +12,7 @@ if (CCR_BUILD_TESTS)
 endif()
 add_subdirectory(tobiaslocker)
 add_subdirectory(zeux)
+
+if (CCR_ENABLE_PARALLEL_SUPPORT)
+    add_subdirectory(jbaldwin)
+endif()

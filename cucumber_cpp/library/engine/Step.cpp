@@ -25,18 +25,18 @@ namespace cucumber_cpp::library::engine
         nestedTestCaseRunner.Step(step);
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<util::DocString>& docString) const
+    void StepBase::Step(const std::string& step, const std::optional<util::DocString>& nestedDocString) const
     {
-        nestedTestCaseRunner.Step(step, util::TransformDocString(docString));
+        nestedTestCaseRunner.Step(step, util::TransformDocString(nestedDocString));
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<util::Table>& dataTable) const
+    void StepBase::Step(const std::string& step, const std::optional<util::Table>& nestedDataTable) const
     {
-        nestedTestCaseRunner.Step(step, util::TransformTable(dataTable));
+        nestedTestCaseRunner.Step(step, util::TransformTable(nestedDataTable));
     }
 
-    void StepBase::Step(const std::string& step, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString) const
+    void StepBase::Step(const std::string& step, const std::optional<util::Table>& nestedDataTable, const std::optional<util::DocString>& nestedDocString) const
     {
-        nestedTestCaseRunner.Step(step, util::TransformTable(dataTable), util::TransformDocString(docString));
+        nestedTestCaseRunner.Step(step, util::TransformTable(nestedDataTable), util::TransformDocString(nestedDocString));
     }
 }

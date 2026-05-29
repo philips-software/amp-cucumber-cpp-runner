@@ -1,12 +1,12 @@
 #include "cucumber_cpp/Steps.hpp"
 #include <string>
 
-STEP(R"(^a (.*?) with (.*?)$)", (const std::string& arg1, const std::string& arg2))
+STEP(R"(^a (.*?) with (.*?)$)", ([[maybe_unused]] const std::string& arg1, [[maybe_unused]] const std::string& arg2))
 {
     // no-op
 }
 
-STEP(R"(^a step with (.*?)$)", (const std::string& arg1))
+STEP(R"(^a step with (.*?)$)", ([[maybe_unused]] const std::string& arg1))
 {
     // no-op
 }

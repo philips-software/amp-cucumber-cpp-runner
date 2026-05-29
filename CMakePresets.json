@@ -24,13 +24,22 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CCR_ENABLE_COVERAGE": "On"
+                "CCR_ENABLE_COVERAGE": "On",
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
             }
         },
         {
             "name": "Host",
             "inherits": "defaults",
             "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "Host-Asynchronous",
+            "inherits": "Host",
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
+            }
         },
         {
             "name": "host-single-Debug-synchronous",
@@ -83,6 +92,32 @@
             }
         },
         {
+            "name": "host-single-Debug-asynchronous",
+            "hidden": true,
+            "inherits": "defaults",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
+            }
+        },
+        {
+            "name": "ubuntu-Debug-asynchronous",
+            "displayName": "Configuration for Linux Debug and Tests, Single Config Generator, asynchronous",
+            "inherits": "host-single-Debug-asynchronous"
+        },
+        {
+            "name": "windows-Debug-asynchronous",
+            "displayName": "Configuration for Windows Debug and Tests, Single Config Generator, asynchronous",
+            "inherits": "host-single-Debug-asynchronous",
+            "toolchainFile": "${sourceDir}/cmake/Windows.MSVC.toolchain.cmake"
+        },
+        {
+            "name": "macos-Debug-asynchronous",
+            "displayName": "Configuration for macOS Debug and Tests, Single Config Generator, asynchronous",
+            "inherits": "host-single-Debug-asynchronous"
+        },
+        {
             "name": "host-single-time-profile",
             "displayName": "Configuration time profiling",
             "inherits": "defaults",
@@ -111,6 +146,13 @@
                 "CCACHE_COMPILERTYPE": "clang-cl"
             },
             "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "Windows-Asynchronous",
+            "inherits": "Windows",
+            "cacheVariables": {
+                "CCR_ENABLE_PARALLEL_SUPPORT": "On"
+            }
         }
     ],
     "buildPresets": [
@@ -127,6 +169,17 @@
             "name": "Host-Debug",
             "configuration": "Debug",
             "configurePreset": "Host",
+            "jobs": 4
+        },
+        {
+            "name": "Host-Asynchronous-Release",
+            "configuration": "Release",
+            "configurePreset": "Host-Asynchronous"
+        },
+        {
+            "name": "Host-Asynchronous-Debug",
+            "configuration": "Debug",
+            "configurePreset": "Host-Asynchronous",
             "jobs": 4
         },
         {
@@ -163,6 +216,21 @@
             "name": "macos-Debug-synchronous-no-re2",
             "configuration": "Debug",
             "configurePreset": "macos-Debug-synchronous-no-re2"
+        },
+        {
+            "name": "ubuntu-Debug-asynchronous",
+            "configuration": "Debug",
+            "configurePreset": "ubuntu-Debug-asynchronous"
+        },
+        {
+            "name": "windows-Debug-asynchronous",
+            "configuration": "Debug",
+            "configurePreset": "windows-Debug-asynchronous"
+        },
+        {
+            "name": "macos-Debug-asynchronous",
+            "configuration": "Debug",
+            "configurePreset": "macos-Debug-asynchronous"
         },
         {
             "name": "host-single-time-profile",
@@ -248,6 +316,24 @@
         {
             "name": "macos-Debug-synchronous-no-re2",
             "configurePreset": "macos-Debug-synchronous-no-re2",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "ubuntu-Debug-asynchronous",
+            "configurePreset": "ubuntu-Debug-asynchronous",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "windows-Debug-asynchronous",
+            "configurePreset": "windows-Debug-asynchronous",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "macos-Debug-asynchronous",
+            "configurePreset": "macos-Debug-asynchronous",
             "configuration": "Debug",
             "inherits": "defaults"
         }
@@ -352,6 +438,57 @@
                 {
                     "type": "test",
                     "name": "macos-Debug-synchronous-no-re2"
+                }
+            ]
+        },
+        {
+            "name": "ubuntu-Debug-asynchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "ubuntu-Debug-asynchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "ubuntu-Debug-asynchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "ubuntu-Debug-asynchronous"
+                }
+            ]
+        },
+        {
+            "name": "windows-Debug-asynchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "windows-Debug-asynchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "windows-Debug-asynchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "windows-Debug-asynchronous"
+                }
+            ]
+        },
+        {
+            "name": "macos-Debug-asynchronous",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "macos-Debug-asynchronous"
+                },
+                {
+                    "type": "build",
+                    "name": "macos-Debug-asynchronous"
+                },
+                {
+                    "type": "test",
+                    "name": "macos-Debug-asynchronous"
                 }
             ]
         }

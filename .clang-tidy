@@ -10,6 +10,7 @@ Checks:          '
     -cppcoreguidelines-pro-bounds-constant-array-index,
     -cppcoreguidelines-pro-type-cstyle-cast,
     -cppcoreguidelines-special-member-functions,
+    -cppcoreguidelines-avoid-reference-coroutine-parameters,
     misc-*,
     -misc-no-recursion,
     -misc-non-private-member-variables-in-classes,

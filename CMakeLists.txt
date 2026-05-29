@@ -3,6 +3,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.0.1) # x-release-please-version
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS Off)
+
 include(ccr_test_helpers)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -18,42 +22,21 @@ else()
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
+
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
+option(CCR_ENABLE_PARALLEL_SUPPORT "Enable parallel support through libcoro" Off)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-if (CCR_BUILD_TESTS)
-    ccr_enable_testing()
-endif()
-
-if (CCR_ENABLE_COVERAGE)
-    find_program(GCOVR_PATH gcovr)
-
-    if (NOT GCOVR_PATH)
-    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
-    endif()
-
-    add_custom_target(
-        generate-coverage-report
-        COMMAND ${GCOVR_PATH} --delete --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating code coverage report in LCOV format"
-    )
-endif()
 
 if (CCR_ENABLE_TIME_PROFILE)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-ftime-trace)
     endif()
 endif()
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
-set(CMAKE_CXX_EXTENSIONS Off)
 
 set_directory_properties(PROPERTY USE_FOLDERS ON)
 
@@ -72,6 +55,10 @@ else()
     find_package(cucumber_gherkin REQUIRED)
     find_package(fmt REQUIRED)
 
+    if(CCR_ENABLE_PARALLEL_SUPPORT)
+        find_package(libcoro REQUIRED)
+    endif()
+
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp REQUIRED)
     endif()
@@ -86,6 +73,26 @@ if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
 else()
     set(CCR_HAS_RE2 Off)
+endif()
+
+
+if (CCR_BUILD_TESTS)
+    ccr_enable_testing()
+endif()
+
+if (CCR_ENABLE_COVERAGE)
+    find_program(GCOVR_PATH gcovr)
+
+    if (NOT GCOVR_PATH)
+    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
+    endif()
+
+    add_custom_target(
+        generate-coverage-report
+        COMMAND ${GCOVR_PATH} --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating code coverage report in LCOV format"
+    )
 endif()
 
 # Sanitizer flags are set after external dependencies so that fetched third-party

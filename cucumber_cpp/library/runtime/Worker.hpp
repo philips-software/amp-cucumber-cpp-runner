@@ -37,16 +37,15 @@ namespace cucumber_cpp::library::runtime
         std::vector<cucumber::messages::test_step_result> RunBeforeAllHooks();
         std::vector<cucumber::messages::test_step_result> RunAfterAllHooks();
 
-        bool RunTestSuite(const assemble::AssembledTestSuite& assembledTestSuite, bool failing);
-        bool RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing);
-
-    private:
         std::vector<cucumber::messages::test_step_result> RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
         std::vector<cucumber::messages::test_step_result> RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
 
+        bool RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing);
+
+    private:
         cucumber::messages::test_step_result RunTestHook(const std::string& id, Context& context);
 
-        bool IsStatusFailed(cucumber::messages::test_step_result_status status) const;
+        [[nodiscard]] bool IsStatusFailed(cucumber::messages::test_step_result_status status) const;
 
         std::string_view testRunStartedId;
         util::Broadcaster& broadcaster;
