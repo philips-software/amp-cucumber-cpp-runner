@@ -14,6 +14,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
+#include <atomic>
 #include <coro/latch.hpp>
 #include <coro/queue.hpp>
 #include <coro/sync_wait.hpp>
@@ -39,17 +40,19 @@ namespace cucumber_cpp::library::runtime
             return status != cucumber::messages::test_step_result_status::PASSED;
         }
 
-        coro::task<void> RunTestCase(std::unique_ptr<coro::thread_pool>& tp, coro::latch& tasksLatch, runtime::Worker& worker, const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool& failing)
+        coro::task<void> RunTestCase(std::unique_ptr<coro::thread_pool>& tp, coro::latch& tasksLatch, runtime::Worker& worker, const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, std::atomic_bool& failing)
         {
             co_await tp->schedule();
 
             try
             {
-                failing |= !worker.RunTestCase(gherkinDocument, assembledTestCase, testSuiteContext, failing);
+                const auto hasTestCaseFailed = !worker.RunTestCase(gherkinDocument, assembledTestCase, testSuiteContext, failing.load());
+                if (hasTestCaseFailed)
+                    failing.store(true);
             }
             catch (...)
             {
-                failing = true;
+                failing.store(true);
             }
 
             tasksLatch.count_down();
@@ -134,12 +137,14 @@ namespace cucumber_cpp::library::runtime
         std::unique_ptr<coro::thread_pool> supportThreadPool{ coro::thread_pool::make_unique(coro::thread_pool::options{ .thread_count = 2 }) };
 
         std::vector<coro::task<void>> tasks;
-        bool failing = false;
+        std::atomic_bool failing = false;
         runtime::Worker synchronousWorker{ testRunStartedId, broadcaster, idGenerator, options, supportCodeLibrary, programContext };
 
-        failing |= IsFailing(util::GetWorstTestStepResult(synchronousWorker.RunBeforeAllHooks()).status, options.dryRun);
+        const auto haveBeforeAllHooksFailed = IsFailing(util::GetWorstTestStepResult(synchronousWorker.RunBeforeAllHooks()).status, options.dryRun);
+        if (haveBeforeAllHooksFailed)
+            failing.store(true);
 
-        if (!failing)
+        if (!failing.load())
         {
             ParallelBroadcaster parallelBroadcaster{ broadcaster, supportThreadPool };
             tasks.emplace_back(parallelBroadcaster.BroadcastEventTask());
@@ -163,8 +168,10 @@ namespace cucumber_cpp::library::runtime
             coro::sync_wait(coro::when_all(std::move(tasks)));
         }
 
-        failing |= IsFailing(util::GetWorstTestStepResult(synchronousWorker.RunAfterAllHooks()).status, options.dryRun);
+        const auto haveAfterAllHooksFailed = IsFailing(util::GetWorstTestStepResult(synchronousWorker.RunAfterAllHooks()).status, options.dryRun);
+        if (haveAfterAllHooksFailed)
+            failing.store(true);
 
-        return !failing;
+        return !failing.load();
     }
 }
