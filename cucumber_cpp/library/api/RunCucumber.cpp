@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
 #include "cucumber/messages/envelope.hpp"
+#include "cucumber_cpp/library/util/IdGenerator.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
@@ -164,7 +165,7 @@ namespace cucumber_cpp::library::api
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
-        cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
+        cucumber::gherkin::id_generator_ptr idGenerator = util::MakeIdGenerator();
 
         support::UndefinedParameters undefinedParameters;
         support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
