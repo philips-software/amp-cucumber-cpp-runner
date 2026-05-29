@@ -32,25 +32,6 @@ option(CCR_ENABLE_PARALLEL_SUPPORT "Enable parallel support through libcoro" Off
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (CCR_BUILD_TESTS)
-    ccr_enable_testing()
-endif()
-
-if (CCR_ENABLE_COVERAGE)
-    find_program(GCOVR_PATH gcovr)
-
-    if (NOT GCOVR_PATH)
-    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
-    endif()
-
-    add_custom_target(
-        generate-coverage-report
-        COMMAND ${GCOVR_PATH} --delete --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating code coverage report in LCOV format"
-    )
-endif()
-
 if (CCR_ENABLE_TIME_PROFILE)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-ftime-trace)
@@ -92,6 +73,26 @@ if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
 else()
     set(CCR_HAS_RE2 Off)
+endif()
+
+
+if (CCR_BUILD_TESTS)
+    ccr_enable_testing()
+endif()
+
+if (CCR_ENABLE_COVERAGE)
+    find_program(GCOVR_PATH gcovr)
+
+    if (NOT GCOVR_PATH)
+    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
+    endif()
+
+    add_custom_target(
+        generate-coverage-report
+        COMMAND ${GCOVR_PATH} --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating code coverage report in LCOV format"
+    )
 endif()
 
 # Sanitizer flags are set after external dependencies so that fetched third-party
