@@ -144,7 +144,11 @@ namespace cucumber_cpp::library::runtime
             .timestamp = util::TimestampNow(),
         };
 
-        broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_run_hook_started = testRunHookStarted });
+        {
+            cucumber::messages::envelope envelope{};
+            envelope.test_run_hook_started = testRunHookStarted;
+            broadcaster.BroadcastEvent(envelope);
+        }
 
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
         if (!options.dryRun)
@@ -155,11 +159,19 @@ namespace cucumber_cpp::library::runtime
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
-                                                                     .test_run_hook_started_id = testRunHookStartedId,
-                                                                     .result = result,
-                                                                     .timestamp = util::TimestampNow(),
-                                                                 } });
+        {
+            // envelope isn't constructed using designated initializers to avoid
+            // the coverage build emitting unreachable branches for the optional fields
+            // to handle when an exception is thrown from constructing the test_run_hook_finished message
+            const auto testRunHookFinished = cucumber::messages::test_run_hook_finished{
+                .test_run_hook_started_id = testRunHookStartedId,
+                .result = result,
+                .timestamp = util::TimestampNow(),
+            };
+            cucumber::messages::envelope envelope{};
+            envelope.test_run_hook_finished = testRunHookFinished;
+            broadcaster.BroadcastEvent(envelope);
+        }
 
         return result;
     }
