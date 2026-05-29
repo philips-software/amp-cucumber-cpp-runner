@@ -42,10 +42,10 @@ namespace cucumber_cpp::library::runtime
 
         coro::task<void> RunTestCase(std::unique_ptr<coro::thread_pool>& tp, coro::latch& tasksLatch, runtime::Worker& worker, const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, std::atomic_bool& failing)
         {
-            co_await tp->schedule();
-
             try
             {
+                co_await tp->schedule();
+
                 const auto hasTestCaseFailed = !worker.RunTestCase(gherkinDocument, assembledTestCase, testSuiteContext, failing.load());
                 if (hasTestCaseFailed)
                     failing.store(true);
