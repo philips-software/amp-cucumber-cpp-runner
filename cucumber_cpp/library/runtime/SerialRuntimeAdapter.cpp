@@ -48,14 +48,13 @@ namespace cucumber_cpp::library::runtime
         bool failing = false;
         runtime::Worker worker{ testRunStartedId, broadcaster, idGenerator, options, supportCodeLibrary, programContext };
 
-        const auto beforeHookResults = worker.RunBeforeAllHooks();
-
-        if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
+        const auto haveBeforeAllHooksFailed = IsFailing(util::GetWorstTestStepResult(worker.RunBeforeAllHooks()).status, options.dryRun);
+        if (haveBeforeAllHooksFailed)
             failing = true;
 
         if (!failing)
         {
-            auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
+            const auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
 
             for (const auto& assembledTestSuite : assembledTestSuites)
                 try
@@ -70,9 +69,8 @@ namespace cucumber_cpp::library::runtime
                 }
         }
 
-        const auto afterHookResults = worker.RunAfterAllHooks();
-
-        if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
+        const auto haveAfterAllHooksFailed = IsFailing(util::GetWorstTestStepResult(worker.RunAfterAllHooks()).status, options.dryRun);
+        if (haveAfterAllHooksFailed)
             failing = true;
 
         return !failing;
