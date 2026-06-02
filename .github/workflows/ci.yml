@@ -30,16 +30,16 @@ jobs:
         target: [Host, Windows]
       fail-fast: false
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - if: ${{ matrix.target == 'Windows' }}
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         id: cache-winsdk
         with:
           path: /winsdk
           key: cache-winsdk-10.0.26100-14.43.17.13
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
-      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}-${{ matrix.target }}
           max-size: 2G
@@ -58,8 +58,8 @@ jobs:
       pull-requests: write
     container: ghcr.io/philips-software/amp-devcontainer-cpp:6.10.3@sha256:e1f388179dbeabaddcdd37b8b563ed89ca3cd36dcf158aa2e5c4f70eb513efec
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}
           max-size: 2G
@@ -85,10 +85,10 @@ jobs:
         preset_suffix: ["", "-no-re2"]
       fail-fast: false
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}${{ matrix.preset_suffix }}
           max-size: 2G
