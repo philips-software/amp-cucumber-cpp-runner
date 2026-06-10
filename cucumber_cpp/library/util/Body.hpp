@@ -3,7 +3,9 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
+#include "gtest/gtest.h"
 #include <exception>
+#include <gtest/gtest-spi.h>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -49,6 +51,16 @@ namespace cucumber_cpp::library::util
     };
 
     using ExecuteArgs = std::vector<Argument>;
+
+    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
+    {
+        explicit CucumberResultReporter(util::TestStepResult& testStepResult);
+
+        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override;
+
+    private:
+        util::TestStepResult& testStepResult;
+    };
 
     struct Body
     {

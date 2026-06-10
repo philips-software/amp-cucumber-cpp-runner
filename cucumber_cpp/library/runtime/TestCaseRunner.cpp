@@ -24,8 +24,11 @@
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/ExecuteAndCatchExceptions.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
+#include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
@@ -221,11 +224,22 @@ namespace cucumber_cpp::library::runtime
             const auto& docString = pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt;
 
             const auto& definition = stepDefinitions.front();
-            const auto result = InvokeStep(definition.factory(
-                                               NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted) },
-                                               broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), util::TransformTable(dataTable), util::TransformDocString(docString)),
-                testStep.step_match_arguments_lists->front());
-            stepResults.push_back(result);
+
+            util::TestStepResult testStepResult{ .status = util::TestStepResultStatus::PASSED };
+            util::CucumberResultReporter reportListener{ testStepResult };
+
+            try
+            {
+                auto step = definition.factory(
+                    NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted) },
+                    broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), util::TransformTable(dataTable), util::TransformDocString(docString));
+
+                stepResults.push_back(InvokeStep(std::move(step)));
+            }
+            catch (...)
+            {
+                stepResults.push_back(util::TransformTestStepResult(util::HandleErrors(testStepResult)));
+            }
         }
 
         const auto afterStepHookResults = RunStepHooks(pickleStep, util::HookType::afterStep, testCaseContext, testStepStarted);
