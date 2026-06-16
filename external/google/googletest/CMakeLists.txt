@@ -11,5 +11,15 @@ if(NOT TARGET gtest)
     FetchContent_MakeAvailable(googletest)
 
     set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES FOLDER External/GoogleTest)
+
+    # clang-22 promoted -Wcharacter-conversion to an on-by-default warning
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 22.0.0)
+            target_compile_options(gtest INTERFACE -Wno-character-conversion)
+            target_compile_options(gtest_main INTERFACE -Wno-character-conversion)
+            target_compile_options(gmock INTERFACE -Wno-character-conversion)
+            target_compile_options(gmock_main INTERFACE -Wno-character-conversion)
+        endif()
+    endif()
     mark_as_advanced(BUILD_GMOCK BUILD_GTEST BUILD_SHARED_LIBS gmock_build_tests gtest_build_samples test_build_tests gtest_disable_pthreads gtest_force_shared_crt gtest_hide_internal_symbols)
 endif()
