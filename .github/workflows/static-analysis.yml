@@ -59,7 +59,7 @@ jobs:
         run: |
           cp .build/Coverage/compile_commands.json compile_commands.json
 
-      - uses: sonarsource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4 # v7.1.0
+      - uses: sonarsource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
