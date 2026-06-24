@@ -34,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
       - if: ${{ matrix.target == 'Windows' }}
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         id: cache-winsdk
         with:
           path: /winsdk
@@ -42,7 +42,7 @@ jobs:
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' && github.event_name != 'pull_request' }}
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
           path: /winsdk
           key: cache-winsdk-10.0.26100-14.43.17.13
