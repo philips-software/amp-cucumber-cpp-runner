@@ -89,7 +89,7 @@ namespace cucumber_cpp::library::runtime
                                                                              return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                          });
 
-            if (testStep.step_definition_ids->size() == 0)
+            if (testStep.step_definition_ids->empty())
                 throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
                                                                                .duration = cucumber::messages::duration{},
                                                                                .status = cucumber::messages::test_step_result_status::UNDEFINED,
@@ -107,7 +107,7 @@ namespace cucumber_cpp::library::runtime
             {
                 const auto& definition = stepDefinitions.front();
                 NestedTestCaseRunner nestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted };
-                const util::BodyFactory bodyFactory = [&nestedTestCaseRunner, nesting, &definition, &supportCodeLibrary, &broadcaster, &testCaseContext, &testStepStarted, &dataTable, &docString]
+                const util::BodyFactory bodyFactory = [&nestedTestCaseRunner, &definition, &broadcaster, &testCaseContext, &testStepStarted, &dataTable, &docString]
                 {
                     return definition.factory(nestedTestCaseRunner, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString));
                 };

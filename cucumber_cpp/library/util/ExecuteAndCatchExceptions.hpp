@@ -21,7 +21,7 @@ namespace cucumber_cpp::library::util
     {
         try
         {
-            throw;
+            throw; // NOSONAR(cpp:S1039) - HandleErrors is always called from a catch(...) block, so an active exception is guaranteed
         }
         catch (const util::NestedTestCaseRunnerError& e)
         {
@@ -45,7 +45,7 @@ namespace cucumber_cpp::library::util
                         e.text);
             }
         }
-        catch (const StepSkipped& e)
+        catch (const cucumber_cpp::library::util::StepSkipped& e)
         {
             testStepResult.status = TestStepResultStatus::SKIPPED;
             if (!e.message.empty())
@@ -61,7 +61,7 @@ namespace cucumber_cpp::library::util
         {
             testStepResult.status = TestStepResultStatus::FAILED;
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             testStepResult.status = TestStepResultStatus::FAILED;
             testStepResult.exception = TestException{
