@@ -5,7 +5,9 @@
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "gtest/gtest.h"
 #include <exception>
+#include <functional>
 #include <gtest/gtest-spi.h>
+#include <memory>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -62,14 +64,19 @@ namespace cucumber_cpp::library::util
         util::TestStepResult& testStepResult;
     };
 
+    struct Body;
+
+    using BodyFactory = std::function<std::unique_ptr<Body>()>;
+    TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args = {});
+
     struct Body
     {
         virtual ~Body() = default;
 
-        TestStepResult ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
-
-    protected:
+    private:
         virtual void Execute(const ExecuteArgs& args) = 0;
+
+        friend TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args);
     };
 }
 

@@ -1,4 +1,4 @@
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "fmt/format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -139,4 +139,21 @@ THEN(R"(the stored string is {string})", (const std::string& expected))
 GIVEN(R"(I attach a link to {string})", (const std::string& url))
 {
     Link(url, "title");
+}
+
+GIVEN(R"(step fixture does not fail)")
+{
+    //
+}
+
+struct FailingStepFixture : cucumber_cpp::StepBase
+{
+    using StepBase::StepBase;
+
+    bool nonExistentKey = context.Get<bool>("nonExistentKey");
+};
+
+GIVEN_F(FailingStepFixture, R"(step fixture fails)")
+{
+    // empty
 }

@@ -222,3 +222,11 @@ teardown() {
     assert_output --partial "|   this step is used | -        |"
     assert_output --partial "| This step is unused | UNUSED   |"
 }
+
+@test "Test failure in step fixture results in error" {
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_step_fixture" -- cucumber_cpp/acceptance_test/features
+    assert_failure
+    assert_output --partial "key not found: \"nonExistentKey\""
+    assert_output --partial "2 scenarios 1 passed, 1 failed"
+    assert_output --partial "2 steps 1 passed, 1 failed"
+}

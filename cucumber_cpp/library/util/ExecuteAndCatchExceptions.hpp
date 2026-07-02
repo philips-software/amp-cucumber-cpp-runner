@@ -17,10 +17,8 @@
 
 namespace cucumber_cpp::library::util
 {
-    [[nodiscard]] inline TestStepResult HandleErrors(TestStepResult testStepResult = { .status = TestStepResultStatus::PASSED }) noexcept
+    inline void HandleErrors(TestStepResult& testStepResult) noexcept
     {
-        const auto startTime = Stopwatch::Instance().Start();
-
         try
         {
             throw;
@@ -79,15 +77,6 @@ namespace cucumber_cpp::library::util
                 .message = "unknown exception",
             };
         }
-
-        auto nanoseconds = Stopwatch::Instance().Duration(startTime);
-        static constexpr std::size_t nanosecondsPerSecond = 1e9;
-        testStepResult.duration = {
-            .seconds = nanoseconds.count() / nanosecondsPerSecond,
-            .nanos = nanoseconds.count() % nanosecondsPerSecond,
-        };
-
-        return testStepResult;
     }
 }
 

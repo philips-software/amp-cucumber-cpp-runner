@@ -1,20 +1,16 @@
 
 #include "cucumber_cpp/library/util/Body.hpp"
-#include "cucumber/gherkin/demangle.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/ExecuteAndCatchExceptions.hpp"
-#include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
-#include "cucumber_cpp/library/util/TestException.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "fmt/format.h"
 #include "gtest/gtest.h"
 #include <cstddef>
-#include <exception>
 #include <filesystem>
+#include <functional>
 #include <gtest/gtest-spi.h>
-#include <string>
+#include <memory>
 
 namespace cucumber_cpp::library::util
 {
@@ -42,20 +38,28 @@ namespace cucumber_cpp::library::util
             throw FatalError{ testPartResult.message() };
     }
 
-    TestStepResult Body::ExecuteAndCatchExceptions(const ExecuteArgs& args)
+    TestStepResult ConstructAndExecute(const std::function<std::unique_ptr<Body>()>& bodyFactory, const ExecuteArgs& args)
     {
+        const auto startTime = Stopwatch::Instance().Start();
         TestStepResult testStepResult{ .status = TestStepResultStatus::PASSED };
         CucumberResultReporter reportListener{ testStepResult };
 
         try
         {
-            Execute(args);
-
-            return testStepResult;
+            bodyFactory()->Execute(args);
         }
         catch (...)
         {
-            return HandleErrors(testStepResult);
+            HandleErrors(testStepResult);
         }
+
+        auto nanoseconds = Stopwatch::Instance().Duration(startTime);
+        static constexpr std::size_t nanosecondsPerSecond = 1e9;
+        testStepResult.duration = {
+            .seconds = nanoseconds.count() / nanosecondsPerSecond,
+            .nanos = nanoseconds.count() % nanosecondsPerSecond,
+        };
+
+        return testStepResult;
     }
 }
