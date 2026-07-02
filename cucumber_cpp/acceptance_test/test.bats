@@ -230,3 +230,13 @@ teardown() {
     assert_output --partial "2 scenarios 1 passed, 1 failed"
     assert_output --partial "2 steps 1 passed, 1 failed"
 }
+
+@test "Test nested failures propagate properly" {
+    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@nested_failing_steps" -- cucumber_cpp/acceptance_test/features
+    assert_failure
+    assert_output --partial "FAILED nested step: \"* a nested step that fails\""
+    assert_output --partial "Value of: false"
+    assert_output --partial "Expected: is true"
+    assert_output --partial "Actual: false (of type bool)"
+    assert_output --partial "↷ Then this should be skipped"
+}

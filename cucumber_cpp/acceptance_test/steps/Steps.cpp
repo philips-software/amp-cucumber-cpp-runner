@@ -157,3 +157,13 @@ GIVEN_F(FailingStepFixture, R"(step fixture fails)")
 {
     // empty
 }
+
+GIVEN("a nested step that fails")
+{
+    ASSERT_THAT(false, testing::IsTrue());
+}
+
+GIVEN("a step calls another step that will fail")
+{
+    Step("a nested step that fails");
+}
