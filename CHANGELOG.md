@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.0.1...v4.1.0) (2026-07-03)
+
+
+### Features
+
+* Add optional RE2 regex engine support ([#336](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/336)) ([874dfb5](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/874dfb5ca5b566ad4b6eff2f786bfac765700e52))
+
 ## [4.0.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.0.0...v4.0.1) (2026-03-19)
 
 
