@@ -1,41 +1,50 @@
-
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/ExecuteAndCatchExceptions.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "fmt/format.h"
+#include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
 #include <cstddef>
 #include <filesystem>
 #include <functional>
-#include <gtest/gtest-spi.h>
 #include <memory>
 
 namespace cucumber_cpp::library::util
 {
-    CucumberResultReporter::CucumberResultReporter(util::TestStepResult& testStepResult)
-        : testing::ScopedFakeTestPartResultReporter{ nullptr }
-        , testStepResult{ testStepResult }
+    namespace
     {
-    }
 
-    void CucumberResultReporter::ReportTestPartResult(const testing::TestPartResult& testPartResult)
-    {
-        if (testPartResult.failed())
+        struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
         {
-            testStepResult.status = util::TestStepResultStatus::FAILED;
+            explicit CucumberResultReporter(util::TestStepResult& testStepResult)
+                : testing::ScopedFakeTestPartResultReporter{ nullptr }
+                , testStepResult{ testStepResult }
+            {
+            }
 
-            auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
+            void ReportTestPartResult(const testing::TestPartResult& testPartResult) override
+            {
+                if (testPartResult.failed())
+                {
+                    testStepResult.status = util::TestStepResultStatus::FAILED;
 
-            if (testStepResult.message)
-                testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
-            else
-                testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
-        }
+                    auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
 
-        if (testPartResult.fatally_failed())
-            throw FatalError{ testPartResult.message() };
+                    if (testStepResult.message)
+                        testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
+                    else
+                        testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
+                }
+
+                if (testPartResult.fatally_failed())
+                    throw FatalError{ testPartResult.message() };
+            }
+
+        private:
+            util::TestStepResult& testStepResult;
+        };
     }
 
     TestStepResult ConstructAndExecute(const std::function<std::unique_ptr<Body>()>& bodyFactory, const ExecuteArgs& args)

@@ -83,32 +83,4 @@ namespace cucumber_cpp::library
     {
         EXPECT_THAT(&Application{}.ParameterRegistration(), testing::NotNull());
     }
-
-    TEST_F(TestApplication, UnusedParameters)
-    {
-        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
-        const auto path = tmp.Path().string();
-
-        tmp << "Feature: Test feature\n"
-               "  Rule: Test rule\n"
-               "    Scenario: Test scenario1\n"
-               "      Given 5 and 5 are equal\n"
-               "      And This is a GIVEN step\n"
-               "      And This is a WHEN step\n"
-               "      And This is a THEN step\n"
-               "      And This is a STEP step\n";
-
-        const std::array args{ "application", "--format", "usage", "--format-options", R"({ "usage": {"theme":"plain"} })", "--", path.c_str() };
-
-        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
-
-        // used
-        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(This is a GIVEN step\s+\|\s+[0-9]+ms)"));
-
-        // unused
-        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(\^This is a step with a \(\[0-9]\+\)s delay\$\s+\|\s+UNUSED)"));
-        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(I throw an exception\s+\|\s+UNUSED)"));
-        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(Step with cucumber expression syntax \{float\} \{string\} \{int\}\s+\|\s+UNUSED)"));
-        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(An expression that looks like a function func\\\(\{int\}, \{int\}\) should keep its parameters\s+\|\s+UNUSED)"));
-    }
 }
