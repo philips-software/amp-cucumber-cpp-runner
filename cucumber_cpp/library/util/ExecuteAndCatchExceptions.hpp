@@ -17,7 +17,7 @@
 
 namespace cucumber_cpp::library::util
 {
-    inline void HandleErrors(TestStepResult& testStepResult) noexcept
+    inline void HandleErrors(TestStepResult& testStepResult)
     {
         try
         {
