@@ -48,5 +48,5 @@ add_subdirectory(tag_expression)
 add_subdirectory(util)
 
 if (CCR_BUILD_TESTS)
-    # add_subdirectory(test)
+    add_subdirectory(test)
 endif()

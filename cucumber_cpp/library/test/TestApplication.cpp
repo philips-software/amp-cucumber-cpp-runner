@@ -2,6 +2,7 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include <CLI/Error.hpp>
 #include <array>
 #include <cstddef>
@@ -34,41 +35,10 @@ namespace cucumber_cpp::library
         return capturedStdout;
     }
 
-    TEST_F(TestApplication, RunHelpWithoutArguments)
-    {
-
-        const std::array args{ "application" };
-
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
-    }
-
-    TEST_F(TestApplication, RunCommandWithoutArguments)
-    {
-
-        const std::array args{ "application", "run" };
-
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::RequiredError));
-    }
-
-    TEST_F(TestApplication, RunCommand)
-    {
-
-        const std::array args{ "application", "run", "--feature", "./", "--report", "console" };
-
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
-    }
-
-    TEST_F(TestApplication, DryRunCommand)
-    {
-        const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--dry" };
-
-        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
-    }
-
     TEST_F(TestApplication, InvalidArgument)
     {
 
-        const std::array args{ "application", "run", "--feature", "./", "--report", "console", "--doesntexist" };
+        const std::array args{ "application", "--doesntexist" };
 
         RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::ExtrasError));
     }
@@ -83,11 +53,12 @@ namespace cucumber_cpp::library
                "    Scenario: Test scenario1\n"
                "      Given 5 and 5 are equal\n";
 
-        const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console", "--dry" };
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--dry-run", path.c_str() };
 
         std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1/1 passed"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenarios 1 skipped"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 steps 1 skipped"));
     }
 
     TEST_F(TestApplication, RunFeatureFile)
@@ -100,11 +71,12 @@ namespace cucumber_cpp::library
                "    Scenario: Test scenario1\n"
                "      Given 5 and 5 are equal\n";
 
-        const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console" };
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", path.c_str() };
 
         std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1/1 passed"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenarios 1 passed"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 steps 1 passed"));
     }
 
     TEST_F(TestApplication, ExposeParameterRegistration)
@@ -126,18 +98,17 @@ namespace cucumber_cpp::library
                "      And This is a THEN step\n"
                "      And This is a STEP step\n";
 
-        const std::array args{ "application", "run", "--feature", path.c_str(), "--report", "console", "--unused" };
+        const std::array args{ "application", "--format", "usage", "--format-options", R"({ "usage": {"theme":"plain"} })", "--", path.c_str() };
 
         std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
-        EXPECT_THAT(stdoutString, testing::HasSubstr("The following steps have not been used:"));
-        EXPECT_THAT(stdoutString, testing::HasSubstr("^This is a step with a ([0-9]+)s delay$"));
-        EXPECT_THAT(stdoutString, testing::HasSubstr("Step with cucumber expression syntax {float} {string} {int}"));
+        // used
+        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(This is a GIVEN step\s+\|\s+[0-9]+ms)"));
 
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("{int} and {int} are equal")));
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a GIVEN step")));
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a WHEN step")));
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a THEN step")));
-        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("And This is a STEP step")));
+        // unused
+        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(\^This is a step with a \(\[0-9]\+\)s delay\$\s+\|\s+UNUSED)"));
+        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(I throw an exception\s+\|\s+UNUSED)"));
+        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(Step with cucumber expression syntax \{float\} \{string\} \{int\}\s+\|\s+UNUSED)"));
+        EXPECT_THAT(stdoutString, testing::ContainsRegex(R"(An expression that looks like a function func\\\(\{int\}, \{int\}\) should keep its parameters\s+\|\s+UNUSED)"));
     }
 }
