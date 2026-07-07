@@ -1,4 +1,4 @@
-#include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "fmt/format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -107,7 +107,7 @@ THEN("the exception is caught")
 
 THEN("the next scenario is executed")
 {
-    /* do nothing */
+    // empty
 }
 
 GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
@@ -139,4 +139,31 @@ THEN(R"(the stored string is {string})", (const std::string& expected))
 GIVEN(R"(I attach a link to {string})", (const std::string& url))
 {
     Link(url, "title");
+}
+
+GIVEN(R"(step fixture does not fail)")
+{
+    // empty
+}
+
+struct FailingStepFixture : cucumber_cpp::StepBase
+{
+    using StepBase::StepBase;
+
+    bool nonExistentKey = context.Get<bool>("nonExistentKey");
+};
+
+GIVEN_F(FailingStepFixture, R"(step fixture fails)")
+{
+    // empty
+}
+
+GIVEN("a nested step that fails")
+{
+    ASSERT_THAT(false, testing::IsTrue());
+}
+
+GIVEN("a step calls another step that will fail")
+{
+    Step("a nested step that fails");
 }

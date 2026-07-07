@@ -16,6 +16,7 @@
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
+#include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
@@ -189,9 +190,15 @@ namespace cucumber_cpp::library::runtime
         broadcaster.BroadcastEvent({ .test_run_hook_started = testRunHookStarted });
 
         cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
+
         if (!options.dryRun)
         {
-            result = util::TransformTestStepResult(definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), false)->ExecuteAndCatchExceptions());
+            const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted]
+            {
+                return definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), false);
+            };
+
+            result = util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory));
 
             if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };

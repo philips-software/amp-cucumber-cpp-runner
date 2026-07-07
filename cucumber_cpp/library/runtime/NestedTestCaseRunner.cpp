@@ -70,9 +70,10 @@ namespace cucumber_cpp::library::runtime
             return testStep;
         }
 
-        void Invoke(std::size_t nesting, const std::string& step, std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args)
+        void Invoke(std::size_t nesting, const std::string& step, const util::BodyFactory& bodyFactory, const cucumber::messages::step_match_arguments_list& args)
         {
-            const auto status = body->ExecuteAndCatchExceptions(util::StepMatchArgumentsListToExecuteArgs(args));
+            const auto status = util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args));
+
             if (status.status != util::TestStepResultStatus::PASSED)
                 throw util::NestedTestCaseRunnerError{
                     .nesting = nesting,
@@ -88,7 +89,7 @@ namespace cucumber_cpp::library::runtime
                                                                              return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                          });
 
-            if (testStep.step_definition_ids->size() == 0)
+            if (testStep.step_definition_ids->empty())
                 throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
                                                                                .duration = cucumber::messages::duration{},
                                                                                .status = cucumber::messages::test_step_result_status::UNDEFINED,
@@ -105,7 +106,12 @@ namespace cucumber_cpp::library::runtime
             else
             {
                 const auto& definition = stepDefinitions.front();
-                Invoke(nesting, step, definition.factory(NestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted }, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString)), testStep.step_match_arguments_lists->front());
+                NestedTestCaseRunner nestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted };
+                const util::BodyFactory bodyFactory = [&nestedTestCaseRunner, &definition, &broadcaster, &testCaseContext, &testStepStarted, &dataTable, &docString]
+                {
+                    return definition.factory(nestedTestCaseRunner, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString));
+                };
+                Invoke(nesting, step, bodyFactory, testStep.step_match_arguments_lists->front());
             }
         }
     }

@@ -47,9 +47,9 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        cucumber::messages::test_step_result InvokeStep(std::unique_ptr<util::Body> body, const cucumber::messages::step_match_arguments_list& args = {})
+        cucumber::messages::test_step_result InvokeStep(const util::BodyFactory& bodyFactory, const cucumber::messages::step_match_arguments_list& args)
         {
-            return util::TransformTestStepResult(body->ExecuteAndCatchExceptions(util::StepMatchArgumentsListToExecuteArgs(args)));
+            return util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args)));
         }
     }
 
@@ -159,7 +159,12 @@ namespace cucumber_cpp::library::runtime
                 .status = cucumber::messages::test_step_result_status::SKIPPED,
             };
 
-        return InvokeStep(hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), hasError));
+        const util::BodyFactory bodyFactory = [&hookDefinition, this, &testCaseContext, &testStepStarted, hasError]
+        {
+            return hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), hasError);
+        };
+
+        return InvokeStep(bodyFactory, {});
     }
 
     std::vector<cucumber::messages::test_step_result> TestCaseRunner::RunStepHooks(const cucumber::messages::pickle_step& /*pickleStep*/, util::HookType hookType, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted)
@@ -171,7 +176,12 @@ namespace cucumber_cpp::library::runtime
         for (const auto& id : ids)
         {
             const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
-            results.emplace_back(InvokeStep(definition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), false)));
+            const auto bodyFactory = [&definition, this, &testCaseContext, &testStepStarted]
+            {
+                return definition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), false);
+            };
+
+            results.emplace_back(InvokeStep(bodyFactory, {}));
         }
 
         return results;
@@ -221,11 +231,15 @@ namespace cucumber_cpp::library::runtime
             const auto& docString = pickleStep.argument ? pickleStep.argument->doc_string : std::nullopt;
 
             const auto& definition = stepDefinitions.front();
-            const auto result = InvokeStep(definition.factory(
-                                               NestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted) },
-                                               broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), util::TransformTable(dataTable), util::TransformDocString(docString)),
-                testStep.step_match_arguments_lists->front());
-            stepResults.push_back(result);
+
+            NestedTestCaseRunner nestedTestCaseRunner{ 0, supportCodeLibrary, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted) };
+
+            const util::BodyFactory bodyFactory = [this, &definition, &nestedTestCaseRunner, &testCaseContext, &testStepStarted, &dataTable, &docString]
+            {
+                return definition.factory(nestedTestCaseRunner, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), util::TransformTable(dataTable), util::TransformDocString(docString));
+            };
+
+            stepResults.push_back(InvokeStep(bodyFactory, testStep.step_match_arguments_lists->front()));
         }
 
         const auto afterStepHookResults = RunStepHooks(pickleStep, util::HookType::afterStep, testCaseContext, testStepStarted);

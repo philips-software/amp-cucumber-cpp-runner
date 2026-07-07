@@ -4,6 +4,8 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include <exception>
+#include <functional>
+#include <memory>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -50,14 +52,19 @@ namespace cucumber_cpp::library::util
 
     using ExecuteArgs = std::vector<Argument>;
 
+    struct Body;
+
+    using BodyFactory = std::function<std::unique_ptr<Body>()>;
+    TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args = {});
+
     struct Body
     {
         virtual ~Body() = default;
 
-        TestStepResult ExecuteAndCatchExceptions(const ExecuteArgs& args = {});
-
-    protected:
+    private:
         virtual void Execute(const ExecuteArgs& args) = 0;
+
+        friend TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args);
     };
 }
 

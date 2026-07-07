@@ -62,7 +62,7 @@ WHEN("I call a nested step")
 {
     ASSERT_THAT(context.Contains("nested"), testing::IsFalse());
 
-    Given("I am a nested step");
+    Step("I am a nested step");
 }
 
 THEN("the nested step was called")
