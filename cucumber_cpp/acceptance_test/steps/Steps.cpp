@@ -107,7 +107,7 @@ THEN("the exception is caught")
 
 THEN("the next scenario is executed")
 {
-    /* do nothing */
+    // empty
 }
 
 GIVEN("{int} and {int} are equal", (std::int32_t a, std::int32_t b))
@@ -143,7 +143,7 @@ GIVEN(R"(I attach a link to {string})", (const std::string& url))
 
 GIVEN(R"(step fixture does not fail)")
 {
-    //
+    // empty
 }
 
 struct FailingStepFixture : cucumber_cpp::StepBase
