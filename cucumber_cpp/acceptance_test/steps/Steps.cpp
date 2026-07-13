@@ -1,4 +1,5 @@
 #include "cucumber_cpp/Steps.hpp"
+#include "cucumber_cpp/library/util/ScenarioInfo.hpp"
 #include "fmt/format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -166,4 +167,33 @@ GIVEN("a nested step that fails")
 GIVEN("a step calls another step that will fail")
 {
     Step("a nested step that fails");
+}
+
+THEN("the {string} has the name {string} or {string}", (const std::string& hookType, const std::string& expectedName1, const std::string& expectedName2))
+{
+    const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+    ASSERT_THAT(scenarioInfo.name, testing::AnyOf(testing::StrEq(expectedName1), testing::StrEq(expectedName2)));
+}
+
+THEN("the {string} has the name {string}", (const std::string& hookType, const std::string& expectedName))
+{
+    const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+    ASSERT_THAT(scenarioInfo.name, testing::StrEq(expectedName));
+}
+
+THEN("the {string} has the tag {string} or {string}", (const std::string& hookType, const std::string& expectedTag1, const std::string& expectedTag2))
+{
+    const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+    ASSERT_THAT(scenarioInfo.tags, testing::AnyOf(testing::Contains(expectedTag1), testing::Contains(expectedTag2)));
+}
+
+THEN("the {string} has the tags {string} and {string}", (const std::string& hookType, const std::string& expectedTag1, const std::string& expectedTag2))
+{
+    const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+    ASSERT_THAT(scenarioInfo.tags, testing::AllOf(testing::Contains(expectedTag1), testing::Contains(expectedTag2)));
+}
+
+THEN("the {string} is not available", (const std::string& hookType))
+{
+    ASSERT_THAT(context.Contains(hookType), testing::IsFalse());
 }

@@ -1,4 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -56,4 +57,22 @@ HOOK_BEFORE_SCENARIO(.name = "fail if --failprogramhook is set")
 {
     if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
         std::cout << "should not be executed\n";
+}
+
+HOOK_BEFORE_SCENARIO("@expose_scenario_info")
+{
+    const auto& scenarioInfo = ScenarioInfo();
+    if (scenarioInfo.tags.contains("@store_scenario_info"))
+    {
+        context.InsertAt("ScenarioInfoHook", scenarioInfo);
+    }
+}
+
+HOOK_BEFORE_STEP("@expose_scenario_info")
+{
+    const auto& scenarioInfo = ScenarioInfo();
+    if (scenarioInfo.tags.contains("@store_scenario_info"))
+    {
+        context.InsertAt("StepHookInfo", scenarioInfo);
+    }
 }

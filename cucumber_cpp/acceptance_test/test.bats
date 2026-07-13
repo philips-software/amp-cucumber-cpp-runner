@@ -240,3 +240,9 @@ teardown() {
     assert_output --partial "Actual: false (of type bool)"
     assert_output --partial "↷ Then this should be skipped"
 }
+
+
+@test "Test providing access to scenario info in scenario and step hooks" {
+    run $acceptance_test --tags "@expose_scenario_info" -- cucumber_cpp/acceptance_test/features
+    assert_success
+}

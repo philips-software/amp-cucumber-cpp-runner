@@ -3,6 +3,7 @@
 #include "cucumber/messages/envelope.hpp"
 #include "cucumber/messages/location.hpp"
 #include "cucumber/messages/parameter_type.hpp"
+#include "cucumber/messages/parse_error.hpp"
 #include "cucumber/messages/pickle_tag.hpp"
 #include "cucumber/messages/source_reference.hpp"
 #include "cucumber/messages/step_definition.hpp"
@@ -23,15 +24,18 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
+#include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <list>
 #include <memory>
 #include <ranges>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::api
@@ -92,12 +96,12 @@ namespace cucumber_cpp::library::api
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
-            for (auto& hook : beforeAllHooks)
+            for (const auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
-            for (auto& hook : afterAllHooks)
+            for (const auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
         }
 
@@ -105,12 +109,12 @@ namespace cucumber_cpp::library::api
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
-            for (auto& hook : beforeAllHooks)
+            for (const auto& hook : beforeAllHooks)
                 broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
-            for (auto& hook : afterAllHooks)
+            for (const auto& hook : afterAllHooks)
                 broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
         }
 
@@ -156,9 +160,33 @@ namespace cucumber_cpp::library::api
             };
 
             if (sources.ordering == support::RunOptions::Ordering::defined)
-                return createOrderedPickleList(pickles);
+                return createOrderedPickleList(std::move(pickles));
             else
-                return createOrderedPickleList(pickles | std::views::reverse);
+                return createOrderedPickleList(std::move(pickles) | std::views::reverse);
+        };
+
+        struct ParseErrorListener : util::Listener
+        {
+            explicit ParseErrorListener(util::Broadcaster& broadcaster)
+                : Listener{ broadcaster, [this](const cucumber::messages::envelope& envelope)
+                    {
+                        OnEvent(envelope);
+                    } }
+            {}
+
+            void OnEvent(const cucumber::messages::envelope& envelope)
+            {
+                if (envelope.parse_error)
+                    parseErrors.push_back(*envelope.parse_error);
+            }
+
+            [[nodiscard]] const std::vector<cucumber::messages::parse_error>& GetParseErrors() const
+            {
+                return parseErrors;
+            }
+
+        private:
+            std::vector<cucumber::messages::parse_error> parseErrors;
         };
     }
 
@@ -182,7 +210,17 @@ namespace cucumber_cpp::library::api
         const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
         const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query);
 
-        const auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
+        ParseErrorListener parseErrorListener{ broadcaster };
+        auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
+
+        if (const auto& parseErrors = parseErrorListener.GetParseErrors(); !parseErrors.empty())
+        {
+            for (const auto& parseError : parseErrors)
+                fmt::println(std::cerr, "Parse error in: \"{}\" {} ", parseError.source.uri.value_or("unknown source"), parseError.message);
+
+            return false;
+        }
+
         const auto orderedPickles = OrderPickles(options.sources, pickleSources | std::views::filter(FilterByTagExpression(options.sources)));
 
         EmitSupportCodeMessages(supportCodeLibrary, broadcaster, idGenerator);

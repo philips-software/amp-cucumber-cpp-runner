@@ -26,6 +26,7 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
@@ -50,6 +51,11 @@ namespace cucumber_cpp::library::runtime
         cucumber::messages::test_step_result InvokeStep(const util::BodyFactory& bodyFactory, const cucumber::messages::step_match_arguments_list& args)
         {
             return util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args)));
+        }
+
+        std::optional<util::ScenarioInfo> MakeScenarioInfo(const cucumber::messages::pickle& pickle)
+        {
+            return std::make_optional<util::ScenarioInfo>(pickle.name, util::TransformPickleTags(pickle.tags));
         }
     }
 
@@ -161,7 +167,7 @@ namespace cucumber_cpp::library::runtime
 
         const util::BodyFactory bodyFactory = [&hookDefinition, this, &testCaseContext, &testStepStarted, hasError]
         {
-            return hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), hasError);
+            return hookDefinition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), MakeScenarioInfo(pickle), hasError);
         };
 
         return InvokeStep(bodyFactory, {});
@@ -178,7 +184,7 @@ namespace cucumber_cpp::library::runtime
             const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
             const auto bodyFactory = [&definition, this, &testCaseContext, &testStepStarted]
             {
-                return definition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), false);
+                return definition.factory(broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), MakeScenarioInfo(pickle), false);
             };
 
             results.emplace_back(InvokeStep(bodyFactory, {}));
