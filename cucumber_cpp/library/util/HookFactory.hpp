@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::util
     template<class T>
     std::unique_ptr<Body> HookBodyFactory(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, std::optional<util::ScenarioInfo> scenarioInfo, bool hasError)
     {
-        return std::make_unique<T>(broadCaster, context, stepOrHookStarted, std::move(scenarioInfo), hasError);
+        return std::make_unique<T>(broadCaster, context, std::move(stepOrHookStarted), std::move(scenarioInfo), hasError);
     }
 }
 

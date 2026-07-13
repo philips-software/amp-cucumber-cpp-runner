@@ -24,6 +24,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
+#include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
@@ -216,7 +217,16 @@ namespace cucumber_cpp::library::api
         if (const auto& parseErrors = parseErrorListener.GetParseErrors(); !parseErrors.empty())
         {
             for (const auto& parseError : parseErrors)
-                fmt::println(std::cerr, "Parse error in: \"{}\" {} ", parseError.source.uri.value_or("unknown source"), parseError.message);
+            {
+                const auto uri = parseError.source.uri.value_or("unknown source");
+                const auto line = parseError.source.location.has_value() ? fmt::format(":{}", parseError.source.location->line) : "";
+                const auto column = parseError.source.location.has_value() && parseError.source.location->column.has_value() ? fmt::format(":{}", parseError.source.location->column.value()) : "";
+
+                const auto messageStart = parseError.message.find(": ");
+                const auto message = messageStart != std::string::npos ? parseError.message.substr(messageStart + 2) : parseError.message;
+
+                fmt::println(std::cerr, "Parse error in: \"{}{}{}\" {}", uri, line, column, message);
+            }
 
             return false;
         }
