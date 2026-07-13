@@ -240,3 +240,15 @@ teardown() {
     assert_output --partial "Actual: false (of type bool)"
     assert_output --partial "↷ Then this should be skipped"
 }
+
+@test "Test providing access to scenario info in scenario and step hooks" {
+    run $acceptance_test --tags "@expose_scenario_info" -- cucumber_cpp/acceptance_test/features
+    assert_success
+}
+
+@test "Test parse errors are printed to cerr" {
+    run $acceptance_test cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature
+    assert_failure
+    assert_output --partial "Parse error in: \"cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature:4:9\""
+    assert_output --partial "got 'when this line is a parse error (when should be When)'"
+}

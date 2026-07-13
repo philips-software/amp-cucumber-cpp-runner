@@ -195,7 +195,7 @@ namespace cucumber_cpp::library::runtime
         {
             const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted]
             {
-                return definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), false);
+                return definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), std::nullopt, false);
             };
 
             result = util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory));

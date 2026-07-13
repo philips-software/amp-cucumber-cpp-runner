@@ -8,7 +8,6 @@
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
-#include <filesystem>
 #include <functional>
 #include <map>
 #include <ranges>
@@ -19,14 +18,6 @@
 #include <tuple>
 #include <variant>
 #include <vector>
-
-#if defined(CCR_STANDALONE)
-#include "fmt/base.h"
-#include "fmt/format.h"
-#include "fmt/ostream.h"
-#include "fmt/ranges.h"
-#include "fmt/std.h"
-#endif
 
 namespace cucumber_cpp::library::support
 {
@@ -70,37 +61,21 @@ namespace cucumber_cpp::library::support
         return customParameters;
     }
 
-    namespace
-    {
-        void PrintContents(std::string_view type, std::source_location sourceLocation, const std::map<std::source_location, Entry, SourceLocationOrder>& registry)
-        {
-#if defined(CCR_STANDALONE)
-            fmt::println("Added ({}): {}:{}", type, std::filesystem::path{ sourceLocation.file_name() }, sourceLocation.line());
-            fmt::println("Registry contents:");
-            for (const auto& [key, item] : registry)
-                fmt::println("  {}:{}", std::filesystem::path{ key.file_name() }, key.line());
-#endif
-        }
-    }
-
     std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
-        PrintContents("Hook", sourceLocation, registry);
+        registry.try_emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
         return registry.size();
     }
 
     std::size_t DefinitionRegistration::Register(GlobalHook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
-        PrintContents("GlobalHook", sourceLocation, registry);
+        registry.try_emplace(sourceLocation, HookEntry{ hookType, hook, factory, sourceLocation });
         return registry.size();
     }
 
     std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation)
     {
-        registry.emplace(sourceLocation, StepStringRegistration::Entry{ stepType, std::string{ matcher }, factory, sourceLocation });
-        PrintContents("Step", sourceLocation, registry);
+        registry.try_emplace(sourceLocation, StepStringRegistration::Entry{ stepType, std::string{ matcher }, factory, sourceLocation });
         return registry.size();
     }
 }

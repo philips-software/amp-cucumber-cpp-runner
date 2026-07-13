@@ -9,6 +9,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/Hook.hpp"
+#include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/util/DocString.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
 
