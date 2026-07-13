@@ -26,13 +26,13 @@
     HOOK_(                                                     \
         (cucumber_cpp::library::support::Hook{ __VA_ARGS__ }), \
         cucumber_cpp::library::util::HookType::beforeFeature,  \
-        cucumber_cpp::library::engine::HookImpl)
+        cucumber_cpp::library::engine::GlobalHookImpl)
 
 #define HOOK_AFTER_FEATURE(...)                                \
     HOOK_(                                                     \
         (cucumber_cpp::library::support::Hook{ __VA_ARGS__ }), \
         cucumber_cpp::library::util::HookType::afterFeature,   \
-        cucumber_cpp::library::engine::HookImpl)
+        cucumber_cpp::library::engine::GlobalHookImpl)
 
 #define HOOK_BEFORE_SCENARIO(...)                              \
     HOOK_(                                                     \

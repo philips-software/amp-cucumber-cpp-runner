@@ -26,6 +26,6 @@ Feature: Scenario begin and end hooks can expose scenario information
 
     @no_store_scenario_info
     Rule: scenario begin and end hooks do not store the scenario information
-        Scenario: Scenario information is unavailble
+        Scenario: Scenario information is available
             Then the "ScenarioInfoHook" is not available
             And the "StepHookInfo" is not available
