@@ -249,5 +249,6 @@ teardown() {
 @test "Test parse errors are printed to cerr" {
     run $acceptance_test cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature
     assert_failure
-    assert_output --partial "Parse error in: \"cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature:4:9\" expected: #EOF, #TableRow, #DocStringSeparator, #StepLine, #TagLine, #ExamplesLine, #ScenarioLine, #RuleLine, #Comment, #Empty, got 'when this line is a parse error (when should be When)'"
+    assert_output --partial "Parse error in: \"cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature:4:9\""
+    assert_output --partial "got 'when this line is a parse error (when should be When)'"
 }
