@@ -1,7 +1,7 @@
 # renovate: datasource=github-tags packageName=cpm-cmake/CPM.cmake versioning=semver
 set(CPM_DOWNLOAD_TAG_DIGEST     v0.43.1    456cb6754daaa010d57444d0c8ce6d95ecf006ab)
 # renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-set(CUCUMBER_GHERKIN_TAG_DIGEST v@42.0.0   f2f7b51ae6a886aefc1f4a2059e4989b83aab8c8)
+set(CUCUMBER_GHERKIN_TAG_DIGEST v42.0.0    f2f7b51ae6a886aefc1f4a2059e4989b83aab8c8)
 # renovate: datasource=github-tags packageName=google/googletest versioning=semver
 set(GOOGLE_TEST_TAG_DIGEST      v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
 # renovate: datasource=github-tags packageName=CLIUtils/CLI11 versioning=semver
@@ -17,14 +17,11 @@ set(RE2_TAG_DIGEST              2025-08-12 0f6c07eae69151e606acb3d9232750c3442df
 # renovate: datasource=github-tags packageName=jbeder/yaml-cpp versioning=semver
 set(YAML_CPP_TAG_DIGEST         v0.9.0     56e3bb550c91fd7005566f19c079cb7a503223cf)
 
-function(ccr_resolve_tag_digest_version LIST_VAR PREFIX)
-    list(GET ${LIST_VAR} 0 _tag)
-    list(GET ${LIST_VAR} 1 _digest)
-    string(REGEX REPLACE "^v" "" _version "${_tag}")
-    set(${PREFIX}_TAG     "${_tag}"     PARENT_SCOPE)
-    set(${PREFIX}_DIGEST  "${_digest}"  PARENT_SCOPE)
-    set(${PREFIX}_VERSION "${_version}" PARENT_SCOPE)
-endfunction()
+macro(ccr_resolve_tag_digest_version LIST_VAR PREFIX)
+    list(GET ${LIST_VAR} 0 ${PREFIX}_TAG)
+    list(GET ${LIST_VAR} 1 ${PREFIX}_DIGEST)
+    string(REGEX REPLACE "^v" "" ${PREFIX}_VERSION "${${PREFIX}_TAG}")
+endmacro()
 
 ccr_resolve_tag_digest_version(CPM_DOWNLOAD_TAG_DIGEST     CPM_DOWNLOAD)
 ccr_resolve_tag_digest_version(CUCUMBER_GHERKIN_TAG_DIGEST CUCUMBER_GHERKIN)
@@ -55,7 +52,7 @@ if(CCR_FETCH_DEPS)
 
         include("${CPM_DOWNLOAD_LOCATION}")
     endif()
-    CPMUsePackageLock(${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake)
+    # CPMUsePackageLock(${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake)
 
     # ---------------------------------------------------------------------------
     #
