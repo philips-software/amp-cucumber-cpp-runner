@@ -75,16 +75,19 @@ endif()
 # libraries (abseil, re2) are not compiled with sanitizer instrumentation.
 # Abseil's constexpr function-pointer comparisons are not compatible with GCC's
 # ASan/UBSan instrumentation, which causes build failures.
-if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
+if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE)
     if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
         add_compile_options(-fsanitize=address -fsanitize=undefined)
         add_link_options(-fsanitize=address -fsanitize=undefined)
     endif()
 endif()
 
-set(CMAKE_COMPILE_WARNING_AS_ERROR On)
+if(PROJECT_IS_TOP_LEVEL)
+    set(CMAKE_COMPILE_WARNING_AS_ERROR On)
+endif()
+
 add_subdirectory(cucumber_cpp)
 
-if (CCR_STANDALONE)
+if (PROJECT_IS_TOP_LEVEL)
     add_subdirectory(compatibility)
 endif()
