@@ -73,6 +73,8 @@ namespace compatibility
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
                     fmt::println("current path: {}", std::filesystem::current_path().string());
+                    fmt::println("   base path: {}", CCR_SOURCE_DIR);
+                    fmt::println(" binary path: {}", CCR_BINARY_DIR);
                     fmt::println("    uri path: {}", uri);
 
                     json[key] = std::filesystem::canonical(uri).string();
