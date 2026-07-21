@@ -8,6 +8,7 @@
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
+#include <fmt/base.h>
 #include <functional>
 #include <map>
 #include <ranges>
@@ -75,6 +76,7 @@ namespace cucumber_cpp::library::support
 
     std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation)
     {
+        fmt::println("DefinitionRegistration::Register: {}", sourceLocation.file_name());
         registry.try_emplace(sourceLocation, StepStringRegistration::Entry{ stepType, std::string{ matcher }, factory, sourceLocation });
         return registry.size();
     }

@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <exception>
 #include <filesystem>
+#include <fmt/base.h>
 #include <functional>
 #include <list>
 #include <map>
@@ -136,7 +137,9 @@ namespace cucumber_cpp::library::support
                 , regex{ std::move(regex) }
                 , factory{ factory }
                 , sourceLocation{ sourceLocation }
-            {}
+            {
+                fmt::println("StepStringRegistration::Entry: {}", sourceLocation.file_name());
+            }
 
             StepType type{};
             std::string regex;
