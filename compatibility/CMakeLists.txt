@@ -13,6 +13,10 @@ target_include_directories(compatibility.base PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
+target_compile_definitions(compatibility.base PRIVATE
+    CCR_BINARY_DIR="${CMAKE_BINARY_DIR}"
+)
+
 function(add_compatibility_kit name)
     set(libname compatibility.${name}.test)
     add_executable(${libname})
