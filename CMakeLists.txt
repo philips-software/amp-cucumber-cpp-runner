@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.1.0) # x-release-please-version
 
-include(ccr_test_helpers)
+include(cmake/ccr_test_helpers.cmake)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CCR_STANDALONE On)
@@ -23,6 +23,8 @@ option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
 option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
+
+set(CUCUMBER_CPP_FETCH_DEPS ${CCR_FETCH_DEPS})
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -61,26 +63,8 @@ include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
 
-if (CCR_FETCH_DEPS)
-    add_subdirectory(external)
-else()
-    find_package(CLI11 REQUIRED)
-    find_package(nlohmann_json REQUIRED)
-    find_package(GTest REQUIRED)
-    find_package(pugixml REQUIRED)
-    find_package(cucumber_messages REQUIRED)
-    find_package(cucumber_gherkin REQUIRED)
-    find_package(fmt REQUIRED)
-
-    if (CCR_BUILD_TESTS)
-        find_package(yaml-cpp REQUIRED)
-    endif()
-
-    if (CCR_USE_RE2)
-        find_package(absl)
-        find_package(re2)
-    endif()
-endif()
+include(cmake/dependencies.cpm.cmake)
+add_subdirectory(external)
 
 if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
