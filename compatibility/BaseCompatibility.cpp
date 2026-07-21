@@ -14,6 +14,8 @@
 #include "nlohmann/json_fwd.hpp"
 #include <chrono>
 #include <filesystem>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
 #include <fstream>
 #include <functional>
 #include <gmock/gmock.h>
@@ -69,6 +71,9 @@ namespace compatibility
 
                     uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), devkit.folder);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
+
+                    fmt::println("current path: {}", std::filesystem::current_path().string());
+                    fmt::println("    uri path: {}", uri);
 
                     json[key] = std::filesystem::canonical(uri).string();
 
