@@ -86,9 +86,6 @@ if(PROJECT_IS_TOP_LEVEL)
     set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 endif()
 
-add_compile_definitions(-DCCR_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-add_compile_definitions(-DCCR_BINARY_DIR="${CMAKE_BINARY_DIR}")
-
 add_subdirectory(cucumber_cpp)
 
 if (PROJECT_IS_TOP_LEVEL)
