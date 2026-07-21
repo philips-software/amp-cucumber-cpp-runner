@@ -42,7 +42,7 @@ if(CCR_FETCH_DEPS)
 
         include("${CPM_DOWNLOAD_LOCATION}")
     endif()
-    # CPMUsePackageLock(${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake)
+    CPMUsePackageLock(${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake)
 
     # ---------------------------------------------------------------------------
     #
