@@ -13,6 +13,7 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
+#include <fmt/base.h>
 #include <iterator>
 #include <list>
 #include <map>
@@ -99,6 +100,8 @@ namespace cucumber_cpp::library::support
             auto cucumberMatcherType = std::holds_alternative<cucumber_expression::RegularExpression>(cucumberMatcher)
                                            ? ExpressionPatternType::regularExpression
                                            : ExpressionPatternType::cucumberExpression;
+
+            fmt::println("Registering step definition@{}", sourceLocation.file_name());
 
             registry.emplace_back(factory,
                 id,
