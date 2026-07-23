@@ -7,12 +7,12 @@
 
 namespace
 {
-    const std::filesystem::path currentCompileDir = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
+    const std::filesystem::path compatibilityPath = std::filesystem::path{ KIT_FOLDER };
 }
 
 HOOK_BEFORE_SCENARIO()
 {
-    std::ifstream svgFile{ currentCompileDir / "cucumber.svg", std::ios::binary };
+    std::ifstream svgFile{ compatibilityPath / "cucumber.svg", std::ios::binary };
     Attach(svgFile, "image/svg+xml");
 }
 
@@ -23,6 +23,6 @@ WHEN(R"(a step passes)")
 
 HOOK_AFTER_SCENARIO()
 {
-    std::ifstream svgFile{ currentCompileDir / "cucumber.svg", std::ios::binary };
+    std::ifstream svgFile{ compatibilityPath / "cucumber.svg", std::ios::binary };
     Attach(svgFile, "image/svg+xml");
 }

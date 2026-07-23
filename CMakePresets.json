@@ -190,8 +190,7 @@
             "name": "defaults",
             "hidden": true,
             "output": {
-                "outputOnFailure": true,
-                "verbosity": "verbose"
+                "outputOnFailure": true
             },
             "execution": {
                 "noTestsAction": "error",
