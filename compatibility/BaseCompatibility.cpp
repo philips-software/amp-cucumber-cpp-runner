@@ -4,7 +4,7 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -14,8 +14,6 @@
 #include "nlohmann/json_fwd.hpp"
 #include <chrono>
 #include <filesystem>
-#include <fmt/base.h>
-#include <fmt/ostream.h>
 #include <fstream>
 #include <functional>
 #include <gmock/gmock.h>

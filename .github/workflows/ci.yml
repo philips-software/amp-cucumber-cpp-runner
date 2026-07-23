@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
-          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake') }}
+          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake')  }}
 
       - name: Cache ccache
         if: "!startsWith(matrix.target, 'Windows')"
@@ -132,7 +132,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
-          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake') }}
+          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake')  }}
 
       - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:

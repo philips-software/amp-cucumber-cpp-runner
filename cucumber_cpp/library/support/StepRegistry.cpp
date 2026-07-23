@@ -1,6 +1,5 @@
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
@@ -13,12 +12,10 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
-#include <fmt/base.h>
 #include <iterator>
 #include <list>
 #include <map>
 #include <optional>
-#include <regex>
 #include <source_location>
 #include <span>
 #include <string>
@@ -100,8 +97,6 @@ namespace cucumber_cpp::library::support
             auto cucumberMatcherType = std::holds_alternative<cucumber_expression::RegularExpression>(cucumberMatcher)
                                            ? ExpressionPatternType::regularExpression
                                            : ExpressionPatternType::cucumberExpression;
-
-            fmt::println("Registering step definition@{}", sourceLocation.file_name());
 
             registry.emplace_back(factory,
                 id,

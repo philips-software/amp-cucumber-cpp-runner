@@ -23,8 +23,6 @@ option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 
-set(CUCUMBER_CPP_FETCH_DEPS ${CCR_FETCH_DEPS})
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (CCR_BUILD_TESTS)

@@ -22,8 +22,6 @@ CPMDeclarePackage(cucumber_messages
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
   SOURCE_SUBDIR cpp
-  OPTIONS
-    "CUCUMBER_MESSAGES_FETCH_DEPS ON"
 )
 # cucumber_gherkin
 CPMDeclarePackage(cucumber_gherkin
@@ -34,8 +32,6 @@ CPMDeclarePackage(cucumber_gherkin
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
   SOURCE_SUBDIR cpp
-  OPTIONS
-    "CUCUMBER_GHERKIN_FETCH_DEPS ON"
 )
 # googletest
 CPMDeclarePackage(googletest
@@ -106,5 +102,6 @@ CPMDeclarePackage(yaml-cpp
   GITHUB_REPOSITORY jbeder/yaml-cpp
   SYSTEM YES
   EXCLUDE_FROM_ALL YES
-  OPTION YAML_ENABLE_PIC OFF
+  OPTIONS
+    "YAML_ENABLE_PIC OFF"
 )

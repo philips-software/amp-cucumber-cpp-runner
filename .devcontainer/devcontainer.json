@@ -15,6 +15,6 @@
     }
   },
   "remoteEnv": {
-    "CPM_SOURCE_CACHE": "~/cache/.cpm"
+    "CPM_SOURCE_CACHE": "/root/cache/.cpm"
   }
 }

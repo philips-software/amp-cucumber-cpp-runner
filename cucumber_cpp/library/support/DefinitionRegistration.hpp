@@ -10,7 +10,6 @@
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
-#include <fmt/base.h>
 #include <functional>
 #include <map>
 #include <ranges>
@@ -97,7 +96,6 @@ namespace cucumber_cpp::library::support
     template<class T>
     std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation)
     {
-        fmt::println("DefinitionRegistration::Register<T>: {}", sourceLocation.file_name());
         return Instance().Register(matcher, stepType, util::StepBodyFactory<T>, sourceLocation);
     }
 
