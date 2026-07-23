@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cucumber_gherkin
     GIT_REPOSITORY https://github.com/cucumber/gherkin.git
-    GIT_TAG 6f0040fee2783fdb455d345e5bdb50d425515b5d # cpp-remove-cmate-use-native-cmake-and-CPM
+    GIT_TAG f2f7b51ae6a886aefc1f4a2059e4989b83aab8c8 # v42.0.0
 )
 
 FetchContent_MakeAvailable(cucumber_gherkin)
