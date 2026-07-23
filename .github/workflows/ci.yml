@@ -149,30 +149,38 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: brew install ccache
 
-      - name: Restore CPM packages cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: use location action
+        uses: ./.github/actions/workflow
         with:
-          path: ${{ env.CPM_SOURCE_CACHE }}
-          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: ${{ !startsWith(matrix.os, 'windows') }}
+          ccache-key: ccache-${{ github.job }}-${{ matrix.os }}-${{ github.ref }}-${{ matrix.type }}${{ matrix.preset_suffix }}
+          workflow-preset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
 
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
-        if: ${{ !startsWith(matrix.os, 'windows') }}
-        with:
-          key: ccache-${{ github.job }}-${{ matrix.os }}-${{ github.ref }}-${{ matrix.type }}${{ matrix.preset_suffix }}
-          restore-keys: ccache-${{ github.job }}-${{ matrix.os }}-
-          max-size: 2G
-          save: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      # - name: Restore CPM packages cache
+      #   uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      #   with:
+      #     path: ${{ env.CPM_SOURCE_CACHE }}
+      #     key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
 
-      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
-        with:
-          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
+      # - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+      #   if: ${{ !startsWith(matrix.os, 'windows') }}
+      #   with:
+      #     key: ccache-${{ github.job }}-${{ matrix.os }}-${{ github.ref }}-${{ matrix.type }}${{ matrix.preset_suffix }}
+      #     restore-keys: ccache-${{ github.job }}-${{ matrix.os }}-
+      #     max-size: 2G
+      #     save: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
-      - name: Save CPM packages cache
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.CPM_SOURCE_CACHE }}
-          key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
+      # - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
+      #   with:
+      #     workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
+
+      # - name: Save CPM packages cache
+      #   if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      #   uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      #   with:
+      #     path: ${{ env.CPM_SOURCE_CACHE }}
+      #     key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
 
       - name: Upload test logs
         if: ${{ failure() }}
