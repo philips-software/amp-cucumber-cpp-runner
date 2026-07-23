@@ -54,13 +54,14 @@ jobs:
           key: cache-winsdk-10.0.26100-14.43.17.13
 
       - name: Cache CPM packages
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
           key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake')  }}
 
       - name: Cache ccache
-        if: "!startsWith(matrix.target, 'Windows')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -87,13 +88,14 @@ jobs:
           persist-credentials: false
 
       - name: Cache CPM packages
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
           key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
 
       - name: Cache ccache
-        if: "!startsWith(matrix.target, 'Windows')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -129,15 +131,19 @@ jobs:
           persist-credentials: false
 
       - name: Cache CPM packages
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
           key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake')  }}
 
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+      - name: Cache ccache
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && !startsWith(matrix.os, 'windows') }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}${{ matrix.preset_suffix }}
-          max-size: 2G
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.job }}-${{ matrix.os }}-${{ github.ref }}-${{ matrix.type }}${{ matrix.preset_suffix }}
+          restore-keys: ccache-${{ github.job }}-${{ matrix.os }}-
 
       - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
