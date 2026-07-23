@@ -54,7 +54,7 @@ if(CCR_FETCH_DEPS)
         include("${CPM_DOWNLOAD_LOCATION}")
     endif()
 
-    CPMUsePackageLock(${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake)
+    CPMUsePackageLock("${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake")
 
     # ---------------------------------------------------------------------------
     #
@@ -102,9 +102,11 @@ if(CCR_FETCH_DEPS)
             "gtest_force_shared_crt ON"
     )
 
-    set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
-        FOLDER External/GoogleTest
-    )
+    if (TARGET gtest)
+        set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
+            FOLDER External/GoogleTest
+        )
+    endif()
 
     # ---------------------------------------------------------------------------
     # cli11

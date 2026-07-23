@@ -54,7 +54,6 @@ function(add_compatibility_kit name)
         KIT_FOLDER="${CMAKE_CURRENT_SOURCE_DIR}/${name}"
         KIT_NDJSON_FILE="${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.ndjson"
         $<$<BOOL:${SKIP_TEST}>:SKIP_TEST>
-        CCR_COMPATIBILITY_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
     )
 endfunction()
 
