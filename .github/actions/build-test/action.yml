@@ -28,6 +28,7 @@ runs:
   steps:
     - name: Restore CPM packages cache
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      id: cache-cpm
       with:
         path: ${{ inputs.cpm-source-cache }}
         key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
@@ -46,7 +47,7 @@ runs:
         testPreset: "${{ inputs.test-preset }}"
 
     - name: Save CPM packages cache
-      if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      if: ${{ !startsWith(github.ref, 'refs/tags/') && steps.cache-cpm.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ inputs.cpm-source-cache }}
