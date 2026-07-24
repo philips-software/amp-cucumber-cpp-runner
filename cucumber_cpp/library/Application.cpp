@@ -80,7 +80,6 @@ namespace cucumber_cpp::library
         {
             dynamicLibraryManager.UnloadAll();
             support::DefinitionRegistration::Instance().Clear();
-            cucumber_expression::ConverterTypeMapClearer::ClearAll();
         }
     }
 

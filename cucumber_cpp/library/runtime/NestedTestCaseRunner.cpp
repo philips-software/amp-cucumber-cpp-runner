@@ -8,6 +8,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
@@ -72,7 +73,10 @@ namespace cucumber_cpp::library::runtime
 
         void Invoke(std::size_t nesting, const std::string& step, const util::BodyFactory& bodyFactory, const cucumber::messages::step_match_arguments_list& args)
         {
-            const auto status = util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args));
+            const auto status = util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args, [](const std::string& name)
+                                                                           {
+                                                                               return support::DefinitionRegistration::Instance().GetConverter(name);
+                                                                           }));
 
             if (status.status != util::TestStepResultStatus::PASSED)
                 throw util::NestedTestCaseRunnerError{

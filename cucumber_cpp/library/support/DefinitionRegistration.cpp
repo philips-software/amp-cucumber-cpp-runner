@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -91,6 +92,26 @@ namespace cucumber_cpp::library::support
         auto result = staticParameters;
         result.insert(customParameters.begin(), customParameters.end());
         return result;
+    }
+
+    cucumber_expression::ErasedConverter DefinitionRegistration::GetConverter(const std::string& name) const
+    {
+        auto findIn = [&name](const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& params) -> cucumber_expression::ErasedConverter
+        {
+            auto it = std::ranges::find_if(params, [&name](const auto& entry)
+                {
+                    return entry.params.name == name;
+                });
+            if (it != params.end())
+                return it->converter;
+
+            return nullptr;
+        };
+
+        if (auto converter = findIn(staticParameters))
+            return converter;
+
+        return findIn(customParameters);
     }
 
     std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)

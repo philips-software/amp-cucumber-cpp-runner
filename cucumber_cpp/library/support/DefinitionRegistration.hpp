@@ -9,6 +9,7 @@
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
+#include <any>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -41,6 +42,8 @@ namespace cucumber_cpp::library::support
         std::vector<HookEntry> GetHooks();
 
         [[nodiscard]] std::set<cucumber_expression::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
+
+        [[nodiscard]] cucumber_expression::ErasedConverter GetConverter(const std::string& name) const;
 
         template<class T>
         static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
@@ -116,7 +119,12 @@ namespace cucumber_cpp::library::support
     std::size_t DefinitionRegistration::Register(cucumber_expression::CustomParameterEntryParams params, std::source_location location)
     {
         auto& instance = Instance();
-        instance.customParameters.emplace(params, instance.customParameters.size() + 1, location);
+
+        cucumber_expression::ErasedConverter converter = [](const cucumber_expression::ConvertFunctionArg& args) -> std::any
+        {
+            return std::any(Transformer::Transform(args));
+        };
+        instance.customParameters.emplace(params, instance.customParameters.size() + 1, location, std::move(converter));
 
         cucumber_expression::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
 
