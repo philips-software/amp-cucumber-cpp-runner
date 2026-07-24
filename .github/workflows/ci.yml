@@ -19,8 +19,6 @@ concurrency:
 
 env:
   GTEST_COLOR: 1
-  CCACHE_BASEDIR: ${{ github.workspace }}
-  CCACHE_DIR: ${{ github.workspace }}/.ccache
   CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
 
 jobs:
@@ -57,8 +55,8 @@ jobs:
         uses: ./.github/actions/build
         with:
           cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: ${{ !startsWith(matrix.target, 'Windows') }}
-          ccache-key: ${{ github.job }}-${{ github.ref }}-${{ matrix.target }}
+          use-ccache: true
+          ccache-key: ${{ github.job }}-${{ matrix.target }}
           configure-preset: "${{ matrix.target}}"
           build-preset: "${{ matrix.target}}-Release"
 
@@ -81,7 +79,7 @@ jobs:
         with:
           cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
           use-ccache: true
-          ccache-key: ${{ github.job }}-${{ github.ref }}
+          ccache-key: ${{ github.job }}
           configure-preset: "Host"
           build-preset: "Host-Debug"
 
@@ -113,7 +111,7 @@ jobs:
         with:
           cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
           use-ccache: ${{ !startsWith(matrix.os, 'windows') }}
-          ccache-key: ccache-${{ github.job }}-${{ matrix.os }}-${{ github.ref }}-${{ matrix.type }}${{ matrix.preset_suffix }}
+          ccache-key: ccache-${{ github.job }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.type }}${{ matrix.preset_suffix }}
           workflow-preset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
 
       - name: Upload test logs

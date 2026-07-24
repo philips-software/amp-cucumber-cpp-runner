@@ -15,8 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_BASEDIR: ${{ github.workspace }}
-  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  GTEST_COLOR: 1
   CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
 
 jobs:
@@ -37,7 +36,7 @@ jobs:
         with:
           cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
           use-ccache: true
-          ccache-key: ${{ github.job }}-${{ github.ref }}
+          ccache-key: ${{ github.job }}
           configure-preset: "Coverage"
           build-preset: "Coverage"
           test-preset: "Coverage"
@@ -86,7 +85,7 @@ jobs:
         with:
           cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
           use-ccache: true
-          ccache-key: ${{ github.job }}-${{ github.ref }}
+          ccache-key: ${{ github.job }}
           configure-preset: "Host"
           build-preset: "Host-Debug"
 
