@@ -57,4 +57,8 @@ function(ccr_add_plugin TARGET_NAME)
         PREFIX ""
         CXX_VISIBILITY_PRESET default
     )
+
+    if (APPLE)
+        set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".dylib")
+    endif()
 endfunction()
