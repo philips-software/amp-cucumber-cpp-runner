@@ -194,7 +194,7 @@
             },
             "execution": {
                 "noTestsAction": "error",
-                "stopOnFailure": true
+                "stopOnFailure": false
             }
         },
         {
