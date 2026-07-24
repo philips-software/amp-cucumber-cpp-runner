@@ -13,6 +13,9 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/plugin/HookLoader.hpp"
+#include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
+#include "cucumber_cpp/library/plugin/StepLoader.hpp"
 #include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
@@ -121,15 +124,20 @@ namespace cucumber_cpp::library::api
 
         void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
         {
+            // Phase 1: Load parameters (must be first, steps reference parameter types)
+            plugin::ParameterLoader::Load(support::DefinitionRegistration::Instance(), supportCodeLibrary.parameterRegistry);
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
 
             support::DefinitionRegistration::Instance().LoadIds(idGenerator);
-            supportCodeLibrary.stepRegistry.LoadSteps();
+
+            // Phase 2: Load steps (can now resolve parameter type expressions)
+            plugin::StepLoader::Load(supportCodeLibrary.stepRegistry);
 
             EmitUndefinedParameters(supportCodeLibrary, broadcaster);
             EmitStepDefinitions(supportCodeLibrary, broadcaster);
 
-            supportCodeLibrary.hookRegistry.LoadHooks();
+            // Phase 3: Load hooks (last, no ordering dependency)
+            plugin::HookLoader::Load(supportCodeLibrary.hookRegistry);
             EmitTestCaseHooks(supportCodeLibrary, broadcaster);
             EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }

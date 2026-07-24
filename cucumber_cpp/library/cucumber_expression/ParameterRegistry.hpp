@@ -11,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <source_location>
 #include <sstream>
@@ -138,10 +139,39 @@ namespace cucumber_cpp::library::cucumber_expression
         static TypeMap<T>& Instance();
     };
 
+    struct ConverterTypeMapClearer
+    {
+        static std::vector<std::function<void()>>& ClearFunctions()
+        {
+            static std::vector<std::function<void()>> fns;
+            return fns;
+        }
+
+        static void Register(std::function<void()> fn)
+        {
+            ClearFunctions().push_back(std::move(fn));
+        }
+
+        static void ClearAll()
+        {
+            for (const auto& fn : ClearFunctions())
+                fn();
+        }
+    };
+
     template<class T>
     TypeMap<T>& ConverterTypeMap<T>::Instance()
     {
         static TypeMap<T> typeMap;
+        [[maybe_unused]] static const bool registered = []
+        {
+            auto* ptr = &typeMap;
+            ConverterTypeMapClearer::Register([ptr]
+                {
+                    ptr->clear();
+                });
+            return true;
+        }();
         return typeMap;
     }
 
@@ -161,9 +191,9 @@ namespace cucumber_cpp::library::cucumber_expression
 
         void AssertParameterIsUnique(const std::string& name) const;
 
-    private:
         void AddParameter(ParameterType parameter);
 
+    private:
         template<class T>
         void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch = false, std::source_location location = std::source_location::current());
 

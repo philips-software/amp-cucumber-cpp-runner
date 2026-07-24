@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -55,9 +56,13 @@ namespace cucumber_cpp::library
             bool recursive{ true };
 
             std::vector<std::string> tags{};
+
+            std::vector<std::string> loadPaths{};
         };
 
         explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
+
+        ~Application();
 
         [[nodiscard]] int Run(int argc, const char* const* argv);
 
@@ -81,6 +86,8 @@ namespace cucumber_cpp::library
         api::Formatters formatters;
 
         util::Broadcaster broadcaster;
+
+        plugin::DynamicLibraryManager dynamicLibraryManager;
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;

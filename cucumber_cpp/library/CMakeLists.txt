@@ -21,6 +21,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_gherkin_lib
     cucumber_cpp.library.api
     cucumber_cpp.library.engine
+    cucumber_cpp.library.plugin
     cucumber_cpp.library.tag_expression
     cucumber_cpp.library.util
     cucumber_cpp.library.formatter
@@ -41,6 +42,7 @@ add_subdirectory(assemble)
 add_subdirectory(cucumber_expression)
 add_subdirectory(engine)
 add_subdirectory(formatter)
+add_subdirectory(plugin)
 add_subdirectory(query)
 add_subdirectory(runtime)
 add_subdirectory(support)

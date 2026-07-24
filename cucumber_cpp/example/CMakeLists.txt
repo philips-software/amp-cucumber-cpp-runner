@@ -13,5 +13,10 @@ target_link_libraries(cucumber_cpp.example PRIVATE
     cucumber_cpp.example.steps
 )
 
+set_target_properties(cucumber_cpp.example PROPERTIES
+    ENABLE_EXPORTS ON
+)
+
 add_subdirectory(hooks)
+add_subdirectory(plugin)
 add_subdirectory(steps)

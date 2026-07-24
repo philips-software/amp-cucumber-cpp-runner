@@ -32,6 +32,12 @@ namespace cucumber_cpp::library::support
         return instance;
     }
 
+    void DefinitionRegistration::Clear()
+    {
+        registry.clear();
+        customParameters.clear();
+    }
+
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
     {
         const auto assignGenerator = [&idGenerator](auto& entry)

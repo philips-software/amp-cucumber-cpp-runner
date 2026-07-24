@@ -6,6 +6,8 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "fmt/base.h"
@@ -72,6 +74,16 @@ namespace cucumber_cpp::library
         cli.set_config("--config", "cucumber.toml");
     }
 
+    Application::~Application()
+    {
+        if (!dynamicLibraryManager.GetLoadedLibraries().empty())
+        {
+            dynamicLibraryManager.UnloadAll();
+            support::DefinitionRegistration::Instance().Clear();
+            cucumber_expression::ConverterTypeMapClearer::ClearAll();
+        }
+    }
+
     int Application::Run(int argc, const char* const* argv)
     {
         const auto formattersSet = formatters.GetAvailableFormatterNames();
@@ -125,12 +137,17 @@ namespace cucumber_cpp::library
             CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are"), "paths");
             cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \"./features\"")->default_val(options.paths);
 
+            cli.add_option("--load", options.loadPaths, "Load cucumber step/hook/parameter dynamic libraries from files or directories");
+
             ProgramContext().InsertRef(options);
 
             cli.parse(argc, argv);
 
             if (options.dumpConfig)
                 std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
+
+            if (!options.loadPaths.empty())
+                dynamicLibraryManager.Load(options.loadPaths);
 
             return RunFeatures();
         }

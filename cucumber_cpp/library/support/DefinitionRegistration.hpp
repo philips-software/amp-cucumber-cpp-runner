@@ -29,6 +29,8 @@ namespace cucumber_cpp::library::support
     public:
         static DefinitionRegistration& Instance();
 
+        void Clear();
+
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 
         template<class T>
