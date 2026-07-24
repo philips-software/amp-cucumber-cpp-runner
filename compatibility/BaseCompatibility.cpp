@@ -1,38 +1,23 @@
 #include "BaseCompatibility.hpp"
-#include "cucumber/messages/envelope.hpp"
 #include "cucumber_cpp/Steps.hpp"
-#include "cucumber_cpp/library/api/Formatters.hpp"
-#include "cucumber_cpp/library/api/RunCucumber.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
-#include "cucumber_cpp/library/support/Types.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
-#include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/Duration.hpp"
-#include "cucumber_cpp/library/util/Timestamp.hpp"
+#include "cucumber_cpp/library/Application.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
-#include <chrono>
+#include "gtest/gtest.h"
 #include <filesystem>
 #include <fstream>
-#include <functional>
-#include <gmock/gmock.h>
-#include <gtest/gtest-spi.h>
-#include <gtest/gtest.h>
-#include <iostream>
 #include <list>
 #include <memory>
-#include <ranges>
 #include <regex>
-#include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace compatibility
 {
     namespace
     {
-        void RemoveIncompatibilities(nlohmann::json& json, const Devkit& devkit)
+        void RemoveIncompatibilities(nlohmann::json& json, const std::string& sourceDir)
         {
             for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
@@ -41,21 +26,18 @@ namespace compatibility
 
                 if (key == "exception" || key == "message" || key == "line" || key == "snippets")
                     jsonIter = json.erase(jsonIter);
+                else if (key == "timestamp" || key == "duration")
+                    jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
-                    RemoveIncompatibilities(value, devkit);
+                    RemoveIncompatibilities(value, sourceDir);
                     ++jsonIter;
                 }
                 else if (value.is_array())
                 {
-                    for (auto valueIter = value.begin(); valueIter != value.end();)
-                    {
-                        if (valueIter->is_object())
-                            RemoveIncompatibilities(*valueIter, devkit);
-
-                        ++valueIter;
-                    }
-
+                    for (auto& element : value)
+                        if (element.is_object())
+                            RemoveIncompatibilities(element, sourceDir);
                     ++jsonIter;
                 }
                 else if (key == "data")
@@ -67,7 +49,7 @@ namespace compatibility
                 {
                     auto uri = value.get<std::string>();
 
-                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), devkit.folder);
+                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), sourceDir);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
                     std::filesystem::path path{ uri };
@@ -83,170 +65,94 @@ namespace compatibility
             }
         }
 
-        struct BroadcastListener
+        std::list<nlohmann::json> LoadNdjson(const std::filesystem::path& path)
         {
-            BroadcastListener(std::filesystem::path ndjsonin, std::filesystem::path expectedndjson, std::filesystem::path ndout, cucumber_cpp::library::util::Broadcaster& broadcaster)
-                : listener(broadcaster, [this](const cucumber::messages::envelope& envelope)
-                      {
-                          OnEvent(envelope);
-                      })
-                , ndjsonin{ std::move(ndjsonin) }
-                , expectedndjson{ std::move(expectedndjson) }
-                , actualndjson(std::move(ndout))
+            std::list<nlohmann::json> envelopes;
+            std::ifstream ifs{ path };
+            std::string line;
+
+            while (std::getline(ifs, line))
             {
-                while (!ifs.eof())
-                {
-                    std::string line;
-                    std::getline(ifs, line);
+                if (line.empty())
+                    continue;
 
-                    if (line.empty())
-                        continue;
+                auto json = nlohmann::json::parse(line);
 
-                    auto json = nlohmann::json::parse(line);
+                if (json.contains("meta"))
+                    continue;
 
-                    if (json.contains("meta"))
-                        continue;
-
-                    expectedEnvelopes.emplace_back(std::move(json));
-                }
+                envelopes.emplace_back(std::move(json));
             }
 
-            void OnEvent(const cucumber::messages::envelope& envelope)
-            {
-                nlohmann::json actualJson{};
-                to_json(actualJson, envelope);
-
-                actualEnvelopes.emplace_back(std::move(actualJson));
-            }
-
-            void CompareEnvelopes(const Devkit& devkit)
-            {
-                EXPECT_THAT(actualEnvelopes.size(), testing::Eq(expectedEnvelopes.size()));
-
-                for (auto& json : actualEnvelopes)
-                {
-                    RemoveIncompatibilities(json, devkit);
-                    actualOfs << json.dump() << "\n";
-                }
-
-                for (auto& json : expectedEnvelopes)
-                {
-                    RemoveIncompatibilities(json, devkit);
-                    expectedOfs << json.dump() << "\n";
-                }
-
-                while (!actualEnvelopes.empty() && !expectedEnvelopes.empty())
-                {
-                    auto actualJson = actualEnvelopes.front();
-                    actualEnvelopes.pop_front();
-
-                    auto expectedJson = expectedEnvelopes.front();
-                    expectedEnvelopes.pop_front();
-
-                    EXPECT_THAT(actualJson, testing::Eq(expectedJson));
-                }
-            }
-
-        private:
-            cucumber_cpp::library::util::Listener listener;
-            std::filesystem::path ndjsonin;
-            std::ifstream ifs{ ndjsonin };
-
-            std::filesystem::path expectedndjson;
-            std::ofstream expectedOfs{ expectedndjson };
-
-            std::filesystem::path actualndjson;
-            std::ofstream actualOfs{ actualndjson };
-
-            std::list<nlohmann::json> expectedEnvelopes;
-            std::list<nlohmann::json> actualEnvelopes;
-        };
-
-        bool IsFeatureFile(const std::filesystem::directory_entry& entry)
-        {
-            return std::filesystem::is_regular_file(entry) && entry.path().has_extension() && entry.path().extension() == ".feature";
+            return envelopes;
         }
 
-        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(const std::set<std::filesystem::path, std::less<>>& paths)
+        void CompareEnvelopes(std::list<nlohmann::json>& actual, std::list<nlohmann::json>& expected, const std::string& sourceDir, const std::filesystem::path& kitDir)
         {
-            std::set<std::filesystem::path, std::less<>> files;
+            for (auto& json : actual)
+                RemoveIncompatibilities(json, sourceDir);
+            for (auto& json : expected)
+                RemoveIncompatibilities(json, sourceDir);
 
-            for (const auto& feature : paths)
-                if (std::filesystem::is_directory(feature))
-                    for (const auto& entry : std::filesystem::directory_iterator{ feature } | std::views::filter(IsFeatureFile))
-                    {
-                        std::cout << " found feature file: " << entry.path() << "\n";
-                        files.insert(entry.path());
-                    }
-                else
-                    files.insert(feature);
+            // Write out normalized envelopes for debugging
+            {
+                std::ofstream ofs{ kitDir / "actual.ndjson" };
+                for (const auto& json : actual)
+                    ofs << json.dump() << "\n";
+            }
+            {
+                std::ofstream ofs{ kitDir / "expected.ndjson" };
+                for (const auto& json : expected)
+                    ofs << json.dump() << "\n";
+            }
 
-            return files;
+            EXPECT_EQ(actual.size(), expected.size());
+
+            auto actualIter = actual.begin();
+            auto expectedIter = expected.begin();
+
+            while (actualIter != actual.end() && expectedIter != expected.end())
+            {
+                EXPECT_EQ(*actualIter, *expectedIter);
+                ++actualIter;
+                ++expectedIter;
+            }
         }
-
-        struct StopwatchIncremental : cucumber_cpp::library::util::Stopwatch
-        {
-            virtual ~StopwatchIncremental() = default;
-
-            std::chrono::high_resolution_clock::time_point Start() override
-            {
-                return {};
-            }
-
-            std::chrono::nanoseconds Duration([[maybe_unused]] std::chrono::high_resolution_clock::time_point timePoint) override
-            {
-                return current;
-            }
-
-            std::chrono::nanoseconds current{ std::chrono::milliseconds{ 1 } };
-        };
-
-        struct TimestampGeneratorIncremental : cucumber_cpp::library::util::TimestampGenerator
-        {
-            virtual ~TimestampGeneratorIncremental() = default;
-
-            std::chrono::milliseconds Now() override
-            {
-                return current++;
-            }
-
-            std::chrono::milliseconds current{ 0 };
-        };
     }
 
-    void RunDevkit(Devkit devkit)
+    void RunDevkit(const KitInfo& kit)
     {
-        compatibility::StopwatchIncremental stopwatch;
-        compatibility::TimestampGeneratorIncremental timestampGenerator;
+        const auto actualNdjsonPath = kit.sourceDir / "actual_run.ndjson";
 
-        devkit.paths = GetFeatureFiles(devkit.paths);
-        const auto isReversed = devkit.kitString.ends_with("-reversed");
+        // Build CLI args: program name, --load <plugin>, --format message:<output>, extra args, -- <feature-dir>
+        std::vector<std::string> argStrings;
+        argStrings.emplace_back("compatibility.test");
+        argStrings.emplace_back("--load");
+        argStrings.emplace_back(kit.pluginPath.string());
+        argStrings.emplace_back("--format");
+        argStrings.emplace_back("message:" + actualNdjsonPath.string());
 
-        cucumber_cpp::library::support::RunOptions runOptions{
-            .sources = {
-                .paths = devkit.paths,
-                .tagExpression = cucumber_cpp::library::tag_expression::Parse(devkit.tagExpression),
-                .ordering = isReversed ? cucumber_cpp::library::support::RunOptions::Ordering::reverse : cucumber_cpp::library::support::RunOptions::Ordering::defined,
-            },
-            .runtime = {
-                .retry = devkit.kitString.starts_with("retry") ? 2u : 0u,
-                .strict = true,
-                .retryTagExpression = cucumber_cpp::library::tag_expression::Parse(""),
-            },
-        };
+        for (const auto& arg : kit.extraArgs)
+            argStrings.emplace_back(arg);
 
-        cucumber_cpp::library::cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+        argStrings.emplace_back("--no-recursive");
+        argStrings.emplace_back(kit.sourceDir.string());
 
-        auto contextStorageFactory{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>() };
-        auto programContext{ std::make_unique<cucumber_cpp::Context>(contextStorageFactory) };
+        std::vector<const char*> argv;
+        argv.reserve(argStrings.size());
+        for (const auto& s : argStrings)
+            argv.push_back(s.c_str());
 
-        cucumber_cpp::library::util::Broadcaster broadcaster;
+        {
+            cucumber_cpp::library::Application app{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>(), false };
+            static_cast<void>(app.Run(static_cast<int>(argv.size()), argv.data()));
+        }
 
-        BroadcastListener broadcastListener{ devkit.ndjsonFile, devkit.ndjsonFile.parent_path() / "expected.ndjson", devkit.ndjsonFile.parent_path() / "actual.ndjson", broadcaster };
+        auto actualEnvelopes = LoadNdjson(actualNdjsonPath);
+        auto expectedEnvelopes = LoadNdjson(kit.ndjsonFile);
 
-        cucumber_cpp::library::api::Formatters formatters;
-        cucumber_cpp::library::api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, { "junit", "message", "pretty", "summary", "usage" }, {});
+        CompareEnvelopes(actualEnvelopes, expectedEnvelopes, kit.sourceDir.string(), kit.sourceDir);
 
-        broadcastListener.CompareEnvelopes(devkit);
+        std::filesystem::remove(actualNdjsonPath);
     }
 }

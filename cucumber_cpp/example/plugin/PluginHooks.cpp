@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/Hooks.hpp"
-#include "cucumber_cpp/library/plugin/PluginExport.hpp"
 #include <iostream>
 
 HOOK_BEFORE_SCENARIO()

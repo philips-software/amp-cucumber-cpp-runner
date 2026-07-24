@@ -1,3 +1,5 @@
+include(${PROJECT_SOURCE_DIR}/cmake/ccr_add_plugin.cmake)
+
 add_library(compatibility.base)
 target_sources(compatibility.base PRIVATE
     BaseCompatibility.cpp
@@ -18,49 +20,57 @@ target_compile_definitions(compatibility.base PRIVATE
     CCR_BINARY_DIR="${CCR_BINARY_DIR_CMAKE}"
 )
 
-function(add_compatibility_kit name)
-    set(libname compatibility.${name}.test)
-    add_executable(${libname})
-
-    if(CCR_BUILD_TESTS)
-        add_test(NAME ${libname} COMMAND ${libname})
-    endif()
-
-    target_link_libraries(${libname} PRIVATE
-        GTest::gtest_main
-        compatibility.base
-    )
-
-    target_include_directories(${libname} PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    )
-
-    target_sources(${libname} PRIVATE
-        TestCompatibility.cpp
-    )
-
-    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/${name}/${name}.cpp)
-        target_sources(${libname} PRIVATE
-            ${name}/${name}.cpp
-        )
-    else()
-        set(SKIP_TEST On)
-    endif()
-
-    string(REPLACE "-" "_" KITNAME ${name})
-
-    target_compile_definitions(${libname} PRIVATE
-        KIT_NAME=${KITNAME}
-        KIT_STRING="${name}"
-        KIT_FOLDER="${CMAKE_CURRENT_SOURCE_DIR}/${name}"
-        KIT_NDJSON_FILE="${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.ndjson"
-        $<$<BOOL:${SKIP_TEST}>:SKIP_TEST>
-    )
-endfunction()
-
+# Build a plugin for each kit that has a .cpp file
 file(GLOB kits RELATIVE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/*)
 foreach(kit ${kits})
-    if (IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${kit})
-        add_compatibility_kit(${kit})
+    if (IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${kit} AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/${kit}/${kit}.cpp)
+        ccr_add_plugin(compatibility.${kit}.plugin ${kit}/${kit}.cpp)
     endif()
 endforeach()
+
+# Single test executable that loads plugins at runtime
+add_executable(compatibility.test)
+target_sources(compatibility.test PRIVATE
+    TestCompatibility.cpp
+)
+
+target_link_libraries(compatibility.test PRIVATE
+    GTest::gtest_main
+    compatibility.base
+)
+
+# Plugins resolve symbols from this executable at runtime via dlopen.
+# ENABLE_EXPORTS creates the dynamic symbol table, but the linker
+# normally strips unreferenced symbols from static libraries.
+# -rdynamic combined with --whole-archive ensures all cucumber_cpp
+# symbols are linked and exported for plugin use.
+if (NOT WIN32)
+    target_link_options(compatibility.test PRIVATE
+        "LINKER:--whole-archive"
+        $<TARGET_FILE:cucumber_cpp.library>
+        $<TARGET_FILE:cucumber_cpp.library.api>
+        $<TARGET_FILE:cucumber_cpp.library.engine>
+        $<TARGET_FILE:cucumber_cpp.library.support>
+        $<TARGET_FILE:cucumber_cpp.library.util>
+        $<TARGET_FILE:GTest::gtest>
+        $<TARGET_FILE:GTest::gmock>
+        "LINKER:--no-whole-archive"
+    )
+endif()
+
+set_target_properties(compatibility.test PROPERTIES
+    ENABLE_EXPORTS ON
+)
+
+file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" COMPAT_SOURCE_DIR_CMAKE)
+file(TO_CMAKE_PATH "${CMAKE_BINARY_DIR}" COMPAT_BUILD_DIR_CMAKE)
+
+target_compile_definitions(compatibility.test PRIVATE
+    COMPAT_SOURCE_DIR="${COMPAT_SOURCE_DIR_CMAKE}"
+    COMPAT_BUILD_DIR="${COMPAT_BUILD_DIR_CMAKE}"
+    COMPAT_PLUGIN_DIR="$<TARGET_FILE_DIR:compatibility.test>"
+)
+
+if(CCR_BUILD_TESTS)
+    gtest_discover_tests(compatibility.test)
+endif()
