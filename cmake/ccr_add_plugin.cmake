@@ -22,7 +22,7 @@ if (NOT TARGET ccr_plugin_register)
     add_library(ccr_plugin_register OBJECT
         ${CMAKE_CURRENT_LIST_DIR}/../cucumber_cpp/library/plugin/PluginRegister.cpp
     )
-    target_include_directories(ccr_plugin_register PRIVATE
+    target_include_directories(ccr_plugin_register SYSTEM PRIVATE
         $<TARGET_PROPERTY:cucumber_cpp,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:cucumber_cpp.library,INCLUDE_DIRECTORIES>
     )
@@ -37,7 +37,7 @@ function(ccr_add_plugin TARGET_NAME)
     # Plugins need the header include paths from cucumber_cpp and its
     # transitive dependencies (fmt, gtest, gherkin, etc.) but must NOT link
     # the actual libraries — symbols resolve from the host at runtime.
-    target_include_directories(${TARGET_NAME} PRIVATE
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
         $<TARGET_PROPERTY:cucumber_cpp,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:cucumber_cpp.library,INCLUDE_DIRECTORIES>
     )
