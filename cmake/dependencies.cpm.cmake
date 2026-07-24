@@ -106,6 +106,8 @@ if(CCR_FETCH_DEPS)
         set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
             FOLDER External/GoogleTest
         )
+        target_compile_options(gtest PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
+        target_compile_options(gmock PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
     endif()
 
     # ---------------------------------------------------------------------------
