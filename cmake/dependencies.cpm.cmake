@@ -31,7 +31,7 @@ ccr_dependency(YAML_CPP          v0.9.0     56e3bb550c91fd7005566f19c079cb7a5032
 if(CCR_FETCH_DEPS)
     if(NOT COMMAND CPMAddPackage)
         # ---------------------------------------------------------------------------
-        # CPM – download on first configure if not already cached (standalone only)
+        # CPM – download on first configure if not already cached
         # ---------------------------------------------------------------------------
         set(CPM_USE_LOCAL_PACKAGES ON)
         set(CPM_DOWNLOAD_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
@@ -171,7 +171,7 @@ else()
     find_package(nlohmann_json ${NLOHMANN_JSON_VERSION} REQUIRED)
     find_package(cucumber_messages ${CUCUMBER_MESSAGES_VERSION} REQUIRED)
     find_package(cucumber_gherkin ${CUCUMBER_GHERKIN_VERSION} REQUIRED)
-    find_package(GTest ${GOOGLE_TEST_VERSION} REQUIRED)
+    find_package(GTest REQUIRED)
     find_package(pugixml ${PUGIXML_VERSION} REQUIRED)
     find_package(fmt ${LIBFMT_VERSION} REQUIRED)
 
