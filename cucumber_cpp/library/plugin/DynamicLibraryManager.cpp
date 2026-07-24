@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibrary.hpp"
 #include "cucumber_cpp/library/plugin/PluginExport.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
@@ -45,7 +46,7 @@ namespace cucumber_cpp::library::plugin
         const auto& lib = libraries.emplace_back(path);
 
         auto registerFn = lib.GetSymbol<CcrRegisterFn>("ccr_register");
-        registerFn();
+        registerFn(&support::DefinitionRegistration::Instance());
     }
 
     void DynamicLibraryManager::LoadDirectory(const std::filesystem::path& directory)

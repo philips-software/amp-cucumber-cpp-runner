@@ -47,6 +47,15 @@ namespace cucumber_cpp::library::support
         staticParameters.merge(customParameters);
     }
 
+    void DefinitionRegistration::MergeInto(DefinitionRegistration& target)
+    {
+        if (this == &target)
+            return;
+
+        target.registry.merge(registry);
+        target.customParameters.merge(customParameters);
+    }
+
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
     {
         const auto assignGenerator = [&idGenerator](auto& entry)

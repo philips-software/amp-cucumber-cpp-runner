@@ -31,6 +31,7 @@ namespace cucumber_cpp::library::support
 
         void Clear();
         void TakeSnapshot();
+        void MergeInto(DefinitionRegistration& target);
 
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 

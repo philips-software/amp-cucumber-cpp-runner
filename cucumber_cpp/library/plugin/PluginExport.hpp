@@ -7,6 +7,6 @@
 #define CCR_EXPORT __attribute__((visibility("default")))
 #endif
 
-using CcrRegisterFn = void (*)();
+using CcrRegisterFn = void (*)(void*);
 
 #endif
