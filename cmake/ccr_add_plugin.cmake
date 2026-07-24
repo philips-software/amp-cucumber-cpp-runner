@@ -26,6 +26,7 @@ if (NOT TARGET ccr_plugin_register)
         $<TARGET_PROPERTY:cucumber_cpp,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:cucumber_cpp.library,INCLUDE_DIRECTORIES>
     )
+    target_link_libraries(ccr_plugin_register PRIVATE fmt::fmt)
     set_target_properties(ccr_plugin_register PROPERTIES
         CXX_VISIBILITY_PRESET default
     )
