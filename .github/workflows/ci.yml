@@ -19,6 +19,7 @@ concurrency:
 
 env:
   GTEST_COLOR: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
 
 jobs:
   build-in-devcontainer:
@@ -33,27 +34,31 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
       - if: ${{ matrix.target == 'Windows' }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: cache-winsdk
         with:
           path: /winsdk
           key: cache-winsdk-10.0.26100-14.43.17.13
+
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' }}
         run: ./get-winsdk.sh
+
       - if: ${{ matrix.target == 'Windows' && steps.cache-winsdk.outputs.cache-hit != 'true' && github.event_name != 'pull_request' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /winsdk
           key: cache-winsdk-10.0.26100-14.43.17.13
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+
+      - name: Build
+        uses: ./.github/actions/build
         with:
-          key: ${{ github.job }}-${{ matrix.target }}
-          max-size: 2G
-      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
-        with:
-          configurePreset: "${{ matrix.target}}"
-          buildPreset: "${{ matrix.target}}-Release"
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: true
+          ccache-key: ${{ github.job }}-${{ matrix.target }}
+          configure-preset: "${{ matrix.target}}"
+          build-preset: "${{ matrix.target}}-Release"
 
   test-linux:
     name: Acceptance Test on Linux
@@ -68,16 +73,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+
+      - name: Build
+        uses: ./.github/actions/build
         with:
-          key: ${{ github.job }}
-          max-size: 2G
-      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
-        with:
-          configurePreset: "Host"
-          buildPreset: "Host-Debug"
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          configure-preset: "Host"
+          build-preset: "Host-Debug"
+
       - run: |
           bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
+
       - uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
         if: always()
         with:
@@ -97,13 +105,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+
+      - name: Build and test
+        uses: ./.github/actions/workflow
         with:
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.type }}${{ matrix.preset_suffix }}
-          max-size: 2G
-      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
-        with:
-          workflowPreset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: ${{ !startsWith(matrix.os, 'windows') }}
+          ccache-key: ccache-${{ github.job }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.type }}${{ matrix.preset_suffix }}
+          workflow-preset: "${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}"
+
       - name: Upload test logs
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

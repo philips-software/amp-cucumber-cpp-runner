@@ -13,6 +13,11 @@ target_include_directories(compatibility.base PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
+file(TO_CMAKE_PATH "${CMAKE_BINARY_DIR}" CCR_BINARY_DIR_CMAKE)
+target_compile_definitions(compatibility.base PRIVATE
+    CCR_BINARY_DIR="${CCR_BINARY_DIR_CMAKE}"
+)
+
 function(add_compatibility_kit name)
     set(libname compatibility.${name}.test)
     add_executable(${libname})
@@ -33,7 +38,6 @@ function(add_compatibility_kit name)
     target_sources(${libname} PRIVATE
         TestCompatibility.cpp
     )
-
 
     if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/${name}/${name}.cpp)
         target_sources(${libname} PRIVATE

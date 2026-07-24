@@ -14,6 +14,10 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
+env:
+  GTEST_COLOR: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
+
 jobs:
   sonar:
     name: SonarCloud
@@ -27,17 +31,15 @@ jobs:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
 
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+      - name: Build
+        uses: ./.github/actions/build-test
         with:
-          key: ${{ github.job }}
-          max-size: 2G
-
-      - name: Build for coverage
-        uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
-        with:
-          configurePreset: "Coverage"
-          buildPreset: "Coverage"
-          testPreset: "Coverage"
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          configure-preset: "Coverage"
+          build-preset: "Coverage"
+          test-preset: "Coverage"
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
@@ -66,21 +68,24 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:8.0.1@sha256:489772f6e442f93804c0ccdb8879d84fbb1a70a203e8a2885ec97b39858bddee
     permissions:
       security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
-        with:
-          key: ${{ github.job }}
+
       - uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           languages: cpp
-      - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
+
+      - name: Build
+        uses: ./.github/actions/build
         with:
-          configurePreset: "Host"
-          buildPreset: "Host-Debug"
+          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          configure-preset: "Host"
+          build-preset: "Host-Debug"
+
       - uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3

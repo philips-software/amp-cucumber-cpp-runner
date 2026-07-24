@@ -1,6 +1,5 @@
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/step_definition_pattern_type.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Expression.hpp"
@@ -17,7 +16,6 @@
 #include <list>
 #include <map>
 #include <optional>
-#include <regex>
 #include <source_location>
 #include <span>
 #include <string>

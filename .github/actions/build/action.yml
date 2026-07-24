@@ -1,0 +1,52 @@
+---
+name: Build
+description: Builds the project using CMake
+
+inputs:
+  cpm-source-cache:
+    description: Path to the CPM source cache directory
+    required: true
+  use-ccache:
+    description: Use ccache to speed up builds
+    required: true
+  ccache-key:
+    description: Key for ccache cache
+    required: false
+  configure-preset:
+    description: CMake configure preset to use
+    required: true
+  build-preset:
+    description: CMake build preset to use
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore CPM packages cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      id: cache-cpm
+      with:
+        path: ${{ inputs.cpm-source-cache }}
+        key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}
+
+    - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+      if: ${{ inputs.use-ccache == 'true' }}
+      with:
+        key: ${{ inputs.ccache-key }}
+        max-size: 2G
+        save: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      env:
+        CPM_SOURCE_CACHE: ${{ inputs.cpm-source-cache }}
+
+    - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
+      with:
+        configurePreset: "${{ inputs.configure-preset }}"
+        buildPreset: "${{ inputs.build-preset }}"
+
+
+    - name: Save CPM packages cache
+      if: ${{ !startsWith(github.ref, 'refs/tags/') && steps.cache-cpm.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.cpm-source-cache }}
+        key: cpm-${{ hashFiles('cmake/dependencies.cpm.cmake', 'cmake/package-lock.cmake') }}

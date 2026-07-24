@@ -10,7 +10,7 @@
 
 namespace
 {
-    const std::filesystem::path currentCompileDir = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
+    const std::filesystem::path compatibilityPath = std::filesystem::path{ KIT_FOLDER };
 }
 
 WHEN(R"(the string {string} is attached as {string})", (const std::string& text, const std::string& mediaType))
@@ -43,7 +43,7 @@ WHEN(R"(an array with {int} bytes is attached as {string})", (std::int32_t size,
 
 WHEN(R"(a PDF document is attached and renamed)")
 {
-    std::ifstream pdfFile{ currentCompileDir / "document.pdf", std::ios::binary };
+    std::ifstream pdfFile{ compatibilityPath / "document.pdf", std::ios::binary };
     Attach(pdfFile, cucumber_cpp::AttachOptions{ .mediaType = "application/pdf", .fileName = "renamed.pdf" });
 }
 

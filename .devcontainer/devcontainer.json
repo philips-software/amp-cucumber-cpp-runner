@@ -13,5 +13,8 @@
         "github.vscode-github-actions"
       ]
     }
+  },
+  "remoteEnv": {
+    "CPM_SOURCE_CACHE": "/root/cache/.cpm"
   }
 }

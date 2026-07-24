@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.1.0) # x-release-please-version
 
-include(ccr_test_helpers)
+include(cmake/ccr_test_helpers.cmake)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CCR_STANDALONE On)
@@ -12,7 +12,6 @@ endif()
 if (CCR_STANDALONE)
     set(CCR_DEFAULTOPT On)
     set(CCR_EXCLUDE_FROM_ALL "")
-    set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 else()
     set(CCR_DEFAULTOPT Off)
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
@@ -61,26 +60,8 @@ include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
 
-if (CCR_FETCH_DEPS)
-    add_subdirectory(external)
-else()
-    find_package(CLI11 REQUIRED)
-    find_package(nlohmann_json REQUIRED)
-    find_package(GTest REQUIRED)
-    find_package(pugixml REQUIRED)
-    find_package(cucumber_messages REQUIRED)
-    find_package(cucumber_gherkin REQUIRED)
-    find_package(fmt REQUIRED)
-
-    if (CCR_BUILD_TESTS)
-        find_package(yaml-cpp REQUIRED)
-    endif()
-
-    if (CCR_USE_RE2)
-        find_package(absl)
-        find_package(re2)
-    endif()
-endif()
+include(cmake/dependencies.cpm.cmake)
+add_subdirectory(external)
 
 if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
@@ -92,15 +73,19 @@ endif()
 # libraries (abseil, re2) are not compiled with sanitizer instrumentation.
 # Abseil's constexpr function-pointer comparisons are not compatible with GCC's
 # ASan/UBSan instrumentation, which causes build failures.
-if (CCR_STANDALONE AND NOT CCR_ENABLE_COVERAGE)
+if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE)
     if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
         add_compile_options(-fsanitize=address -fsanitize=undefined)
         add_link_options(-fsanitize=address -fsanitize=undefined)
     endif()
 endif()
 
+if(PROJECT_IS_TOP_LEVEL)
+    set(CMAKE_COMPILE_WARNING_AS_ERROR On)
+endif()
+
 add_subdirectory(cucumber_cpp)
 
-if (CCR_STANDALONE)
+if (PROJECT_IS_TOP_LEVEL)
     add_subdirectory(compatibility)
 endif()

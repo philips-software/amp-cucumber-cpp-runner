@@ -136,7 +136,8 @@ namespace cucumber_cpp::library::support
                 , regex{ std::move(regex) }
                 , factory{ factory }
                 , sourceLocation{ sourceLocation }
-            {}
+            {
+            }
 
             StepType type{};
             std::string regex;

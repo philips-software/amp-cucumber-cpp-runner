@@ -4,7 +4,7 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -70,7 +70,11 @@ namespace compatibility
                     uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), devkit.folder);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
-                    json[key] = std::filesystem::canonical(uri).string();
+                    std::filesystem::path path{ uri };
+                    if (path.is_relative())
+                        path = std::filesystem::path{ CCR_BINARY_DIR } / path;
+
+                    json[key] = std::filesystem::canonical(path).string();
 
                     ++jsonIter;
                 }
