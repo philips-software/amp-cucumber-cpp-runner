@@ -12,7 +12,7 @@ inputs:
     default: true
   ccache-key:
     description: Key for ccache cache
-    required: false
+    required: true
   workflow-preset:
     description: CMake workflow preset to use
     required: true
@@ -37,6 +37,8 @@ runs:
     - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
       with:
         workflowPreset: "${{ inputs.workflow-preset }}"
+      env:
+        CPM_SOURCE_CACHE: ${{ inputs.cpm-source-cache }}
 
     - name: Save CPM packages cache
       if: ${{ !startsWith(github.ref, 'refs/tags/') && steps.cache-cpm.outputs.cache-hit != 'true' }}

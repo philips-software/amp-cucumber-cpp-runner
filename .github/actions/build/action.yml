@@ -12,7 +12,7 @@ inputs:
     default: true
   ccache-key:
     description: Key for ccache cache
-    required: false
+    required: true
   configure-preset:
     description: CMake configure preset to use
     required: true
@@ -36,11 +36,14 @@ runs:
         key: ${{ inputs.ccache-key }}
         max-size: 2G
         save: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      env:
+        CPM_SOURCE_CACHE: ${{ inputs.cpm-source-cache }}
 
     - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
       with:
         configurePreset: "${{ inputs.configure-preset }}"
         buildPreset: "${{ inputs.build-preset }}"
+
 
     - name: Save CPM packages cache
       if: ${{ !startsWith(github.ref, 'refs/tags/') && steps.cache-cpm.outputs.cache-hit != 'true' }}
