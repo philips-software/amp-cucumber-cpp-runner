@@ -1,7 +1,7 @@
 FetchContent_Declare(
     cucumber_messages
     GIT_REPOSITORY https://github.com/cucumber/messages.git
-    GIT_TAG c34b8cf6412f274ac6943075326440b7e6062c81 # refactor-cpp-codegen
+    GIT_TAG 073f951ce615149a1532185fbae013ad908a918e # v34.2.0
     OVERRIDE_FIND_PACKAGE
 )
 
