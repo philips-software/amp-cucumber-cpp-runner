@@ -26,8 +26,7 @@ namespace cucumber_cpp::library::plugin
 
     void DynamicLibraryManager::UnloadAll()
     {
-        while (!libraries.empty())
-            libraries.pop_back();
+        libraries.clear();
     }
 
     std::vector<std::filesystem::path> DynamicLibraryManager::GetLoadedLibraries() const
@@ -43,7 +42,7 @@ namespace cucumber_cpp::library::plugin
 
     void DynamicLibraryManager::LoadFile(const std::filesystem::path& path)
     {
-        auto& lib = libraries.emplace_back(path);
+        const auto& lib = libraries.emplace_back(path);
 
         auto registerFn = lib.GetSymbol<CcrRegisterFn>("ccr_register");
         registerFn();
@@ -59,7 +58,7 @@ namespace cucumber_cpp::library::plugin
             if (std::filesystem::is_regular_file(entry) && entry.path().extension() == extension)
                 sortedPaths.push_back(entry.path());
 
-        std::sort(sortedPaths.begin(), sortedPaths.end());
+        std::ranges::sort(sortedPaths);
 
         for (const auto& path : sortedPaths)
             LoadFile(path);
