@@ -8,11 +8,10 @@ inputs:
     required: true
   use-ccache:
     description: Use ccache to speed up builds
-    required: false
-    default: true
+    required: true
   ccache-key:
     description: Key for ccache cache
-    required: true
+    required: false
   workflow-preset:
     description: CMake workflow preset to use
     required: true
