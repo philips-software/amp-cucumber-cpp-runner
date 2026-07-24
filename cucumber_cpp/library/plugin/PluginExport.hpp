@@ -7,6 +7,16 @@
 #define CCR_EXPORT __attribute__((visibility("default")))
 #endif
 
-using CcrRegisterFn = void (*)(void*);
+namespace cucumber_cpp::library::plugin
+{
+    struct PluginHostContext
+    {
+        void* registration;
+        void* stopwatch;
+        void* timestampGenerator;
+    };
+}
+
+using CcrRegisterFn = void (*)(cucumber_cpp::library::plugin::PluginHostContext*);
 
 #endif

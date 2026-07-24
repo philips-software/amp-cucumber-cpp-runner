@@ -39,6 +39,11 @@ namespace cucumber_cpp::library::util
         return *instance;
     }
 
+    void TimestampGenerator::SetInstance(TimestampGenerator& inst)
+    {
+        instance = &inst;
+    }
+
     std::chrono::milliseconds TimestampGeneratorSystemClock::Now()
     {
         const auto now = std::chrono::system_clock::now().time_since_epoch();

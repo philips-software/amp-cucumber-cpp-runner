@@ -2,6 +2,8 @@
 #include "cucumber_cpp/library/plugin/DynamicLibrary.hpp"
 #include "cucumber_cpp/library/plugin/PluginExport.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
@@ -46,7 +48,14 @@ namespace cucumber_cpp::library::plugin
         const auto& lib = libraries.emplace_back(path);
 
         auto registerFn = lib.GetSymbol<CcrRegisterFn>("ccr_register");
-        registerFn(&support::DefinitionRegistration::Instance());
+
+        PluginHostContext context{
+            .registration = &support::DefinitionRegistration::Instance(),
+            .stopwatch = &util::Stopwatch::Instance(),
+            .timestampGenerator = &util::TimestampGenerator::Instance(),
+        };
+
+        registerFn(&context);
     }
 
     void DynamicLibraryManager::LoadDirectory(const std::filesystem::path& directory)
