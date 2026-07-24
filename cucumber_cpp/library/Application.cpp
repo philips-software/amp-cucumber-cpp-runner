@@ -71,15 +71,14 @@ namespace cucumber_cpp::library
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
     {
         cli.set_config("--config", "cucumber.toml");
-        support::DefinitionRegistration::Instance().TakeSnapshot();
     }
 
     Application::~Application()
     {
         if (!dynamicLibraryManager.GetLoadedLibraries().empty())
         {
+            support::DefinitionRegistration::Instance().UnregisterPlugins();
             dynamicLibraryManager.UnloadAll();
-            support::DefinitionRegistration::Instance().Clear();
         }
     }
 

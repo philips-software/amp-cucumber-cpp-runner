@@ -33,28 +33,17 @@ namespace cucumber_cpp::library::support
         return instance;
     }
 
-    void DefinitionRegistration::Clear()
+    void DefinitionRegistration::RegisterPlugin(DefinitionRegistration& plugin)
     {
-        registry.clear();
-        customParameters.clear();
-    }
-
-    void DefinitionRegistration::TakeSnapshot()
-    {
-        if (!staticRegistry.empty() || !staticParameters.empty())
+        if (&plugin == this)
             return;
 
-        staticRegistry.merge(registry);
-        staticParameters.merge(customParameters);
+        plugins.push_back(&plugin);
     }
 
-    void DefinitionRegistration::MergeInto(DefinitionRegistration& target)
+    void DefinitionRegistration::UnregisterPlugins()
     {
-        if (this == &target)
-            return;
-
-        target.registry.merge(registry);
-        target.customParameters.merge(customParameters);
+        plugins.clear();
     }
 
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
@@ -64,11 +53,12 @@ namespace cucumber_cpp::library::support
             entry.id = idGenerator->next_id();
         };
 
-        for (auto& [key, item] : staticRegistry)
-            std::visit(assignGenerator, item);
-
         for (auto& [key, item] : registry)
             std::visit(assignGenerator, item);
+
+        for (auto* plugin : plugins)
+            for (auto& [key, item] : plugin->registry)
+                std::visit(assignGenerator, item);
     }
 
     std::vector<HookEntry> DefinitionRegistration::GetHooks()
@@ -82,36 +72,22 @@ namespace cucumber_cpp::library::support
                     result.push_back(std::get<HookEntry>(entry));
         };
 
-        collectHooks(staticRegistry);
         collectHooks(registry);
+
+        for (auto* plugin : plugins)
+            collectHooks(plugin->registry);
+
         return result;
     }
 
     std::set<cucumber_expression::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
     {
-        auto result = staticParameters;
-        result.insert(customParameters.begin(), customParameters.end());
+        auto result = customParameters;
+
+        for (const auto* plugin : plugins)
+            result.insert(plugin->customParameters.begin(), plugin->customParameters.end());
+
         return result;
-    }
-
-    cucumber_expression::ErasedConverter DefinitionRegistration::GetConverter(const std::string& name) const
-    {
-        auto findIn = [&name](const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& params) -> cucumber_expression::ErasedConverter
-        {
-            auto it = std::ranges::find_if(params, [&name](const auto& entry)
-                {
-                    return entry.params.name == name;
-                });
-            if (it != params.end())
-                return it->converter;
-
-            return nullptr;
-        };
-
-        if (auto converter = findIn(staticParameters))
-            return converter;
-
-        return findIn(customParameters);
     }
 
     std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)

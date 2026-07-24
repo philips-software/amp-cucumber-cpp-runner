@@ -18,7 +18,6 @@
 #include "cucumber/messages/test_step_started.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
-#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -51,10 +50,7 @@ namespace cucumber_cpp::library::runtime
     {
         cucumber::messages::test_step_result InvokeStep(const util::BodyFactory& bodyFactory, const cucumber::messages::step_match_arguments_list& args)
         {
-            return util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args, [](const std::string& name)
-                                                                                            {
-                                                                                                return support::DefinitionRegistration::Instance().GetConverter(name);
-                                                                                            })));
+            return util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args)));
         }
 
         std::optional<util::ScenarioInfo> MakeScenarioInfo(const cucumber::messages::pickle& pickle)

@@ -8,7 +8,6 @@
 #include "cucumber_cpp/library/Steps.hpp"
 #include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/plugin/PluginExport.hpp"
 
 namespace cucumber_cpp
 {

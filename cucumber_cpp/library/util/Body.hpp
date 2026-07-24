@@ -48,7 +48,6 @@ namespace cucumber_cpp::library::util
     {
         std::string converterName;
         cucumber_expression::ConvertFunctionArg converterArgs;
-        cucumber_expression::ErasedConverter converter;
     };
 
     using ExecuteArgs = std::vector<Argument>;

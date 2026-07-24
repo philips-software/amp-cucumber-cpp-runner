@@ -6,9 +6,7 @@
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "gtest/gtest.h"
-#include <any>
 #include <cstddef>
-#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -16,29 +14,9 @@
 namespace cucumber_cpp::library::detail
 {
     template<class T>
-    struct IsOptional : std::false_type
-    {};
-
-    template<class T>
-    struct IsOptional<std::optional<T>> : std::true_type
-    {};
-
-    template<class T>
-    T TransformArg(const std::string& parameterName, const cucumber_expression::ConvertFunctionArg& parameterArgs, const cucumber_expression::ErasedConverter& converter)
+    T TransformArg(const std::string& parameterName, const cucumber_expression::ConvertFunctionArg& parameterArgs)
     {
-        if constexpr (IsOptional<T>::value)
-        {
-            using Inner = typename T::value_type;
-            if (converter)
-                return std::any_cast<std::optional<Inner>>(converter(parameterArgs));
-            return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
-        }
-        else
-        {
-            if (converter)
-                return std::any_cast<std::optional<T>>(converter(parameterArgs)).value();
-            return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
-        }
+        return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
     }
 
     template<class Base>
@@ -66,7 +44,7 @@ namespace cucumber_cpp::library::detail
         template<class... TArgs, std::size_t... I>
         void ExecuteImpl(const util::ExecuteArgs& args, std::index_sequence<I...> /*unused*/)
         {
-            static_cast<Base*>(this)->ExecuteImpl(TransformArg<std::remove_cvref_t<TArgs>>(args[I].converterName, args[I].converterArgs, args[I].converter)...);
+            static_cast<Base*>(this)->ExecuteImpl(TransformArg<std::remove_cvref_t<TArgs>>(args[I].converterName, args[I].converterArgs)...);
         }
     };
 }

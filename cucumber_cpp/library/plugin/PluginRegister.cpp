@@ -7,5 +7,5 @@ extern "C" CCR_EXPORT void ccr_register(void* hostRegistration)
         return;
 
     auto& host = *static_cast<cucumber_cpp::library::support::DefinitionRegistration*>(hostRegistration);
-    cucumber_cpp::library::support::DefinitionRegistration::Instance().MergeInto(host);
+    host.RegisterPlugin(cucumber_cpp::library::support::DefinitionRegistration::Instance());
 }

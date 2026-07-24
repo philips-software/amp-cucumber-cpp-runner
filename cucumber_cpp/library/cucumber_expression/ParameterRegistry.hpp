@@ -3,7 +3,6 @@
 
 #include "fmt/format.h"
 #include <algorithm>
-#include <any>
 #include <cctype>
 #include <compare>
 #include <cstddef>
@@ -32,9 +31,6 @@ namespace cucumber_cpp::library::cucumber_expression
         bool useForSnippets;
     };
 
-    using ConvertFunctionArg = std::vector<std::optional<std::string>>;
-    using ErasedConverter = std::function<std::any(const ConvertFunctionArg&)>;
-
     struct CustomParameterEntry
     {
         CustomParameterEntryParams params;
@@ -42,8 +38,6 @@ namespace cucumber_cpp::library::cucumber_expression
         std::size_t localId{};
 
         std::source_location location;
-
-        ErasedConverter converter;
 
         std::strong_ordering operator<=>(const CustomParameterEntry& other) const;
     };
@@ -129,6 +123,8 @@ namespace cucumber_cpp::library::cucumber_expression
         bool preferForRegexMatch{ false };
         std::source_location location;
     };
+
+    using ConvertFunctionArg = std::vector<std::optional<std::string>>;
 
     template<class T>
     using ConverterFunction = std::function<T(const ConvertFunctionArg&)>;
