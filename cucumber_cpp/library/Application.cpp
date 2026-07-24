@@ -82,7 +82,6 @@ namespace cucumber_cpp::library
         if (!dynamicLibraryManager.GetLoadedLibraries().empty())
         {
             cucumber_expression::ConverterTypeMapClearer::ClearAll();
-            cucumber_expression::ConverterTypeMapClearer::ClearFunctions().clear();
             support::DefinitionRegistration::Instance().UnregisterPlugins();
             dynamicLibraryManager.UnloadAll();
         }

@@ -3,6 +3,7 @@
 
 #include "fmt/format.h"
 #include <algorithm>
+#include <any>
 #include <cctype>
 #include <compare>
 #include <cstddef>
@@ -129,50 +130,113 @@ namespace cucumber_cpp::library::cucumber_expression
     template<class T>
     using ConverterFunction = std::function<T(const ConvertFunctionArg&)>;
 
-    template<class T>
-    using TypeMap = std::map<std::string, ConverterFunction<T>>;
+    // Type-erased converter used at the host/plugin ABI boundary. The stored
+    // std::function returns std::any so a single non-templated map can hold
+    // converters for all return types. std::any_cast is performed at the call
+    // site (host or plugin), while the underlying storage can be shared.
+    using AnyConverterFunction = std::function<std::any(const ConvertFunctionArg&)>;
 
-    template<class T>
-    struct ConverterTypeMap
+    using ConverterMap = std::map<std::string, AnyConverterFunction>;
+
+    // Central converter registry. Each DLL has its own default map, but the
+    // active pointer can be redirected to a shared (host-owned) map so
+    // registrations and lookups cross DLL boundaries safely.
+    struct ConverterRegistry
     {
-        static TypeMap<T>& Instance();
+        static ConverterMap& Instance()
+        {
+            return *ActivePtr();
+        }
+
+        static ConverterMap& LocalInstance()
+        {
+            static ConverterMap map;
+            return map;
+        }
+
+        // Redirect this DLL's active converter map to an externally owned map
+        // (typically the host's). Passing nullptr restores the local map.
+        static void SetInstance(ConverterMap* external)
+        {
+            ActivePtr() = external != nullptr ? external : &LocalInstance();
+        }
+
+    private:
+        static ConverterMap*& ActivePtr()
+        {
+            static ConverterMap* ptr = &LocalInstance();
+            return ptr;
+        }
     };
 
     struct ConverterTypeMapClearer
     {
-        static std::vector<std::function<void()>>& ClearFunctions()
-        {
-            static std::vector<std::function<void()>> fns;
-            return fns;
-        }
-
-        static void Register(std::function<void()> fn)
-        {
-            ClearFunctions().push_back(std::move(fn));
-        }
-
         static void ClearAll()
         {
-            for (const auto& fn : ClearFunctions())
-                fn();
+            ConverterRegistry::LocalInstance().clear();
+            ConverterRegistry::Instance().clear();
         }
     };
 
+    // Backwards-compatible typed accessor. Wraps/unwraps std::any so existing
+    // typed callers keep working, but storage is unified in ConverterRegistry.
     template<class T>
-    TypeMap<T>& ConverterTypeMap<T>::Instance()
+    struct ConverterTypeMap
     {
-        static TypeMap<T> typeMap;
-        [[maybe_unused]] static const bool registered = []
+        // Proxy allowing typed insertion/lookup against the underlying any map.
+        struct Proxy
         {
-            auto* ptr = &typeMap;
-            ConverterTypeMapClearer::Register([ptr]
+            ConverterMap& map;
+
+            void emplace(const std::string& name, ConverterFunction<T> fn)
+            {
+                map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args) -> std::any
                 {
-                    ptr->clear();
-                });
-            return true;
-        }();
-        return typeMap;
-    }
+                    return std::any{ fn(args) };
+                };
+            }
+
+            struct TypedAccessor
+            {
+                AnyConverterFunction& fn;
+
+                T operator()(const ConvertFunctionArg& args) const
+                {
+                    return std::any_cast<T>(fn(args));
+                }
+            };
+
+            TypedAccessor at(const std::string& name)
+            {
+                return TypedAccessor{ map.at(name) };
+            }
+
+            struct Assigner
+            {
+                ConverterMap& map;
+                std::string name;
+
+                Assigner& operator=(ConverterFunction<T> fn)
+                {
+                    map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args) -> std::any
+                    {
+                        return std::any{ fn(args) };
+                    };
+                    return *this;
+                }
+            };
+
+            Assigner operator[](const std::string& name)
+            {
+                return Assigner{ map, name };
+            }
+        };
+
+        static Proxy Instance()
+        {
+            return Proxy{ ConverterRegistry::Instance() };
+        }
+    };
 
     struct ParameterRegistry
     {

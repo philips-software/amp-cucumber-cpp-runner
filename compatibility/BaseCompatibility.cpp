@@ -161,6 +161,7 @@ namespace compatibility
         argStrings.emplace_back("--load");
         argStrings.emplace_back(kit.pluginPath.string());
         argStrings.emplace_back("--format");
+        argStrings.emplace_back("pretty");
         argStrings.emplace_back("message:" + actualNdjsonPath.string());
 
         for (const auto& arg : kit.extraArgs)

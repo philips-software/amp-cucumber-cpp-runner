@@ -14,6 +14,7 @@ namespace cucumber_cpp::library::plugin
         void* registration;
         void* stopwatch;
         void* timestampGenerator;
+        void* converterMap;
     };
 }
 
