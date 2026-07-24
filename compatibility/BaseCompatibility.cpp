@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/Application.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <filesystem>
 #include <fstream>
@@ -106,14 +107,14 @@ namespace compatibility
                     ofs << json.dump() << "\n";
             }
 
-            EXPECT_EQ(actual.size(), expected.size());
+            EXPECT_THAT(actual.size(), testing::Eq(expected.size()));
 
             auto actualIter = actual.begin();
             auto expectedIter = expected.begin();
 
             while (actualIter != actual.end() && expectedIter != expected.end())
             {
-                EXPECT_EQ(*actualIter, *expectedIter);
+                EXPECT_THAT(*actualIter, testing::Eq(*expectedIter));
                 ++actualIter;
                 ++expectedIter;
             }

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace compatibility
@@ -62,10 +63,10 @@ namespace compatibility
             std::ranges::replace(name, '-', '_');
             return name;
         }
-    }
 
-    class CompatibilityTest : public testing::TestWithParam<KitInfo>
-    {};
+        class CompatibilityTest : public testing::TestWithParam<KitInfo>
+        {};
+    }
 
     TEST_P(CompatibilityTest, Kit)
     {
