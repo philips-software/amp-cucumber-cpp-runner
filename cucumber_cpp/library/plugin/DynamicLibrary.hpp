@@ -1,7 +1,5 @@
 #ifndef PLUGIN_DYNAMIC_LIBRARY_HPP
 #define PLUGIN_DYNAMIC_LIBRARY_HPP
-#ifndef CUCUMBER_CPP_PLUGIN_DYNAMIC_LIBRARY_HPP
-#define CUCUMBER_CPP_PLUGIN_DYNAMIC_LIBRARY_HPP
 
 #include <filesystem>
 #include <string>
@@ -45,7 +43,5 @@ namespace cucumber_cpp::library::plugin
         return reinterpret_cast<FnPtr>(GetSymbolAddress(name)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     }
 }
-
-#endif
 
 #endif

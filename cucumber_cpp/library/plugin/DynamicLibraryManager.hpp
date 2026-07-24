@@ -1,7 +1,5 @@
 #ifndef PLUGIN_DYNAMIC_LIBRARY_MANAGER_HPP
 #define PLUGIN_DYNAMIC_LIBRARY_MANAGER_HPP
-#ifndef CUCUMBER_CPP_PLUGIN_DYNAMIC_LIBRARY_MANAGER_HPP
-#define CUCUMBER_CPP_PLUGIN_DYNAMIC_LIBRARY_MANAGER_HPP
 
 #include "cucumber_cpp/library/plugin/DynamicLibrary.hpp"
 #include <filesystem>
@@ -24,7 +22,5 @@ namespace cucumber_cpp::library::plugin
         std::vector<DynamicLibrary> libraries;
     };
 }
-
-#endif
 
 #endif
