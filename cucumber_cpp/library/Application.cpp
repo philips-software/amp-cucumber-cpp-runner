@@ -66,9 +66,13 @@ namespace cucumber_cpp::library
         }
     }
 
-    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
+    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener,
+        std::unique_ptr<util::Stopwatch> stopwatch,
+        std::unique_ptr<util::TimestampGenerator> timestampGenerator)
         : contextStorageFactory{ std::move(contextStorageFactory) }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
+        , stopwatch{ std::move(stopwatch) }
+        , timestampGenerator{ std::move(timestampGenerator) }
     {
         cli.set_config("--config", "cucumber.toml");
     }
@@ -147,7 +151,10 @@ namespace cucumber_cpp::library
                 std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
 
             if (!options.loadPaths.empty())
+            {
+                support::DefinitionRegistration::Instance().TakeSnapshot();
                 dynamicLibraryManager.Load(options.loadPaths);
+            }
 
             return RunFeatures();
         }

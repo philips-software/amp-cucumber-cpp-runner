@@ -60,7 +60,9 @@ namespace cucumber_cpp::library
             std::vector<std::string> loadPaths{};
         };
 
-        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true,
+            std::unique_ptr<util::Stopwatch> stopwatch = std::make_unique<util::StopWatchHighResolutionClock>(),
+            std::unique_ptr<util::TimestampGenerator> timestampGenerator = std::make_unique<util::TimestampGeneratorSystemClock>());
 
         ~Application();
 
@@ -91,8 +93,8 @@ namespace cucumber_cpp::library
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
-        util::StopWatchHighResolutionClock stopwatchHighResolutionClock;
-        util::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
+        std::unique_ptr<util::Stopwatch> stopwatch;
+        std::unique_ptr<util::TimestampGenerator> timestampGenerator;
 
         bool runPassed{ false };
     };

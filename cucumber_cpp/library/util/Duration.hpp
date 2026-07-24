@@ -15,11 +15,9 @@ namespace cucumber_cpp::library::util
 
     struct Stopwatch
     {
-    protected:
         Stopwatch();
-        ~Stopwatch() = default;
+        virtual ~Stopwatch() = default;
 
-    public:
         static Stopwatch& Instance();
 
         virtual std::chrono::high_resolution_clock::time_point Start() = 0;

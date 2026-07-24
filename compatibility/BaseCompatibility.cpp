@@ -1,10 +1,13 @@
 #include "BaseCompatibility.hpp"
 #include "cucumber_cpp/Steps.hpp"
 #include "cucumber_cpp/library/Application.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <list>
@@ -26,8 +29,6 @@ namespace compatibility
                 auto& value = jsonIter.value();
 
                 if (key == "exception" || key == "message" || key == "line" || key == "snippets")
-                    jsonIter = json.erase(jsonIter);
-                else if (key == "timestamp" || key == "duration")
                     jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
@@ -119,6 +120,35 @@ namespace compatibility
                 ++expectedIter;
             }
         }
+
+        struct StopwatchIncremental : cucumber_cpp::library::util::Stopwatch
+        {
+            virtual ~StopwatchIncremental() = default;
+
+            std::chrono::high_resolution_clock::time_point Start() override
+            {
+                return {};
+            }
+
+            std::chrono::nanoseconds Duration([[maybe_unused]] std::chrono::high_resolution_clock::time_point timePoint) override
+            {
+                return current;
+            }
+
+            std::chrono::nanoseconds current{ std::chrono::milliseconds{ 1 } };
+        };
+
+        struct TimestampGeneratorIncremental : cucumber_cpp::library::util::TimestampGenerator
+        {
+            virtual ~TimestampGeneratorIncremental() = default;
+
+            std::chrono::milliseconds Now() override
+            {
+                return current++;
+            }
+
+            std::chrono::milliseconds current{ 0 };
+        };
     }
 
     void RunDevkit(const KitInfo& kit)
@@ -145,7 +175,11 @@ namespace compatibility
             argv.push_back(s.c_str());
 
         {
-            cucumber_cpp::library::Application app{ std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>(), false };
+            cucumber_cpp::library::Application app{
+                std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>(), false,
+                std::make_unique<StopwatchIncremental>(),
+                std::make_unique<TimestampGeneratorIncremental>()
+            };
             static_cast<void>(app.Run(static_cast<int>(argv.size()), argv.data()));
         }
 

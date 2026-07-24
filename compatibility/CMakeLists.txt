@@ -33,7 +33,6 @@ add_executable(compatibility.test)
 target_sources(compatibility.test PRIVATE
     TestCompatibility.cpp
 )
-
 target_link_libraries(compatibility.test PRIVATE
     GTest::gtest_main
     compatibility.base
@@ -81,6 +80,10 @@ target_compile_definitions(compatibility.test PRIVATE
     COMPAT_PLUGIN_DIR="$<TARGET_FILE_DIR:compatibility.test>"
 )
 
-if(CCR_BUILD_TESTS AND NOT CMAKE_CROSSCOMPILING)
-    gtest_discover_tests(compatibility.test)
+if(CCR_BUILD_TESTS)
+    if(NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        gtest_discover_tests(compatibility.test)
+    else()
+        add_test(NAME compatibility.test COMMAND compatibility.test)
+    endif()
 endif()

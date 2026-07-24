@@ -32,6 +32,8 @@ namespace cucumber_cpp::library::support
         void RegisterPlugin(DefinitionRegistration& plugin);
         void UnregisterPlugins();
 
+        void TakeSnapshot();
+
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 
         template<class T>
@@ -62,6 +64,9 @@ namespace cucumber_cpp::library::support
         std::set<cucumber_expression::CustomParameterEntry, std::less<>> customParameters;
 
         std::vector<DefinitionRegistration*> plugins;
+
+        std::map<std::source_location, Entry, SourceLocationOrder> staticRegistry;
+        std::set<cucumber_expression::CustomParameterEntry, std::less<>> staticCustomParameters;
     };
 
     //////////////////////////
@@ -88,6 +93,7 @@ namespace cucumber_cpp::library::support
                 func(step);
         };
 
+        forEachStep(staticRegistry);
         forEachStep(registry);
 
         for (auto* plugin : plugins)

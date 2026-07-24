@@ -15,11 +15,9 @@ namespace cucumber_cpp::library::util
 
     struct TimestampGenerator
     {
-    protected:
         TimestampGenerator();
-        ~TimestampGenerator();
+        virtual ~TimestampGenerator();
 
-    public:
         static TimestampGenerator& Instance();
         virtual std::chrono::milliseconds Now() = 0;
 

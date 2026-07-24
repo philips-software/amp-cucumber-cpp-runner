@@ -7,16 +7,15 @@
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
-#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <map>
-#include <ranges>
 #include <set>
 #include <source_location>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -44,6 +43,17 @@ namespace cucumber_cpp::library::support
     void DefinitionRegistration::UnregisterPlugins()
     {
         plugins.clear();
+        registry.clear();
+        customParameters.clear();
+    }
+
+    void DefinitionRegistration::TakeSnapshot()
+    {
+        if (staticRegistry.empty() && staticCustomParameters.empty())
+        {
+            staticRegistry = std::move(registry);
+            staticCustomParameters = std::move(customParameters);
+        }
     }
 
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
@@ -52,6 +62,9 @@ namespace cucumber_cpp::library::support
         {
             entry.id = idGenerator->next_id();
         };
+
+        for (auto& [key, item] : staticRegistry)
+            std::visit(assignGenerator, item);
 
         for (auto& [key, item] : registry)
             std::visit(assignGenerator, item);
@@ -72,6 +85,7 @@ namespace cucumber_cpp::library::support
                     result.push_back(std::get<HookEntry>(entry));
         };
 
+        collectHooks(staticRegistry);
         collectHooks(registry);
 
         for (auto* plugin : plugins)
@@ -82,7 +96,8 @@ namespace cucumber_cpp::library::support
 
     std::set<cucumber_expression::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
     {
-        auto result = customParameters;
+        auto result = staticCustomParameters;
+        result.insert(customParameters.begin(), customParameters.end());
 
         for (const auto* plugin : plugins)
             result.insert(plugin->customParameters.begin(), plugin->customParameters.end());
