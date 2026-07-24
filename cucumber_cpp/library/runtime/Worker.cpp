@@ -193,9 +193,9 @@ namespace cucumber_cpp::library::runtime
 
         if (!options.dryRun)
         {
-            const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted]
+            const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted](util::TestStepResult& testStepResult)
             {
-                return definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), std::nullopt, false);
+                return definition.factory(testStepResult, broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), std::nullopt, false);
             };
 
             result = util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory));
