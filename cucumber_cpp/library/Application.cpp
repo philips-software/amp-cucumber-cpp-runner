@@ -1,4 +1,10 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "CLI/App.hpp"
+#include "CLI/CLI.hpp"
+#include "CLI/Error.hpp"
+#include "CLI/Option.hpp"
+#include "CLI/Validators.hpp"
+#include "CLI/impl/App_inl.hpp"
 #include "cucumber/gherkin/demangle.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
@@ -13,19 +19,12 @@
 #include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
-#include <CLI/App.hpp>
-#include <CLI/Error.hpp>
-#include <CLI/Option.hpp>
-#include <CLI/Validators.hpp>
-#include <CLI/impl/App_inl.hpp>
-#include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -53,7 +52,7 @@ namespace cucumber_cpp::library
                     foundFiles.emplace(entry.path());
         }
 
-        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(Application::Options& options)
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(const Application::Options& options)
         {
             std::set<std::filesystem::path, std::less<>> foundFiles;
 
@@ -68,10 +67,11 @@ namespace cucumber_cpp::library
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
-        : contextStorageFactory{ contextStorageFactory }
+        : contextStorageFactory{ std::move(contextStorageFactory) }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
     {
         cli.set_config("--config", "cucumber.toml");
+        support::DefinitionRegistration::Instance().TakeSnapshot();
     }
 
     Application::~Application()

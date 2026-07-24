@@ -38,6 +38,15 @@ namespace cucumber_cpp::library::support
         customParameters.clear();
     }
 
+    void DefinitionRegistration::TakeSnapshot()
+    {
+        if (!staticRegistry.empty() || !staticParameters.empty())
+            return;
+
+        staticRegistry.merge(registry);
+        staticParameters.merge(customParameters);
+    }
+
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
     {
         const auto assignGenerator = [&idGenerator](auto& entry)
@@ -45,26 +54,34 @@ namespace cucumber_cpp::library::support
             entry.id = idGenerator->next_id();
         };
 
+        for (auto& [key, item] : staticRegistry)
+            std::visit(assignGenerator, item);
+
         for (auto& [key, item] : registry)
             std::visit(assignGenerator, item);
     }
 
     std::vector<HookEntry> DefinitionRegistration::GetHooks()
     {
-        auto allSteps = registry | std::views::values | std::views::filter([](const Entry& entry)
-                                                            {
-                                                                return std::holds_alternative<HookEntry>(entry);
-                                                            }) |
-                        std::views::transform([](const Entry& entry)
-                            {
-                                return std::get<HookEntry>(entry);
-                            });
-        return { allSteps.begin(), allSteps.end() };
+        std::vector<HookEntry> result;
+
+        auto collectHooks = [&result](auto& reg)
+        {
+            for (auto& [key, entry] : reg)
+                if (std::holds_alternative<HookEntry>(entry))
+                    result.push_back(std::get<HookEntry>(entry));
+        };
+
+        collectHooks(staticRegistry);
+        collectHooks(registry);
+        return result;
     }
 
-    const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& DefinitionRegistration::GetRegisteredParameters() const
+    std::set<cucumber_expression::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
     {
-        return customParameters;
+        auto result = staticParameters;
+        result.insert(customParameters.begin(), customParameters.end());
+        return result;
     }
 
     std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)

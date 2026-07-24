@@ -30,6 +30,7 @@ namespace cucumber_cpp::library::support
         static DefinitionRegistration& Instance();
 
         void Clear();
+        void TakeSnapshot();
 
         void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
 
@@ -38,7 +39,7 @@ namespace cucumber_cpp::library::support
 
         std::vector<HookEntry> GetHooks();
 
-        const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& GetRegisteredParameters() const;
+        [[nodiscard]] std::set<cucumber_expression::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
 
         template<class T>
         static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
@@ -57,6 +58,9 @@ namespace cucumber_cpp::library::support
         std::size_t Register(GlobalHook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation);
         std::size_t Register(std::string_view matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation);
 
+        std::map<std::source_location, Entry, SourceLocationOrder> staticRegistry;
+        std::set<cucumber_expression::CustomParameterEntry, std::less<>> staticParameters;
+
         std::map<std::source_location, Entry, SourceLocationOrder> registry;
         std::set<cucumber_expression::CustomParameterEntry, std::less<>> customParameters;
     };
@@ -68,19 +72,25 @@ namespace cucumber_cpp::library::support
     template<class T>
     void DefinitionRegistration::ForEachRegisteredStep(const T& func)
     {
-        auto allSteps = registry |
-                        std::views::values |
-                        std::views::filter([](const Entry& entry)
-                            {
-                                return std::holds_alternative<StepStringRegistration::Entry>(entry);
-                            }) |
-                        std::views::transform([](const Entry& entry)
-                            {
-                                return std::get<StepStringRegistration::Entry>(entry);
-                            });
+        auto forEachStep = [&func](auto& reg)
+        {
+            auto allSteps = reg |
+                            std::views::values |
+                            std::views::filter([](const Entry& entry)
+                                {
+                                    return std::holds_alternative<StepStringRegistration::Entry>(entry);
+                                }) |
+                            std::views::transform([](const Entry& entry)
+                                {
+                                    return std::get<StepStringRegistration::Entry>(entry);
+                                });
 
-        for (const auto& step : allSteps)
-            func(step);
+            for (const auto& step : allSteps)
+                func(step);
+        };
+
+        forEachStep(staticRegistry);
+        forEachStep(registry);
     }
 
     template<class T>
