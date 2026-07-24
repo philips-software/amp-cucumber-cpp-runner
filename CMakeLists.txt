@@ -54,6 +54,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
+# Compiler cache
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+else()
+    find_program(SCCACHE_PROGRAM sccache)
+    if(SCCACHE_PROGRAM)
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+        message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    endif()
+endif()
+
 set_directory_properties(PROPERTY USE_FOLDERS ON)
 
 include(FetchContent)
