@@ -71,6 +71,6 @@ target_compile_definitions(compatibility.test PRIVATE
     COMPAT_PLUGIN_DIR="$<TARGET_FILE_DIR:compatibility.test>"
 )
 
-if(CCR_BUILD_TESTS)
+if(CCR_BUILD_TESTS AND NOT CMAKE_CROSSCOMPILING)
     gtest_discover_tests(compatibility.test)
 endif()
