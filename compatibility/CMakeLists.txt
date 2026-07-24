@@ -42,9 +42,19 @@ target_link_libraries(compatibility.test PRIVATE
 # Plugins resolve symbols from this executable at runtime via dlopen.
 # ENABLE_EXPORTS creates the dynamic symbol table, but the linker
 # normally strips unreferenced symbols from static libraries.
-# -rdynamic combined with --whole-archive ensures all cucumber_cpp
+# --whole-archive (Linux) or -force_load (macOS) ensures all cucumber_cpp
 # symbols are linked and exported for plugin use.
-if (NOT WIN32)
+if (APPLE)
+    target_link_options(compatibility.test PRIVATE
+        "LINKER:-force_load,$<TARGET_FILE:cucumber_cpp.library>"
+        "LINKER:-force_load,$<TARGET_FILE:cucumber_cpp.library.api>"
+        "LINKER:-force_load,$<TARGET_FILE:cucumber_cpp.library.engine>"
+        "LINKER:-force_load,$<TARGET_FILE:cucumber_cpp.library.support>"
+        "LINKER:-force_load,$<TARGET_FILE:cucumber_cpp.library.util>"
+        "LINKER:-force_load,$<TARGET_FILE:GTest::gtest>"
+        "LINKER:-force_load,$<TARGET_FILE:GTest::gmock>"
+    )
+elseif (NOT WIN32)
     target_link_options(compatibility.test PRIVATE
         "LINKER:--whole-archive"
         $<TARGET_FILE:cucumber_cpp.library>
