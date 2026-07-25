@@ -35,6 +35,30 @@
 
 namespace cucumber_cpp::library
 {
+    struct PluginSession
+    {
+        explicit PluginSession(plugin::DynamicLibraryManager& manager, const std::vector<std::string>& paths)
+            : manager{ manager }
+        {
+            support::DefinitionRegistration::Instance().TakeSnapshot();
+            cucumber_expression::ConverterRegistry::TakeSnapshot();
+            manager.Load(paths);
+        }
+
+        ~PluginSession()
+        {
+            support::DefinitionRegistration::Instance().UnregisterPlugins();
+            cucumber_expression::ConverterRegistry::RestoreSnapshot();
+            manager.UnloadAll();
+        }
+
+        PluginSession(const PluginSession&) = delete;
+        PluginSession& operator=(const PluginSession&) = delete;
+
+    private:
+        plugin::DynamicLibraryManager& manager;
+    };
+
     namespace
     {
         bool IsFeatureFile(const std::filesystem::directory_entry& entry)
@@ -77,15 +101,7 @@ namespace cucumber_cpp::library
         cli.set_config("--config", "cucumber.toml");
     }
 
-    Application::~Application()
-    {
-        if (!dynamicLibraryManager.GetLoadedLibraries().empty())
-        {
-            support::DefinitionRegistration::Instance().UnregisterPlugins();
-            cucumber_expression::ConverterRegistry::RestoreSnapshot();
-            dynamicLibraryManager.UnloadAll();
-        }
-    }
+    Application::~Application() = default;
 
     int Application::Run(int argc, const char* const* argv)
     {
@@ -150,11 +166,7 @@ namespace cucumber_cpp::library
                 std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
 
             if (!options.loadPaths.empty())
-            {
-                support::DefinitionRegistration::Instance().TakeSnapshot();
-                cucumber_expression::ConverterRegistry::TakeSnapshot();
-                dynamicLibraryManager.Load(options.loadPaths);
-            }
+                pluginSession = std::make_unique<PluginSession>(dynamicLibraryManager, options.loadPaths);
 
             return RunFeatures();
         }

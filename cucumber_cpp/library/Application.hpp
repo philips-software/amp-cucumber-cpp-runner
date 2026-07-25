@@ -27,6 +27,8 @@
 
 namespace cucumber_cpp::library
 {
+    struct PluginSession;
+
     struct Application
     {
         struct Options
@@ -90,6 +92,8 @@ namespace cucumber_cpp::library
         util::Broadcaster broadcaster;
 
         plugin::DynamicLibraryManager dynamicLibraryManager;
+
+        std::unique_ptr<PluginSession> pluginSession;
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
