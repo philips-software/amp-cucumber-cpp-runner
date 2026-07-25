@@ -17,6 +17,7 @@ namespace compatibility
             std::vector<KitInfo> kits;
 
             const std::filesystem::path sourceDir{ COMPAT_SOURCE_DIR };
+            const std::filesystem::path buildDir{ COMPAT_BUILD_DIR };
             const std::filesystem::path pluginDir{ COMPAT_PLUGIN_DIR };
 
             for (const auto& entry : std::filesystem::directory_iterator{ sourceDir })
@@ -46,6 +47,7 @@ namespace compatibility
                 kits.push_back(KitInfo{
                     .name = name,
                     .sourceDir = entry.path(),
+                    .buildDir = buildDir / "compatibility" / name,
                     .ndjsonFile = ndjsonFile,
                     .pluginPath = pluginPath,
                     .extraArgs = std::move(extraArgs),

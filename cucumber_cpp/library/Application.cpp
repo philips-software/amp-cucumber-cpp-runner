@@ -81,8 +81,8 @@ namespace cucumber_cpp::library
     {
         if (!dynamicLibraryManager.GetLoadedLibraries().empty())
         {
-            cucumber_expression::ConverterTypeMapClearer::ClearAll();
             support::DefinitionRegistration::Instance().UnregisterPlugins();
+            cucumber_expression::ConverterRegistry::RestoreSnapshot();
             dynamicLibraryManager.UnloadAll();
         }
     }
@@ -152,6 +152,7 @@ namespace cucumber_cpp::library
             if (!options.loadPaths.empty())
             {
                 support::DefinitionRegistration::Instance().TakeSnapshot();
+                cucumber_expression::ConverterRegistry::TakeSnapshot();
                 dynamicLibraryManager.Load(options.loadPaths);
             }
 

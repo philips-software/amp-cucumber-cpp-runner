@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -35,6 +36,9 @@ namespace cucumber_cpp::library::support
     void DefinitionRegistration::RegisterPlugin(DefinitionRegistration& plugin)
     {
         if (&plugin == this)
+            return;
+
+        if (std::find(plugins.begin(), plugins.end(), &plugin) != plugins.end())
             return;
 
         plugins.push_back(&plugin);

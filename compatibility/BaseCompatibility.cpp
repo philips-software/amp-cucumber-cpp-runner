@@ -97,6 +97,7 @@ namespace compatibility
                 RemoveIncompatibilities(json, sourceDir);
 
             // Write out normalized envelopes for debugging
+            std::filesystem::create_directories(kitDir);
             {
                 std::ofstream ofs{ kitDir / "actual.ndjson" };
                 for (const auto& json : actual)
@@ -187,7 +188,7 @@ namespace compatibility
         auto actualEnvelopes = LoadNdjson(actualNdjsonPath);
         auto expectedEnvelopes = LoadNdjson(kit.ndjsonFile);
 
-        CompareEnvelopes(actualEnvelopes, expectedEnvelopes, kit.sourceDir.string(), kit.sourceDir);
+        CompareEnvelopes(actualEnvelopes, expectedEnvelopes, kit.sourceDir.string(), kit.buildDir);
 
         std::filesystem::remove(actualNdjsonPath);
     }

@@ -347,9 +347,76 @@ flowchart TD
 3. Query methods (`ForEachRegisteredStep`, `GetHooks`, `GetRegisteredParameters`,
    `LoadIds`) iterate the host's own entries, then each plugin's entries.
 
-4. On destruction, `UnregisterPlugins()` clears the pointer list before `UnloadAll()`
-   closes the shared libraries (preventing dangling pointers).
+4. On destruction, `UnregisterPlugins()` clears the pointer list, then
+   `ConverterRegistry::RestoreSnapshot()` restores the converter map to its
+   pre-plugin state, before `UnloadAll()` closes the shared libraries
+   (preventing dangling pointers).
 
 **Consequence**: Multiple sequential `Application` instances in the same process
 will correctly share statically-linked definitions while each getting a fresh
 set of plugin-loaded definitions.
+
+---
+
+## ABI Versioning
+
+The `PluginHostContext` struct passed to `ccr_register` includes version
+metadata to guard against host/plugin version skew:
+
+```cpp
+struct PluginHostContext
+{
+    uint32_t abi_version;   // pluginAbiVersion constant
+    uint32_t struct_size;   // sizeof(PluginHostContext) at build time
+    void* registration;
+    void* stopwatch;
+    void* timestampGenerator;
+    void* converterMap;
+};
+```
+
+- **`abi_version`** — compared by the plugin against its own compiled-in
+  `pluginAbiVersion`. A mismatch causes `ccr_register` to return immediately
+  without registering, preventing undefined behaviour from incompatible structs.
+- **`struct_size`** — allows future extensions to append fields to
+  `PluginHostContext` while old plugins safely ignore them.
+
+---
+
+## Snapshot / Restore Cleanup
+
+Before loading plugins, the host takes snapshots of mutable global state:
+
+```cpp
+support::DefinitionRegistration::Instance().TakeSnapshot();
+cucumber_expression::ConverterRegistry::TakeSnapshot();
+dynamicLibraryManager.Load(options.loadPaths);
+```
+
+On destruction, rather than clearing all state (which would destroy
+statically-registered converters), the host restores to the snapshot:
+
+```cpp
+support::DefinitionRegistration::Instance().UnregisterPlugins();
+cucumber_expression::ConverterRegistry::RestoreSnapshot();
+dynamicLibraryManager.UnloadAll();
+```
+
+This ensures that converters and definitions registered by the statically-linked
+test code survive across Application instances, while plugin-added entries are
+properly removed.
+
+---
+
+## Duplicate Plugin Guard
+
+`DefinitionRegistration::RegisterPlugin` includes a duplicate-pointer guard:
+
+```cpp
+if (std::find(plugins.begin(), plugins.end(), &plugin) != plugins.end())
+    return;
+```
+
+This prevents the same plugin from being registered twice if `--load` lists
+the same path multiple times or if a directory scan includes a plugin that
+was also explicitly specified.

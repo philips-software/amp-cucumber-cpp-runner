@@ -136,7 +136,7 @@ namespace cucumber_cpp::library::cucumber_expression
     // site (host or plugin), while the underlying storage can be shared.
     using AnyConverterFunction = std::function<std::any(const ConvertFunctionArg&)>;
 
-    using ConverterMap = std::map<std::string, AnyConverterFunction>;
+    using ConverterMap = std::map<std::string, AnyConverterFunction, std::less<>>;
 
     // Central converter registry. Each DLL has its own default map, but the
     // active pointer can be redirected to a shared (host-owned) map so
@@ -161,20 +161,27 @@ namespace cucumber_cpp::library::cucumber_expression
             ActivePtr() = external != nullptr ? external : &LocalInstance();
         }
 
+        static void TakeSnapshot()
+        {
+            Snapshot() = Instance();
+        }
+
+        static void RestoreSnapshot()
+        {
+            Instance() = Snapshot();
+        }
+
     private:
         static ConverterMap*& ActivePtr()
         {
             static ConverterMap* ptr = &LocalInstance();
             return ptr;
         }
-    };
 
-    struct ConverterTypeMapClearer
-    {
-        static void ClearAll()
+        static ConverterMap& Snapshot()
         {
-            ConverterRegistry::LocalInstance().clear();
-            ConverterRegistry::Instance().clear();
+            static ConverterMap snapshot;
+            return snapshot;
         }
     };
 
@@ -218,7 +225,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
                 Assigner& operator=(ConverterFunction<T> fn)
                 {
-                    map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args) -> std::any
+                    map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args)
                     {
                         return std::any{ fn(args) };
                     };
@@ -237,7 +244,15 @@ namespace cucumber_cpp::library::cucumber_expression
             return Proxy{ ConverterRegistry::Instance() };
         }
     };
+}
 
+namespace cucumber_cpp::library::plugin
+{
+    struct ParameterLoader;
+}
+
+namespace cucumber_cpp::library::cucumber_expression
+{
     struct ParameterRegistry
     {
         explicit ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters);
@@ -251,6 +266,9 @@ namespace cucumber_cpp::library::cucumber_expression
 
         template<class T>
         void AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location = std::source_location::current());
+
+    private:
+        friend struct plugin::ParameterLoader;
 
         void AssertParameterIsUnique(const std::string& name) const;
 

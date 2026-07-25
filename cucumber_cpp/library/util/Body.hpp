@@ -3,7 +3,6 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
-#include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
 #include <exception>
 #include <functional>
@@ -16,15 +15,7 @@
 
 namespace cucumber_cpp::library::util
 {
-    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
-    {
-        explicit CucumberResultReporter(util::TestStepResult& testStepResult);
-
-        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override;
-
-    private:
-        util::TestStepResult& testStepResult;
-    };
+    struct CucumberResultReporter;
 
     struct FatalError : std::runtime_error
     {
@@ -71,14 +62,14 @@ namespace cucumber_cpp::library::util
     struct Body
     {
         explicit Body(TestStepResult& testStepResult);
-        virtual ~Body() = default;
+        virtual ~Body();
 
     private:
         virtual void Execute(const ExecuteArgs& args) = 0;
 
         friend TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args);
 
-        CucumberResultReporter reportListener;
+        std::unique_ptr<CucumberResultReporter> reportListener;
     };
 }
 

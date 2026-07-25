@@ -30,6 +30,9 @@ namespace cucumber_cpp::library::plugin
                 nullptr, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                 reinterpret_cast<LPSTR>(&buffer), 0, nullptr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 
+            if (size == 0 || buffer == nullptr)
+                return "Unknown error (code " + std::to_string(error) + ")";
+
             std::string message(buffer, size);
             LocalFree(buffer);
             return message;
@@ -112,12 +115,17 @@ namespace cucumber_cpp::library::plugin
 
 #if defined(_WIN32)
         void* symbol = reinterpret_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle), symbolName.c_str())); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-#else
-        void* symbol = dlsym(handle, symbolName.c_str());
-#endif
 
         if (symbol == nullptr)
-            throw std::runtime_error("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "'");
+            throw std::runtime_error("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + GetLastErrorMessage());
+#else
+        dlerror(); // clear previous error
+        void* symbol = dlsym(handle, symbolName.c_str());
+        const char* error = dlerror();
+
+        if (error != nullptr)
+            throw std::runtime_error("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + error);
+#endif
 
         return symbol;
     }

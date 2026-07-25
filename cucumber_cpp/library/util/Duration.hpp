@@ -16,7 +16,7 @@ namespace cucumber_cpp::library::util
     struct Stopwatch
     {
         Stopwatch();
-        virtual ~Stopwatch() = default;
+        virtual ~Stopwatch();
 
         static Stopwatch& Instance();
         static void SetInstance(Stopwatch& inst);

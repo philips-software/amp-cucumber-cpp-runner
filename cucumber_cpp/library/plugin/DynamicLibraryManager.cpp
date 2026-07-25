@@ -51,6 +51,8 @@ namespace cucumber_cpp::library::plugin
         auto registerFn = lib.GetSymbol<CcrRegisterFn>("ccr_register");
 
         PluginHostContext context{
+            .abiVersion = pluginAbiVersion,
+            .structSize = sizeof(PluginHostContext),
             .registration = &support::DefinitionRegistration::Instance(),
             .stopwatch = &util::Stopwatch::Instance(),
             .timestampGenerator = &util::TimestampGenerator::Instance(),

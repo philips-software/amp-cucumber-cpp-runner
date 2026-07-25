@@ -12,6 +12,7 @@ namespace compatibility
     {
         std::string name;
         std::filesystem::path sourceDir;
+        std::filesystem::path buildDir;
         std::filesystem::path ndjsonFile;
         std::filesystem::path pluginPath;
         std::vector<std::string> extraArgs;

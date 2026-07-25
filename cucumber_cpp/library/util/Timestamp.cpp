@@ -31,7 +31,8 @@ namespace cucumber_cpp::library::util
 
     TimestampGenerator::~TimestampGenerator()
     {
-        instance = nullptr;
+        if (instance == this)
+            instance = nullptr;
     }
 
     TimestampGenerator& TimestampGenerator::Instance()

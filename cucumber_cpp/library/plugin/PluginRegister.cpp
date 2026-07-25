@@ -9,6 +9,9 @@ extern "C" CCR_EXPORT void ccr_register(cucumber_cpp::library::plugin::PluginHos
     if (context == nullptr || context->registration == nullptr)
         return;
 
+    if (context->abiVersion != cucumber_cpp::library::plugin::pluginAbiVersion)
+        return;
+
     auto& host = *static_cast<cucumber_cpp::library::support::DefinitionRegistration*>(context->registration);
     host.RegisterPlugin(cucumber_cpp::library::support::DefinitionRegistration::Instance());
 

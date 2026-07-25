@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "fmt/format.h"
+#include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
 #include <cstddef>
 #include <filesystem>
@@ -12,6 +13,16 @@
 
 namespace cucumber_cpp::library::util
 {
+    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
+    {
+        explicit CucumberResultReporter(util::TestStepResult& testStepResult);
+
+        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override;
+
+    private:
+        util::TestStepResult& testStepResult;
+    };
+
     CucumberResultReporter::CucumberResultReporter(util::TestStepResult& testStepResult)
         : testing::ScopedFakeTestPartResultReporter{ nullptr }
         , testStepResult{ testStepResult }
@@ -60,8 +71,9 @@ namespace cucumber_cpp::library::util
         return testStepResult;
     }
 
-    
     Body::Body(TestStepResult& testStepResult)
-        : reportListener{ testStepResult }
+        : reportListener{ std::make_unique<CucumberResultReporter>(testStepResult) }
     {}
+
+    Body::~Body() = default;
 }
