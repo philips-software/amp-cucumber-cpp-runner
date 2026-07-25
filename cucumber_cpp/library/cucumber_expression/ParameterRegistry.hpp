@@ -195,9 +195,9 @@ namespace cucumber_cpp::library::cucumber_expression
         {
             ConverterMap& map;
 
-            void emplace(const std::string& name, ConverterFunction<T> fn)
+            void Emplace(const std::string& name, ConverterFunction<T> fn)
             {
-                map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args) -> std::any
+                map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args)
                 {
                     return std::any{ fn(args) };
                 };
@@ -213,7 +213,7 @@ namespace cucumber_cpp::library::cucumber_expression
                 }
             };
 
-            TypedAccessor at(const std::string& name)
+            TypedAccessor At(const std::string& name)
             {
                 return TypedAccessor{ map.at(name) };
             }
@@ -274,7 +274,6 @@ namespace cucumber_cpp::library::cucumber_expression
 
         void AddParameter(ParameterType parameter);
 
-    private:
         template<class T>
         void AddBuiltinParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, bool preferForRegexMatch = false, std::source_location location = std::source_location::current());
 
@@ -304,7 +303,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         AddParameter(parameter);
 
-        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+        ConverterTypeMap<T>::Instance().Emplace(parameter.name, converter);
     }
 }
 

@@ -64,7 +64,7 @@ target_compile_definitions(compatibility.test PRIVATE
 
 if(CCR_BUILD_TESTS)
     if(NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        gtest_discover_tests(compatibility.test)
+        gtest_discover_tests(compatibility.test DISCOVERY_MODE PRE_TEST)
     else()
         add_test(NAME compatibility.test COMMAND compatibility.test)
     endif()
