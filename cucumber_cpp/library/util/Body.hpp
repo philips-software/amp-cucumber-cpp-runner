@@ -4,6 +4,7 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "gtest/gtest-spi.h"
+#include "gtest/gtest.h"
 #include <exception>
 #include <functional>
 #include <memory>
