@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.1.0) # x-release-please-version
+project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.2.0) # x-release-please-version
 
 include(cmake/ccr_test_helpers.cmake)
 
