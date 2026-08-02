@@ -7,15 +7,16 @@
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <map>
-#include <ranges>
 #include <set>
 #include <source_location>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -32,6 +33,33 @@ namespace cucumber_cpp::library::support
         return instance;
     }
 
+    void DefinitionRegistration::RegisterPlugin(DefinitionRegistration& plugin)
+    {
+        if (&plugin == this)
+            return;
+
+        if (std::find(plugins.begin(), plugins.end(), &plugin) != plugins.end())
+            return;
+
+        plugins.push_back(&plugin);
+    }
+
+    void DefinitionRegistration::UnregisterPlugins()
+    {
+        plugins.clear();
+        registry.clear();
+        customParameters.clear();
+    }
+
+    void DefinitionRegistration::TakeSnapshot()
+    {
+        if (staticRegistry.empty() && staticCustomParameters.empty())
+        {
+            staticRegistry = std::move(registry);
+            staticCustomParameters = std::move(customParameters);
+        }
+    }
+
     void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
     {
         const auto assignGenerator = [&idGenerator](auto& entry)
@@ -39,26 +67,46 @@ namespace cucumber_cpp::library::support
             entry.id = idGenerator->next_id();
         };
 
+        for (auto& [key, item] : staticRegistry)
+            std::visit(assignGenerator, item);
+
         for (auto& [key, item] : registry)
             std::visit(assignGenerator, item);
+
+        for (auto* plugin : plugins)
+            for (auto& [key, item] : plugin->registry)
+                std::visit(assignGenerator, item);
     }
 
     std::vector<HookEntry> DefinitionRegistration::GetHooks()
     {
-        auto allSteps = registry | std::views::values | std::views::filter([](const Entry& entry)
-                                                            {
-                                                                return std::holds_alternative<HookEntry>(entry);
-                                                            }) |
-                        std::views::transform([](const Entry& entry)
-                            {
-                                return std::get<HookEntry>(entry);
-                            });
-        return { allSteps.begin(), allSteps.end() };
+        std::vector<HookEntry> result;
+
+        auto collectHooks = [&result](auto& reg)
+        {
+            for (auto& [key, entry] : reg)
+                if (std::holds_alternative<HookEntry>(entry))
+                    result.push_back(std::get<HookEntry>(entry));
+        };
+
+        collectHooks(staticRegistry);
+        collectHooks(registry);
+
+        for (auto* plugin : plugins)
+            collectHooks(plugin->registry);
+
+        return result;
     }
 
-    const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& DefinitionRegistration::GetRegisteredParameters() const
+    std::set<cucumber_expression::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
     {
-        return customParameters;
+        auto result = staticCustomParameters;
+        result.insert(customParameters.begin(), customParameters.end());
+
+        for (const auto* plugin : plugins)
+            result.insert(plugin->customParameters.begin(), plugin->customParameters.end());
+
+        return result;
     }
 
     std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation)

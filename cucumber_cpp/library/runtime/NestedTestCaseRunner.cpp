@@ -107,9 +107,9 @@ namespace cucumber_cpp::library::runtime
             {
                 const auto& definition = stepDefinitions.front();
                 NestedTestCaseRunner nestedTestCaseRunner{ nesting, supportCodeLibrary, broadcaster, testCaseContext, testStepStarted };
-                const util::BodyFactory bodyFactory = [&nestedTestCaseRunner, &definition, &broadcaster, &testCaseContext, &testStepStarted, &dataTable, &docString]
+                const util::BodyFactory bodyFactory = [&nestedTestCaseRunner, &definition, &broadcaster, &testCaseContext, &testStepStarted, &dataTable, &docString](util::TestStepResult& testStepResult)
                 {
-                    return definition.factory(nestedTestCaseRunner, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString));
+                    return definition.factory(testStepResult, nestedTestCaseRunner, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString));
                 };
                 Invoke(nesting, step, bodyFactory, testStep.step_match_arguments_lists->front());
             }

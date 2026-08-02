@@ -6,18 +6,19 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include <memory>
 #include <optional>
 #include <utility>
 
 namespace cucumber_cpp::library::util
 {
-    using HookFactory = std::unique_ptr<Body> (&)(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, std::optional<util::ScenarioInfo> scenarioInfo, bool hasError);
+    using HookFactory = std::unique_ptr<Body> (&)(util::TestStepResult& testStepResult, Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, std::optional<util::ScenarioInfo> scenarioInfo, bool hasError);
 
     template<class T>
-    std::unique_ptr<Body> HookBodyFactory(Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, std::optional<util::ScenarioInfo> scenarioInfo, bool hasError)
+    std::unique_ptr<Body> HookBodyFactory(util::TestStepResult& testStepResult, Broadcaster& broadCaster, Context& context, StepOrHookStarted stepOrHookStarted, std::optional<util::ScenarioInfo> scenarioInfo, bool hasError)
     {
-        return std::make_unique<T>(broadCaster, context, std::move(stepOrHookStarted), std::move(scenarioInfo), hasError);
+        return std::make_unique<T>(testStepResult, broadCaster, context, std::move(stepOrHookStarted), std::move(scenarioInfo), hasError);
     }
 }
 

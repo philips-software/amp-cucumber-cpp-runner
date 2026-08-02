@@ -1,4 +1,10 @@
 #include "cucumber_cpp/library/Application.hpp"
+#include "CLI/App.hpp"
+#include "CLI/CLI.hpp"
+#include "CLI/Error.hpp"
+#include "CLI/Option.hpp"
+#include "CLI/Validators.hpp"
+#include "CLI/impl/App_inl.hpp"
 #include "cucumber/gherkin/demangle.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
@@ -6,24 +12,19 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
-#include <CLI/App.hpp>
-#include <CLI/Error.hpp>
-#include <CLI/Option.hpp>
-#include <CLI/Validators.hpp>
-#include <CLI/impl/App_inl.hpp>
-#include <CLI/impl/Option_inl.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -34,6 +35,30 @@
 
 namespace cucumber_cpp::library
 {
+    struct PluginSession
+    {
+        explicit PluginSession(plugin::DynamicLibraryManager& manager, const std::vector<std::string>& paths)
+            : manager{ manager }
+        {
+            support::DefinitionRegistration::Instance().TakeSnapshot();
+            cucumber_expression::ConverterRegistry::TakeSnapshot();
+            manager.Load(paths);
+        }
+
+        ~PluginSession()
+        {
+            support::DefinitionRegistration::Instance().UnregisterPlugins();
+            cucumber_expression::ConverterRegistry::RestoreSnapshot();
+            manager.UnloadAll();
+        }
+
+        PluginSession(const PluginSession&) = delete;
+        PluginSession& operator=(const PluginSession&) = delete;
+
+    private:
+        plugin::DynamicLibraryManager& manager;
+    };
+
     namespace
     {
         bool IsFeatureFile(const std::filesystem::directory_entry& entry)
@@ -51,7 +76,7 @@ namespace cucumber_cpp::library
                     foundFiles.emplace(entry.path());
         }
 
-        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(Application::Options& options)
+        std::set<std::filesystem::path, std::less<>> GetFeatureFiles(const Application::Options& options)
         {
             std::set<std::filesystem::path, std::less<>> foundFiles;
 
@@ -65,12 +90,18 @@ namespace cucumber_cpp::library
         }
     }
 
-    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener)
-        : contextStorageFactory{ contextStorageFactory }
+    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener,
+        std::unique_ptr<util::Stopwatch> stopwatch,
+        std::unique_ptr<util::TimestampGenerator> timestampGenerator)
+        : contextStorageFactory{ std::move(contextStorageFactory) }
         , removeDefaultGoogleTestListener{ removeDefaultGoogleTestListener }
+        , stopwatch{ std::move(stopwatch) }
+        , timestampGenerator{ std::move(timestampGenerator) }
     {
         cli.set_config("--config", "cucumber.toml");
     }
+
+    Application::~Application() = default;
 
     int Application::Run(int argc, const char* const* argv)
     {
@@ -125,12 +156,17 @@ namespace cucumber_cpp::library
             CLI::deprecate_option(cli.add_option("-f,--feature", options.paths, "Paths to where your feature files are"), "paths");
             cli.add_option("paths", options.paths, "Paths to where your feature files are, defaults to \"./features\"")->default_val(options.paths);
 
+            cli.add_option("--load", options.loadPaths, "Load cucumber step/hook/parameter dynamic libraries from files or directories");
+
             ProgramContext().InsertRef(options);
 
             cli.parse(argc, argv);
 
             if (options.dumpConfig)
                 std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
+
+            if (!options.loadPaths.empty())
+                pluginSession = std::make_unique<PluginSession>(dynamicLibraryManager, options.loadPaths);
 
             return RunFeatures();
         }

@@ -10,7 +10,7 @@
 
 namespace
 {
-    const std::filesystem::path compatibilityPath = std::filesystem::path{ KIT_FOLDER };
+    const std::filesystem::path compatibilityPath = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
 }
 
 WHEN(R"(the string {string} is attached as {string})", (const std::string& text, const std::string& mediaType))

@@ -30,4 +30,17 @@ HeaderFilterRegex: '.*'
 FormatStyle: file
 CheckOptions:
     AllowSoleDefaultDtor: true
+    # readability-identifier-naming
+    readability-identifier-naming.NamespaceCase: lower_case
+    readability-identifier-naming.StructCase: CamelCase
+    readability-identifier-naming.ClassCase: CamelCase
+    readability-identifier-naming.EnumCase: CamelCase
+    readability-identifier-naming.EnumConstantCase: camelBack
+    readability-identifier-naming.MemberCase: camelBack
+    readability-identifier-naming.ParameterCase: camelBack
+    readability-identifier-naming.VariableCase: camelBack
+    readability-identifier-naming.FunctionCase: CamelCase
+    readability-identifier-naming.MethodCase: CamelCase
+    readability-identifier-naming.TypeAliasCase: CamelCase
+    readability-identifier-naming.TypedefCase: CamelCase
 ...

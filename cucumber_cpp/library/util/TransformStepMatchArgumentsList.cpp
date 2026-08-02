@@ -1,4 +1,3 @@
-
 #include "cucumber_cpp/library/util/TransformStepMatchArgumentsList.hpp"
 #include "cucumber/messages/step_match_arguments_list.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"

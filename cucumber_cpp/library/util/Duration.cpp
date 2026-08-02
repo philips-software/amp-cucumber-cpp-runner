@@ -39,6 +39,17 @@ namespace cucumber_cpp::library::util
         return *instance;
     }
 
+    void Stopwatch::SetInstance(Stopwatch& inst)
+    {
+        instance = &inst;
+    }
+
+    Stopwatch::~Stopwatch()
+    {
+        if (instance == this)
+            instance = nullptr;
+    }
+
     std::chrono::high_resolution_clock::time_point StopWatchHighResolutionClock::Start()
     {
         return std::chrono::high_resolution_clock::now();
