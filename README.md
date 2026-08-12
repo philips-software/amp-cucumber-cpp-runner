@@ -254,8 +254,11 @@ $ example --repeat 3 --repeat-tag-filter @measure
 ```
 
 > ℹ️ `--repeat` and `--retry` are mutually exclusive. Aggregating the repeated
-> executions (for example averaging a measurement) belongs in an
-> `HOOK_AFTER_FEATURE`/`HOOK_AFTER_ALL` hook.
+> executions (for example averaging a measurement) belongs in a `HOOK_AFTER_ALL`
+> hook: record each execution's sample from a per-scenario hook and assert the
+> aggregate once in `HOOK_AFTER_ALL`. A failing `HOOK_AFTER_ALL` fails the run;
+> note that `HOOK_AFTER_FEATURE` failures do **not** affect the exit status, so
+> the aggregate threshold check must not live there.
 
 > ℹ️ use --help to see all available arguments and options
 
