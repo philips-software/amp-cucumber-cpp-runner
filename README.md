@@ -244,7 +244,18 @@ $ example --format pretty --tags @smoke and not @ignore -- ./feature/acceptance 
 
 # On windows you might need to enclose the tags in quotes:
 $ example --format pretty --tags "@smoke and not @ignore" -- ./feature/acceptance ./feature/integration
+
+# runs every matching scenario 3 times unconditionally (for sampling/measurement).
+# Unlike --retry, it does not stop early on a pass; the run fails if any execution fails.
+$ example --repeat 3
+
+# only repeats scenarios matching the tag expression
+$ example --repeat 3 --repeat-tag-filter @measure
 ```
+
+> ℹ️ `--repeat` and `--retry` are mutually exclusive. Aggregating the repeated
+> executions (for example averaging a measurement) belongs in an
+> `HOOK_AFTER_FEATURE`/`HOOK_AFTER_ALL` hook.
 
 > ℹ️ use --help to see all available arguments and options
 

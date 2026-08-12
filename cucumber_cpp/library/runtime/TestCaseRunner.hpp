@@ -32,9 +32,9 @@ namespace cucumber_cpp::library::runtime
             support::SupportCodeLibrary& supportCodeLibrary,
             Context& testSuiteContext);
 
-        cucumber::messages::test_step_result_status Run();
+        cucumber::messages::test_step_result_status Run(std::size_t attemptOffset = 0, bool willRepeatAfter = false);
 
-        bool RunAttempt(std::size_t attempt, bool moreAttemptsAvailable);
+        bool RunAttempt(std::size_t attempt, bool moreAttemptsAvailable, bool willRepeatAfter = false);
 
         cucumber::messages::test_step_result RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted, bool hasError);
 

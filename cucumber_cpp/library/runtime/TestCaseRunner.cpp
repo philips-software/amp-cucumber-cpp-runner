@@ -79,13 +79,13 @@ namespace cucumber_cpp::library::runtime
         , testSuiteContext{ testSuiteContext }
     {}
 
-    cucumber::messages::test_step_result_status TestCaseRunner::Run()
+    cucumber::messages::test_step_result_status TestCaseRunner::Run(std::size_t attemptOffset, bool willRepeatAfter)
     {
         for (std::size_t attempt = 0; attempt < maximumAttempts; ++attempt)
         {
             testStepResults.clear();
 
-            const auto willRetry = RunAttempt(attempt, (attempt + 1) < maximumAttempts);
+            const auto willRetry = RunAttempt(attemptOffset + attempt, (attempt + 1) < maximumAttempts, willRepeatAfter);
 
             if (willRetry)
                 continue;
@@ -96,7 +96,7 @@ namespace cucumber_cpp::library::runtime
         return cucumber::messages::test_step_result_status::UNKNOWN;
     }
 
-    bool TestCaseRunner::RunAttempt(std::size_t attempt, bool moreAttemptsAvailable)
+    bool TestCaseRunner::RunAttempt(std::size_t attempt, bool moreAttemptsAvailable, bool willRepeatAfter)
     {
         Context testCaseContext{ &testSuiteContext };
         const auto currentTestCaseStartedId = idGenerator->next_id();
@@ -151,7 +151,7 @@ namespace cucumber_cpp::library::runtime
         broadcaster.BroadcastEvent(cucumber::messages::envelope{ .test_case_finished = cucumber::messages::test_case_finished{
                                                                      .test_case_started_id = currentTestCaseStartedId,
                                                                      .timestamp = util::TimestampNow(),
-                                                                     .will_be_retried = willRetry,
+                                                                     .will_be_retried = willRetry || willRepeatAfter,
                                                                  } });
 
         return willRetry;
