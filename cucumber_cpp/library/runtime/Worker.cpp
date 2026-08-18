@@ -144,7 +144,9 @@ namespace cucumber_cpp::library::runtime
 
     bool Worker::RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
     {
-        const auto repeats = RepeatsForPickle(assembledTestCase.pickle, options);
+        // A skipped test case (dry-run or fail-fast) never executes, so it must not repeat.
+        const bool skip = options.dryRun || (options.failFast && failing);
+        const auto repeats = skip ? 1 : RepeatsForPickle(assembledTestCase.pickle, options);
 
         bool allPassed = true;
 
@@ -157,7 +159,7 @@ namespace cucumber_cpp::library::runtime
                 assembledTestCase.pickle,
                 assembledTestCase.testCase,
                 RetriesForPickle(assembledTestCase.pickle, options),
-                options.dryRun || (options.failFast && failing),
+                skip,
                 supportCodeLibrary,
                 testSuiteContext,
             };

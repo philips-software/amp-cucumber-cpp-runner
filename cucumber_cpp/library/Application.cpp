@@ -118,6 +118,7 @@ namespace cucumber_cpp::library
             auto* repeatOpt = cli.add_option("--repeat", options.repeat, "Number of times to run matching scenarios unconditionally (for sampling/measurement); unlike --retry it does not stop early on pass")->default_val(options.repeat);
             cli.add_option("--repeat-tag-filter", options.repeatTagFilter, "Only repeat scenarios matching this tag expression")->needs(repeatOpt);
             repeatOpt->excludes(retryOpt);
+            retryOpt->excludes(repeatOpt);
             cli.add_flag("--strict,!--no-strict", options.strict, "Fail if there are pending steps")->default_val(options.strict);
             cli.add_flag("--feature-hooks,!--no-feature-hooks", options.featureHooks, "Run Before/After Feature hooks, note these are non-standard and are not supported by messages")->default_val(options.featureHooks);
             cli.add_flag("--recursive,!--no-recursive", options.recursive, "Search for feature files recursively")->default_val(options.recursive);
