@@ -58,6 +58,16 @@ namespace cucumber_cpp::library::runtime
                 return 0;
         }
 
+        std::size_t RepeatsForPickle(const cucumber::messages::pickle& pickle, const support::RunOptions::Runtime& options)
+        {
+            if (options.repeat == 0)
+                return 1;
+            else if (options.repeatTagExpression->Evaluate(util::TransformPickleTags(pickle.tags)))
+                return options.repeat;
+            else
+                return 1;
+        }
+
         bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
         {
             if (dryRun)
@@ -134,21 +144,32 @@ namespace cucumber_cpp::library::runtime
 
     bool Worker::RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
     {
-        TestCaseRunner testCaseRunner{
-            broadcaster,
-            idGenerator,
-            gherkinDocument,
-            assembledTestCase.pickle,
-            assembledTestCase.testCase,
-            RetriesForPickle(assembledTestCase.pickle, options),
-            options.dryRun || (options.failFast && failing),
-            supportCodeLibrary,
-            testSuiteContext,
-        };
+        // A skipped test case (dry-run or fail-fast) never executes, so it must not repeat.
+        const bool skip = options.dryRun || (options.failFast && failing);
+        const auto repeats = skip ? 1 : RepeatsForPickle(assembledTestCase.pickle, options);
 
-        const auto status = testCaseRunner.Run();
+        bool allPassed = true;
 
-        return !IsStatusFailed(status);
+        for (std::size_t repeat = 0; repeat < repeats; ++repeat)
+        {
+            TestCaseRunner testCaseRunner{
+                broadcaster,
+                idGenerator,
+                gherkinDocument,
+                assembledTestCase.pickle,
+                assembledTestCase.testCase,
+                RetriesForPickle(assembledTestCase.pickle, options),
+                skip,
+                supportCodeLibrary,
+                testSuiteContext,
+            };
+
+            const auto status = testCaseRunner.Run(repeat, (repeat + 1) < repeats);
+
+            allPassed = allPassed && !IsStatusFailed(status);
+        }
+
+        return allPassed;
     }
 
     std::vector<cucumber::messages::test_step_result> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
