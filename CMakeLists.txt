@@ -30,17 +30,23 @@ if (CCR_BUILD_TESTS)
 endif()
 
 if (CCR_ENABLE_COVERAGE)
-    find_program(GCOVR_PATH gcovr)
-
-    if (NOT GCOVR_PATH)
-    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
-    endif()
+    find_program(GCOVR_PROGRAM gcovr REQUIRED)
 
     add_custom_target(
         generate-coverage-report
-        COMMAND ${GCOVR_PATH} --delete --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+        COMMAND ${GCOVR_PROGRAM} --version
+        COMMAND ${GCOVR_PROGRAM}
+            --root ${CMAKE_CURRENT_SOURCE_DIR}
+            --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
+            --filter cucumber_cpp
+            --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.*
+            --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();'
+            --txt-summary
+            --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+            --cobertura ${CMAKE_CURRENT_BINARY_DIR}/cobertura.xml --cobertura-pretty
+            --markdown-summary ${CMAKE_CURRENT_BINARY_DIR}/coverage-summary.md
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating code coverage report in LCOV format"
+        COMMENT "Generating code coverage reports"
     )
 endif()
 
