@@ -48,7 +48,6 @@ jobs:
           bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
 
       - name: Check testdata coverage
-        working-directory: cpp
         run: cmake --build build/Coverage --target generate-coverage-report
 
       - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
