@@ -44,6 +44,7 @@ if (CCR_ENABLE_COVERAGE)
             --txt-summary
             --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
             --cobertura ${CMAKE_CURRENT_BINARY_DIR}/cobertura.xml --cobertura-pretty
+            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
             --markdown-summary ${CMAKE_CURRENT_BINARY_DIR}/coverage-summary.md
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating code coverage reports"
