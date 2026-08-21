@@ -41,18 +41,18 @@ namespace cucumber_cpp::library::plugin
     }
 
     DynamicLibrary::DynamicLibrary(const std::filesystem::path& path)
-        : libraryPath{ path }
+        : libraryPath{ std::filesystem::weakly_canonical(path) }
     {
 #if defined(_WIN32)
-        handle = LoadLibraryW(path.c_str());
+        handle = LoadLibraryW(libraryPath.c_str());
 
         if (handle == nullptr)
-            throw std::runtime_error("Failed to load library '" + path.string() + "': " + GetLastErrorMessage());
+            throw std::runtime_error("Failed to load library '" + libraryPath.string() + "': " + GetLastErrorMessage());
 #else
-        handle = dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL); // NOLINT(hicpp-signed-bitwise)
+        handle = dlopen(libraryPath.c_str(), RTLD_NOW | RTLD_GLOBAL); // NOLINT(hicpp-signed-bitwise)
 
         if (handle == nullptr)
-            throw std::runtime_error("Failed to load library '" + path.string() + "': " + dlerror());
+            throw std::runtime_error("Failed to load library '" + libraryPath.string() + "': " + dlerror());
 #endif
     }
 

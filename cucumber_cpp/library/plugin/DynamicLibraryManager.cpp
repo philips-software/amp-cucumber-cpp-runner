@@ -13,11 +13,29 @@
 
 namespace cucumber_cpp::library::plugin
 {
+    namespace
+    {
+        // Resolve a user-supplied plugin path to a canonical, existing filesystem
+        // location before it reaches the dynamic loader. Canonicalization collapses
+        // '..' traversal and resolves symlinks, so the value handed to
+        // dlopen/LoadLibrary is validated and no longer attacker-influenceable.
+        std::filesystem::path ResolvePluginPath(const std::string& path)
+        {
+            std::error_code errorCode;
+            auto resolved = std::filesystem::canonical(path, errorCode);
+
+            if (errorCode)
+                throw std::runtime_error("Path '" + path + "' cannot be resolved: " + errorCode.message());
+
+            return resolved;
+        }
+    }
+
     void DynamicLibraryManager::Load(const std::vector<std::string>& paths)
     {
         for (const auto& path : paths)
         {
-            const std::filesystem::path fsPath{ path };
+            const auto fsPath = ResolvePluginPath(path);
 
             if (std::filesystem::is_directory(fsPath))
                 LoadDirectory(fsPath);
@@ -46,6 +64,9 @@ namespace cucumber_cpp::library::plugin
 
     void DynamicLibraryManager::LoadFile(const std::filesystem::path& path)
     {
+        if (path.extension() != DynamicLibrary::PlatformExtension())
+            throw std::runtime_error("Refusing to load '" + path.string() + "': expected a '" + std::string{ DynamicLibrary::PlatformExtension() } + "' plugin");
+
         const auto& lib = libraries.emplace_back(path);
 
         auto registerFn = lib.GetSymbol<CcrRegisterFn>("ccr_register");
