@@ -44,8 +44,8 @@ namespace cucumber_cpp::library::runtime
 
         [[nodiscard]] cucumber::messages::TestStepResult GetWorstStepResult() const;
 
-        bool ShouldSkipHook(bool isBeforeHook);
-        bool IsSkippingSteps();
+        [[nodiscard]] bool ShouldSkipHook(bool isBeforeHook) const;
+        [[nodiscard]] bool IsSkippingSteps() const;
 
     private:
         util::Broadcaster& broadcaster;

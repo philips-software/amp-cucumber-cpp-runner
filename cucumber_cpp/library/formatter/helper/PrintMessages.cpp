@@ -70,7 +70,7 @@ namespace cucumber_cpp::library::formatter::helper
             maxContentLength, theme);
     }
 
-    void PrintScenarioAttemptLine(std::ostream& stream, const cucumber::messages::Pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::Scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme)
+    void PrintScenarioAttemptLine(std::ostream& stream, const cucumber::messages::Pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::Scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
             FormatPickleAttemptTitle(pickle, attempt, retry, scenario, theme),
@@ -79,7 +79,7 @@ namespace cucumber_cpp::library::formatter::helper
             maxContentLength, theme);
     }
 
-    void PrintHookLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::Hook& hook, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const Theme& theme)
+    void PrintHookLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::Hook& hook, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
             helper::FormatHookTitle(hook, testStepFinished.testStepResult->status, isBeforeHook, useStatusIcon, theme),
@@ -87,7 +87,7 @@ namespace cucumber_cpp::library::formatter::helper
             scenarioIndent + 2, maxContentLength, theme);
     }
 
-    void PrintStepLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::TestStep& testStep, const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::Step& step, const cucumber::messages::StepDefinition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const Theme& theme)
+    void PrintStepLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::TestStep& testStep, const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::Step& step, const cucumber::messages::StepDefinition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
             helper::FormatStepTitle(testStep, pickleStep, step, testStepFinished.testStepResult->status, useStatusIcon, theme),

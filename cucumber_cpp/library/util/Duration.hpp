@@ -18,6 +18,11 @@ namespace cucumber_cpp::library::util
         Stopwatch();
         virtual ~Stopwatch();
 
+        Stopwatch(const Stopwatch&) = delete;
+        Stopwatch& operator=(const Stopwatch&) = delete;
+        Stopwatch(Stopwatch&&) = delete;
+        Stopwatch& operator=(Stopwatch&&) = delete;
+
         static Stopwatch& Instance();
         static void SetInstance(Stopwatch& inst);
 

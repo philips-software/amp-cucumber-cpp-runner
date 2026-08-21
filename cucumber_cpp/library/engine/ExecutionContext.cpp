@@ -3,6 +3,7 @@
 #include "cucumber/messages/Attachment.hpp"
 #include "cucumber/messages/AttachmentContentEncoding.hpp"
 #include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
@@ -11,40 +12,19 @@
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <istream>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <source_location>
 #include <string>
 #include <utility>
 #include <variant>
 
-/*
-
-std::optional<std::string> read_file( std::istream & is ) {
-  if( not is.seekg( 0, std::ios_base::seek_dir::end ) ) {
-    return std::nullopt;
-  }
-  auto const sz = is.tellg( );
-  if( not is.seekg( 0 ) ) {
-    return std::nullopt;
-  }
-  auto result = std::string( '\0', static_cast<std::size_t>( sz ) );
-  if( not is.read( result.data( ), sz ) ) {
-    return std::nullopt;
-  }
-  if( sz != is.gcount( ) ) {
-    return std::nullopt;
-  }
-  return result;
-}
-
-*/
-
 namespace cucumber_cpp::library::engine
 {
     namespace
     {
-        constexpr auto LogMediaType{ "text/x.cucumber.log+plain" };
-        constexpr auto LinkMediaType{ "text/uri-list" };
+        constexpr auto logMediaType{ "text/x.cucumber.log+plain" };
+        constexpr auto linkMediaType{ "text/uri-list" };
 
         std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestStepStartedIds(util::StepOrHookStarted stepOrHookStarted)
         {
@@ -73,18 +53,18 @@ namespace cucumber_cpp::library::engine
                                ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
                                : std::get<AttachOptions>(mediaType);
 
-            auto [test_case_started_id, test_step_id] = ReadTestStepStartedIds(stepOrHookStarted);
-            auto test_run_hook_started_id = ReadTestRunHookStartedIds(stepOrHookStarted);
+            auto [testCaseStartedId, testStepId] = ReadTestStepStartedIds(stepOrHookStarted);
+            auto testRunHookStartedId = ReadTestRunHookStartedIds(stepOrHookStarted);
 
-            broadCaster.BroadcastEvent({
+            broadCaster.BroadcastEvent(cucumber::messages::Envelope{
                 .attachment = std::make_shared<cucumber::messages::Attachment>(cucumber::messages::Attachment{
                     .body = std::move(data),
                     .contentEncoding = encoding,
                     .fileName = std::move(options.fileName),
                     .mediaType = std::move(options.mediaType),
-                    .testCaseStartedId = std::move(test_case_started_id),
-                    .testStepId = std::move(test_step_id),
-                    .testRunHookStartedId = std::move(test_run_hook_started_id),
+                    .testCaseStartedId = std::move(testCaseStartedId),
+                    .testStepId = std::move(testStepId),
+                    .testRunHookStartedId = std::move(testRunHookStartedId),
                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
                 }),
             });
@@ -113,13 +93,13 @@ namespace cucumber_cpp::library::engine
 
     void ExecutionContext::Log(std::string text)
     {
-        Attach(std::move(text), std::string{ LogMediaType });
+        Attach(std::move(text), std::string{ logMediaType });
     }
 
     void ExecutionContext::Link(std::string url, std::optional<std::string> title)
     {
         Attach(std::move(url), AttachOptions{
-                                   .mediaType = LinkMediaType,
+                                   .mediaType = linkMediaType,
                                    .fileName = std::move(title),
                                });
     }

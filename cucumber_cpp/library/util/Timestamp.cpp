@@ -62,7 +62,7 @@ namespace cucumber_cpp::library::util
         };
     }
 
-    cucumber::messages::Duration operator-(const cucumber::messages::Timestamp& lhs, const cucumber::messages::Timestamp& rhs)
+    cucumber::messages::Duration operator-(const cucumber::messages::Timestamp& lhs, const cucumber::messages::Timestamp& rhs) // NOSONAR: cannot be a hidden friend of the generated messages::Timestamp type
     {
         const auto durationMillis = TimestampToMillis(lhs) - TimestampToMillis(rhs);
         return MillisecondsToDuration(durationMillis);

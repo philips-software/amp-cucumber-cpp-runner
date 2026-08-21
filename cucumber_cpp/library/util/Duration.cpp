@@ -86,7 +86,7 @@ namespace cucumber_cpp::library::util
         return lhs;
     }
 
-    cucumber::messages::Duration operator+(const cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs)
+    cucumber::messages::Duration operator+(const cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs) // NOSONAR: cannot be a hidden friend of the generated messages::Duration type
     {
         cucumber::messages::Duration result = lhs;
 

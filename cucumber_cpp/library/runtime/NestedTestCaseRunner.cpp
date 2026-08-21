@@ -1,7 +1,9 @@
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber/messages/Duration.hpp"
+#include "cucumber/messages/Group.hpp"
 #include "cucumber/messages/PickleDocString.hpp"
 #include "cucumber/messages/PickleTable.hpp"
+#include "cucumber/messages/StepMatchArgument.hpp"
 #include "cucumber/messages/StepMatchArgumentsList.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
@@ -14,6 +16,7 @@
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
@@ -62,7 +65,7 @@ namespace cucumber_cpp::library::runtime
                                                std::views::filter(HasMatch))
             {
                 testStep.stepDefinitionIds.value().push_back(id);
-                auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
+                const auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
                 for (const auto& result : *match)
                     argumentList->stepMatchArguments.emplace_back(std::make_shared<cucumber::messages::StepMatchArgument>(cucumber::messages::StepMatchArgument{
                         .group = std::make_shared<cucumber::messages::Group>(util::ArgumentGroupToMessageGroup(result.Group())),
@@ -85,7 +88,7 @@ namespace cucumber_cpp::library::runtime
                 };
         }
 
-        void Run(std::size_t nesting, const std::string& step, const cucumber::messages::TestStep& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, const util::TestStepStarted& testStepStarted, const std::optional<cucumber::messages::PickleTable>& dataTable, const std::optional<cucumber::messages::PickleDocString>& docString)
+        void Run(std::size_t nesting, const std::string& step, const cucumber::messages::TestStep& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, const util::TestStepStarted& testStepStarted, const std::optional<cucumber::messages::PickleTable>& dataTable, const std::optional<cucumber::messages::PickleDocString>& docString) // NOSONAR: cohesive step runner
         {
             auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([&supportCodeLibrary](const std::string& id)
                                                                        {

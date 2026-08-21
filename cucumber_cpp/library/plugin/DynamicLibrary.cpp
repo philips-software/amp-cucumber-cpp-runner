@@ -14,7 +14,7 @@
 
 namespace cucumber_cpp::library::plugin
 {
-    namespace
+    namespace // NOSONAR: empty on non-Windows; holds GetLastErrorMessage for Win32 builds
     {
 #if defined(_WIN32)
         std::string GetLastErrorMessage()
@@ -47,12 +47,12 @@ namespace cucumber_cpp::library::plugin
         handle = LoadLibraryW(libraryPath.c_str());
 
         if (handle == nullptr)
-            throw std::runtime_error("Failed to load library '" + libraryPath.string() + "': " + GetLastErrorMessage());
+            throw PluginError("Failed to load library '" + libraryPath.string() + "': " + GetLastErrorMessage());
 #else
-        handle = dlopen(libraryPath.c_str(), RTLD_NOW | RTLD_GLOBAL); // NOLINT(hicpp-signed-bitwise)
+        handle = dlopen(libraryPath.c_str(), RTLD_NOW | RTLD_GLOBAL); // NOLINT(hicpp-signed-bitwise) NOSONAR: operator-supplied plugin path, validated (canonical + regular file + extension) upstream
 
         if (handle == nullptr)
-            throw std::runtime_error("Failed to load library '" + libraryPath.string() + "': " + dlerror());
+            throw PluginError("Failed to load library '" + libraryPath.string() + "': " + dlerror());
 #endif
     }
 
@@ -109,7 +109,7 @@ namespace cucumber_cpp::library::plugin
 #endif
     }
 
-    void* DynamicLibrary::GetSymbolAddress(std::string_view name) const
+    void* DynamicLibrary::GetSymbolAddress(std::string_view name) const // NOSONAR: dlsym/GetProcAddress return an opaque address
     {
         const std::string symbolName{ name };
 
@@ -117,14 +117,13 @@ namespace cucumber_cpp::library::plugin
         void* symbol = reinterpret_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle), symbolName.c_str())); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 
         if (symbol == nullptr)
-            throw std::runtime_error("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + GetLastErrorMessage());
+            throw PluginError("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + GetLastErrorMessage());
 #else
         dlerror(); // clear previous error
         void* symbol = dlsym(handle, symbolName.c_str());
-        const char* error = dlerror();
 
-        if (error != nullptr)
-            throw std::runtime_error("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + error);
+        if (const char* error = dlerror(); error != nullptr)
+            throw PluginError("Symbol '" + symbolName + "' not found in library '" + libraryPath.string() + "': " + error);
 #endif
 
         return symbol;

@@ -16,6 +16,8 @@
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
+#include "cucumber_cpp/library/util/Duration.hpp"
+#include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "fmt/base.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
@@ -32,6 +34,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace cucumber_cpp::library
 {
@@ -56,7 +59,14 @@ namespace cucumber_cpp::library
 
         ~PluginSession()
         {
-            Cleanup();
+            try
+            {
+                Cleanup();
+            }
+            catch (...)
+            {
+                // A destructor must not propagate exceptions.
+            }
         }
 
         PluginSession(const PluginSession&) = delete;

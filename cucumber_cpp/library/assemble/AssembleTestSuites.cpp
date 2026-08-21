@@ -1,8 +1,11 @@
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Group.hpp"
+#include "cucumber/messages/StepMatchArgument.hpp"
 #include "cucumber/messages/StepMatchArgumentsList.hpp"
 #include "cucumber/messages/TestCase.hpp"
+#include "cucumber/messages/TestStep.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
@@ -17,6 +20,7 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -50,7 +54,7 @@ namespace cucumber_cpp::library::assemble
             {
                 const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
 
-                auto& testStep = testCase.testSteps.emplace_back(std::make_shared<cucumber::messages::TestStep>(cucumber::messages::TestStep{
+                const auto& testStep = testCase.testSteps.emplace_back(std::make_shared<cucumber::messages::TestStep>(cucumber::messages::TestStep{
                     .hookId = std::nullopt,
                     .id = idGenerator->NextId(),
                     .pickleStepId = step->id,
@@ -63,7 +67,7 @@ namespace cucumber_cpp::library::assemble
                                                    std::views::filter(HasMatch))
                 {
                     testStep->stepDefinitionIds.value().push_back(id);
-                    auto& argumentList = testStep->stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
+                    const auto& argumentList = testStep->stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
                     for (const auto& result : *match)
                         argumentList->stepMatchArguments.emplace_back(std::make_shared<cucumber::messages::StepMatchArgument>(cucumber::messages::StepMatchArgument{
                             .group = std::make_shared<cucumber::messages::Group>(util::ArgumentGroupToMessageGroup(result.Group())),
@@ -75,8 +79,8 @@ namespace cucumber_cpp::library::assemble
 
         void AssembleTestSteps(const support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::TestCase& testCase, cucumber::gherkin::IdGeneratorPtr idGenerator)
         {
-            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::before, util::TransformPickleTags((pickleSource.pickle->tags)));
-            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::after, util::TransformPickleTags((pickleSource.pickle->tags)));
+            auto beforeHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::before, util::TransformPickleTags(pickleSource.pickle->tags));
+            auto afterHooks = supportCodeLibrary.hookRegistry.FindIds(util::HookType::after, util::TransformPickleTags(pickleSource.pickle->tags));
 
             testCase.testSteps.reserve(beforeHooks.size() + pickleSource.pickle->steps.size() + afterHooks.size());
 

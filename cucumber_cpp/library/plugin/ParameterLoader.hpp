@@ -8,7 +8,7 @@ namespace cucumber_cpp::library::plugin
 {
     struct ParameterLoader
     {
-        static void Load(support::DefinitionRegistration& registration, cucumber_expression::ParameterRegistry& parameterRegistry);
+        static void Load(const support::DefinitionRegistration& registration, cucumber_expression::ParameterRegistry& parameterRegistry);
     };
 }
 

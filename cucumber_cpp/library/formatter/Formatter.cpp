@@ -3,7 +3,6 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "nlohmann/json_fwd.hpp"
-#include <cstdio>
 #include <ostream>
 
 namespace cucumber_cpp::library::formatter

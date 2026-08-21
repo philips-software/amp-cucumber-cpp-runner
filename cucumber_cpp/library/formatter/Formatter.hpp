@@ -12,7 +12,7 @@
 
 namespace cucumber_cpp::library::formatter
 {
-    struct Formatter
+    struct Formatter // NOSONAR: members are protected by design for derived formatters
         : util::Listener
     {
         Formatter(support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const nlohmann::json& formatOptions, std::ostream& outputStream = std::cout);

@@ -6,6 +6,7 @@
 #include "cucumber/messages/SourceReference.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 

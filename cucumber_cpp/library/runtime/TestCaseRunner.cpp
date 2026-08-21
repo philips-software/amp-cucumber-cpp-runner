@@ -16,6 +16,7 @@
 #include "cucumber/messages/TestStepResult.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber/messages/TestStepStarted.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
@@ -86,9 +87,7 @@ namespace cucumber_cpp::library::runtime
         {
             testStepResults.clear();
 
-            const auto willRetry = RunAttempt(attempt, (attempt + 1) < maximumAttempts);
-
-            if (willRetry)
+            if (RunAttempt(attempt, (attempt + 1) < maximumAttempts))
                 continue;
 
             return GetWorstStepResult().status;
@@ -277,12 +276,12 @@ namespace cucumber_cpp::library::runtime
         return util::GetWorstTestStepResult(testStepResults);
     }
 
-    bool TestCaseRunner::ShouldSkipHook(bool isBeforeHook)
+    bool TestCaseRunner::ShouldSkipHook(bool isBeforeHook) const
     {
         return skip || (IsSkippingSteps() && isBeforeHook);
     }
 
-    bool TestCaseRunner::IsSkippingSteps()
+    bool TestCaseRunner::IsSkippingSteps() const
     {
         return GetWorstStepResult().status != cucumber::messages::TestStepResultStatus::PASSED;
     }

@@ -1,11 +1,10 @@
 
 #include "cucumber_cpp/library/formatter/JunitXmlFormatter.hpp"
+#include "cucumber/messages/Duration.hpp"
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/PickleStep.hpp"
 #include "cucumber/messages/Step.hpp"
 #include "cucumber/messages/TestCaseStarted.hpp"
-#include "cucumber/messages/TestStep.hpp"
-#include "cucumber/messages/TestStepFinished.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber/query/NamingStrategy.hpp"
 #include "cucumber/query/Query.hpp"
@@ -15,6 +14,7 @@
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include "pugixml.hpp"
 #include <algorithm>
 #include <cctype>
@@ -65,7 +65,7 @@ namespace cucumber_cpp::library::formatter
             std::optional<std::string> timestamp;
         };
 
-        std::optional<ReportFailure> MakeFailure(cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+        std::optional<ReportFailure> MakeFailure(const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
         {
             const auto result = query.FindMostSevereTestStepResultBy(testCaseStarted);
             if (!result.has_value() || result.value()->status == cucumber::messages::TestStepResultStatus::PASSED)
@@ -85,7 +85,7 @@ namespace cucumber_cpp::library::formatter
         std::string FormatStep(const cucumber::messages::Step& gherkinStep, const cucumber::messages::PickleStep& pickleStep, cucumber::messages::TestStepResultStatus status)
         {
             auto statusString = std::string{ cucumber::messages::to_string(status) };
-            std::transform(statusString.begin(), statusString.end(), statusString.begin(), [](unsigned char c)
+            std::ranges::transform(statusString, statusString.begin(), [](unsigned char c)
                 {
                     return std::tolower(c);
                 });
@@ -93,7 +93,7 @@ namespace cucumber_cpp::library::formatter
             return fmt::format("{:.<76}{}", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString);
         }
 
-        std::string MakeOutput(cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+        std::string MakeOutput(const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
         {
             const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
             auto outputView = testStepFinishedAndTestStep |
@@ -111,7 +111,7 @@ namespace cucumber_cpp::library::formatter
             return fmt::format("\n{}\n", fmt::join(outputView, "\n"));
         }
 
-        std::list<ReportTestCase> MakeTestCases(cucumber::query::Query& query, const std::optional<std::string>& testClassName)
+        std::list<ReportTestCase> MakeTestCases(const cucumber::query::Query& query, const std::optional<std::string>& testClassName)
         {
             std::list<ReportTestCase> testCases;
 
@@ -125,11 +125,7 @@ namespace cucumber_cpp::library::formatter
                 const auto& lineage = *lineageAndPickle.lineage;
                 const auto durationOpt = query.FindTestCaseDurationBy(testCaseStartedPtr);
 
-                testCases.emplace_back(testClassName.has_value()
-                                           ? testClassName.value()
-                                       : lineage.feature
-                                           ? lineage.feature->name
-                                           : pickle->uri,
+                testCases.emplace_back(testClassName.value_or(lineage.feature ? lineage.feature->name : pickle->uri),
                     namingStrategy->Reduce(lineage, *pickle),
                     util::DurationToMilliseconds(durationOpt.has_value() ? *durationOpt.value() : cucumber::messages::Duration{}).count(),
                     MakeFailure(query, testCaseStartedPtr),
@@ -139,7 +135,7 @@ namespace cucumber_cpp::library::formatter
             return testCases;
         }
 
-        ReportSuite MakeReport(cucumber::query::Query& query, const std::optional<std::string>& testClassName)
+        ReportSuite MakeReport(const cucumber::query::Query& query, const std::optional<std::string>& testClassName)
         {
             const auto statuses = query.CountMostSevereTestStepResultStatus();
             const auto count = [&statuses](cucumber::messages::TestStepResultStatus status)

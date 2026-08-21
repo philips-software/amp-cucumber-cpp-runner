@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/api/Gherkin.hpp"
-#include "cucumber/gherkin/App.hpp"
 #include "cucumber/gherkin/AstBuilder.hpp"
 #include "cucumber/gherkin/Exceptions.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"

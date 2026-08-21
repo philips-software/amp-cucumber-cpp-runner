@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <list>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -339,7 +340,7 @@ namespace cucumber_cpp::library::formatter::helper
         return "";
     }
 
-    std::string FormatBase64Attachment(const std::string& body, const std::string& mediaType, const std::optional<std::string>& filename, const Theme& theme)
+    std::string FormatBase64Attachment(std::string_view body, const std::string& mediaType, const std::optional<std::string>& filename, const Theme& theme)
     {
         TextBuilder builder{};
         builder.Append("Embedding").Space();

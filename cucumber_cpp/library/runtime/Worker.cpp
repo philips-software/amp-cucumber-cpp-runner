@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/Duration.hpp"
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/Feature.hpp"
 #include "cucumber/messages/GherkinDocument.hpp"
@@ -8,11 +9,11 @@
 #include "cucumber/messages/TestRunHookStarted.hpp"
 #include "cucumber/messages/TestStepResult.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -20,6 +21,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
@@ -187,7 +189,7 @@ namespace cucumber_cpp::library::runtime
             .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
         };
 
-        broadcaster.BroadcastEvent({ .testRunHookStarted = std::make_shared<cucumber::messages::TestRunHookStarted>(testRunHookStarted) });
+        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunHookStarted = std::make_shared<cucumber::messages::TestRunHookStarted>(testRunHookStarted) });
 
         cucumber::messages::TestStepResult result{ .duration = std::make_shared<cucumber::messages::Duration>(cucumber::messages::Duration{ .seconds = 0, .nanos = 0 }), .status = cucumber::messages::TestStepResultStatus::SKIPPED };
 
@@ -204,11 +206,11 @@ namespace cucumber_cpp::library::runtime
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        broadcaster.BroadcastEvent({ .testRunHookFinished = std::make_shared<cucumber::messages::TestRunHookFinished>(cucumber::messages::TestRunHookFinished{
-                                         .testRunHookStartedId = testRunHookStartedId,
-                                         .result = std::make_shared<cucumber::messages::TestStepResult>(result),
-                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                     }) });
+        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunHookFinished = std::make_shared<cucumber::messages::TestRunHookFinished>(cucumber::messages::TestRunHookFinished{
+                                                                     .testRunHookStartedId = testRunHookStartedId,
+                                                                     .result = std::make_shared<cucumber::messages::TestStepResult>(result),
+                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
+                                                                 }) });
 
         return result;
     }

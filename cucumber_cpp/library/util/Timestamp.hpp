@@ -18,6 +18,11 @@ namespace cucumber_cpp::library::util
         TimestampGenerator();
         virtual ~TimestampGenerator();
 
+        TimestampGenerator(const TimestampGenerator&) = delete;
+        TimestampGenerator& operator=(const TimestampGenerator&) = delete;
+        TimestampGenerator(TimestampGenerator&&) = delete;
+        TimestampGenerator& operator=(TimestampGenerator&&) = delete;
+
         static TimestampGenerator& Instance();
         static void SetInstance(TimestampGenerator& inst);
         virtual std::chrono::milliseconds Now() = 0;

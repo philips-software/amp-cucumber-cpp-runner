@@ -5,7 +5,7 @@
 
 namespace cucumber_cpp::library::plugin
 {
-    void ParameterLoader::Load(support::DefinitionRegistration& registration, cucumber_expression::ParameterRegistry& parameterRegistry)
+    void ParameterLoader::Load(const support::DefinitionRegistration& registration, cucumber_expression::ParameterRegistry& parameterRegistry)
     {
         const auto& existingParameters = parameterRegistry.GetParameters();
 

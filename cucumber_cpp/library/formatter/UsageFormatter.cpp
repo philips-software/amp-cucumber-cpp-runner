@@ -1,8 +1,6 @@
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
 #include "cucumber/messages/Envelope.hpp"
-#include "cucumber/messages/Location.hpp"
 #include "cucumber/messages/StepDefinitionPatternType.hpp"
-#include "cucumber/messages/TestCase.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber/messages/TestStepFinished.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
@@ -30,7 +28,6 @@
 #include <string>
 #include <string_view>
 #include <tuple>
-#include <utility>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -88,7 +85,6 @@ namespace cucumber_cpp::library::formatter
             const cucumber::query::Query& query,
             const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
             const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
-            const std::shared_ptr<const cucumber::messages::Pickle>& pickle,
             const cucumber::query::Lineage& lineage)
         {
             const auto pickleStep = query.FindPickleStepBy(testStep).value();
@@ -110,7 +106,6 @@ namespace cucumber_cpp::library::formatter
             const cucumber::query::Query& query,
             const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
             const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
-            const std::shared_ptr<const cucumber::messages::Pickle>& pickle,
             const cucumber::query::Lineage& lineage,
             std::map<std::string, Usage, std::less<>>& mapping)
         {
@@ -118,7 +113,7 @@ namespace cucumber_cpp::library::formatter
                 return;
 
             const auto& stepDefinitionId = testStep->stepDefinitionIds.value().front();
-            mapping.at(stepDefinitionId).matches.emplace_back(CreateUsageMatch(query, testStepFinished, testStep, pickle, lineage));
+            mapping.at(stepDefinitionId).matches.emplace_back(CreateUsageMatch(query, testStepFinished, testStep, lineage));
         }
 
         std::optional<std::chrono::nanoseconds> CalculateMeanDuration(const std::list<UsageMatch>& matches)
@@ -152,13 +147,12 @@ namespace cucumber_cpp::library::formatter
                 if (!query.FindTestCaseFinishedBy(testCaseStarted).has_value())
                     continue;
 
-                const auto pickle = query.FindPickleBy(testCaseStarted).value();
                 const auto lineageAndPickle = query.FindLineageBy(testCaseStarted).value();
                 const auto& lineage = *lineageAndPickle.lineage;
                 const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
                 for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
-                    AddUsageMatchToMapping(query, testStepFinished, testStep, pickle, lineage, mapping);
+                    AddUsageMatchToMapping(query, testStepFinished, testStep, lineage, mapping);
             }
         }
 

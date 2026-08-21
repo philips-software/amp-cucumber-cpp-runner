@@ -1,6 +1,7 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber/messages/PickleTable.hpp"
 #include "cucumber/messages/PickleTableCell.hpp"
+#include "cucumber/messages/PickleTableRow.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
 #include <memory>
 #include <optional>
@@ -35,7 +36,7 @@ namespace cucumber_cpp::library::util
 
         for (const auto& tableRow : table->rows)
         {
-            auto& pickleTableRow = pickleTable.rows.emplace_back(std::make_shared<cucumber::messages::PickleTableRow>());
+            const auto& pickleTableRow = pickleTable.rows.emplace_back(std::make_shared<cucumber::messages::PickleTableRow>());
             pickleTableRow->cells.reserve(tableRow.cells.size());
 
             for (const auto& cell : tableRow.cells)

@@ -38,7 +38,7 @@ namespace cucumber_cpp::library::support
         if (&plugin == this)
             return;
 
-        if (std::find(plugins.begin(), plugins.end(), &plugin) != plugins.end())
+        if (std::ranges::find(plugins, &plugin) != plugins.end())
             return;
 
         plugins.push_back(&plugin);

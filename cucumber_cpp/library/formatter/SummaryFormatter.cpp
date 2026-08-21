@@ -129,7 +129,7 @@ namespace cucumber_cpp::library::formatter
             return data;
         }
 
-        std::size_t CalculateLength(const cucumber::query::Query& query, const cucumber::messages::Pickle& pickle, const cucumber::messages::TestCaseStarted& testCaseStarted, const cucumber::messages::TestCaseFinished& testCaseFinished, const cucumber::messages::Scenario& scenario, const cucumber::messages::TestCase& testCase, bool useStatusIcon, const helper::Theme& theme)
+        std::size_t CalculateLength(const cucumber::query::Query& query, const cucumber::messages::Pickle& pickle, const cucumber::messages::TestCaseStarted& testCaseStarted, const cucumber::messages::TestCaseFinished& testCaseFinished, const cucumber::messages::Scenario& scenario, const cucumber::messages::TestCase& testCase, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
             const auto scenarioLength = helper::Unstyled(helper::FormatPickleAttemptTitle(pickle, testCaseStarted.attempt, testCaseFinished.willBeRetried, scenario, theme)).length();
 
@@ -162,16 +162,15 @@ namespace cucumber_cpp::library::formatter
             return maxContentLength;
         }
 
-        void HandleHookStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const helper::Theme& theme)
+        void HandleHookStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
-            const auto hookOpt = query.FindHookBy(testStep);
-            if (hookOpt.has_value())
+            if (const auto hookOpt = query.FindHookBy(testStep); hookOpt.has_value())
                 helper::PrintHookLine(stream, *testStepFinished, *hookOpt.value(), scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
 
             helper::PrintError(stream, *testStepFinished, scenarioIndent, useStatusIcon, theme);
         }
 
-        void HandleTestStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
             const auto pickleStep = query.FindPickleStepBy(testStep).value();
             const auto step = query.FindStepBy(pickleStep).value();
@@ -221,7 +220,7 @@ namespace cucumber_cpp::library::formatter
             HandleTestSteps(stream, query, testCaseStarted, scenarioIndent, maxContentLength, useStatusIcon, theme);
         }
 
-        void HandleTestCaseStartedList(std::ostream& stream, const cucumber::query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>> testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestCaseStartedList(std::ostream& stream, const cucumber::query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>>& testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
         {
             if (testCaseStartedList.empty())
                 return;

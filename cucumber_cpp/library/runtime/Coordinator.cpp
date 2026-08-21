@@ -3,13 +3,12 @@
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/TestRunFinished.hpp"
 #include "cucumber/messages/TestRunStarted.hpp"
-#include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <memory>
-#include <span>
 #include <string>
 #include <utility>
 
@@ -29,18 +28,18 @@ namespace cucumber_cpp::library::runtime
 
     bool Coordinator::Run()
     {
-        broadcaster.BroadcastEvent({ .testRunStarted = std::make_shared<cucumber::messages::TestRunStarted>(cucumber::messages::TestRunStarted{
-                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                         .id = std::string{ testRunStartedId },
-                                     }) });
+        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunStarted = std::make_shared<cucumber::messages::TestRunStarted>(cucumber::messages::TestRunStarted{
+                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
+                                                                     .id = std::string{ testRunStartedId },
+                                                                 }) });
 
         const auto success = runtimeAdapter->Run();
 
-        broadcaster.BroadcastEvent({ .testRunFinished = std::make_shared<cucumber::messages::TestRunFinished>(cucumber::messages::TestRunFinished{
-                                         .success = success,
-                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                         .testRunStartedId = std::string{ testRunStartedId },
-                                     }) });
+        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunFinished = std::make_shared<cucumber::messages::TestRunFinished>(cucumber::messages::TestRunFinished{
+                                                                     .success = success,
+                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
+                                                                     .testRunStartedId = std::string{ testRunStartedId },
+                                                                 }) });
 
         return success;
     }

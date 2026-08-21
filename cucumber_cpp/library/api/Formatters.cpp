@@ -6,7 +6,9 @@
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <filesystem>
 #include <fstream>
 #include <functional>

@@ -11,70 +11,75 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/TransformDocString.hpp"
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace cucumber_cpp::library::engine
 {
-    struct StepMock : StepBase
+    namespace
     {
-        using StepBase::StepBase;
+        struct StepMock : StepBase
+        {
+            using StepBase::StepBase;
 
-        MOCK_METHOD(void, SetUp, (), (override));
-        MOCK_METHOD(void, TearDown, (), (override));
+            MOCK_METHOD(void, SetUp, (), (override));
+            MOCK_METHOD(void, TearDown, (), (override));
 
-        using StepBase::Pending;
-        using StepBase::Skipped;
+            using StepBase::Pending;
+            using StepBase::Skipped;
 
-        using StepBase::Step;
+            using StepBase::Step;
 
-        using StepBase::context;
-        using StepBase::dataTable;
-        using StepBase::docString;
-    };
-
-    struct TestStep : testing::Test
-    {
-        util::Broadcaster broadcaster;
-        std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
-        Context context{ contextStorageFactory };
-        util::StepOrHookStarted stepOrHookStarted;
-        cucumber::messages::PickleStepArgument pickleStepArgument;
-
-        cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
-        cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
-        support::UndefinedParameters undefinedParameters;
-        support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
-        support::HookRegistry hookRegistry{ idGenerator };
-
-        support::SupportCodeLibrary supportCodeLibrary{
-            .hookRegistry = hookRegistry,
-            .stepRegistry = stepRegistry,
-            .parameterRegistry = parameterRegistry,
-            .undefinedParameters = undefinedParameters
-        };
-        runtime::NestedTestCaseRunner nestedTestCaseRunner{
-            0,
-            supportCodeLibrary,
-            broadcaster,
-            context,
-            std::get<util::TestStepStarted>(stepOrHookStarted),
+            using StepBase::context;
+            using StepBase::dataTable;
+            using StepBase::docString;
         };
 
-        StepMock step{
-            nestedTestCaseRunner,
-            broadcaster,
-            context,
-            stepOrHookStarted,
-            util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*(*pickleStepArgument.dataTable)) : std::nullopt),
-            util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*(*pickleStepArgument.docString)) : std::nullopt),
+        struct TestStep : testing::Test
+        {
+            util::Broadcaster broadcaster;
+            std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
+            Context context{ contextStorageFactory };
+            util::StepOrHookStarted stepOrHookStarted;
+            cucumber::messages::PickleStepArgument pickleStepArgument;
+
+            cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+            cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
+            support::UndefinedParameters undefinedParameters;
+            support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
+            support::HookRegistry hookRegistry{ idGenerator };
+
+            support::SupportCodeLibrary supportCodeLibrary{
+                .hookRegistry = hookRegistry,
+                .stepRegistry = stepRegistry,
+                .parameterRegistry = parameterRegistry,
+                .undefinedParameters = undefinedParameters
+            };
+            runtime::NestedTestCaseRunner nestedTestCaseRunner{
+                0,
+                supportCodeLibrary,
+                broadcaster,
+                context,
+                std::get<util::TestStepStarted>(stepOrHookStarted),
+            };
+
+            StepMock step{
+                nestedTestCaseRunner,
+                broadcaster,
+                context,
+                stepOrHookStarted,
+                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*(*pickleStepArgument.dataTable)) : std::nullopt),
+                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*(*pickleStepArgument.docString)) : std::nullopt),
+            };
         };
-    };
+    }
 
     TEST_F(TestStep, StepProvidesAccessToSetUpFunction)
     {

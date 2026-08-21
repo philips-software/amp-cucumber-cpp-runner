@@ -7,8 +7,8 @@
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <algorithm>
 #include <filesystem>
-#include <stdexcept>
 #include <string>
+#include <system_error>
 #include <vector>
 
 namespace cucumber_cpp::library::plugin
@@ -25,7 +25,7 @@ namespace cucumber_cpp::library::plugin
             auto resolved = std::filesystem::canonical(path, errorCode);
 
             if (errorCode)
-                throw std::runtime_error("Path '" + path + "' cannot be resolved: " + errorCode.message());
+                throw PluginError("Path '" + path + "' cannot be resolved: " + errorCode.message());
 
             return resolved;
         }
@@ -42,7 +42,7 @@ namespace cucumber_cpp::library::plugin
             else if (std::filesystem::is_regular_file(fsPath))
                 LoadFile(fsPath);
             else
-                throw std::runtime_error("Path '" + path + "' is not a file or directory");
+                throw PluginError("Path '" + path + "' is not a file or directory");
         }
     }
 
@@ -65,7 +65,7 @@ namespace cucumber_cpp::library::plugin
     void DynamicLibraryManager::LoadFile(const std::filesystem::path& path)
     {
         if (path.extension() != DynamicLibrary::PlatformExtension())
-            throw std::runtime_error("Refusing to load '" + path.string() + "': expected a '" + std::string{ DynamicLibrary::PlatformExtension() } + "' plugin");
+            throw PluginError("Refusing to load '" + path.string() + "': expected a '" + std::string{ DynamicLibrary::PlatformExtension() } + "' plugin");
 
         const auto& lib = libraries.emplace_back(path);
 

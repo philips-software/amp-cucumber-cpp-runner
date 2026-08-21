@@ -12,7 +12,6 @@
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <cucumber/messages/Pickle.hpp>
 #include <stdexcept>
 #include <string>
 #include <string_view>

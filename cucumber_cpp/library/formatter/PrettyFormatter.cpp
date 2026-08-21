@@ -11,15 +11,16 @@
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace cucumber_cpp::library::formatter
 {
@@ -131,11 +132,10 @@ namespace cucumber_cpp::library::formatter
         const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testStepFinished->testCaseStartedId);
 
         const auto testStep = query.FindTestStepBy(testStepFinished).value();
-        const auto pickleStepOpt = query.FindPickleStepBy(testStep);
 
-        if (pickleStepOpt.has_value())
+        if (const auto pickleStepOpt = query.FindPickleStepBy(testStep); pickleStepOpt.has_value())
         {
-            const auto pickleStep = pickleStepOpt.value();
+            const auto& pickleStep = pickleStepOpt.value();
             const auto step = query.FindStepBy(pickleStep).value();
             const auto stepDefinitionOpt = query.FindUnambiguousStepDefinitionBy(testStep);
             const auto* stepDefinition = stepDefinitionOpt.has_value() ? stepDefinitionOpt.value().get() : nullptr;

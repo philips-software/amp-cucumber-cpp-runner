@@ -24,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace cucumber_cpp::library::formatter::helper
 {
@@ -44,7 +45,7 @@ namespace cucumber_cpp::library::formatter::helper
     std::string FormatAmbiguousStep(const std::list<const cucumber::messages::StepDefinition*>& stepDefinitions, const Theme& theme);
     std::string FormatTestStepResultError(const cucumber::messages::TestStepResult& testStepResult, const Theme& theme);
     std::string FormatTestRunFinishedError(const cucumber::messages::TestRunFinished& testRunFinished, const Theme& theme);
-    std::string FormatBase64Attachment(const std::string& body, const std::string& mediaType, const std::optional<std::string>& filename, const Theme& theme);
+    std::string FormatBase64Attachment(std::string_view body, const std::string& mediaType, const std::optional<std::string>& filename, const Theme& theme);
     std::string FormatTextAttachment(const std::string& body, const Theme& theme);
     std::string FormatAttachment(const cucumber::messages::Attachment& attachment, const Theme& theme);
 }

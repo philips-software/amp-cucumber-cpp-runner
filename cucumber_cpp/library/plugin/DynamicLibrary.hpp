@@ -1,12 +1,19 @@
 #ifndef PLUGIN_DYNAMIC_LIBRARY_HPP
 #define PLUGIN_DYNAMIC_LIBRARY_HPP
 
+#include <cstring>
 #include <filesystem>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
 namespace cucumber_cpp::library::plugin
 {
+    struct PluginError : std::runtime_error
+    {
+        using runtime_error::runtime_error;
+    };
+
     struct DynamicLibrary
     {
         explicit DynamicLibrary(const std::filesystem::path& path);
@@ -27,10 +34,10 @@ namespace cucumber_cpp::library::plugin
         static std::string_view PlatformExtension();
 
     private:
-        void* GetSymbolAddress(std::string_view name) const;
+        [[nodiscard]] void* GetSymbolAddress(std::string_view name) const;
 
         std::filesystem::path libraryPath;
-        void* handle{ nullptr };
+        void* handle{ nullptr }; // NOSONAR: opaque OS module handle from dlopen/LoadLibrary
     };
 
     //////////////////////////
@@ -40,7 +47,12 @@ namespace cucumber_cpp::library::plugin
     template<class FnPtr>
     FnPtr DynamicLibrary::GetSymbol(std::string_view name) const
     {
-        return reinterpret_cast<FnPtr>(GetSymbolAddress(name)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // Object-pointer to function-pointer conversion is not portable via a cast;
+        // copying the bits is the POSIX-recommended, well-defined idiom for dlsym.
+        void* address = GetSymbolAddress(name);
+        FnPtr symbol{};
+        std::memcpy(&symbol, &address, sizeof(symbol));
+        return symbol;
     }
 }
 
