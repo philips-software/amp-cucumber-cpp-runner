@@ -1,7 +1,7 @@
 #ifndef FORMATTER_USAGE_FORMATTER_HPP
 #define FORMATTER_USAGE_FORMATTER_HPP
 
-#include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/Envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "fmt/base.h"
@@ -27,7 +27,7 @@ namespace cucumber_cpp::library::formatter
             helper::Theme theme;
         };
 
-        void OnEnvelope(const cucumber::messages::envelope& envelope) override;
+        void OnEnvelope(const cucumber::messages::Envelope& envelope) override;
 
         Options options{ formatOptions.value(name, nlohmann::json::object()) };
 

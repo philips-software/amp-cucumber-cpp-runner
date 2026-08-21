@@ -1,18 +1,18 @@
 #ifndef RUNTIME_WORKER_HPP
 #define RUNTIME_WORKER_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/gherkin_document.hpp"
-#include "cucumber/messages/test_step_result.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/Feature.hpp"
+#include "cucumber/messages/GherkinDocument.hpp"
+#include "cucumber/messages/TestStepResult.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include <cucumber/messages/pickle.hpp>
+#include <cucumber/messages/Pickle.hpp>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -29,28 +29,28 @@ namespace cucumber_cpp::library::runtime
     {
         Worker(std::string_view testRunStartedId,
             util::Broadcaster& broadcaster,
-            cucumber::gherkin::id_generator_ptr idGenerator,
+            cucumber::gherkin::IdGeneratorPtr idGenerator,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary& supportCodeLibrary,
             Context& programContext);
 
-        std::vector<cucumber::messages::test_step_result> RunBeforeAllHooks();
-        std::vector<cucumber::messages::test_step_result> RunAfterAllHooks();
+        std::vector<cucumber::messages::TestStepResult> RunBeforeAllHooks();
+        std::vector<cucumber::messages::TestStepResult> RunAfterAllHooks();
 
         bool RunTestSuite(const assemble::AssembledTestSuite& assembledTestSuite, bool failing);
-        bool RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing);
+        bool RunTestCase(const cucumber::messages::GherkinDocument& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing);
 
     private:
-        std::vector<cucumber::messages::test_step_result> RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
-        std::vector<cucumber::messages::test_step_result> RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context);
+        std::vector<cucumber::messages::TestStepResult> RunBeforeTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context);
+        std::vector<cucumber::messages::TestStepResult> RunAfterTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context);
 
-        cucumber::messages::test_step_result RunTestHook(const std::string& id, Context& context);
+        cucumber::messages::TestStepResult RunTestHook(const std::string& id, Context& context);
 
-        bool IsStatusFailed(cucumber::messages::test_step_result_status status) const;
+        bool IsStatusFailed(cucumber::messages::TestStepResultStatus status) const;
 
         std::string_view testRunStartedId;
         util::Broadcaster& broadcaster;
-        cucumber::gherkin::id_generator_ptr idGenerator;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary& supportCodeLibrary;
         Context& programContext;

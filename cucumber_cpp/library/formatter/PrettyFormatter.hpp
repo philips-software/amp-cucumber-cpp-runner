@@ -1,17 +1,18 @@
 #ifndef FORMATTER_PRETTY_FORMATTER_HPP
 #define FORMATTER_PRETTY_FORMATTER_HPP
 
-#include "cucumber/messages/attachment.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/rule.hpp"
-#include "cucumber/messages/test_case_started.hpp"
-#include "cucumber/messages/test_run_finished.hpp"
-#include "cucumber/messages/test_step_finished.hpp"
+#include "cucumber/messages/Attachment.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Feature.hpp"
+#include "cucumber/messages/Rule.hpp"
+#include "cucumber/messages/TestCaseStarted.hpp"
+#include "cucumber/messages/TestRunFinished.hpp"
+#include "cucumber/messages/TestStepFinished.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <set>
 #include <string>
@@ -37,22 +38,22 @@ namespace cucumber_cpp::library::formatter
         };
 
     private:
-        void OnEnvelope(const cucumber::messages::envelope& envelope) override;
+        void OnEnvelope(const cucumber::messages::Envelope& envelope) override;
 
-        void CalculateIndent(const cucumber::messages::test_case_started& testCaseStarted);
+        void CalculateIndent(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted);
 
-        void HandleTestCaseStarted(const cucumber::messages::test_case_started& testCaseStarted);
-        void HandleAttachment(const cucumber::messages::attachment& attachment);
-        void HandleTestStepFinished(const cucumber::messages::test_step_finished& testStepFinished);
-        void HandleTestRunFinished(const cucumber::messages::test_run_finished& testRunFinished);
+        void HandleTestCaseStarted(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted);
+        void HandleAttachment(const cucumber::messages::Attachment& attachment);
+        void HandleTestStepFinished(const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished);
+        void HandleTestRunFinished(const cucumber::messages::TestRunFinished& testRunFinished);
 
         Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
 
         std::map<std::string, std::size_t> maxContentLengthByTestCaseStartedId;
         std::map<std::string, std::size_t> scenarioIndentByTestCaseStartedId;
 
-        std::set<const cucumber::messages::feature*> printedFeatureUris;
-        std::set<const cucumber::messages::rule*> printedRuleIds;
+        std::set<const cucumber::messages::Feature*> printedFeatureUris;
+        std::set<const cucumber::messages::Rule*> printedRuleIds;
     };
 }
 

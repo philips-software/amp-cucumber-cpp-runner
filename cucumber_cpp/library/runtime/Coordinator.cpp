@@ -1,8 +1,8 @@
 #include "cucumber_cpp/library/runtime/Coordinator.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/test_run_finished.hpp"
-#include "cucumber/messages/test_run_started.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/TestRunFinished.hpp"
+#include "cucumber/messages/TestRunStarted.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::runtime
 {
     Coordinator::Coordinator(std::string testRunStartedId,
         util::Broadcaster& broadcaster,
-        cucumber::gherkin::id_generator_ptr idGenerator,
+        cucumber::gherkin::IdGeneratorPtr idGenerator,
         std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
         support::SupportCodeLibrary& supportCodeLibrary)
         : testRunStartedId{ std::move(testRunStartedId) }
@@ -29,18 +29,18 @@ namespace cucumber_cpp::library::runtime
 
     bool Coordinator::Run()
     {
-        broadcaster.BroadcastEvent({ .test_run_started = cucumber::messages::test_run_started{
-                                         .timestamp = util::TimestampNow(),
+        broadcaster.BroadcastEvent({ .testRunStarted = std::make_shared<cucumber::messages::TestRunStarted>(cucumber::messages::TestRunStarted{
+                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
                                          .id = std::string{ testRunStartedId },
-                                     } });
+                                     }) });
 
         const auto success = runtimeAdapter->Run();
 
-        broadcaster.BroadcastEvent({ .test_run_finished = cucumber::messages::test_run_finished{
+        broadcaster.BroadcastEvent({ .testRunFinished = std::make_shared<cucumber::messages::TestRunFinished>(cucumber::messages::TestRunFinished{
                                          .success = success,
-                                         .timestamp = util::TimestampNow(),
-                                         .test_run_started_id = std::string{ testRunStartedId },
-                                     } });
+                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
+                                         .testRunStartedId = std::string{ testRunStartedId },
+                                     }) });
 
         return success;
     }

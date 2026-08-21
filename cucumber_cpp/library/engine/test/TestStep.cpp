@@ -1,5 +1,5 @@
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/pickle_step_argument.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/PickleStepArgument.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
@@ -44,10 +44,10 @@ namespace cucumber_cpp::library::engine
         std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
         Context context{ contextStorageFactory };
         util::StepOrHookStarted stepOrHookStarted;
-        cucumber::messages::pickle_step_argument pickleStepArgument;
+        cucumber::messages::PickleStepArgument pickleStepArgument;
 
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
-        cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
+        cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
         support::UndefinedParameters undefinedParameters;
         support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
         support::HookRegistry hookRegistry{ idGenerator };
@@ -71,8 +71,8 @@ namespace cucumber_cpp::library::engine
             broadcaster,
             context,
             stepOrHookStarted,
-            util::TransformTable(pickleStepArgument.data_table),
-            util::TransformDocString(pickleStepArgument.doc_string),
+            util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*(*pickleStepArgument.dataTable)) : std::nullopt),
+            util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*(*pickleStepArgument.docString)) : std::nullopt),
         };
     };
 

@@ -1,8 +1,8 @@
 #ifndef UTIL_EXECUTE_AND_CATCH_EXCEPTIONS_HPP
 #define UTIL_EXECUTE_AND_CATCH_EXCEPTIONS_HPP
 
-#include "cucumber/gherkin/demangle.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/gherkin/Demangle.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
@@ -27,7 +27,7 @@ namespace cucumber_cpp::library::util
         {
             testStepResult.status = TestStepResultStatus::FAILED;
 
-            if (e.status.status != cucumber::messages::test_step_result_status::PASSED)
+            if (e.status.status != cucumber::messages::TestStepResultStatus::PASSED)
             {
                 const auto offset = std::string(e.nesting, ' ');
 
@@ -65,7 +65,7 @@ namespace cucumber_cpp::library::util
         {
             testStepResult.status = TestStepResultStatus::FAILED;
             testStepResult.exception = TestException{
-                .type = cucumber::gherkin::detail::demangle(typeid(e).name()).get(),
+                .type = cucumber::gherkin::detail::Demangle(typeid(e).name()).get(),
                 .message = e.what(),
             };
         }

@@ -1,7 +1,7 @@
 #ifndef FORMATTER_MESSAGE_FORMATTER_HPP
 #define FORMATTER_MESSAGE_FORMATTER_HPP
 
-#include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/Envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "nlohmann/json.hpp"
 #include <optional>
@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::formatter
         constexpr static auto name = "message";
 
     private:
-        void OnEnvelope(const cucumber::messages::envelope& envelope) override;
+        void OnEnvelope(const cucumber::messages::Envelope& envelope) override;
     };
 }
 

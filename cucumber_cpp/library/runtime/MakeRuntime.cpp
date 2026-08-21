@@ -1,5 +1,5 @@
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/runtime/Coordinator.hpp"
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
@@ -12,7 +12,7 @@
 
 namespace cucumber_cpp::library::runtime
 {
-    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
+    std::unique_ptr<support::RuntimeAdapter> MakeAdapter(const support::RunOptions::Runtime& options, std::string testRunStartedId, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::IdGeneratorPtr idGenerator, Context& programContext)
     {
         return std::make_unique<runtime::SerialRuntimeAdapter>(
             testRunStartedId,
@@ -24,9 +24,9 @@ namespace cucumber_cpp::library::runtime
             programContext);
     }
 
-    std::unique_ptr<support::Runtime> MakeRuntime(const support::RunOptions::Runtime& options, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::id_generator_ptr idGenerator, Context& programContext)
+    std::unique_ptr<support::Runtime> MakeRuntime(const support::RunOptions::Runtime& options, util::Broadcaster& broadcaster, const std::list<support::PickleSource>& sourcedPickles, support::SupportCodeLibrary& supportCodeLibrary, cucumber::gherkin::IdGeneratorPtr idGenerator, Context& programContext)
     {
-        const auto testRunStartedId{ idGenerator->next_id() };
+        const auto testRunStartedId{ idGenerator->NextId() };
         return std::make_unique<runtime::Coordinator>(
             testRunStartedId,
             broadcaster,

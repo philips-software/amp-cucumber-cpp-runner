@@ -1,7 +1,7 @@
 #ifndef CUCUMBER_CPP_STEPREGISTRY_HPP
 #define CUCUMBER_CPP_STEPREGISTRY_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
 #include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
@@ -97,7 +97,7 @@ namespace cucumber_cpp::library::support
             const std::uint32_t& used;
         };
 
-        explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::id_generator_ptr idGenerator);
+        explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::IdGeneratorPtr idGenerator);
 
         void LoadSteps();
 
@@ -115,7 +115,7 @@ namespace cucumber_cpp::library::support
 
         cucumber_expression::ParameterRegistry& parameterRegistry;
         support::UndefinedParameters& undefinedParameters;
-        cucumber::gherkin::id_generator_ptr idGenerator;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
 
         std::list<Definition> registry;
         std::map<std::string, std::list<Definition>::iterator, std::less<>> idToDefinitionMap;

@@ -5,7 +5,7 @@
 #include "CLI/Option.hpp"
 #include "CLI/Validators.hpp"
 #include "CLI/impl/App_inl.hpp"
-#include "cucumber/gherkin/demangle.hpp"
+#include "cucumber/gherkin/Demangle.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
@@ -186,7 +186,7 @@ namespace cucumber_cpp::library
         }
         catch (const std::exception& error)
         {
-            std::cout << fmt::format("{}:\n{}\n", cucumber::gherkin::detail::demangle(typeid(error).name()).get(), error.what());
+            std::cout << fmt::format("{}:\n{}\n", cucumber::gherkin::detail::Demangle(typeid(error).name()).get(), error.what());
             return EXIT_FAILURE;
         }
         catch (...)

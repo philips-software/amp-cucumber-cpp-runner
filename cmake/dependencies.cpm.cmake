@@ -8,11 +8,13 @@ endmacro()
 ccr_dependency(CPM_DOWNLOAD      v0.43.1    456cb6754daaa010d57444d0c8ce6d95ecf006ab)
 set(CPM_DOWNLOAD_SHA256 "1c40fc102ce9625d7de7eb14f541cab30cc3138dca627f0b0ec40293ce6c2934")
 # renovate: datasource=github-tags packageName=nlohmann/json versioning=semver
-ccr_dependency(NLOHMANN_JSON v3.12.0 55f93686c01528224f448c19128836e7df245f72)
+ccr_dependency(NLOHMANN_JSON     v3.12.0    55f93686c01528224f448c19128836e7df245f72)
 # renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
-ccr_dependency(CUCUMBER_MESSAGES v34.2.0 073f951ce615149a1532185fbae013ad908a918e)
+ccr_dependency(CUCUMBER_MESSAGES v34.0.0    8cd6cacecd0a657095c93b069c850f51009e0499)
 # renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_GHERKIN  v42.0.0    f2f7b51ae6a886aefc1f4a2059e4989b83aab8c8)
+ccr_dependency(CUCUMBER_GHERKIN  v42.0.0    85b41deb147e18421fe1023a0c496558caccaaa9)
+# renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
+ccr_dependency(CUCUMBER_QUERY    v1.0.0    2d432352bb6d82c4092ce8b33f280149b1f7fcea)
 # renovate: datasource=github-tags packageName=google/googletest versioning=semver
 ccr_dependency(GOOGLE_TEST       v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
 # renovate: datasource=github-tags packageName=CLIUtils/CLI11 versioning=semver
@@ -54,8 +56,6 @@ if(CCR_FETCH_DEPS)
         include("${CPM_DOWNLOAD_LOCATION}")
     endif()
 
-    CPMUsePackageLock("${CMAKE_CURRENT_LIST_DIR}/package-lock.cmake")
-
     # ---------------------------------------------------------------------------
     #
     # Dependencies
@@ -86,8 +86,17 @@ if(CCR_FETCH_DEPS)
     # cucumber_gherkin
     # ---------------------------------------------------------------------------
     CPMAddPackage(
-        URI "gh:cucumber/gherkin@${CUCUMBER_GHERKIN_VERSION}#${CUCUMBER_GHERKIN_DIGEST}"
+        URI "gh:cucumber/gherkin#${CUCUMBER_GHERKIN_DIGEST}"
         NAME cucumber_gherkin
+        SOURCE_SUBDIR cpp
+    )
+
+    # ---------------------------------------------------------------------------
+    # cucumber_query
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:cucumber/query#${CUCUMBER_QUERY_DIGEST}"
+        NAME cucumber_query
         SOURCE_SUBDIR cpp
     )
 

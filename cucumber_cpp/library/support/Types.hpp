@@ -1,9 +1,9 @@
 #ifndef SUPPORT_TYPES_HPP
 #define SUPPORT_TYPES_HPP
 
-#include "cucumber/messages/gherkin_document.hpp"
-#include "cucumber/messages/location.hpp"
-#include "cucumber/messages/pickle.hpp"
+#include "cucumber/messages/GherkinDocument.hpp"
+#include "cucumber/messages/Location.hpp"
+#include "cucumber/messages/Pickle.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include <cstddef>
 #include <filesystem>
@@ -51,9 +51,9 @@ namespace cucumber_cpp::library::support
 
     struct PickleSource
     {
-        std::shared_ptr<const cucumber::messages::pickle> pickle;
-        std::shared_ptr<const cucumber::messages::gherkin_document> gherkinDocument;
-        std::shared_ptr<const cucumber::messages::location> location;
+        std::shared_ptr<const cucumber::messages::Pickle> pickle;
+        std::shared_ptr<const cucumber::messages::GherkinDocument> gherkinDocument;
+        std::shared_ptr<const cucumber::messages::Location> location;
     };
 
     struct Runtime

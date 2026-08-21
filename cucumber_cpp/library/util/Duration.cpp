@@ -1,6 +1,6 @@
 
 #include "cucumber_cpp/library/util/Duration.hpp"
-#include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <chrono>
 #include <cstddef>
@@ -20,7 +20,7 @@ namespace cucumber_cpp::library::util
             return std::chrono::duration_cast<std::chrono::nanoseconds>(seconds) + nanos;
         }
 
-        cucumber::messages::duration ToDuration(std::chrono::milliseconds millis)
+        cucumber::messages::Duration ToDuration(std::chrono::milliseconds millis)
         {
             return {
                 .seconds = millis.count() / millisecondsPerSecond,
@@ -61,22 +61,22 @@ namespace cucumber_cpp::library::util
         return std::chrono::duration_cast<std::chrono::nanoseconds>(timeStop - timePoint);
     }
 
-    cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis)
+    cucumber::messages::Duration MillisecondsToDuration(std::chrono::milliseconds millis)
     {
         return ToDuration(millis);
     }
 
-    std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::duration& duration)
+    std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::Duration& duration)
     {
         return ToMillis(std::chrono::seconds{ duration.seconds }, std::chrono::nanoseconds{ duration.nanos });
     }
 
-    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::duration& duration)
+    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::Duration& duration)
     {
         return ToNanoSeconds(std::chrono::seconds{ duration.seconds }, std::chrono::nanoseconds{ duration.nanos });
     }
 
-    cucumber::messages::duration& operator+=(cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs)
+    cucumber::messages::Duration& operator+=(cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs)
     {
         const auto totalNanos = lhs.nanos + rhs.nanos;
         lhs.seconds += rhs.seconds;
@@ -86,9 +86,9 @@ namespace cucumber_cpp::library::util
         return lhs;
     }
 
-    cucumber::messages::duration operator+(const cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs)
+    cucumber::messages::Duration operator+(const cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs)
     {
-        cucumber::messages::duration result = lhs;
+        cucumber::messages::Duration result = lhs;
 
         return result += rhs;
     }

@@ -1,12 +1,13 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
-#include "cucumber/messages/pickle_table.hpp"
-#include "cucumber/messages/pickle_table_cell.hpp"
+#include "cucumber/messages/PickleTable.hpp"
+#include "cucumber/messages/PickleTableCell.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
+#include <memory>
 #include <optional>
 
 namespace cucumber_cpp::library::util
 {
-    std::optional<Table> TransformTable(const std::optional<cucumber::messages::pickle_table>& pickleTable)
+    std::optional<Table> TransformTable(const std::optional<cucumber::messages::PickleTable>& pickleTable)
     {
         if (!pickleTable.has_value())
             return std::nullopt;
@@ -16,29 +17,29 @@ namespace cucumber_cpp::library::util
         for (const auto& pickleTableRow : pickleTable->rows)
         {
             TableRow& tableRow = table.rows.emplace_back();
-            tableRow.cells.reserve(pickleTableRow.cells.size());
+            tableRow.cells.reserve(pickleTableRow->cells.size());
 
-            for (const auto& cell : pickleTableRow.cells)
-                tableRow.cells.emplace_back(cell.value);
+            for (const auto& cell : pickleTableRow->cells)
+                tableRow.cells.emplace_back(cell->value);
         }
 
         return table;
     }
 
-    std::optional<cucumber::messages::pickle_table> TransformTable(const std::optional<Table>& table)
+    std::optional<cucumber::messages::PickleTable> TransformTable(const std::optional<Table>& table)
     {
         if (!table.has_value())
             return std::nullopt;
 
-        cucumber::messages::pickle_table pickleTable;
+        cucumber::messages::PickleTable pickleTable;
 
         for (const auto& tableRow : table->rows)
         {
-            auto& pickleTableRow = pickleTable.rows.emplace_back();
-            pickleTableRow.cells.reserve(tableRow.cells.size());
+            auto& pickleTableRow = pickleTable.rows.emplace_back(std::make_shared<cucumber::messages::PickleTableRow>());
+            pickleTableRow->cells.reserve(tableRow.cells.size());
 
             for (const auto& cell : tableRow.cells)
-                pickleTableRow.cells.emplace_back(cucumber::messages::pickle_table_cell{ .value = cell.value });
+                pickleTableRow->cells.emplace_back(std::make_shared<cucumber::messages::PickleTableCell>(cucumber::messages::PickleTableCell{ .value = cell.value }));
         }
 
         return pickleTable;

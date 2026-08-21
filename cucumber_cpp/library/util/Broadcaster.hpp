@@ -6,7 +6,7 @@
 
 namespace cucumber::messages
 {
-    struct envelope;
+    struct Envelope;
 }
 
 namespace cucumber_cpp::library::util
@@ -15,7 +15,7 @@ namespace cucumber_cpp::library::util
 
     struct Listener
     {
-        explicit Listener(Broadcaster& broadcaster, const std::function<void(const cucumber::messages::envelope& envelope)>& onEvent);
+        explicit Listener(Broadcaster& broadcaster, const std::function<void(const cucumber::messages::Envelope& envelope)>& onEvent);
 
         Listener(const Listener&) = delete;
         Listener& operator=(const Listener&) = delete;
@@ -24,11 +24,11 @@ namespace cucumber_cpp::library::util
 
         ~Listener();
 
-        void Invoke(const cucumber::messages::envelope& envelope) const;
+        void Invoke(const cucumber::messages::Envelope& envelope) const;
 
     private:
         Broadcaster& broadcaster;
-        std::function<void(const cucumber::messages::envelope& envelope)> onEvent;
+        std::function<void(const cucumber::messages::Envelope& envelope)> onEvent;
     };
 
     struct Broadcaster
@@ -36,7 +36,7 @@ namespace cucumber_cpp::library::util
         void AddListener(Listener* listener);
         void RemoveListener(Listener* listener);
 
-        void BroadcastEvent(const cucumber::messages::envelope& envelope);
+        void BroadcastEvent(const cucumber::messages::Envelope& envelope);
 
     private:
         std::vector<Listener*> listeners;

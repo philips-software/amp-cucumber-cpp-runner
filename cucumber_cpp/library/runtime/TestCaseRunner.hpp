@@ -1,15 +1,15 @@
 #ifndef RUNTIME_TEST_CASE_RUNNER_HPP
 #define RUNTIME_TEST_CASE_RUNNER_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/gherkin_document.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/test_case.hpp"
-#include "cucumber/messages/test_step.hpp"
-#include "cucumber/messages/test_step_result.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber/messages/test_step_started.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/GherkinDocument.hpp"
+#include "cucumber/messages/Pickle.hpp"
+#include "cucumber/messages/PickleStep.hpp"
+#include "cucumber/messages/TestCase.hpp"
+#include "cucumber/messages/TestStep.hpp"
+#include "cucumber/messages/TestStepResult.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/messages/TestStepStarted.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -23,42 +23,42 @@ namespace cucumber_cpp::library::runtime
     struct TestCaseRunner
     {
         TestCaseRunner(util::Broadcaster& broadcaster,
-            cucumber::gherkin::id_generator_ptr idGenerator,
-            const cucumber::messages::gherkin_document& gherkinDocument,
-            const cucumber::messages::pickle& pickle,
-            const cucumber::messages::test_case& testCase,
+            cucumber::gherkin::IdGeneratorPtr idGenerator,
+            const cucumber::messages::GherkinDocument& gherkinDocument,
+            const cucumber::messages::Pickle& pickle,
+            const cucumber::messages::TestCase& testCase,
             std::size_t retries,
             bool skip,
             support::SupportCodeLibrary& supportCodeLibrary,
             Context& testSuiteContext);
 
-        cucumber::messages::test_step_result_status Run();
+        cucumber::messages::TestStepResultStatus Run();
 
         bool RunAttempt(std::size_t attempt, bool moreAttemptsAvailable);
 
-        cucumber::messages::test_step_result RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted, bool hasError);
+        cucumber::messages::TestStepResult RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError);
 
-        std::vector<cucumber::messages::test_step_result> RunStepHooks(const cucumber::messages::pickle_step& pickleStep, util::HookType hookType, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted);
+        std::vector<cucumber::messages::TestStepResult> RunStepHooks(const cucumber::messages::PickleStep& pickleStep, util::HookType hookType, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
 
-        cucumber::messages::test_step_result RunStep(const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::test_step& testStep, Context& testCaseContext, const cucumber::messages::test_step_started& testStepStarted);
+        cucumber::messages::TestStepResult RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
 
-        [[nodiscard]] cucumber::messages::test_step_result GetWorstStepResult() const;
+        [[nodiscard]] cucumber::messages::TestStepResult GetWorstStepResult() const;
 
         bool ShouldSkipHook(bool isBeforeHook);
         bool IsSkippingSteps();
 
     private:
         util::Broadcaster& broadcaster;
-        cucumber::gherkin::id_generator_ptr idGenerator;
-        const cucumber::messages::gherkin_document& gherkinDocument;
-        const cucumber::messages::pickle& pickle;
-        const cucumber::messages::test_case& testCase;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
+        const cucumber::messages::GherkinDocument& gherkinDocument;
+        const cucumber::messages::Pickle& pickle;
+        const cucumber::messages::TestCase& testCase;
         std::size_t maximumAttempts;
         bool skip;
         support::SupportCodeLibrary& supportCodeLibrary;
         Context& testSuiteContext;
 
-        std::vector<cucumber::messages::test_step_result> testStepResults;
+        std::vector<cucumber::messages::TestStepResult> testStepResults;
     };
 }
 

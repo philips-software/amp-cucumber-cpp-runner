@@ -1,11 +1,11 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/Envelope.hpp"
 #include <functional>
 #include <vector>
 
 namespace cucumber_cpp::library::util
 {
-    Listener::Listener(Broadcaster& broadcaster, const std::function<void(const cucumber::messages::envelope& envelope)>& onEvent)
+    Listener::Listener(Broadcaster& broadcaster, const std::function<void(const cucumber::messages::Envelope& envelope)>& onEvent)
         : broadcaster{ broadcaster }
         , onEvent{ onEvent }
     {
@@ -17,7 +17,7 @@ namespace cucumber_cpp::library::util
         broadcaster.RemoveListener(this);
     }
 
-    void Listener::Invoke(const cucumber::messages::envelope& envelope) const
+    void Listener::Invoke(const cucumber::messages::Envelope& envelope) const
     {
         if (onEvent)
             onEvent(envelope);
@@ -33,7 +33,7 @@ namespace cucumber_cpp::library::util
         std::erase(listeners, listener);
     }
 
-    void Broadcaster::BroadcastEvent(const cucumber::messages::envelope& envelope)
+    void Broadcaster::BroadcastEvent(const cucumber::messages::Envelope& envelope)
     {
         for (auto& listener : listeners)
             listener->Invoke(envelope);

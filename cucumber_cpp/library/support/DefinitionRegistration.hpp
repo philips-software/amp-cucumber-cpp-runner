@@ -1,7 +1,7 @@
 #ifndef SUPPORT_DEFINITION_REGISTRATION_HPP
 #define SUPPORT_DEFINITION_REGISTRATION_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
@@ -34,7 +34,7 @@ namespace cucumber_cpp::library::support
 
         void TakeSnapshot();
 
-        void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
+        void LoadIds(cucumber::gherkin::IdGeneratorPtr idGenerator);
 
         template<class T>
         void ForEachRegisteredStep(const T& func);

@@ -1,7 +1,7 @@
 #ifndef HELPER_THEME_HPP
 #define HELPER_THEME_HPP
 
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
 #include "fmt/color.h"
 #include <functional>
 #include <map>
@@ -56,25 +56,25 @@ namespace cucumber_cpp::library::formatter::helper
 
         struct
         {
-            std::optional<std::map<cucumber::messages::test_step_result_status, fmt::text_style, std::less<>>> all{};
-            std::optional<std::map<cucumber::messages::test_step_result_status, std::string, std::less<>>> icon{};
-            std::optional<std::map<cucumber::messages::test_step_result_status, std::string, std::less<>>> progress{};
+            std::optional<std::map<cucumber::messages::TestStepResultStatus, fmt::text_style, std::less<>>> all{};
+            std::optional<std::map<cucumber::messages::TestStepResultStatus, std::string, std::less<>>> icon{};
+            std::optional<std::map<cucumber::messages::TestStepResultStatus, std::string, std::less<>>> progress{};
 
-            fmt::text_style All(cucumber::messages::test_step_result_status status, fmt::text_style defaultStyle = {}) const
+            fmt::text_style All(cucumber::messages::TestStepResultStatus status, fmt::text_style defaultStyle = {}) const
             {
                 if (all && all->contains(status))
                     return all->at(status);
                 return defaultStyle;
             }
 
-            std::string Icon(cucumber::messages::test_step_result_status status, std::string defaultIcon = {}) const
+            std::string Icon(cucumber::messages::TestStepResultStatus status, std::string defaultIcon = {}) const
             {
                 if (icon && icon->contains(status))
                     return icon->at(status);
                 return defaultIcon;
             }
 
-            std::string Progress(cucumber::messages::test_step_result_status status, std::string defaultProgress = {}) const
+            std::string Progress(cucumber::messages::TestStepResultStatus status, std::string defaultProgress = {}) const
             {
                 if (progress && progress->contains(status))
                     return progress->at(status);

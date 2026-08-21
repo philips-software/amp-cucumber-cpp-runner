@@ -1,13 +1,14 @@
 
 #include "cucumber_cpp/library/formatter/JunitXmlFormatter.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/step.hpp"
-#include "cucumber/messages/test_case_started.hpp"
-#include "cucumber/messages/test_step.hpp"
-#include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/PickleStep.hpp"
+#include "cucumber/messages/Step.hpp"
+#include "cucumber/messages/TestCaseStarted.hpp"
+#include "cucumber/messages/TestStep.hpp"
+#include "cucumber/messages/TestStepFinished.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/query/NamingStrategy.hpp"
+#include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Trim.hpp"
@@ -20,6 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <list>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -63,24 +65,24 @@ namespace cucumber_cpp::library::formatter
             std::optional<std::string> timestamp;
         };
 
-        std::optional<ReportFailure> MakeFailure(query::Query& query, const cucumber::messages::test_case_started& testCaseStarted)
+        std::optional<ReportFailure> MakeFailure(cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
         {
             const auto result = query.FindMostSevereTestStepResultBy(testCaseStarted);
-            if (!result.has_value() || result.value()->status == cucumber::messages::test_step_result_status::PASSED)
+            if (!result.has_value() || result.value()->status == cucumber::messages::TestStepResultStatus::PASSED)
                 return std::nullopt;
 
             const auto& testStepResultStatus = result.value();
 
             return std::optional<ReportFailure>{
                 std::in_place,
-                testStepResultStatus->status == cucumber::messages::test_step_result_status::SKIPPED ? FailureKind::skipped : FailureKind::failure,
-                testStepResultStatus->exception ? std::make_optional(testStepResultStatus->exception->type) : std::nullopt,
-                testStepResultStatus->exception ? testStepResultStatus->exception->message : std::nullopt,
-                testStepResultStatus->exception ? testStepResultStatus->exception->stack_trace : testStepResultStatus->message,
+                testStepResultStatus->status == cucumber::messages::TestStepResultStatus::SKIPPED ? FailureKind::skipped : FailureKind::failure,
+                testStepResultStatus->exception ? std::make_optional((*testStepResultStatus->exception)->type) : std::nullopt,
+                testStepResultStatus->exception ? (*testStepResultStatus->exception)->message : std::nullopt,
+                testStepResultStatus->exception ? (*testStepResultStatus->exception)->stackTrace : testStepResultStatus->message,
             };
         }
 
-        std::string FormatStep(const cucumber::messages::step& gherkinStep, const cucumber::messages::pickle_step& pickleStep, cucumber::messages::test_step_result_status status)
+        std::string FormatStep(const cucumber::messages::Step& gherkinStep, const cucumber::messages::PickleStep& pickleStep, cucumber::messages::TestStepResultStatus status)
         {
             auto statusString = std::string{ cucumber::messages::to_string(status) };
             std::transform(statusString.begin(), statusString.end(), statusString.begin(), [](unsigned char c)
@@ -91,67 +93,76 @@ namespace cucumber_cpp::library::formatter
             return fmt::format("{:.<76}{}", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString);
         }
 
-        std::string MakeOutput(query::Query& query, const cucumber::messages::test_case_started& testCaseStarted)
+        std::string MakeOutput(cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
         {
-            const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
+            const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
             auto outputView = testStepFinishedAndTestStep |
-                              std::views::filter([](const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& pair)
+                              std::views::filter([](const cucumber::query::TestStepFinishedAndTestStep& pair)
                                   {
-                                      const auto [_, testStep] = pair;
-                                      return testStep->pickle_step_id.has_value();
+                                      return pair.testStep->pickleStepId.has_value();
                                   }) |
-                              std::views::transform([&query](const std::pair<const cucumber::messages::test_step_finished*, const cucumber::messages::test_step*>& pair)
+                              std::views::transform([&query](const cucumber::query::TestStepFinishedAndTestStep& pair)
                                   {
-                                      const auto [testStepFinished, testStep] = pair;
-                                      const auto& pickleStep = *query.FindPickleStepBy(*testStep);
-                                      const auto& gherkinStep = query.FindStepBy(pickleStep);
-                                      return FormatStep(gherkinStep, pickleStep, testStepFinished->test_step_result.status);
+                                      const auto pickleStep = query.FindPickleStepBy(pair.testStep).value();
+                                      const auto gherkinStep = query.FindStepBy(pickleStep).value();
+                                      return FormatStep(*gherkinStep, *pickleStep, pair.testStepFinished->testStepResult->status);
                                   });
 
             return fmt::format("\n{}\n", fmt::join(outputView, "\n"));
         }
 
-        std::list<ReportTestCase> MakeTestCases(query::Query& query, const std::optional<std::string>& testClassName)
+        std::list<ReportTestCase> MakeTestCases(cucumber::query::Query& query, const std::optional<std::string>& testClassName)
         {
             std::list<ReportTestCase> testCases;
 
+            const auto namingStrategy = cucumber::query::CreateNamingStrategy(cucumber::query::NamingStrategyLength::longName);
+
             const auto allTestCaseStarted = query.FindAllTestCaseStarted();
-            for (const auto testCaseStartedPtr : allTestCaseStarted)
+            for (const auto& testCaseStartedPtr : allTestCaseStarted)
             {
-                const auto& pickle = query.FindPickleBy(*testCaseStartedPtr);
-                const auto& lineage = query.FindLineageByPickle(pickle);
-                const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(*testCaseStartedPtr);
+                const auto pickle = query.FindPickleBy(testCaseStartedPtr).value();
+                const auto lineageAndPickle = query.FindLineageBy(testCaseStartedPtr).value();
+                const auto& lineage = *lineageAndPickle.lineage;
+                const auto durationOpt = query.FindTestCaseDurationBy(testCaseStartedPtr);
 
                 testCases.emplace_back(testClassName.has_value()
                                            ? testClassName.value()
                                        : lineage.feature
                                            ? lineage.feature->name
-                                           : pickle.uri,
-                    query::NamingStrategy::Reduce(lineage, pickle),
-                    util::DurationToMilliseconds(query.FindTestCaseDurationBy(*testCaseStartedPtr)).count(),
-                    MakeFailure(query, *testCaseStartedPtr),
-                    MakeOutput(query, *testCaseStartedPtr));
+                                           : pickle->uri,
+                    namingStrategy->Reduce(lineage, *pickle),
+                    util::DurationToMilliseconds(durationOpt.has_value() ? *durationOpt.value() : cucumber::messages::Duration{}).count(),
+                    MakeFailure(query, testCaseStartedPtr),
+                    MakeOutput(query, testCaseStartedPtr));
             }
 
             return testCases;
         }
 
-        ReportSuite MakeReport(query::Query& query, const std::optional<std::string>& testClassName)
+        ReportSuite MakeReport(cucumber::query::Query& query, const std::optional<std::string>& testClassName)
         {
-            const auto& statuses = query.CountMostSevereTestStepResultStatus();
+            const auto statuses = query.CountMostSevereTestStepResultStatus();
+            const auto count = [&statuses](cucumber::messages::TestStepResultStatus status)
+            {
+                const auto it = statuses.find(status);
+                return it != statuses.end() ? it->second : std::size_t{ 0 };
+            };
+
+            const auto testRunDuration = query.FindTestRunDuration();
+            const auto testRunStarted = query.FindTestRunStarted();
 
             return {
-                .time = util::DurationToMilliseconds(query.FindTestRunDuration()).count(),
+                .time = util::DurationToMilliseconds(testRunDuration.has_value() ? *testRunDuration.value() : cucumber::messages::Duration{}).count(),
                 .tests = query.CountTestCasesStarted(),
-                .skipped = statuses.at(cucumber::messages::test_step_result_status::SKIPPED),
-                .failures = statuses.at(cucumber::messages::test_step_result_status::UNKNOWN) +
-                            statuses.at(cucumber::messages::test_step_result_status::PENDING) +
-                            statuses.at(cucumber::messages::test_step_result_status::UNDEFINED) +
-                            statuses.at(cucumber::messages::test_step_result_status::AMBIGUOUS) +
-                            statuses.at(cucumber::messages::test_step_result_status::FAILED),
+                .skipped = count(cucumber::messages::TestStepResultStatus::SKIPPED),
+                .failures = count(cucumber::messages::TestStepResultStatus::UNKNOWN) +
+                            count(cucumber::messages::TestStepResultStatus::PENDING) +
+                            count(cucumber::messages::TestStepResultStatus::UNDEFINED) +
+                            count(cucumber::messages::TestStepResultStatus::AMBIGUOUS) +
+                            count(cucumber::messages::TestStepResultStatus::FAILED),
                 .errors = 0,
                 .testCases = MakeTestCases(query, testClassName),
-                .timestamp = util::MakeIso8601Timestamp(query.FindTestRunStarted().timestamp),
+                .timestamp = testRunStarted.has_value() ? std::make_optional(util::MakeIso8601Timestamp(*testRunStarted.value()->timestamp)) : std::nullopt,
             };
         }
 
@@ -217,9 +228,9 @@ namespace cucumber_cpp::library::formatter
     {
     }
 
-    void JunitXmlFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
+    void JunitXmlFormatter::OnEnvelope(const cucumber::messages::Envelope& envelope)
     {
-        if (envelope.test_run_finished)
+        if (envelope.testRunFinished)
             HandleTestRunFinished();
     }
 

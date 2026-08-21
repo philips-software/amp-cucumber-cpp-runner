@@ -1,17 +1,17 @@
 #ifndef UTIL_DURATION_HPP
 #define UTIL_DURATION_HPP
 
-#include "cucumber/messages/duration.hpp"
+#include "cucumber/messages/Duration.hpp"
 #include <chrono>
 
 namespace cucumber_cpp::library::util
 {
-    cucumber::messages::duration MillisecondsToDuration(std::chrono::milliseconds millis);
+    cucumber::messages::Duration MillisecondsToDuration(std::chrono::milliseconds millis);
 
-    std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::duration& duration);
-    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::duration& duration);
-    cucumber::messages::duration& operator+=(cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
-    cucumber::messages::duration operator+(const cucumber::messages::duration& lhs, const cucumber::messages::duration& rhs);
+    std::chrono::milliseconds DurationToMilliseconds(const cucumber::messages::Duration& duration);
+    std::chrono::nanoseconds DurationToNanoSeconds(const cucumber::messages::Duration& duration);
+    cucumber::messages::Duration& operator+=(cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs);
+    cucumber::messages::Duration operator+(const cucumber::messages::Duration& lhs, const cucumber::messages::Duration& rhs);
 
     struct Stopwatch
     {

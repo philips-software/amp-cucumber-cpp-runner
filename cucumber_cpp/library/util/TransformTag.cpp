@@ -1,8 +1,9 @@
 
 #include "cucumber_cpp/library/util/TransformTag.hpp"
-#include "cucumber/messages/tag.hpp"
+#include "cucumber/messages/Tag.hpp"
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <set>
 #include <span>
@@ -10,17 +11,12 @@
 
 namespace cucumber_cpp::library::util
 {
-    namespace
+    std::set<std::string, std::less<>> TransformTags(std::span<const std::shared_ptr<cucumber::messages::Tag>> tags)
     {
-        const std::string& TransformTagname(const cucumber::messages::tag& tag)
-        {
-            return tag.name;
-        }
-    }
-
-    std::set<std::string, std::less<>> TransformTags(std::span<const cucumber::messages::tag> tags)
-    {
-        auto tagNames = tags | std::views::transform(TransformTagname);
+        auto tagNames = tags | std::views::transform([](const auto& tag) -> const std::string&
+                                   {
+                                       return tag->name;
+                                   });
         return { std::begin(tagNames), std::end(tagNames) };
     }
 }

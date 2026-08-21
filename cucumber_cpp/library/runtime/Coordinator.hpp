@@ -1,7 +1,7 @@
 #ifndef RUNTIME_COORDINATOR_HPP
 #define RUNTIME_COORDINATOR_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -15,7 +15,7 @@ namespace cucumber_cpp::library::runtime
     {
         Coordinator(std::string testRunStartedId,
             util::Broadcaster& broadcaster,
-            cucumber::gherkin::id_generator_ptr idGenerator,
+            cucumber::gherkin::IdGeneratorPtr idGenerator,
             std::unique_ptr<support::RuntimeAdapter>&& runtimeAdapter,
             support::SupportCodeLibrary& supportCodeLibrary);
 
@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::runtime
     private:
         std::string testRunStartedId;
         util::Broadcaster& broadcaster;
-        cucumber::gherkin::id_generator_ptr idGenerator;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
         std::unique_ptr<support::RuntimeAdapter> runtimeAdapter;
         support::SupportCodeLibrary& supportCodeLibrary;
     };

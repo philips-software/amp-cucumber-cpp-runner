@@ -1,5 +1,5 @@
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
@@ -60,11 +60,11 @@ namespace cucumber_cpp::library::support
         }
     }
 
-    void DefinitionRegistration::LoadIds(cucumber::gherkin::id_generator_ptr idGenerator)
+    void DefinitionRegistration::LoadIds(cucumber::gherkin::IdGeneratorPtr idGenerator)
     {
         const auto assignGenerator = [&idGenerator](auto& entry)
         {
-            entry.id = idGenerator->next_id();
+            entry.id = idGenerator->NextId();
         };
 
         for (auto& [key, item] : staticRegistry)

@@ -1,7 +1,7 @@
 #ifndef RUNTIME_SERIAL_RUNTIME_ADAPTER_HPP
 #define RUNTIME_SERIAL_RUNTIME_ADAPTER_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -15,7 +15,7 @@ namespace cucumber_cpp::library::runtime
     {
         SerialRuntimeAdapter(std::string testRunStartedId,
             util::Broadcaster& broadcaster,
-            cucumber::gherkin::id_generator_ptr idGenerator,
+            cucumber::gherkin::IdGeneratorPtr idGenerator,
             const std::list<support::PickleSource>& sourcedPickles,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary& supportCodeLibrary,
@@ -26,7 +26,7 @@ namespace cucumber_cpp::library::runtime
     private:
         std::string testRunStartedId;
         util::Broadcaster& broadcaster;
-        cucumber::gherkin::id_generator_ptr idGenerator;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
         const std::list<support::PickleSource>& sourcedPickles;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary& supportCodeLibrary;

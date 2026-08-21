@@ -1,5 +1,5 @@
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
 #include "fmt/color.h"
 #include <functional>
 #include <map>
@@ -12,34 +12,34 @@ namespace cucumber_cpp::library::formatter::helper
 {
     namespace
     {
-        const std::map<cucumber::messages::test_step_result_status, fmt::text_style, std::less<>> statusColors{
-            { cucumber::messages::test_step_result_status::AMBIGUOUS, fmt::fg(fmt::color::red) },
-            { cucumber::messages::test_step_result_status::FAILED, fmt::fg(fmt::color::red) },
-            { cucumber::messages::test_step_result_status::PASSED, fmt::fg(fmt::color::green) },
-            { cucumber::messages::test_step_result_status::PENDING, fmt::fg(fmt::color::yellow) },
-            { cucumber::messages::test_step_result_status::SKIPPED, fmt::fg(fmt::color::cyan) },
-            { cucumber::messages::test_step_result_status::UNDEFINED, fmt::fg(fmt::color::yellow) },
-            { cucumber::messages::test_step_result_status::UNKNOWN, fmt::fg(fmt::color::gray) },
+        const std::map<cucumber::messages::TestStepResultStatus, fmt::text_style, std::less<>> statusColors{
+            { cucumber::messages::TestStepResultStatus::AMBIGUOUS, fmt::fg(fmt::color::red) },
+            { cucumber::messages::TestStepResultStatus::FAILED, fmt::fg(fmt::color::red) },
+            { cucumber::messages::TestStepResultStatus::PASSED, fmt::fg(fmt::color::green) },
+            { cucumber::messages::TestStepResultStatus::PENDING, fmt::fg(fmt::color::yellow) },
+            { cucumber::messages::TestStepResultStatus::SKIPPED, fmt::fg(fmt::color::cyan) },
+            { cucumber::messages::TestStepResultStatus::UNDEFINED, fmt::fg(fmt::color::yellow) },
+            { cucumber::messages::TestStepResultStatus::UNKNOWN, fmt::fg(fmt::color::gray) },
         };
 
-        const std::map<cucumber::messages::test_step_result_status, std::string, std::less<>> iconMap{
-            { cucumber::messages::test_step_result_status::AMBIGUOUS, "✘" },
-            { cucumber::messages::test_step_result_status::FAILED, "✘" },
-            { cucumber::messages::test_step_result_status::PASSED, "✔" },
-            { cucumber::messages::test_step_result_status::PENDING, "■" },
-            { cucumber::messages::test_step_result_status::SKIPPED, "↷" },
-            { cucumber::messages::test_step_result_status::UNDEFINED, "■" },
-            { cucumber::messages::test_step_result_status::UNKNOWN, " " },
+        const std::map<cucumber::messages::TestStepResultStatus, std::string, std::less<>> iconMap{
+            { cucumber::messages::TestStepResultStatus::AMBIGUOUS, "✘" },
+            { cucumber::messages::TestStepResultStatus::FAILED, "✘" },
+            { cucumber::messages::TestStepResultStatus::PASSED, "✔" },
+            { cucumber::messages::TestStepResultStatus::PENDING, "■" },
+            { cucumber::messages::TestStepResultStatus::SKIPPED, "↷" },
+            { cucumber::messages::TestStepResultStatus::UNDEFINED, "■" },
+            { cucumber::messages::TestStepResultStatus::UNKNOWN, " " },
         };
 
-        const std::map<cucumber::messages::test_step_result_status, std::string, std::less<>> progressIcons{
-            { cucumber::messages::test_step_result_status::AMBIGUOUS, "A" },
-            { cucumber::messages::test_step_result_status::FAILED, "F" },
-            { cucumber::messages::test_step_result_status::PASSED, "." },
-            { cucumber::messages::test_step_result_status::PENDING, "P" },
-            { cucumber::messages::test_step_result_status::SKIPPED, "-" },
-            { cucumber::messages::test_step_result_status::UNDEFINED, "U" },
-            { cucumber::messages::test_step_result_status::UNKNOWN, "?" },
+        const std::map<cucumber::messages::TestStepResultStatus, std::string, std::less<>> progressIcons{
+            { cucumber::messages::TestStepResultStatus::AMBIGUOUS, "A" },
+            { cucumber::messages::TestStepResultStatus::FAILED, "F" },
+            { cucumber::messages::TestStepResultStatus::PASSED, "." },
+            { cucumber::messages::TestStepResultStatus::PENDING, "P" },
+            { cucumber::messages::TestStepResultStatus::SKIPPED, "-" },
+            { cucumber::messages::TestStepResultStatus::UNDEFINED, "U" },
+            { cucumber::messages::TestStepResultStatus::UNKNOWN, "?" },
         };
 
         std::optional<fmt::text_style> GetColorStyle(std::optional<fmt::text_style> def)

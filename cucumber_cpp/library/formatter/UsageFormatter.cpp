@@ -1,13 +1,14 @@
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/location.hpp"
-#include "cucumber/messages/step_definition_pattern_type.hpp"
-#include "cucumber/messages/test_case.hpp"
-#include "cucumber/messages/test_step.hpp"
-#include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Location.hpp"
+#include "cucumber/messages/StepDefinitionPatternType.hpp"
+#include "cucumber/messages/TestCase.hpp"
+#include "cucumber/messages/TestStep.hpp"
+#include "cucumber/messages/TestStepFinished.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/query/Lineage.hpp"
+#include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "fmt/base.h"
 #include "fmt/format.h"
@@ -21,6 +22,7 @@
 #include <iterator>
 #include <list>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <ostream>
@@ -34,12 +36,12 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
-        bool HasExecuted(cucumber::messages::test_step_result_status status)
+        bool HasExecuted(cucumber::messages::TestStepResultStatus status)
         {
-            return status == cucumber::messages::test_step_result_status::UNKNOWN ||
-                   status == cucumber::messages::test_step_result_status::PASSED ||
-                   status == cucumber::messages::test_step_result_status::PENDING ||
-                   status == cucumber::messages::test_step_result_status::FAILED;
+            return status == cucumber::messages::TestStepResultStatus::UNKNOWN ||
+                   status == cucumber::messages::TestStepResultStatus::PASSED ||
+                   status == cucumber::messages::TestStepResultStatus::PENDING ||
+                   status == cucumber::messages::TestStepResultStatus::FAILED;
         }
 
         struct UsageMatch
@@ -60,63 +62,63 @@ namespace cucumber_cpp::library::formatter
             std::optional<std::chrono::nanoseconds> meanDuration;
         };
 
-        std::map<std::string, Usage, std::less<>> BuildEmptyMapping(const query::Query& query)
+        std::map<std::string, Usage, std::less<>> BuildEmptyMapping(const cucumber::query::Query& query)
         {
             std::map<std::string, Usage, std::less<>> mapping;
 
-            for (const auto& [id, stepDefinition] : query.StepDefinitions())
-                mapping[id] = Usage{
-                    .line = stepDefinition.source_reference.location.value_or(cucumber::messages::location{}).line,
+            for (const auto& stepDefinition : query.FindAllStepDefinitions())
+                mapping[stepDefinition->id] = Usage{
+                    .line = (stepDefinition->sourceReference && stepDefinition->sourceReference->location) ? (*stepDefinition->sourceReference->location)->line : 0,
                     .matches = {},
-                    .pattern = stepDefinition.pattern.source,
-                    .patternType = std::string{ cucumber::messages::to_string(stepDefinition.pattern.type) },
-                    .uri = stepDefinition.source_reference.uri.value_or(""),
+                    .pattern = stepDefinition->pattern->source,
+                    .patternType = std::string{ cucumber::messages::to_string(stepDefinition->pattern->type) },
+                    .uri = stepDefinition->sourceReference ? stepDefinition->sourceReference->uri.value_or("") : "",
                     .meanDuration = {},
                 };
 
             return mapping;
         }
 
-        bool ShouldProcessTestStep(const cucumber::messages::test_step& testStep)
+        bool ShouldProcessTestStep(const cucumber::messages::TestStep& testStep)
         {
-            return testStep.step_definition_ids.has_value() && testStep.step_definition_ids.value().size() == 1;
+            return testStep.stepDefinitionIds.has_value() && testStep.stepDefinitionIds.value().size() == 1;
         }
 
         UsageMatch CreateUsageMatch(
-            const query::Query& query,
-            const cucumber::messages::test_step_finished& testStepFinished,
-            const cucumber::messages::test_step& testStep,
-            const cucumber::messages::test_case& testCase)
+            const cucumber::query::Query& query,
+            const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
+            const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
+            const std::shared_ptr<const cucumber::messages::Pickle>& pickle,
+            const cucumber::query::Lineage& lineage)
         {
-            const auto& pickleStep = query.FindPickleStepById(testStep.pickle_step_id.value());
-            const auto& pickle = query.FindPickleById(testCase.pickle_id);
-            const auto& step = query.FindStepBy(pickleStep);
-            const auto& lineage = query.FindLineageByPickle(pickle);
+            const auto pickleStep = query.FindPickleStepBy(testStep).value();
+            const auto step = query.FindStepBy(pickleStep).value();
 
             std::optional<std::chrono::nanoseconds> duration{};
-            if (HasExecuted(testStepFinished.test_step_result.status))
-                duration = util::DurationToNanoSeconds(query.FindTestStepDurationByTestStepId(testStepFinished.test_step_id));
+            if (HasExecuted(testStepFinished->testStepResult->status) && testStepFinished->testStepResult->duration)
+                duration = util::DurationToNanoSeconds(*testStepFinished->testStepResult->duration);
 
             return UsageMatch{
                 .duration = duration,
-                .line = step.location.line,
-                .text = pickleStep.text,
+                .line = step->location->line,
+                .text = pickleStep->text,
                 .uri = lineage.gherkinDocument->uri.value_or("")
             };
         }
 
         void AddUsageMatchToMapping(
-            const query::Query& query,
-            const cucumber::messages::test_step_finished& testStepFinished,
-            const cucumber::messages::test_step& testStep,
-            const cucumber::messages::test_case& testCase,
+            const cucumber::query::Query& query,
+            const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
+            const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
+            const std::shared_ptr<const cucumber::messages::Pickle>& pickle,
+            const cucumber::query::Lineage& lineage,
             std::map<std::string, Usage, std::less<>>& mapping)
         {
-            if (!ShouldProcessTestStep(testStep))
+            if (!ShouldProcessTestStep(*testStep))
                 return;
 
-            const auto& stepDefinitionId = testStep.step_definition_ids.value().front();
-            mapping.at(stepDefinitionId).matches.emplace_back(CreateUsageMatch(query, testStepFinished, testStep, testCase));
+            const auto& stepDefinitionId = testStep->stepDefinitionIds.value().front();
+            mapping.at(stepDefinitionId).matches.emplace_back(CreateUsageMatch(query, testStepFinished, testStep, pickle, lineage));
         }
 
         std::optional<std::chrono::nanoseconds> CalculateMeanDuration(const std::list<UsageMatch>& matches)
@@ -143,16 +145,20 @@ namespace cucumber_cpp::library::formatter
             return total / count;
         }
 
-        void PopulateMappingWithMatches(const query::Query& query, std::map<std::string, Usage, std::less<>>& mapping)
+        void PopulateMappingWithMatches(const cucumber::query::Query& query, std::map<std::string, Usage, std::less<>>& mapping)
         {
-            for (const auto& [testCaseStartedId, testCaseFinished] : query.TestCaseFinishedByTestCaseStartedId())
+            for (const auto& testCaseStarted : query.FindAllTestCaseStarted())
             {
-                const auto& testCaseStarted = query.FindTestCaseStartedById(testCaseStartedId);
-                const auto& testCase = query.FindTestCaseBy(testCaseStarted);
+                if (!query.FindTestCaseFinishedBy(testCaseStarted).has_value())
+                    continue;
+
+                const auto pickle = query.FindPickleBy(testCaseStarted).value();
+                const auto lineageAndPickle = query.FindLineageBy(testCaseStarted).value();
+                const auto& lineage = *lineageAndPickle.lineage;
                 const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
-                for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
-                    AddUsageMatchToMapping(query, *testStepFinished, *testStep, testCase, mapping);
+                for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
+                    AddUsageMatchToMapping(query, testStepFinished, testStep, pickle, lineage, mapping);
             }
         }
 
@@ -162,7 +168,7 @@ namespace cucumber_cpp::library::formatter
                 usage.meanDuration = CalculateMeanDuration(usage.matches);
         }
 
-        std::map<std::string, Usage, std::less<>> BuildMapping(const query::Query& query)
+        std::map<std::string, Usage, std::less<>> BuildMapping(const cucumber::query::Query& query)
         {
             auto mapping = BuildEmptyMapping(query);
             PopulateMappingWithMatches(query, mapping);
@@ -170,7 +176,7 @@ namespace cucumber_cpp::library::formatter
             return mapping;
         }
 
-        std::list<Usage> GetUsage(const query::Query& query, bool unusedOnly)
+        std::list<Usage> GetUsage(const cucumber::query::Query& query, bool unusedOnly)
         {
             const auto& mapping = BuildMapping(query);
             auto mapValues = mapping | std::views::values | (std::views::filter([unusedOnly](const Usage& usage)
@@ -307,9 +313,9 @@ namespace cucumber_cpp::library::formatter
     {
     }
 
-    void UsageFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
+    void UsageFormatter::OnEnvelope(const cucumber::messages::Envelope& envelope)
     {
-        if (envelope.test_run_finished.has_value())
+        if (envelope.testRunFinished.has_value())
             PrintUsageTable(outputStream, GetUsage(query, options.unusedOnly), topRow, middleRow, bottomRow, options.theme);
     }
 }
