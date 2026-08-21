@@ -42,20 +42,34 @@ namespace cucumber_cpp::library
         {
             support::DefinitionRegistration::Instance().TakeSnapshot();
             cucumber_expression::ConverterRegistry::TakeSnapshot();
-            manager.Load(paths);
+
+            try
+            {
+                manager.Load(paths);
+            }
+            catch (...)
+            {
+                Cleanup();
+                throw;
+            }
         }
 
         ~PluginSession()
         {
-            support::DefinitionRegistration::Instance().UnregisterPlugins();
-            cucumber_expression::ConverterRegistry::RestoreSnapshot();
-            manager.UnloadAll();
+            Cleanup();
         }
 
         PluginSession(const PluginSession&) = delete;
         PluginSession& operator=(const PluginSession&) = delete;
 
     private:
+        void Cleanup()
+        {
+            support::DefinitionRegistration::Instance().UnregisterPlugins();
+            cucumber_expression::ConverterRegistry::RestoreSnapshot();
+            manager.UnloadAll();
+        }
+
         plugin::DynamicLibraryManager& manager;
     };
 

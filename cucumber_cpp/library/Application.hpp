@@ -93,12 +93,14 @@ namespace cucumber_cpp::library
 
         plugin::DynamicLibraryManager dynamicLibraryManager;
 
-        std::unique_ptr<PluginSession> pluginSession;
-
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
         std::unique_ptr<util::Stopwatch> stopwatch;
         std::unique_ptr<util::TimestampGenerator> timestampGenerator;
+
+        // Declared last so it is destroyed first: unloading plugins runs their static
+        // destructors, which may still reference the host-owned stopwatch/timestampGenerator.
+        std::unique_ptr<PluginSession> pluginSession;
 
         bool runPassed{ false };
     };

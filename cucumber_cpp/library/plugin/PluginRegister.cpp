@@ -6,10 +6,16 @@
 
 extern "C" CCR_EXPORT void ccr_register(cucumber_cpp::library::plugin::PluginHostContext* context)
 {
-    if (context == nullptr || context->registration == nullptr)
+    if (context == nullptr)
         return;
 
     if (context->abiVersion != cucumber_cpp::library::plugin::pluginAbiVersion)
+        return;
+
+    if (context->structSize < sizeof(cucumber_cpp::library::plugin::PluginHostContext))
+        return;
+
+    if (context->registration == nullptr)
         return;
 
     auto& host = *static_cast<cucumber_cpp::library::support::DefinitionRegistration*>(context->registration);

@@ -366,8 +366,8 @@ metadata to guard against host/plugin version skew:
 ```cpp
 struct PluginHostContext
 {
-    uint32_t abi_version;   // pluginAbiVersion constant
-    uint32_t struct_size;   // sizeof(PluginHostContext) at build time
+    uint32_t abiVersion;    // pluginAbiVersion constant
+    uint32_t structSize;    // sizeof(PluginHostContext) at build time
     void* registration;
     void* stopwatch;
     void* timestampGenerator;
@@ -375,10 +375,10 @@ struct PluginHostContext
 };
 ```
 
-- **`abi_version`** — compared by the plugin against its own compiled-in
+- **`abiVersion`** — compared by the plugin against its own compiled-in
   `pluginAbiVersion`. A mismatch causes `ccr_register` to return immediately
   without registering, preventing undefined behaviour from incompatible structs.
-- **`struct_size`** — allows future extensions to append fields to
+- **`structSize`** — allows future extensions to append fields to
   `PluginHostContext` while old plugins safely ignore them.
 
 ---
