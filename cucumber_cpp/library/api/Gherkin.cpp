@@ -5,7 +5,6 @@
 #include "cucumber/gherkin/Parser.hpp"
 #include "cucumber/gherkin/PickleCompiler.hpp"
 #include "cucumber/gherkin/Utils.hpp"
-#include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/GherkinDocument.hpp"
 #include "cucumber/messages/ParseError.hpp"
 #include "cucumber/messages/Pickle.hpp"

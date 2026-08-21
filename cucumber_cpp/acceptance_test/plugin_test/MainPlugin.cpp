@@ -38,10 +38,25 @@ namespace
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    const std::string mode = argc > 1 ? argv[1] : "sequential";
+
     const auto pluginA = PluginPath("cucumber_cpp.acceptance_test.plugin_a");
     const auto pluginB = PluginPath("cucumber_cpp.acceptance_test.plugin_b");
+
+    // Directory load: --load points at a directory, exercising DynamicLibraryManager::LoadDirectory
+    // which discovers and loads every plugin in it (here plugin A and plugin B together).
+    if (mode == "directory")
+    {
+        if (RunApplication({ "--load", pluginDir, "--tags", "@plugin_a and @plugin_b_hook" }) != 0)
+        {
+            std::cerr << "FAILED: Directory load run\n";
+            return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
+    }
 
     // First run: plugin A (steps + custom parameter) with statically linked step
     auto result = RunApplication({ "--load", pluginA, "--tags", "@plugin_a and not @plugin_b_hook" });

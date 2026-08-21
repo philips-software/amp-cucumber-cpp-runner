@@ -258,3 +258,8 @@ teardown() {
     run $plugin_test
     assert_success
 }
+
+@test "Plugin test: load all plugins from a directory" {
+    run $plugin_test directory
+    assert_success
+}
