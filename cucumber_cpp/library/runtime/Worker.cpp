@@ -21,6 +21,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
@@ -189,7 +190,7 @@ namespace cucumber_cpp::library::runtime
             .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
         };
 
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunHookStarted = std::make_shared<cucumber::messages::TestRunHookStarted>(testRunHookStarted) });
+        broadcaster.BroadcastEvent(util::MakeShared(testRunHookStarted));
 
         cucumber::messages::TestStepResult result{ .duration = std::make_shared<cucumber::messages::Duration>(cucumber::messages::Duration{ .seconds = 0, .nanos = 0 }), .status = cucumber::messages::TestStepResultStatus::SKIPPED };
 
@@ -206,11 +207,11 @@ namespace cucumber_cpp::library::runtime
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunHookFinished = std::make_shared<cucumber::messages::TestRunHookFinished>(cucumber::messages::TestRunHookFinished{
-                                                                     .testRunHookStartedId = testRunHookStartedId,
-                                                                     .result = std::make_shared<cucumber::messages::TestStepResult>(result),
-                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                 }) });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunHookFinished{
+            .testRunHookStartedId = testRunHookStartedId,
+            .result = util::MakeShared(result),
+            .timestamp = util::MakeShared(util::TimestampNow()),
+        }));
 
         return result;
     }

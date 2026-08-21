@@ -27,6 +27,7 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
@@ -102,12 +103,12 @@ namespace cucumber_cpp::library::runtime
         const auto currentTestCaseStartedId = idGenerator->NextId();
         bool willRetry = false;
 
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testCaseStarted = std::make_shared<cucumber::messages::TestCaseStarted>(cucumber::messages::TestCaseStarted{
-                                                                     .attempt = attempt,
-                                                                     .id = currentTestCaseStartedId,
-                                                                     .testCaseId = testCase.id,
-                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                 }) });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestCaseStarted{
+            .attempt = attempt,
+            .id = currentTestCaseStartedId,
+            .testCaseId = testCase.id,
+            .timestamp = util::MakeShared(util::TimestampNow()),
+        }));
 
         bool seenSteps = false;
         bool error = false;
@@ -119,7 +120,7 @@ namespace cucumber_cpp::library::runtime
                 .testStepId = testStep->id,
                 .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
             };
-            broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testStepStarted = std::make_shared<cucumber::messages::TestStepStarted>(testStepStarted) });
+            broadcaster.BroadcastEvent(util::MakeShared(testStepStarted));
 
             cucumber::messages::TestStepResult testStepResult;
 
@@ -141,21 +142,21 @@ namespace cucumber_cpp::library::runtime
             }
             testStepResults.emplace_back(testStepResult);
 
-            broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testStepFinished = std::make_shared<cucumber::messages::TestStepFinished>(cucumber::messages::TestStepFinished{
-                                                                         .testCaseStartedId = currentTestCaseStartedId,
-                                                                         .testStepId = testStep->id,
-                                                                         .testStepResult = std::make_shared<cucumber::messages::TestStepResult>(testStepResult),
-                                                                         .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                     }) });
+            broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestStepFinished{
+                .testCaseStartedId = currentTestCaseStartedId,
+                .testStepId = testStep->id,
+                .testStepResult = util::MakeShared(testStepResult),
+                .timestamp = util::MakeShared(util::TimestampNow()),
+            }));
         }
 
         willRetry = GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::FAILED && moreAttemptsAvailable;
 
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testCaseFinished = std::make_shared<cucumber::messages::TestCaseFinished>(cucumber::messages::TestCaseFinished{
-                                                                     .testCaseStartedId = currentTestCaseStartedId,
-                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                     .willBeRetried = willRetry,
-                                                                 }) });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestCaseFinished{
+            .testCaseStartedId = currentTestCaseStartedId,
+            .timestamp = util::MakeShared(util::TimestampNow()),
+            .willBeRetried = willRetry,
+        }));
 
         return willRetry;
     }
@@ -205,11 +206,11 @@ namespace cucumber_cpp::library::runtime
 
         if (const auto count = testStep.stepDefinitionIds->size(); count == 0)
         {
-            broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .suggestion = std::make_shared<cucumber::messages::Suggestion>(cucumber::messages::Suggestion{
-                                                                         .id = idGenerator->NextId(),
-                                                                         .pickleStepId = pickleStep.id,
-                                                                         .snippets = {},
-                                                                     }) });
+            broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::Suggestion{
+                .id = idGenerator->NextId(),
+                .pickleStepId = pickleStep.id,
+                .snippets = {},
+            }));
 
             return {
                 .duration = std::make_shared<cucumber::messages::Duration>(),

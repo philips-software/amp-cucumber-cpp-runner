@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Envelope.hpp"
-#include "cucumber/messages/Hook.hpp"
 #include "cucumber/messages/Location.hpp"
 #include "cucumber/messages/ParameterType.hpp"
 #include "cucumber/messages/ParseError.hpp"
@@ -10,7 +9,6 @@
 #include "cucumber/messages/StepDefinition.hpp"
 #include "cucumber/messages/StepDefinitionPattern.hpp"
 #include "cucumber/messages/StepDefinitionPatternType.hpp"
-#include "cucumber/messages/UndefinedParameterType.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
@@ -27,6 +25,7 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
@@ -54,46 +53,44 @@ namespace cucumber_cpp::library::api
                 if (parameter.isBuiltin)
                     continue;
 
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{
-                    .parameterType = std::make_shared<cucumber::messages::ParameterType>(cucumber::messages::ParameterType{
-                        .name = parameter.name,
-                        .regularExpressions = parameter.regex,
-                        .useForSnippets = parameter.useForSnippets,
-                        .id = idGenerator->NextId(),
-                        .sourceReference = std::make_shared<cucumber::messages::SourceReference>(cucumber::messages::SourceReference{
-                            .uri = parameter.location.file_name(),
-                            .location = std::make_shared<cucumber::messages::Location>(cucumber::messages::Location{
-                                .line = parameter.location.line(),
-                            }),
+                broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::ParameterType{
+                    .name = parameter.name,
+                    .regularExpressions = parameter.regex,
+                    .useForSnippets = parameter.useForSnippets,
+                    .id = idGenerator->NextId(),
+                    .sourceReference = util::MakeShared(cucumber::messages::SourceReference{
+                        .uri = parameter.location.file_name(),
+                        .location = util::MakeShared(cucumber::messages::Location{
+                            .line = parameter.location.line(),
                         }),
                     }),
-                });
+                }));
             }
         }
 
         void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .undefinedParameterType = std::make_shared<cucumber::messages::UndefinedParameterType>(parameter) });
+                broadcaster.BroadcastEvent(util::MakeShared(parameter));
         }
 
         void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .stepDefinition = std::make_shared<cucumber::messages::StepDefinition>(cucumber::messages::StepDefinition{
-                                                                             .id = stepDefinition.id,
-                                                                             .pattern = std::make_shared<cucumber::messages::StepDefinitionPattern>(cucumber::messages::StepDefinitionPattern{
-                                                                                 .source = stepDefinition.pattern,
-                                                                                 .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION,
-                                                                             }),
-                                                                             .sourceReference = std::make_shared<cucumber::messages::SourceReference>(cucumber::messages::SourceReference{
-                                                                                 .uri = stepDefinition.uri.string(),
-                                                                                 .location = std::make_shared<cucumber::messages::Location>(cucumber::messages::Location{
-                                                                                     .line = stepDefinition.line,
-                                                                                 }),
-                                                                             }),
-                                                                         }) });
+                broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::StepDefinition{
+                    .id = stepDefinition.id,
+                    .pattern = util::MakeShared(cucumber::messages::StepDefinitionPattern{
+                        .source = stepDefinition.pattern,
+                        .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION,
+                    }),
+                    .sourceReference = util::MakeShared(cucumber::messages::SourceReference{
+                        .uri = stepDefinition.uri.string(),
+                        .location = util::MakeShared(cucumber::messages::Location{
+                            .line = stepDefinition.line,
+                        }),
+                    }),
+                }));
             }
         }
 
@@ -102,12 +99,12 @@ namespace cucumber_cpp::library::api
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .hook = std::make_shared<cucumber::messages::Hook>(util::TransformHookData(hook)) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .hook = std::make_shared<cucumber::messages::Hook>(util::TransformHookData(hook)) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
         }
 
         void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
@@ -115,12 +112,12 @@ namespace cucumber_cpp::library::api
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .hook = std::make_shared<cucumber::messages::Hook>(util::TransformHookData(hook)) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .hook = std::make_shared<cucumber::messages::Hook>(util::TransformHookData(hook)) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
         }
 
         void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)

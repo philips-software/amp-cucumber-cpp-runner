@@ -3,10 +3,10 @@
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/TestRunFinished.hpp"
 #include "cucumber/messages/TestRunStarted.hpp"
-#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <memory>
 #include <string>
@@ -28,18 +28,18 @@ namespace cucumber_cpp::library::runtime
 
     bool Coordinator::Run()
     {
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunStarted = std::make_shared<cucumber::messages::TestRunStarted>(cucumber::messages::TestRunStarted{
-                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                     .id = std::string{ testRunStartedId },
-                                                                 }) });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunStarted{
+            .timestamp = util::MakeShared(util::TimestampNow()),
+            .id = std::string{ testRunStartedId },
+        }));
 
         const auto success = runtimeAdapter->Run();
 
-        broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testRunFinished = std::make_shared<cucumber::messages::TestRunFinished>(cucumber::messages::TestRunFinished{
-                                                                     .success = success,
-                                                                     .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                                                                     .testRunStartedId = std::string{ testRunStartedId },
-                                                                 }) });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunFinished{
+            .success = success,
+            .timestamp = util::MakeShared(util::TimestampNow()),
+            .testRunStartedId = std::string{ testRunStartedId },
+        }));
 
         return success;
     }

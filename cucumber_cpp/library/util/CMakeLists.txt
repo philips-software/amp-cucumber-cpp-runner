@@ -15,6 +15,7 @@ target_sources(cucumber_cpp.library.util PRIVATE
     HookData.hpp
     HookFactory.hpp
     Immoveable.hpp
+    MakeShared.hpp
     NestedTestCaseRunnerError.hpp
     StepFactory.hpp
     StepOrHookStarted.hpp

@@ -16,6 +16,7 @@
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
 #include <functional>
 #include <list>
@@ -114,7 +115,7 @@ namespace cucumber_cpp::library::assemble
 
             AssembleTestSteps(supportCodeLibrary, pickleSource, testCase, idGenerator);
 
-            broadcaster.BroadcastEvent(cucumber::messages::Envelope{ .testCase = std::make_shared<cucumber::messages::TestCase>(testCase) });
+            broadcaster.BroadcastEvent(util::MakeShared(testCase));
 
             if (!assembledTestSuiteMap.contains(pickleSource.gherkinDocument->uri.value()))
             {

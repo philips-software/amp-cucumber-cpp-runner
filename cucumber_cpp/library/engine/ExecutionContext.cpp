@@ -3,16 +3,15 @@
 #include "cucumber/messages/Attachment.hpp"
 #include "cucumber/messages/AttachmentContentEncoding.hpp"
 #include "cucumber/messages/Envelope.hpp"
-#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include <istream>
 #include <iterator>
-#include <memory>
 #include <optional>
 #include <source_location>
 #include <string>
@@ -56,18 +55,16 @@ namespace cucumber_cpp::library::engine
             auto [testCaseStartedId, testStepId] = ReadTestStepStartedIds(stepOrHookStarted);
             auto testRunHookStartedId = ReadTestRunHookStartedIds(stepOrHookStarted);
 
-            broadCaster.BroadcastEvent(cucumber::messages::Envelope{
-                .attachment = std::make_shared<cucumber::messages::Attachment>(cucumber::messages::Attachment{
-                    .body = std::move(data),
-                    .contentEncoding = encoding,
-                    .fileName = std::move(options.fileName),
-                    .mediaType = std::move(options.mediaType),
-                    .testCaseStartedId = std::move(testCaseStartedId),
-                    .testStepId = std::move(testStepId),
-                    .testRunHookStartedId = std::move(testRunHookStartedId),
-                    .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-                }),
-            });
+            broadCaster.BroadcastEvent(util::MakeShared(cucumber::messages::Attachment{
+                .body = std::move(data),
+                .contentEncoding = encoding,
+                .fileName = std::move(options.fileName),
+                .mediaType = std::move(options.mediaType),
+                .testCaseStartedId = std::move(testCaseStartedId),
+                .testStepId = std::move(testStepId),
+                .testRunHookStartedId = std::move(testRunHookStartedId),
+                .timestamp = util::MakeShared(util::TimestampNow()),
+            }));
         }
     }
 
