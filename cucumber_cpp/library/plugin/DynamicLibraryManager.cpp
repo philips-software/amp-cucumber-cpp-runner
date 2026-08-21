@@ -51,17 +51,6 @@ namespace cucumber_cpp::library::plugin
         libraries.clear();
     }
 
-    std::vector<std::filesystem::path> DynamicLibraryManager::GetLoadedLibraries() const
-    {
-        std::vector<std::filesystem::path> paths;
-        paths.reserve(libraries.size());
-
-        for (const auto& lib : libraries)
-            paths.push_back(lib.Path());
-
-        return paths;
-    }
-
     void DynamicLibraryManager::LoadFile(const std::filesystem::path& path)
     {
         if (path.extension() != DynamicLibrary::PlatformExtension())

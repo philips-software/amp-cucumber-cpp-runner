@@ -45,7 +45,6 @@ classDiagram
         -vector~DynamicLibrary~ libraries
         +Load(paths)
         +UnloadAll()
-        +GetLoadedLibraries() vector~path~
         -LoadFile(path)
         -LoadDirectory(path)
     }
@@ -322,16 +321,13 @@ maintains a list of plugin instance pointers.
 
 ```mermaid
 flowchart TD
-    dest["~Application()"]
-    check{"dynamicLibraryManager\n.GetLoadedLibraries()\nempty?"}
-    skip["No cleanup needed"]
-    unreg["UnregisterPlugins()\nClear plugin pointer list"]
-    unload["UnloadAll()\nlibraries.clear() → dlclose"]
+    dest["~PluginSession() → Cleanup()"]
+    unreg["DefinitionRegistration::UnregisterPlugins()\nClear plugin pointer list"]
+    restore["ConverterRegistry::RestoreSnapshot()\nRestore pre-plugin converter map"]
+    unload["DynamicLibraryManager::UnloadAll()\nlibraries.clear() → dlclose"]
     done["Host registrations intact\nPlugin DLLs unloaded"]
 
-    dest --> check
-    check -->|yes| skip
-    check -->|no| unreg --> unload --> done
+    dest --> unreg --> restore --> unload --> done
 ```
 
 **How it works:**

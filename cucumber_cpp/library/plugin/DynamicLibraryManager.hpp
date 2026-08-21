@@ -13,8 +13,6 @@ namespace cucumber_cpp::library::plugin
         void Load(const std::vector<std::string>& paths);
         void UnloadAll();
 
-        [[nodiscard]] std::vector<std::filesystem::path> GetLoadedLibraries() const;
-
     private:
         void LoadFile(const std::filesystem::path& path);
         void LoadDirectory(const std::filesystem::path& directory);
