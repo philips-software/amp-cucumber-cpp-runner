@@ -46,7 +46,7 @@ namespace cucumber_cpp::library::engine
             return std::nullopt;
         }
 
-        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::AttachmentContentEncoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
+        void BroadcastAttachment(const util::Broadcaster& broadCaster, std::string data, cucumber::messages::AttachmentContentEncoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
         {
             auto options = std::holds_alternative<std::string>(mediaType)
                                ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
@@ -74,12 +74,12 @@ namespace cucumber_cpp::library::engine
         , stepOrHookStarted{ std::move(stepOrHookStarted) }
     {}
 
-    void ExecutionContext::Attach(std::string data, OptionsOrMediaType mediaType)
+    void ExecutionContext::Attach(std::string data, OptionsOrMediaType mediaType) const
     {
         BroadcastAttachment(broadCaster, std::move(data), cucumber::messages::AttachmentContentEncoding::IDENTITY, std::move(mediaType), stepOrHookStarted);
     }
 
-    void ExecutionContext::Attach(std::istream& data, OptionsOrMediaType mediaType)
+    void ExecutionContext::Attach(std::istream& data, OptionsOrMediaType mediaType) const
     {
         std::string buffer{ std::istreambuf_iterator<char>{ data }, std::istreambuf_iterator<char>{} };
 
@@ -88,12 +88,12 @@ namespace cucumber_cpp::library::engine
         BroadcastAttachment(broadCaster, std::move(buffer), cucumber::messages::AttachmentContentEncoding::BASE64, std::move(mediaType), stepOrHookStarted);
     }
 
-    void ExecutionContext::Log(std::string text)
+    void ExecutionContext::Log(std::string text) const
     {
         Attach(std::move(text), std::string{ logMediaType });
     }
 
-    void ExecutionContext::Link(std::string url, std::optional<std::string> title)
+    void ExecutionContext::Link(std::string url, std::optional<std::string> title) const
     {
         Attach(std::move(url), AttachOptions{
                                    .mediaType = linkMediaType,

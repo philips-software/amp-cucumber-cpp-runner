@@ -33,10 +33,10 @@ namespace cucumber_cpp::library::engine
         ExecutionContext(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted);
 
     protected:
-        void Attach(std::string data, OptionsOrMediaType mediaType);
-        void Attach(std::istream& data, OptionsOrMediaType mediaType);
-        void Log(std::string text);
-        void Link(std::string url, std::optional<std::string> title = std::nullopt);
+        void Attach(std::string data, OptionsOrMediaType mediaType) const;
+        void Attach(std::istream& data, OptionsOrMediaType mediaType) const;
+        void Log(std::string text) const;
+        void Link(std::string url, std::optional<std::string> title = std::nullopt) const;
 
         [[noreturn]] static void Skipped(const std::string& message = "", std::source_location current = std::source_location::current()) noexcept(false);
         [[noreturn]] static void Pending(const std::string& message = "", std::source_location current = std::source_location::current()) noexcept(false);

@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Duration.hpp"
-#include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/Feature.hpp"
 #include "cucumber/messages/GherkinDocument.hpp"
 #include "cucumber/messages/Pickle.hpp"
@@ -45,7 +44,7 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        const inline std::set<cucumber::messages::TestStepResultStatus> failingStatuses{
+        const inline std::set failingStatuses{
             cucumber::messages::TestStepResultStatus::AMBIGUOUS,
             cucumber::messages::TestStepResultStatus::FAILED,
             cucumber::messages::TestStepResultStatus::UNDEFINED,

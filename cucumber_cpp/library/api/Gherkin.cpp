@@ -18,7 +18,7 @@
 
 namespace cucumber_cpp::library::api
 {
-    std::list<support::PickleSource> CollectPickles(const support::RunOptions::Sources& sources, cucumber::gherkin::IdGeneratorPtr idGenerator, util::Broadcaster& broadcaster)
+    std::list<support::PickleSource> CollectPickles(const support::RunOptions::Sources& sources, cucumber::gherkin::IdGeneratorPtr idGenerator, const util::Broadcaster& broadcaster)
     {
         std::list<support::PickleSource> pickleSources;
 
