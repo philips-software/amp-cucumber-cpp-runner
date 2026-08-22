@@ -23,3 +23,7 @@ target_link_libraries(cucumber_cpp.library.plugin PUBLIC
     cucumber_cpp.library.cucumber_expression
     ${CMAKE_DL_LIBS}
 )
+
+if (CCR_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
