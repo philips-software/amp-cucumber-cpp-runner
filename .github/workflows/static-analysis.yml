@@ -47,19 +47,19 @@ jobs:
         run: |
           bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
 
-      - name: Collect coverage
-        run: |
-          gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j "$(nproc)" --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.*
+      - name: Check testdata coverage
+        run: cmake --build .build/Coverage --target generate-coverage-report
 
       - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
         with:
-          input: ${{ github.workspace }}/testresults/*.xml
+          input: ${{ github.workspace }}/.build/Coverage/sonarqube.xml
           output: execution.xml
           transformation: gtest-to-generic-execution
 
       - name: Convert results
         run: |
           cp .build/Coverage/compile_commands.json compile_commands.json
+          cp .build/Coverage/sonarqube.xml sonarqube.xml
 
       - uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:

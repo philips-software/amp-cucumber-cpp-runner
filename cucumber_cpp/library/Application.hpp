@@ -7,6 +7,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -26,6 +27,8 @@
 
 namespace cucumber_cpp::library
 {
+    struct PluginSession;
+
     struct Application
     {
         struct Options
@@ -55,9 +58,15 @@ namespace cucumber_cpp::library
             bool recursive{ true };
 
             std::vector<std::string> tags{};
+
+            std::vector<std::string> loadPaths{};
         };
 
-        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true);
+        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true,
+            std::unique_ptr<util::Stopwatch> stopwatch = std::make_unique<util::StopWatchHighResolutionClock>(),
+            std::unique_ptr<util::TimestampGenerator> timestampGenerator = std::make_unique<util::TimestampGeneratorSystemClock>());
+
+        ~Application();
 
         [[nodiscard]] int Run(int argc, const char* const* argv);
 
@@ -82,10 +91,16 @@ namespace cucumber_cpp::library
 
         util::Broadcaster broadcaster;
 
+        plugin::DynamicLibraryManager dynamicLibraryManager;
+
         cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
-        util::StopWatchHighResolutionClock stopwatchHighResolutionClock;
-        util::TimestampGeneratorSystemClock timestampGeneratorSystemClock;
+        std::unique_ptr<util::Stopwatch> stopwatch;
+        std::unique_ptr<util::TimestampGenerator> timestampGenerator;
+
+        // Declared last so it is destroyed first: unloading plugins runs their static
+        // destructors, which may still reference the host-owned stopwatch/timestampGenerator.
+        std::unique_ptr<PluginSession> pluginSession;
 
         bool runPassed{ false };
     };

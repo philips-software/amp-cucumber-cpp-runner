@@ -3,6 +3,7 @@
 
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
+#include "gtest/gtest.h"
 #include <exception>
 #include <functional>
 #include <memory>
@@ -14,6 +15,7 @@
 
 namespace cucumber_cpp::library::util
 {
+    struct CucumberResultReporter;
 
     struct FatalError : std::runtime_error
     {
@@ -54,17 +56,20 @@ namespace cucumber_cpp::library::util
 
     struct Body;
 
-    using BodyFactory = std::function<std::unique_ptr<Body>()>;
+    using BodyFactory = std::function<std::unique_ptr<Body>(TestStepResult&)>;
     TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args = {});
 
     struct Body
     {
-        virtual ~Body() = default;
+        explicit Body(TestStepResult& testStepResult);
+        virtual ~Body();
 
     private:
         virtual void Execute(const ExecuteArgs& args) = 0;
 
         friend TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args);
+
+        std::unique_ptr<CucumberResultReporter> reportListener;
     };
 }
 

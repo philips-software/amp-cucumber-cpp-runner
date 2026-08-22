@@ -1,10 +1,11 @@
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "base64.hpp"
-#include "cucumber/messages/attachment.hpp"
-#include "cucumber/messages/attachment_content_encoding.hpp"
-#include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/Attachment.hpp"
+#include "cucumber/messages/AttachmentContentEncoding.hpp"
+#include "cucumber/messages/Envelope.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
@@ -17,34 +18,12 @@
 #include <utility>
 #include <variant>
 
-/*
-
-std::optional<std::string> read_file( std::istream & is ) {
-  if( not is.seekg( 0, std::ios_base::seek_dir::end ) ) {
-    return std::nullopt;
-  }
-  auto const sz = is.tellg( );
-  if( not is.seekg( 0 ) ) {
-    return std::nullopt;
-  }
-  auto result = std::string( '\0', static_cast<std::size_t>( sz ) );
-  if( not is.read( result.data( ), sz ) ) {
-    return std::nullopt;
-  }
-  if( sz != is.gcount( ) ) {
-    return std::nullopt;
-  }
-  return result;
-}
-
-*/
-
 namespace cucumber_cpp::library::engine
 {
     namespace
     {
-        constexpr auto LogMediaType{ "text/x.cucumber.log+plain" };
-        constexpr auto LinkMediaType{ "text/uri-list" };
+        constexpr auto logMediaType{ "text/x.cucumber.log+plain" };
+        constexpr auto linkMediaType{ "text/uri-list" };
 
         std::pair<std::optional<std::string>, std::optional<std::string>> ReadTestStepStartedIds(util::StepOrHookStarted stepOrHookStarted)
         {
@@ -67,27 +46,25 @@ namespace cucumber_cpp::library::engine
             return std::nullopt;
         }
 
-        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::attachment_content_encoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
+        void BroadcastAttachment(const util::Broadcaster& broadCaster, std::string data, cucumber::messages::AttachmentContentEncoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
         {
             auto options = std::holds_alternative<std::string>(mediaType)
                                ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
                                : std::get<AttachOptions>(mediaType);
 
-            auto [test_case_started_id, test_step_id] = ReadTestStepStartedIds(stepOrHookStarted);
-            auto test_run_hook_started_id = ReadTestRunHookStartedIds(stepOrHookStarted);
+            auto [testCaseStartedId, testStepId] = ReadTestStepStartedIds(stepOrHookStarted);
+            auto testRunHookStartedId = ReadTestRunHookStartedIds(stepOrHookStarted);
 
-            broadCaster.BroadcastEvent({
-                .attachment = cucumber::messages::attachment{
-                    .body = std::move(data),
-                    .content_encoding = encoding,
-                    .file_name = std::move(options.fileName),
-                    .media_type = std::move(options.mediaType),
-                    .test_case_started_id = std::move(test_case_started_id),
-                    .test_step_id = std::move(test_step_id),
-                    .test_run_hook_started_id = std::move(test_run_hook_started_id),
-                    .timestamp = util::TimestampNow(),
-                },
-            });
+            broadCaster.BroadcastEvent(util::MakeShared(cucumber::messages::Attachment{
+                .body = std::move(data),
+                .contentEncoding = encoding,
+                .fileName = std::move(options.fileName),
+                .mediaType = std::move(options.mediaType),
+                .testCaseStartedId = std::move(testCaseStartedId),
+                .testStepId = std::move(testStepId),
+                .testRunHookStartedId = std::move(testRunHookStartedId),
+                .timestamp = util::MakeShared(util::TimestampNow()),
+            }));
         }
     }
 
@@ -97,29 +74,29 @@ namespace cucumber_cpp::library::engine
         , stepOrHookStarted{ std::move(stepOrHookStarted) }
     {}
 
-    void ExecutionContext::Attach(std::string data, OptionsOrMediaType mediaType)
+    void ExecutionContext::Attach(std::string data, OptionsOrMediaType mediaType) const
     {
-        BroadcastAttachment(broadCaster, std::move(data), cucumber::messages::attachment_content_encoding::IDENTITY, std::move(mediaType), stepOrHookStarted);
+        BroadcastAttachment(broadCaster, std::move(data), cucumber::messages::AttachmentContentEncoding::IDENTITY, std::move(mediaType), stepOrHookStarted);
     }
 
-    void ExecutionContext::Attach(std::istream& data, OptionsOrMediaType mediaType)
+    void ExecutionContext::Attach(std::istream& data, OptionsOrMediaType mediaType) const
     {
         std::string buffer{ std::istreambuf_iterator<char>{ data }, std::istreambuf_iterator<char>{} };
 
         buffer = base64::to_base64(buffer);
 
-        BroadcastAttachment(broadCaster, std::move(buffer), cucumber::messages::attachment_content_encoding::BASE64, std::move(mediaType), stepOrHookStarted);
+        BroadcastAttachment(broadCaster, std::move(buffer), cucumber::messages::AttachmentContentEncoding::BASE64, std::move(mediaType), stepOrHookStarted);
     }
 
-    void ExecutionContext::Log(std::string text)
+    void ExecutionContext::Log(std::string text) const
     {
-        Attach(std::move(text), std::string{ LogMediaType });
+        Attach(std::move(text), std::string{ logMediaType });
     }
 
-    void ExecutionContext::Link(std::string url, std::optional<std::string> title)
+    void ExecutionContext::Link(std::string url, std::optional<std::string> title) const
     {
         Attach(std::move(url), AttachOptions{
-                                   .mediaType = LinkMediaType,
+                                   .mediaType = linkMediaType,
                                    .fileName = std::move(title),
                                });
     }

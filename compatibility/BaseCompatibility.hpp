@@ -1,27 +1,30 @@
 #ifndef COMPATIBILITY_BASE_COMPATIBILITY_HPP
 #define COMPATIBILITY_BASE_COMPATIBILITY_HPP
 
-#include <cstddef>
 #include <filesystem>
-#include <functional>
-#include <gtest/gtest-spi.h>
-#include <gtest/gtest.h>
-#include <set>
+#include <ostream>
 #include <string>
+#include <vector>
 
 namespace compatibility
 {
-    struct Devkit
+    struct KitInfo
     {
-        std::set<std::filesystem::path, std::less<>> paths;
-        std::string tagExpression;
-        std::size_t retry;
+        std::string name;
+        std::filesystem::path sourceDir;
+        std::filesystem::path buildDir;
         std::filesystem::path ndjsonFile;
-        std::string folder;
-        std::string kitString;
+        std::filesystem::path pluginPath;
+        std::vector<std::string> extraArgs;
+        bool hasPlugin;
     };
 
-    void RunDevkit(Devkit devkit);
+    inline void PrintTo(const KitInfo& kit, std::ostream* os)
+    {
+        *os << kit.name;
+    }
+
+    void RunDevkit(const KitInfo& kit);
 }
 
 #endif

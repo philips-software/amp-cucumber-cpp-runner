@@ -13,13 +13,13 @@ namespace cucumber_cpp::library::cucumber_expression
     template<class T>
     T TransformArg([[maybe_unused]] const T& _, const std::string& name, const cucumber_expression::ConvertFunctionArg& match)
     {
-        return ConverterTypeMap<std::optional<T>>::Instance().at(name)(match).value();
+        return ConverterTypeMap<std::optional<T>>::Instance().At(name)(match).value();
     }
 
     template<class T>
     std::optional<T> TransformArg([[maybe_unused]] const std::optional<T>& _, const std::string& name, const cucumber_expression::ConvertFunctionArg& match)
     {
-        return ConverterTypeMap<std::optional<T>>::Instance().at(name)(match);
+        return ConverterTypeMap<std::optional<T>>::Instance().At(name)(match);
     }
 
     struct Argument

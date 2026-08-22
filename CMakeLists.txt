@@ -30,17 +30,24 @@ if (CCR_BUILD_TESTS)
 endif()
 
 if (CCR_ENABLE_COVERAGE)
-    find_program(GCOVR_PATH gcovr)
-
-    if (NOT GCOVR_PATH)
-    message(FATAL_ERROR "Could not find gcovr, which is required for code coverage IDE integration")
-    endif()
+    find_program(GCOVR_PROGRAM gcovr REQUIRED)
 
     add_custom_target(
         generate-coverage-report
-        COMMAND ${GCOVR_PATH} --delete --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+        COMMAND ${GCOVR_PROGRAM} --version
+        COMMAND ${GCOVR_PROGRAM}
+            --root ${CMAKE_CURRENT_SOURCE_DIR}
+            --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
+            --filter cucumber_cpp
+            --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.* --exclude=.*/test_helper/.*
+            --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();'
+            --txt-summary
+            --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
+            --cobertura ${CMAKE_CURRENT_BINARY_DIR}/cobertura.xml --cobertura-pretty
+            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
+            --markdown-summary ${CMAKE_CURRENT_BINARY_DIR}/coverage-summary.md
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating code coverage report in LCOV format"
+        COMMENT "Generating code coverage reports"
     )
 endif()
 
@@ -54,11 +61,39 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
+# Compiler cache
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+else()
+    find_program(SCCACHE_PROGRAM sccache)
+    if(SCCACHE_PROGRAM)
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+        message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    endif()
+endif()
+
 set_directory_properties(PROPERTY USE_FOLDERS ON)
 
 include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
+
+# Enable sanitizers globally, before any dependency is added, so every target
+# (including fetched third-party libraries) is instrumented. Consistent
+# instrumentation keeps libc++ container annotations coherent across module
+# boundaries; mixing instrumented and uninstrumented code produces false-positive
+# container-overflow reports.
+if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE
+        AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
+    set(CCR_ENABLE_SANITIZERS On)
+endif()
+
+if (CCR_ENABLE_SANITIZERS)
+    add_compile_options(-fsanitize=address -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
+endif()
 
 include(cmake/dependencies.cpm.cmake)
 add_subdirectory(external)
@@ -69,15 +104,32 @@ else()
     set(CCR_HAS_RE2 Off)
 endif()
 
-# Sanitizer flags are set after external dependencies so that fetched third-party
-# libraries (abseil, re2) are not compiled with sanitizer instrumentation.
-# Abseil's constexpr function-pointer comparisons are not compatible with GCC's
-# ASan/UBSan instrumentation, which causes build failures.
-if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE)
-    if (NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
-        add_compile_options(-fsanitize=address -fsanitize=undefined)
-        add_link_options(-fsanitize=address -fsanitize=undefined)
-    endif()
+# Opt specific dependencies out of sanitizer instrumentation because of known
+# limitations: abseil's constexpr function-pointer comparisons are not compatible
+# with GCC's ASan/UBSan instrumentation, which causes build failures. Later target
+# options override the globally inherited flags.
+if (CCR_ENABLE_SANITIZERS)
+    function(ccr_disable_sanitizers dir)
+        get_property(targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
+        foreach(target IN LISTS targets)
+            get_target_property(type ${target} TYPE)
+            if (NOT type STREQUAL "INTERFACE_LIBRARY" AND NOT type STREQUAL "UTILITY")
+                target_compile_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
+                target_link_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
+            endif()
+        endforeach()
+
+        get_property(subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
+        foreach(subdir IN LISTS subdirs)
+            ccr_disable_sanitizers("${subdir}")
+        endforeach()
+    endfunction()
+
+    foreach(dep_dir IN ITEMS "${abseil-cpp_SOURCE_DIR}" "${re2_SOURCE_DIR}")
+        if (dep_dir AND IS_DIRECTORY "${dep_dir}")
+            ccr_disable_sanitizers("${dep_dir}")
+        endif()
+    endforeach()
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)

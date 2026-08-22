@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 
 setup_file() {
-    acceptance_test=$(find . -name "cucumber_cpp.acceptance_test" -print -quit)
-    export acceptance_test
+    acceptance_test=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -print -quit)
+    plugin_test=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -print -quit)
+    export acceptance_test plugin_test
 }
 
 setup() {
@@ -251,4 +252,23 @@ teardown() {
     assert_failure
     assert_output --partial "Parse error in: \"cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature:4:9\""
     assert_output --partial "got 'when this line is a parse error (when should be When)'"
+}
+
+@test "Test multiple parse errors in a single feature are all reported" {
+    run $acceptance_test cucumber_cpp/acceptance_test/features_with_parse_error/test_multiple_parse_errors.feature
+    assert_failure
+    assert_output --partial "test_multiple_parse_errors.feature:5:9"
+    assert_output --partial "got 'when this is the first parse error'"
+    assert_output --partial "test_multiple_parse_errors.feature:7:1"
+    assert_output --partial "got 'when this is the second parse error'"
+}
+
+@test "Plugin test: load two plugins sequentially with static step" {
+    run $plugin_test
+    assert_success
+}
+
+@test "Plugin test: load all plugins from a directory" {
+    run $plugin_test directory
+    assert_success
 }

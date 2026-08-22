@@ -1,18 +1,18 @@
 #include "cucumber_cpp/library/runtime/Worker.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/gherkin_document.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/test_run_hook_finished.hpp"
-#include "cucumber/messages/test_run_hook_started.hpp"
-#include "cucumber/messages/test_step_result.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/Duration.hpp"
+#include "cucumber/messages/Feature.hpp"
+#include "cucumber/messages/GherkinDocument.hpp"
+#include "cucumber/messages/Pickle.hpp"
+#include "cucumber/messages/TestRunHookFinished.hpp"
+#include "cucumber/messages/TestRunHookStarted.hpp"
+#include "cucumber/messages/TestStepResult.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/runtime/TestCaseRunner.hpp"
-#include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -20,6 +20,8 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
@@ -42,13 +44,13 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        const inline std::set<cucumber::messages::test_step_result_status> failingStatuses{
-            cucumber::messages::test_step_result_status::AMBIGUOUS,
-            cucumber::messages::test_step_result_status::FAILED,
-            cucumber::messages::test_step_result_status::UNDEFINED,
+        const inline std::set failingStatuses{
+            cucumber::messages::TestStepResultStatus::AMBIGUOUS,
+            cucumber::messages::TestStepResultStatus::FAILED,
+            cucumber::messages::TestStepResultStatus::UNDEFINED,
         };
 
-        std::size_t RetriesForPickle(const cucumber::messages::pickle& pickle, const support::RunOptions::Runtime& options)
+        std::size_t RetriesForPickle(const cucumber::messages::Pickle& pickle, const support::RunOptions::Runtime& options)
         {
             if (options.retry == 0)
                 return 0;
@@ -58,18 +60,18 @@ namespace cucumber_cpp::library::runtime
                 return 0;
         }
 
-        bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
+        bool IsFailing(cucumber::messages::TestStepResultStatus status, bool dryRun)
         {
             if (dryRun)
                 return false;
 
-            return status != cucumber::messages::test_step_result_status::PASSED;
+            return status != cucumber::messages::TestStepResultStatus::PASSED;
         }
     }
 
     Worker::Worker(std::string_view testRunStartedId,
         util::Broadcaster& broadcaster,
-        cucumber::gherkin::id_generator_ptr idGenerator,
+        cucumber::gherkin::IdGeneratorPtr idGenerator,
         const support::RunOptions::Runtime& options,
         support::SupportCodeLibrary& supportCodeLibrary,
         Context& programContext)
@@ -81,9 +83,9 @@ namespace cucumber_cpp::library::runtime
         , programContext{ programContext }
     {}
 
-    std::vector<cucumber::messages::test_step_result> Worker::RunBeforeAllHooks()
+    std::vector<cucumber::messages::TestStepResult> Worker::RunBeforeAllHooks()
     {
-        std::vector<cucumber::messages::test_step_result> results;
+        std::vector<cucumber::messages::TestStepResult> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeAll);
 
         results.reserve(ids.size());
@@ -94,9 +96,9 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    std::vector<cucumber::messages::test_step_result> Worker::RunAfterAllHooks()
+    std::vector<cucumber::messages::TestStepResult> Worker::RunAfterAllHooks()
     {
-        std::vector<cucumber::messages::test_step_result> results;
+        std::vector<cucumber::messages::TestStepResult> results;
         auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::afterAll);
         for (const auto& id : ids | std::views::reverse)
             results.emplace_back(RunTestHook(id, programContext));
@@ -112,7 +114,7 @@ namespace cucumber_cpp::library::runtime
 
         if (options.featureHooks)
         {
-            const auto beforeHookResults = RunBeforeTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+            const auto beforeHookResults = RunBeforeTestSuiteHooks(**assembledTestSuite.gherkinDocument.feature, testSuiteContext);
 
             if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
                 failing = true;
@@ -123,7 +125,7 @@ namespace cucumber_cpp::library::runtime
 
         if (options.featureHooks)
         {
-            const auto afterHookResults = RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+            const auto afterHookResults = RunAfterTestSuiteHooks(**assembledTestSuite.gherkinDocument.feature, testSuiteContext);
 
             if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
                 failing = true;
@@ -132,7 +134,7 @@ namespace cucumber_cpp::library::runtime
         return !failed;
     }
 
-    bool Worker::RunTestCase(const cucumber::messages::gherkin_document& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
+    bool Worker::RunTestCase(const cucumber::messages::GherkinDocument& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing)
     {
         TestCaseRunner testCaseRunner{
             broadcaster,
@@ -151,9 +153,9 @@ namespace cucumber_cpp::library::runtime
         return !IsStatusFailed(status);
     }
 
-    std::vector<cucumber::messages::test_step_result> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
+    std::vector<cucumber::messages::TestStepResult> Worker::RunBeforeTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context)
     {
-        std::vector<cucumber::messages::test_step_result> results;
+        std::vector<cucumber::messages::TestStepResult> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::beforeFeature, util::TransformTags(feature.tags));
         results.reserve(ids.size());
 
@@ -163,9 +165,9 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    std::vector<cucumber::messages::test_step_result> Worker::RunAfterTestSuiteHooks(const cucumber::messages::feature& feature, Context& context)
+    std::vector<cucumber::messages::TestStepResult> Worker::RunAfterTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context)
     {
-        std::vector<cucumber::messages::test_step_result> results;
+        std::vector<cucumber::messages::TestStepResult> results;
         const auto ids = supportCodeLibrary.hookRegistry.FindIds(util::HookType::afterFeature, util::TransformTags(feature.tags));
         results.reserve(ids.size());
 
@@ -175,50 +177,50 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    cucumber::messages::test_step_result Worker::RunTestHook(const std::string& id, Context& context)
+    cucumber::messages::TestStepResult Worker::RunTestHook(const std::string& id, Context& context)
     {
         const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
-        const auto testRunHookStartedId = idGenerator->next_id();
+        const auto testRunHookStartedId = idGenerator->NextId();
 
-        const auto testRunHookStarted = cucumber::messages::test_run_hook_started{
+        const auto testRunHookStarted = cucumber::messages::TestRunHookStarted{
             .id = testRunHookStartedId,
-            .test_run_started_id = std::string{ testRunStartedId },
-            .hook_id = definition.data.id,
-            .timestamp = util::TimestampNow(),
+            .testRunStartedId = std::string{ testRunStartedId },
+            .hookId = definition.data.id,
+            .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
         };
 
-        broadcaster.BroadcastEvent({ .test_run_hook_started = testRunHookStarted });
+        broadcaster.BroadcastEvent(util::MakeShared(testRunHookStarted));
 
-        cucumber::messages::test_step_result result{ .duration{ .seconds = 0, .nanos = 0 }, .status = cucumber::messages::test_step_result_status::SKIPPED };
+        cucumber::messages::TestStepResult result{ .duration = std::make_shared<cucumber::messages::Duration>(cucumber::messages::Duration{ .seconds = 0, .nanos = 0 }), .status = cucumber::messages::TestStepResultStatus::SKIPPED };
 
         if (!options.dryRun)
         {
-            const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted]
+            const util::BodyFactory bodyFactory = [&definition, this, &context, &testRunHookStarted](util::TestStepResult& testStepResult)
             {
-                return definition.factory(broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), std::nullopt, false);
+                return definition.factory(testStepResult, broadcaster, context, util::TransformTestRunHookStarted(testRunHookStarted), std::nullopt, false);
             };
 
             result = util::TransformTestStepResult(util::ConstructAndExecute(bodyFactory));
 
-            if (result.status != cucumber::messages::test_step_result_status::PASSED && options.failGlobalHookFast)
+            if (result.status != cucumber::messages::TestStepResultStatus::PASSED && options.failGlobalHookFast)
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        broadcaster.BroadcastEvent({ .test_run_hook_finished = cucumber::messages::test_run_hook_finished{
-                                         .test_run_hook_started_id = testRunHookStartedId,
-                                         .result = result,
-                                         .timestamp = util::TimestampNow(),
-                                     } });
+        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunHookFinished{
+            .testRunHookStartedId = testRunHookStartedId,
+            .result = util::MakeShared(result),
+            .timestamp = util::MakeShared(util::TimestampNow()),
+        }));
 
         return result;
     }
 
-    bool Worker::IsStatusFailed(cucumber::messages::test_step_result_status status) const
+    bool Worker::IsStatusFailed(cucumber::messages::TestStepResultStatus status) const
     {
         if (options.dryRun)
             return false;
 
-        if (options.strict && status == cucumber::messages::test_step_result_status::PENDING)
+        if (options.strict && status == cucumber::messages::TestStepResultStatus::PENDING)
             return true;
 
         return failingStatuses.contains(status);

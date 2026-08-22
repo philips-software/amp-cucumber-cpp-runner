@@ -8,5 +8,11 @@ target_link_libraries(cucumber_cpp.library.util.test PUBLIC
 )
 
 target_sources(cucumber_cpp.library.util.test PRIVATE
+    TestBroadcaster.cpp
     TestDummy.cpp
+    TestDuration.cpp
+    TestTransformDocString.cpp
+    TestTransformTable.cpp
+    TestTransformTag.cpp
+    TestTransformTestStepResultStatus.cpp
 )

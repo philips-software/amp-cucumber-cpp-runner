@@ -26,7 +26,7 @@ target_include_directories(cucumber_cpp.library.formatter PUBLIC
 target_link_libraries(cucumber_cpp.library.formatter PUBLIC
     cucumber_cpp.library.cucumber_expression
     cucumber_cpp.library.formatter.helper
-    cucumber_cpp.library.query
+    cucumber::query
     cucumber_cpp.library.support
     cucumber_cpp.library.util
     fmt::fmt

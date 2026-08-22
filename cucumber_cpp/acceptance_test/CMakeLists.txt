@@ -31,3 +31,4 @@ target_link_libraries(cucumber_cpp.acceptance_test.unused PRIVATE
 
 add_subdirectory(hooks)
 add_subdirectory(steps)
+add_subdirectory(plugin_test)

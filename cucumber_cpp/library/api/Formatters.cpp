@@ -5,9 +5,10 @@
 #include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
+#include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -48,7 +49,7 @@ namespace cucumber_cpp::library::api
         return { view.begin(), view.end() };
     }
 
-    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, query::Query& query, std::ostream& output)
+    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, std::ostream& output)
     {
         std::list<std::unique_ptr<formatter::Formatter>> activeFormatters;
 
@@ -57,14 +58,14 @@ namespace cucumber_cpp::library::api
             const FormatterOption option{ formatterName };
 
             if (option.output.empty())
-                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, query, formatOptions, output));
+                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, broadcaster, formatOptions, output));
             else
             {
                 const auto absolutePath = std::filesystem::absolute(std::filesystem::path{ option.output }).string();
                 if (!customOutputFiles.contains(absolutePath))
                     customOutputFiles.try_emplace(absolutePath, std::make_unique<std::ofstream>(absolutePath));
 
-                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, query, formatOptions, *customOutputFiles.at(absolutePath)));
+                activeFormatters.emplace_back(availableFormatters.at(option.name).factory(supportCodeLibrary, broadcaster, formatOptions, *customOutputFiles.at(absolutePath)));
             }
         }
 

@@ -3,6 +3,7 @@
 
 #include "fmt/format.h"
 #include <algorithm>
+#include <any>
 #include <cctype>
 #include <compare>
 #include <cstddef>
@@ -129,22 +130,129 @@ namespace cucumber_cpp::library::cucumber_expression
     template<class T>
     using ConverterFunction = std::function<T(const ConvertFunctionArg&)>;
 
-    template<class T>
-    using TypeMap = std::map<std::string, ConverterFunction<T>>;
+    // Type-erased converter used at the host/plugin ABI boundary. The stored
+    // std::function returns std::any so a single non-templated map can hold
+    // converters for all return types. std::any_cast is performed at the call
+    // site (host or plugin), while the underlying storage can be shared.
+    using AnyConverterFunction = std::function<std::any(const ConvertFunctionArg&)>;
 
+    using ConverterMap = std::map<std::string, AnyConverterFunction, std::less<>>;
+
+    // Central converter registry. Each DLL has its own default map, but the
+    // active pointer can be redirected to a shared (host-owned) map so
+    // registrations and lookups cross DLL boundaries safely.
+    struct ConverterRegistry
+    {
+        static ConverterMap& Instance()
+        {
+            return *ActivePtr();
+        }
+
+        static ConverterMap& LocalInstance()
+        {
+            static ConverterMap map;
+            return map;
+        }
+
+        // Redirect this DLL's active converter map to an externally owned map
+        // (typically the host's). Passing nullptr restores the local map.
+        static void SetInstance(ConverterMap* external)
+        {
+            ActivePtr() = external != nullptr ? external : &LocalInstance();
+        }
+
+        static void TakeSnapshot()
+        {
+            Snapshot() = Instance();
+        }
+
+        static void RestoreSnapshot()
+        {
+            Instance() = Snapshot();
+        }
+
+    private:
+        static ConverterMap*& ActivePtr()
+        {
+            static ConverterMap* ptr = &LocalInstance();
+            return ptr;
+        }
+
+        static ConverterMap& Snapshot()
+        {
+            static ConverterMap snapshot;
+            return snapshot;
+        }
+    };
+
+    // Backwards-compatible typed accessor. Wraps/unwraps std::any so existing
+    // typed callers keep working, but storage is unified in ConverterRegistry.
     template<class T>
     struct ConverterTypeMap
     {
-        static TypeMap<T>& Instance();
+        // Proxy allowing typed insertion/lookup against the underlying any map.
+        struct Proxy
+        {
+            ConverterMap& map;
+
+            void Emplace(const std::string& name, ConverterFunction<T> fn)
+            {
+                map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args)
+                {
+                    return std::any{ fn(args) };
+                };
+            }
+
+            struct TypedAccessor
+            {
+                AnyConverterFunction& fn;
+
+                T operator()(const ConvertFunctionArg& args) const
+                {
+                    return std::any_cast<T>(fn(args));
+                }
+            };
+
+            TypedAccessor At(const std::string& name)
+            {
+                return TypedAccessor{ map.at(name) };
+            }
+
+            struct Assigner
+            {
+                ConverterMap& map;
+                std::string name;
+
+                Assigner& operator=(ConverterFunction<T> fn)
+                {
+                    map[name] = [fn = std::move(fn)](const ConvertFunctionArg& args)
+                    {
+                        return std::any{ fn(args) };
+                    };
+                    return *this;
+                }
+            };
+
+            Assigner operator[](const std::string& name)
+            {
+                return Assigner{ map, name };
+            }
+        };
+
+        static Proxy Instance()
+        {
+            return Proxy{ ConverterRegistry::Instance() };
+        }
     };
+}
 
-    template<class T>
-    TypeMap<T>& ConverterTypeMap<T>::Instance()
-    {
-        static TypeMap<T> typeMap;
-        return typeMap;
-    }
+namespace cucumber_cpp::library::plugin
+{
+    struct ParameterLoader;
+}
 
+namespace cucumber_cpp::library::cucumber_expression
+{
     struct ParameterRegistry
     {
         explicit ParameterRegistry(const std::set<CustomParameterEntry, std::less<>>& customParameters);
@@ -159,9 +267,11 @@ namespace cucumber_cpp::library::cucumber_expression
         template<class T>
         void AddParameter(std::string name, std::vector<std::string> regex, ConverterFunction<T> converter, std::source_location location = std::source_location::current());
 
+    private:
+        friend struct plugin::ParameterLoader;
+
         void AssertParameterIsUnique(const std::string& name) const;
 
-    private:
         void AddParameter(ParameterType parameter);
 
         template<class T>
@@ -193,7 +303,7 @@ namespace cucumber_cpp::library::cucumber_expression
 
         AddParameter(parameter);
 
-        ConverterTypeMap<T>::Instance().emplace(parameter.name, converter);
+        ConverterTypeMap<T>::Instance().Emplace(parameter.name, converter);
     }
 }
 

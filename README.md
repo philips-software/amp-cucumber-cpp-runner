@@ -244,6 +244,9 @@ $ example --format pretty --tags @smoke and not @ignore -- ./feature/acceptance 
 
 # On windows you might need to enclose the tags in quotes:
 $ example --format pretty --tags "@smoke and not @ignore" -- ./feature/acceptance ./feature/integration
+
+# Dynamically load a library with hooks / steps and or parameters before executing
+$ example --load myhooks.so myparameters.so allmysteps/ -- ./feature
 ```
 
 > ℹ️ use --help to see all available arguments and options

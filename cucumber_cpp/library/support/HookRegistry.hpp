@@ -1,7 +1,7 @@
 #ifndef CUCUMBER_CPP_HOOKREGISTRY_HPP
 #define CUCUMBER_CPP_HOOKREGISTRY_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
@@ -40,7 +40,7 @@ namespace cucumber_cpp::library::support
             util::HookFactory factory;
         };
 
-        explicit HookRegistry(cucumber::gherkin::id_generator_ptr idGenerator);
+        explicit HookRegistry(cucumber::gherkin::IdGeneratorPtr idGenerator);
 
         void LoadHooks();
 
@@ -56,7 +56,7 @@ namespace cucumber_cpp::library::support
     private:
         void Register(const std::string& id, util::HookType type, std::optional<std::string_view> expression, std::optional<std::string_view> name, util::HookFactory factory, std::source_location sourceLocation);
 
-        cucumber::gherkin::id_generator_ptr idGenerator;
+        cucumber::gherkin::IdGeneratorPtr idGenerator;
         std::map<std::string, Definition, std::less<>> registry;
     };
 }

@@ -1,20 +1,20 @@
 #include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
-#include "cucumber/messages/duration.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/scenario.hpp"
-#include "cucumber/messages/test_case.hpp"
-#include "cucumber/messages/test_case_finished.hpp"
-#include "cucumber/messages/test_case_started.hpp"
-#include "cucumber/messages/test_step.hpp"
-#include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber/messages/test_step_result.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/Duration.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Pickle.hpp"
+#include "cucumber/messages/Scenario.hpp"
+#include "cucumber/messages/TestCase.hpp"
+#include "cucumber/messages/TestCaseFinished.hpp"
+#include "cucumber/messages/TestCaseStarted.hpp"
+#include "cucumber/messages/TestStep.hpp"
+#include "cucumber/messages/TestStepFinished.hpp"
+#include "cucumber/messages/TestStepResult.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/FormatMessages.hpp"
 #include "cucumber_cpp/library/formatter/helper/PrintMessages.hpp"
 #include "cucumber_cpp/library/formatter/helper/TextBuilder.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/ToLower.hpp"
 #include "fmt/ostream.h"
@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <functional>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <ostream>
 #include <ranges>
@@ -34,86 +35,91 @@ namespace cucumber_cpp::library::formatter
 {
     namespace
     {
-        bool IsFailure(cucumber::messages::test_step_result_status status, bool willBeRetried)
+        bool IsFailure(cucumber::messages::TestStepResultStatus status, bool willBeRetried)
         {
-            return status == cucumber::messages::test_step_result_status::AMBIGUOUS ||
-                   status == cucumber::messages::test_step_result_status::UNDEFINED ||
-                   (status == cucumber::messages::test_step_result_status::FAILED && !willBeRetried);
+            return status == cucumber::messages::TestStepResultStatus::AMBIGUOUS ||
+                   status == cucumber::messages::TestStepResultStatus::UNDEFINED ||
+                   (status == cucumber::messages::TestStepResultStatus::FAILED && !willBeRetried);
         }
 
-        bool IsWarning(cucumber::messages::test_step_result_status status, bool willBeRetried)
+        bool IsWarning(cucumber::messages::TestStepResultStatus status, bool willBeRetried)
         {
-            return status == cucumber::messages::test_step_result_status::PENDING ||
-                   (status == cucumber::messages::test_step_result_status::FAILED && willBeRetried);
+            return status == cucumber::messages::TestStepResultStatus::PENDING ||
+                   (status == cucumber::messages::TestStepResultStatus::FAILED && willBeRetried);
         }
 
         struct SummaryData
         {
-            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> warningTestStepResults;
-            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> failedTestStepResults;
-            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> scenarioCounts;
-            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>> stepCounts;
-            cucumber::messages::duration totalStepDuration{};
+            std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>> warningTestStepResults;
+            std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>> failedTestStepResults;
+            std::map<cucumber::messages::TestStepResultStatus, std::size_t, std::less<>> scenarioCounts;
+            std::map<cucumber::messages::TestStepResultStatus, std::size_t, std::less<>> stepCounts;
+            cucumber::messages::Duration totalStepDuration{};
         };
 
         void ClassifyTestCaseResult(
             const std::string& id,
-            const cucumber::messages::test_case_started& testCaseStarted,
-            const cucumber::messages::test_step_result* testStepResult,
+            const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted,
+            const cucumber::messages::TestStepResult* testStepResult,
             bool willBeRetried,
-            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>>& warningResults,
-            std::map<std::string, const cucumber::messages::test_case_started*, std::less<>>& failedResults)
+            std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>>& warningResults,
+            std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>>& failedResults)
         {
             if (testStepResult == nullptr)
                 return;
 
             if (IsWarning(testStepResult->status, willBeRetried))
-                warningResults[id] = &testCaseStarted;
+                warningResults[id] = testCaseStarted.get();
 
             if (IsFailure(testStepResult->status, willBeRetried))
-                failedResults[id] = &testCaseStarted;
+                failedResults[id] = testCaseStarted.get();
         }
 
         void CountScenarioResult(
-            const query::Query& query,
-            const cucumber::messages::test_case_finished& testCaseFinished,
-            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& scenarioCounts)
+            const cucumber::query::Query& query,
+            const std::shared_ptr<const cucumber::messages::TestCaseFinished>& testCaseFinished,
+            std::map<cucumber::messages::TestStepResultStatus, std::size_t, std::less<>>& scenarioCounts)
         {
-            if (const auto& testStepResultPtr = query.FindMostSevereTestStepResultBy(testCaseFinished); testStepResultPtr.has_value())
+            if (const auto testStepResultPtr = query.FindMostSevereTestStepResultBy(testCaseFinished); testStepResultPtr.has_value())
                 ++scenarioCounts[testStepResultPtr.value()->status];
             else
-                ++scenarioCounts[cucumber::messages::test_step_result_status::PASSED];
+                ++scenarioCounts[cucumber::messages::TestStepResultStatus::PASSED];
         }
 
         void CountStepResults(
-            const query::Query& query,
-            const cucumber::messages::test_case_started& testCaseStarted,
-            std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& stepCounts,
-            cucumber::messages::duration& totalStepDuration)
+            const cucumber::query::Query& query,
+            const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted,
+            std::map<cucumber::messages::TestStepResultStatus, std::size_t, std::less<>>& stepCounts,
+            cucumber::messages::Duration& totalStepDuration)
         {
-            const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
+            const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
             for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
             {
-                if (testStep->pickle_step_id.has_value())
+                if (testStep->pickleStepId.has_value())
                 {
-                    ++stepCounts[testStepFinished->test_step_result.status];
-                    totalStepDuration += testStepFinished->test_step_result.duration;
+                    ++stepCounts[testStepFinished->testStepResult->status];
+                    if (testStepFinished->testStepResult->duration)
+                        totalStepDuration += *testStepFinished->testStepResult->duration;
                 }
             }
         }
 
-        SummaryData CollectSummaryData(const query::Query& query)
+        SummaryData CollectSummaryData(const cucumber::query::Query& query)
         {
             SummaryData data;
 
-            for (const auto& [id, testCaseStarted] : query.TestCaseStarted())
+            for (const auto& testCaseStarted : query.FindAllTestCaseStarted())
             {
-                const auto& testCaseFinished = query.TestCaseFinishedByTestCaseStartedId().at(testCaseStarted.id);
-                const auto* testStepResult = query.FindMostSevereTestStepResultBy(testCaseStarted).value_or(nullptr);
+                const auto testCaseFinishedOpt = query.FindTestCaseFinishedBy(testCaseStarted);
+                if (!testCaseFinishedOpt.has_value())
+                    continue;
+                const auto& testCaseFinished = testCaseFinishedOpt.value();
+                const auto mostSevereOpt = query.FindMostSevereTestStepResultBy(testCaseStarted);
+                const auto* testStepResult = mostSevereOpt.has_value() ? mostSevereOpt.value().get() : nullptr;
 
-                ClassifyTestCaseResult(id, testCaseStarted, testStepResult, testCaseFinished.will_be_retried, data.warningTestStepResults, data.failedTestStepResults);
+                ClassifyTestCaseResult(testCaseStarted->id, testCaseStarted, testStepResult, testCaseFinished->willBeRetried, data.warningTestStepResults, data.failedTestStepResults);
 
-                if (!testCaseFinished.will_be_retried)
+                if (!testCaseFinished->willBeRetried)
                 {
                     CountScenarioResult(query, testCaseFinished, data.scenarioCounts);
                     CountStepResults(query, testCaseStarted, data.stepCounts, data.totalStepDuration);
@@ -123,29 +129,31 @@ namespace cucumber_cpp::library::formatter
             return data;
         }
 
-        std::size_t CalculateLength(const query::Query& query, const cucumber::messages::pickle& pickle, const cucumber::messages::test_case_started& testCaseStarted, const cucumber::messages::test_case_finished& testCaseFinished, const cucumber::messages::scenario& scenario, const cucumber::messages::test_case& testCase, bool useStatusIcon, const helper::Theme& theme)
+        std::size_t CalculateLength(const cucumber::query::Query& query, const cucumber::messages::Pickle& pickle, const cucumber::messages::TestCaseStarted& testCaseStarted, const cucumber::messages::TestCaseFinished& testCaseFinished, const cucumber::messages::Scenario& scenario, const cucumber::messages::TestCase& testCase, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
-            const auto scenarioLength = helper::Unstyled(helper::FormatPickleAttemptTitle(pickle, testCaseStarted.attempt, testCaseFinished.will_be_retried, scenario, theme)).length();
+            const auto scenarioLength = helper::Unstyled(helper::FormatPickleAttemptTitle(pickle, testCaseStarted.attempt, testCaseFinished.willBeRetried, scenario, theme)).length();
 
-            const auto toLength = [&query, useStatusIcon, &theme, isBeforeHook = true](const cucumber::messages::test_step& testStep) mutable -> std::size_t
+            const auto toLength = [&query, useStatusIcon, &theme, isBeforeHook = true](const std::shared_ptr<cucumber::messages::TestStep>& testStep) mutable -> std::size_t
             {
-                if (testStep.hook_id.has_value())
+                if (testStep->hookId.has_value())
                 {
-                    const auto& hook = query.FindHookById(testStep.hook_id.value());
-                    return helper::Unstyled(helper::FormatHookTitle(hook, cucumber::messages::test_step_result_status::UNKNOWN, isBeforeHook, useStatusIcon, theme)).length();
+                    const auto hookOpt = query.FindHookBy(testStep);
+                    if (!hookOpt.has_value())
+                        return 0;
+                    return helper::Unstyled(helper::FormatHookTitle(*hookOpt.value(), cucumber::messages::TestStepResultStatus::UNKNOWN, isBeforeHook, useStatusIcon, theme)).length();
                 }
-                else if (testStep.hook_id.has_value())
+                else if (testStep->pickleStepId.has_value())
                 {
                     isBeforeHook = false;
 
-                    const auto* pickleStep = query.FindPickleStepBy(testStep);
-                    const auto& step = query.FindStepBy(*pickleStep);
-                    return helper::Unstyled(helper::FormatStepTitle(testStep, *pickleStep, step, cucumber::messages::test_step_result_status::UNKNOWN, useStatusIcon, theme)).length();
+                    const auto pickleStep = query.FindPickleStepBy(testStep).value();
+                    const auto step = query.FindStepBy(pickleStep).value();
+                    return helper::Unstyled(helper::FormatStepTitle(*testStep, *pickleStep, *step, cucumber::messages::TestStepResultStatus::UNKNOWN, useStatusIcon, theme)).length();
                 }
                 return 0;
             };
 
-            auto steplengths = testCase.test_steps | std::views::transform(toLength);
+            auto steplengths = testCase.testSteps | std::views::transform(toLength);
 
             const auto maxStepLengthIter = std::ranges::max_element(steplengths);
             const auto maxStepLength = (maxStepLengthIter != steplengths.end()) ? *maxStepLengthIter : 0;
@@ -154,65 +162,65 @@ namespace cucumber_cpp::library::formatter
             return maxContentLength;
         }
 
-        void HandleHookStep(std::ostream& stream, const query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const helper::Theme& theme)
+        void HandleHookStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
-            const auto& hook = query.FindHookById(testStep.hook_id.value());
-            helper::PrintHookLine(stream, testStepFinished, hook, scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
+            if (const auto hookOpt = query.FindHookBy(testStep); hookOpt.has_value())
+                helper::PrintHookLine(stream, *testStepFinished, *hookOpt.value(), scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
 
-            helper::PrintError(stream, testStepFinished, scenarioIndent, useStatusIcon, theme);
+            helper::PrintError(stream, *testStepFinished, scenarioIndent, useStatusIcon, theme);
         }
 
-        void HandleTestStep(std::ostream& stream, const query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestStep(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme) // NOSONAR: cohesive formatting helper
         {
-            const auto* pickleStep = query.FindPickleStepBy(testStep);
-            const auto& step = query.FindStepBy(*pickleStep);
-            const auto* stepDefinition = (testStep.step_definition_ids && !testStep.step_definition_ids->empty()) ? &query.FindStepDefinitionById(testStep.step_definition_ids->front()) : nullptr;
+            const auto pickleStep = query.FindPickleStepBy(testStep).value();
+            const auto step = query.FindStepBy(pickleStep).value();
+            const auto stepDefinitionOpt = query.FindUnambiguousStepDefinitionBy(testStep);
+            const auto* stepDefinition = stepDefinitionOpt.has_value() ? stepDefinitionOpt.value().get() : nullptr;
 
-            helper::PrintStepLine(stream, testStepFinished, testStep, *pickleStep, step, stepDefinition, scenarioIndent, maxContentLength, useStatusIcon, theme);
+            helper::PrintStepLine(stream, *testStepFinished, *testStep, *pickleStep, *step, stepDefinition, scenarioIndent, maxContentLength, useStatusIcon, theme);
 
             helper::PrintStepArgument(stream, *pickleStep, scenarioIndent, useStatusIcon, theme);
-            helper::PrintAmbiguousStep(stream, query, testStepFinished, testStep, scenarioIndent, useStatusIcon, theme);
+            helper::PrintAmbiguousStep(stream, query, *testStepFinished, testStep, scenarioIndent, useStatusIcon, theme);
 
-            helper::PrintError(stream, testStepFinished, scenarioIndent, useStatusIcon, theme);
+            helper::PrintError(stream, *testStepFinished, scenarioIndent, useStatusIcon, theme);
         }
 
-        void HandleTestSteps(std::ostream& stream, const query::Query& query, const cucumber::messages::test_case_started& testCaseStarted, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestSteps(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const helper::Theme& theme)
         {
-            const auto& testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
+            const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
 
             auto isBeforeHook = true;
-            for (const auto [testStepFinished, testStep] : testStepFinishedAndTestStep)
+            for (const auto& [testStepFinished, testStep] : testStepFinishedAndTestStep)
             {
-                if (testStep->hook_id.has_value())
-                    HandleHookStep(stream, query, *testStepFinished, *testStep, scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
+                if (testStep->hookId.has_value())
+                    HandleHookStep(stream, query, testStepFinished, testStep, scenarioIndent, maxContentLength, isBeforeHook, useStatusIcon, theme);
                 else
                 {
                     isBeforeHook = false;
-                    HandleTestStep(stream, query, *testStepFinished, *testStep, scenarioIndent, maxContentLength, useStatusIcon, theme);
+                    HandleTestStep(stream, query, testStepFinished, testStep, scenarioIndent, maxContentLength, useStatusIcon, theme);
                 }
             }
         }
 
-        void HandleTestCaseStarted(std::ostream& stream, const query::Query& query, const cucumber::messages::test_case_started& testCaseStarted, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestCaseStarted(std::ostream& stream, const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted, bool useStatusIcon, const helper::Theme& theme)
         {
             auto scenarioIndent = 0;
 
-            const auto& testCaseFinished = query.TestCaseFinishedByTestCaseStartedId().at(testCaseStarted.id);
-            const auto& pickle = query.FindPickleBy(testCaseStarted);
-            const auto& lineage = query.FindLineageByPickle(pickle);
+            const auto testCaseFinished = query.FindTestCaseFinishedBy(testCaseStarted).value();
+            const auto pickle = query.FindPickleBy(testCaseStarted).value();
+            const auto lineageAndPickle = query.FindLineageBy(pickle).value();
+            const auto& lineage = *lineageAndPickle.lineage;
             const auto& scenario = lineage.scenario;
-            const auto& rule = lineage.rule;
-            const auto& feature = lineage.feature;
-            const auto& testCase = query.FindTestCaseBy(testCaseStarted);
+            const auto testCase = query.FindTestCaseBy(testCaseStarted).value();
 
-            const auto maxContentLength = CalculateLength(query, pickle, testCaseStarted, testCaseFinished, *scenario, testCase, useStatusIcon, theme);
+            const auto maxContentLength = CalculateLength(query, *pickle, *testCaseStarted, *testCaseFinished, *scenario, *testCase, useStatusIcon, theme);
 
             fmt::println(stream, "");
-            helper::PrintScenarioAttemptLine(stream, pickle, testCaseStarted.attempt, testCaseFinished.will_be_retried, *scenario, scenarioIndent, maxContentLength, theme);
+            helper::PrintScenarioAttemptLine(stream, *pickle, testCaseStarted->attempt, testCaseFinished->willBeRetried, *scenario, scenarioIndent, maxContentLength, theme);
             HandleTestSteps(stream, query, testCaseStarted, scenarioIndent, maxContentLength, useStatusIcon, theme);
         }
 
-        void HandleTestCaseStartedList(std::ostream& stream, const query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::test_case_started*, std::less<>> testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
+        void HandleTestCaseStartedList(std::ostream& stream, const cucumber::query::Query& query, const std::string& title, const std::map<std::string, const cucumber::messages::TestCaseStarted*, std::less<>>& testCaseStartedList, bool useStatusIcon, const helper::Theme& theme)
         {
             if (testCaseStartedList.empty())
                 return;
@@ -220,10 +228,10 @@ namespace cucumber_cpp::library::formatter
             fmt::println(stream, "\n{}:", title);
 
             for (const auto& [id, testCaseStarted] : testCaseStartedList)
-                HandleTestCaseStarted(stream, query, *testCaseStarted, useStatusIcon, theme);
+                HandleTestCaseStarted(stream, query, std::shared_ptr<const cucumber::messages::TestCaseStarted>{ std::shared_ptr<void>{}, testCaseStarted }, useStatusIcon, theme);
         }
 
-        void HandleSummary(std::ostream& stream, const std::string& summary, const std::map<cucumber::messages::test_step_result_status, std::size_t, std::less<>>& counts, const helper::Theme& theme)
+        void HandleSummary(std::ostream& stream, const std::string& summary, const std::map<cucumber::messages::TestStepResultStatus, std::size_t, std::less<>>& counts, const helper::Theme& theme)
         {
             const auto countToStatusString = [&theme](const auto& pair)
             {
@@ -249,13 +257,16 @@ namespace cucumber_cpp::library::formatter
     {
     }
 
-    void SummaryFormatter::OnEnvelope(const cucumber::messages::envelope& envelope)
+    void SummaryFormatter::OnEnvelope(const cucumber::messages::Envelope& envelope)
     {
-        if (envelope.test_run_finished)
-            LogSummary(query.FindTestRunDuration());
+        if (envelope.testRunFinished)
+        {
+            const auto testRunDuration = query.FindTestRunDuration();
+            LogSummary(testRunDuration.has_value() ? *testRunDuration.value() : cucumber::messages::Duration{});
+        }
     }
 
-    void SummaryFormatter::LogSummary(const cucumber::messages::duration& testRunDuration)
+    void SummaryFormatter::LogSummary(const cucumber::messages::Duration& testRunDuration)
     {
         const auto data = CollectSummaryData(query);
 

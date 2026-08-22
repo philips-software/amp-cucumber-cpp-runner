@@ -1,6 +1,6 @@
 
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/tag_expression/Parser.hpp"
@@ -51,7 +51,7 @@ namespace cucumber_cpp::library::support
         , factory{ factory }
     {}
 
-    HookRegistry::HookRegistry(cucumber::gherkin::id_generator_ptr idGenerator)
+    HookRegistry::HookRegistry(cucumber::gherkin::IdGeneratorPtr idGenerator)
         : idGenerator{ std::move(idGenerator) }
     {
     }

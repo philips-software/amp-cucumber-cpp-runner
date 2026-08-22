@@ -5,8 +5,9 @@
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
+#include "cucumber_cpp/library/util/TestStepResult.hpp"
+#include "gtest/gtest.h"
 #include <cstddef>
-#include <gtest/gtest.h>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -23,7 +24,11 @@ namespace cucumber_cpp::library::detail
     struct BodyCrtp : util::Body
     {
     private:
-        BodyCrtp() = default;
+        explicit BodyCrtp(util::TestStepResult& testStepResult)
+            : util::Body{ testStepResult }
+        {
+        }
+
         friend Base;
 
     public:
@@ -57,24 +62,29 @@ namespace cucumber_cpp::library::detail
 
 #define BODY_STRUCT CONCAT(BodyImpl, __LINE__)
 
-#define BODY(matcher, type, targs, registration, base)                            \
-    namespace                                                                     \
-    {                                                                             \
-        struct BODY_STRUCT : cucumber_cpp::library::detail::BodyCrtp<BODY_STRUCT> \
-            , base                                                                \
-        {                                                                         \
-            /* Workaround namespaces in `base`. For example `base` = Foo::Bar. */ \
-            /* Then the result would be Foo::Bar::Foo::Bar which is invalid */    \
-            using myBase = base;                                                  \
-            using myBase::myBase;                                                 \
-                                                                                  \
-        private:                                                                  \
-            friend BodyCrtp;                                                      \
-            void ExecuteImpl targs;                                               \
-            static const std::size_t ID;                                          \
-        };                                                                        \
-    }                                                                             \
-    const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type); \
+#define BODY(matcher, type, targs, registration, base)                                                 \
+    namespace                                                                                          \
+    {                                                                                                  \
+        struct BODY_STRUCT : cucumber_cpp::library::detail::BodyCrtp<BODY_STRUCT>                      \
+            , base                                                                                     \
+        {                                                                                              \
+            /* Workaround namespaces in `base`. For example `base` = Foo::Bar. */                      \
+            /* Then the result would be Foo::Bar::Foo::Bar which is invalid */                         \
+            using myBase = base;                                                                       \
+            using myBase::myBase;                                                                      \
+            template<typename... CTArgs>                                                               \
+            BODY_STRUCT(cucumber_cpp::library::util::TestStepResult& testStepResult, CTArgs&&... args) \
+                : BodyCrtp<BODY_STRUCT>{ testStepResult }                                              \
+                , myBase{ std::forward<CTArgs>(args)... }                                              \
+            {}                                                                                         \
+                                                                                                       \
+        private:                                                                                       \
+            friend BodyCrtp;                                                                           \
+            void ExecuteImpl targs;                                                                    \
+            static const std::size_t ID;                                                               \
+        };                                                                                             \
+    }                                                                                                  \
+    const std::size_t BODY_STRUCT::ID = registration<BODY_STRUCT>(matcher, type);                      \
     void BODY_STRUCT::ExecuteImpl targs
 
 #endif

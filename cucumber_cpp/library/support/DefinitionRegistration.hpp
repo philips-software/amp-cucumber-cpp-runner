@@ -1,7 +1,7 @@
 #ifndef SUPPORT_DEFINITION_REGISTRATION_HPP
 #define SUPPORT_DEFINITION_REGISTRATION_HPP
 
-#include "cucumber/gherkin/id_generator.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
@@ -29,14 +29,19 @@ namespace cucumber_cpp::library::support
     public:
         static DefinitionRegistration& Instance();
 
-        void LoadIds(cucumber::gherkin::id_generator_ptr idGenerator);
+        void RegisterPlugin(DefinitionRegistration& plugin);
+        void UnregisterPlugins();
+
+        void TakeSnapshot();
+
+        void LoadIds(cucumber::gherkin::IdGeneratorPtr idGenerator);
 
         template<class T>
         void ForEachRegisteredStep(const T& func);
 
         std::vector<HookEntry> GetHooks();
 
-        const std::set<cucumber_expression::CustomParameterEntry, std::less<>>& GetRegisteredParameters() const;
+        [[nodiscard]] std::set<cucumber_expression::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
 
         template<class T>
         static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
@@ -57,6 +62,11 @@ namespace cucumber_cpp::library::support
 
         std::map<std::source_location, Entry, SourceLocationOrder> registry;
         std::set<cucumber_expression::CustomParameterEntry, std::less<>> customParameters;
+
+        std::vector<DefinitionRegistration*> plugins;
+
+        std::map<std::source_location, Entry, SourceLocationOrder> staticRegistry;
+        std::set<cucumber_expression::CustomParameterEntry, std::less<>> staticCustomParameters;
     };
 
     //////////////////////////
@@ -66,19 +76,28 @@ namespace cucumber_cpp::library::support
     template<class T>
     void DefinitionRegistration::ForEachRegisteredStep(const T& func)
     {
-        auto allSteps = registry |
-                        std::views::values |
-                        std::views::filter([](const Entry& entry)
-                            {
-                                return std::holds_alternative<StepStringRegistration::Entry>(entry);
-                            }) |
-                        std::views::transform([](const Entry& entry)
-                            {
-                                return std::get<StepStringRegistration::Entry>(entry);
-                            });
+        auto forEachStep = [&func](auto& reg)
+        {
+            auto allSteps = reg |
+                            std::views::values |
+                            std::views::filter([](const Entry& entry)
+                                {
+                                    return std::holds_alternative<StepStringRegistration::Entry>(entry);
+                                }) |
+                            std::views::transform([](const Entry& entry)
+                                {
+                                    return std::get<StepStringRegistration::Entry>(entry);
+                                });
 
-        for (const auto& step : allSteps)
-            func(step);
+            for (const auto& step : allSteps)
+                func(step);
+        };
+
+        forEachStep(staticRegistry);
+        forEachStep(registry);
+
+        for (auto* plugin : plugins)
+            forEachStep(plugin->registry);
     }
 
     template<class T>

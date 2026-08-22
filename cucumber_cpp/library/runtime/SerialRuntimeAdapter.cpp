@@ -1,6 +1,6 @@
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber_cpp/library/runtime/Worker.hpp"
@@ -16,18 +16,18 @@ namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        bool IsFailing(cucumber::messages::test_step_result_status status, bool dryRun)
+        bool IsFailing(cucumber::messages::TestStepResultStatus status, bool dryRun)
         {
             if (dryRun)
                 return false;
 
-            return status != cucumber::messages::test_step_result_status::PASSED;
+            return status != cucumber::messages::TestStepResultStatus::PASSED;
         }
     }
 
     SerialRuntimeAdapter::SerialRuntimeAdapter(std::string testRunStartedId,
         util::Broadcaster& broadcaster,
-        cucumber::gherkin::id_generator_ptr idGenerator,
+        cucumber::gherkin::IdGeneratorPtr idGenerator,
         const std::list<support::PickleSource>& sourcedPickles,
         const support::RunOptions::Runtime& options,
         support::SupportCodeLibrary& supportCodeLibrary,

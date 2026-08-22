@@ -13,49 +13,48 @@
 
 namespace cucumber_cpp::library::util
 {
-    namespace
+    struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
     {
+        explicit CucumberResultReporter(util::TestStepResult& testStepResult);
 
-        struct CucumberResultReporter : public testing::ScopedFakeTestPartResultReporter
-        {
-            explicit CucumberResultReporter(util::TestStepResult& testStepResult)
-                : testing::ScopedFakeTestPartResultReporter{ nullptr }
-                , testStepResult{ testStepResult }
-            {
-            }
+        void ReportTestPartResult(const testing::TestPartResult& testPartResult) override;
 
-            void ReportTestPartResult(const testing::TestPartResult& testPartResult) override
-            {
-                if (testPartResult.failed())
-                {
-                    testStepResult.status = util::TestStepResultStatus::FAILED;
+    private:
+        util::TestStepResult& testStepResult;
+    };
 
-                    auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
-
-                    if (testStepResult.message)
-                        testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
-                    else
-                        testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
-                }
-
-                if (testPartResult.fatally_failed())
-                    throw FatalError{ testPartResult.message() };
-            }
-
-        private:
-            util::TestStepResult& testStepResult;
-        };
+    CucumberResultReporter::CucumberResultReporter(util::TestStepResult& testStepResult)
+        : testing::ScopedFakeTestPartResultReporter{ nullptr }
+        , testStepResult{ testStepResult }
+    {
     }
 
-    TestStepResult ConstructAndExecute(const std::function<std::unique_ptr<Body>()>& bodyFactory, const ExecuteArgs& args)
+    void CucumberResultReporter::ReportTestPartResult(const testing::TestPartResult& testPartResult)
+    {
+        if (testPartResult.failed())
+        {
+            testStepResult.status = util::TestStepResultStatus::FAILED;
+
+            auto fileName = std::filesystem::relative(testPartResult.file_name(), std::filesystem::current_path()).string();
+
+            if (testStepResult.message)
+                testStepResult.message = fmt::format("{}\n{}:{}: Failure\n{}", testStepResult.message.value(), fileName, testPartResult.line_number(), testPartResult.message());
+            else
+                testStepResult.message = fmt::format("{}:{}: Failure\n{}", fileName, testPartResult.line_number(), testPartResult.message());
+        }
+
+        if (testPartResult.fatally_failed())
+            throw FatalError{ testPartResult.message() };
+    }
+
+    TestStepResult ConstructAndExecute(const BodyFactory& bodyFactory, const ExecuteArgs& args)
     {
         const auto startTime = Stopwatch::Instance().Start();
         TestStepResult testStepResult{ .status = TestStepResultStatus::PASSED };
-        CucumberResultReporter reportListener{ testStepResult };
 
         try
         {
-            bodyFactory()->Execute(args);
+            bodyFactory(testStepResult)->Execute(args);
         }
         catch (...)
         {
@@ -71,4 +70,10 @@ namespace cucumber_cpp::library::util
 
         return testStepResult;
     }
+
+    Body::Body(TestStepResult& testStepResult)
+        : reportListener{ std::make_unique<CucumberResultReporter>(testStepResult) }
+    {}
+
+    Body::~Body() = default;
 }

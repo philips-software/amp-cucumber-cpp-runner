@@ -1,19 +1,21 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
-#include "cucumber/gherkin/id_generator.hpp"
-#include "cucumber/messages/envelope.hpp"
-#include "cucumber/messages/location.hpp"
-#include "cucumber/messages/parameter_type.hpp"
-#include "cucumber/messages/parse_error.hpp"
-#include "cucumber/messages/pickle_tag.hpp"
-#include "cucumber/messages/source_reference.hpp"
-#include "cucumber/messages/step_definition.hpp"
-#include "cucumber/messages/step_definition_pattern.hpp"
-#include "cucumber/messages/step_definition_pattern_type.hpp"
+#include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/messages/Envelope.hpp"
+#include "cucumber/messages/Location.hpp"
+#include "cucumber/messages/ParameterType.hpp"
+#include "cucumber/messages/ParseError.hpp"
+#include "cucumber/messages/PickleTag.hpp"
+#include "cucumber/messages/SourceReference.hpp"
+#include "cucumber/messages/StepDefinition.hpp"
+#include "cucumber/messages/StepDefinitionPattern.hpp"
+#include "cucumber/messages/StepDefinitionPatternType.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/Gherkin.hpp"
 #include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
+#include "cucumber_cpp/library/plugin/HookLoader.hpp"
+#include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
+#include "cucumber_cpp/library/plugin/StepLoader.hpp"
 #include "cucumber_cpp/library/runtime/MakeRuntime.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
@@ -23,6 +25,7 @@
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
+#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
@@ -43,103 +46,106 @@ namespace cucumber_cpp::library::api
 {
     namespace
     {
-        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
+        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
                 if (parameter.isBuiltin)
                     continue;
 
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{
-                    .parameter_type = cucumber::messages::parameter_type{
-                        .name = parameter.name,
-                        .regular_expressions = parameter.regex,
-                        .use_for_snippets = parameter.useForSnippets,
-                        .id = idGenerator->next_id(),
-                        .source_reference = cucumber::messages::source_reference{
-                            .uri = parameter.location.file_name(),
-                            .location = cucumber::messages::location{
-                                .line = parameter.location.line(),
-                            },
-                        },
-                    },
-                });
+                broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::ParameterType{
+                    .name = parameter.name,
+                    .regularExpressions = parameter.regex,
+                    .useForSnippets = parameter.useForSnippets,
+                    .id = idGenerator->NextId(),
+                    .sourceReference = util::MakeShared(cucumber::messages::SourceReference{
+                        .uri = parameter.location.file_name(),
+                        .location = util::MakeShared(cucumber::messages::Location{
+                            .line = parameter.location.line(),
+                        }),
+                    }),
+                }));
             }
         }
 
-        void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .undefined_parameter_type = parameter });
+                broadcaster.BroadcastEvent(util::MakeShared(parameter));
         }
 
-        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .step_definition = cucumber::messages::step_definition{
-                                                                             .id = stepDefinition.id,
-                                                                             .pattern = cucumber::messages::step_definition_pattern{
-                                                                                 .source = stepDefinition.pattern,
-                                                                                 .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::step_definition_pattern_type::CUCUMBER_EXPRESSION : cucumber::messages::step_definition_pattern_type::REGULAR_EXPRESSION,
-                                                                             },
-                                                                             .source_reference = {
-                                                                                 .uri = stepDefinition.uri.string(),
-                                                                                 .location = cucumber::messages::location{
-                                                                                     .line = stepDefinition.line,
-                                                                                 },
-                                                                             },
-                                                                         } });
+                broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::StepDefinition{
+                    .id = stepDefinition.id,
+                    .pattern = util::MakeShared(cucumber::messages::StepDefinitionPattern{
+                        .source = stepDefinition.pattern,
+                        .type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION,
+                    }),
+                    .sourceReference = util::MakeShared(cucumber::messages::SourceReference{
+                        .uri = stepDefinition.uri.string(),
+                        .location = util::MakeShared(cucumber::messages::Location{
+                            .line = stepDefinition.line,
+                        }),
+                    }),
+                }));
             }
         }
 
-        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
         }
 
-        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(cucumber::messages::envelope{ .hook = util::TransformHookData(hook) });
+                broadcaster.BroadcastEvent(util::MakeShared(util::TransformHookData(hook)));
         }
 
-        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::id_generator_ptr& idGenerator)
+        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
         {
+            // Phase 1: Load parameters (must be first, steps reference parameter types)
+            plugin::ParameterLoader::Load(support::DefinitionRegistration::Instance(), supportCodeLibrary.parameterRegistry);
             EmitParameters(supportCodeLibrary, broadcaster, idGenerator);
 
             support::DefinitionRegistration::Instance().LoadIds(idGenerator);
-            supportCodeLibrary.stepRegistry.LoadSteps();
+
+            // Phase 2: Load steps (can now resolve parameter type expressions)
+            plugin::StepLoader::Load(supportCodeLibrary.stepRegistry);
 
             EmitUndefinedParameters(supportCodeLibrary, broadcaster);
             EmitStepDefinitions(supportCodeLibrary, broadcaster);
 
-            supportCodeLibrary.hookRegistry.LoadHooks();
+            // Phase 3: Load hooks (last, no ordering dependency)
+            plugin::HookLoader::Load(supportCodeLibrary.hookRegistry);
             EmitTestCaseHooks(supportCodeLibrary, broadcaster);
             EmitTestRunHooks(supportCodeLibrary, broadcaster);
         }
 
-        const std::string& TransformPickleTagName(const cucumber::messages::pickle_tag& tag)
+        const std::string& TransformPickleTagName(const std::shared_ptr<cucumber::messages::PickleTag>& tag)
         {
-            return tag.name;
+            return tag->name;
         }
 
-        std::set<std::string, std::less<>> PickleTagsToSet(const std::vector<cucumber::messages::pickle_tag>& tags)
+        std::set<std::string, std::less<>> PickleTagsToSet(const std::vector<std::shared_ptr<cucumber::messages::PickleTag>>& tags)
         {
             auto tagNames = tags | std::views::transform(TransformPickleTagName);
             return { std::begin(tagNames), std::end(tagNames) };
@@ -169,31 +175,31 @@ namespace cucumber_cpp::library::api
         struct ParseErrorListener : util::Listener
         {
             explicit ParseErrorListener(util::Broadcaster& broadcaster)
-                : Listener{ broadcaster, [this](const cucumber::messages::envelope& envelope)
+                : Listener{ broadcaster, [this](const cucumber::messages::Envelope& envelope)
                     {
                         OnEvent(envelope);
                     } }
             {}
 
-            void OnEvent(const cucumber::messages::envelope& envelope)
+            void OnEvent(const cucumber::messages::Envelope& envelope)
             {
-                if (envelope.parse_error)
-                    parseErrors.push_back(*envelope.parse_error);
+                if (envelope.parseError)
+                    parseErrors.push_back(*envelope.parseError.value());
             }
 
-            [[nodiscard]] const std::vector<cucumber::messages::parse_error>& GetParseErrors() const
+            [[nodiscard]] const std::vector<cucumber::messages::ParseError>& GetParseErrors() const
             {
                 return parseErrors;
             }
 
         private:
-            std::vector<cucumber::messages::parse_error> parseErrors;
+            std::vector<cucumber::messages::ParseError> parseErrors;
         };
     }
 
     bool RunCucumber(const support::RunOptions& options, cucumber_expression::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
-        cucumber::gherkin::id_generator_ptr idGenerator = std::make_shared<cucumber::gherkin::id_generator>();
+        cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
 
         support::UndefinedParameters undefinedParameters;
         support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
@@ -206,10 +212,8 @@ namespace cucumber_cpp::library::api
             .undefinedParameters = undefinedParameters,
         };
 
-        query::Query query{ broadcaster };
-
         const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
-        const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, query);
+        const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, broadcaster);
 
         ParseErrorListener parseErrorListener{ broadcaster };
         auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
@@ -218,9 +222,9 @@ namespace cucumber_cpp::library::api
         {
             for (const auto& parseError : parseErrors)
             {
-                const auto uri = parseError.source.uri.value_or("unknown source");
-                const auto line = parseError.source.location.has_value() ? fmt::format(":{}", parseError.source.location->line) : "";
-                const auto column = parseError.source.location.has_value() && parseError.source.location->column.has_value() ? fmt::format(":{}", parseError.source.location->column.value()) : "";
+                const auto uri = parseError.source->uri.value_or("unknown source");
+                const auto line = parseError.source->location.has_value() ? fmt::format(":{}", parseError.source->location.value()->line) : "";
+                const auto column = parseError.source->location.has_value() && parseError.source->location.value()->column.has_value() ? fmt::format(":{}", parseError.source->location.value()->column.value()) : "";
 
                 const auto messageStart = parseError.message.find(": ");
                 const auto message = messageStart != std::string::npos ? parseError.message.substr(messageStart + 2) : parseError.message;

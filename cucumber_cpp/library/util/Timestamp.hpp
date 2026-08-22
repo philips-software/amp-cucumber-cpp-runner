@@ -1,8 +1,8 @@
 #ifndef UTIL_TIMESTAMP_HPP
 #define UTIL_TIMESTAMP_HPP
 
-#include "cucumber/messages/duration.hpp"
-#include "cucumber/messages/timestamp.hpp"
+#include "cucumber/messages/Duration.hpp"
+#include "cucumber/messages/Timestamp.hpp"
 #include <chrono>
 #include <cstddef>
 #include <string>
@@ -15,12 +15,16 @@ namespace cucumber_cpp::library::util
 
     struct TimestampGenerator
     {
-    protected:
         TimestampGenerator();
-        ~TimestampGenerator();
+        virtual ~TimestampGenerator();
 
-    public:
+        TimestampGenerator(const TimestampGenerator&) = delete;
+        TimestampGenerator& operator=(const TimestampGenerator&) = delete;
+        TimestampGenerator(TimestampGenerator&&) = delete;
+        TimestampGenerator& operator=(TimestampGenerator&&) = delete;
+
         static TimestampGenerator& Instance();
+        static void SetInstance(TimestampGenerator& inst);
         virtual std::chrono::milliseconds Now() = 0;
 
     private:
@@ -34,11 +38,11 @@ namespace cucumber_cpp::library::util
         std::chrono::milliseconds Now() override;
     };
 
-    cucumber::messages::timestamp TimestampNow();
+    cucumber::messages::Timestamp TimestampNow();
 
-    cucumber::messages::duration operator-(const cucumber::messages::timestamp& lhs, const cucumber::messages::timestamp& rhs);
+    cucumber::messages::Duration operator-(const cucumber::messages::Timestamp& lhs, const cucumber::messages::Timestamp& rhs);
 
-    std::string MakeIso8601Timestamp(const cucumber::messages::timestamp& timestamp);
+    std::string MakeIso8601Timestamp(const cucumber::messages::Timestamp& timestamp);
 }
 
 namespace cucumber::messages

@@ -2,8 +2,8 @@
   "cmake.useCMakePresets": "always",
   "cucumberautocomplete.steps": [
     "compatibility/*/*.cpp",
-    "cucumber_cpp/example/steps/*.cpp",
-    "cucumber_cpp/acceptance_test/steps/*.cpp"
+    "cucumber_cpp/example/*/*.cpp",
+    "cucumber_cpp/acceptance_test/*/*.cpp"
   ],
   "cucumberautocomplete.gherkinDefinitionPart": "(GIVEN|WHEN|THEN|STEP)\\(",
   "cucumberautocomplete.customParameters": [
@@ -26,5 +26,8 @@
     "connectionId": "philips-software",
     "projectKey": "philips-software_amp-cucumber-cpp-runner"
   },
-  "cmake.postRunCoverageTarget": "generate-coverage-report"
+  "cmake.postRunCoverageTarget": "generate-coverage-report",
+  "cmake.coverageInfoFiles": [
+    "${workspaceFolder}/.build/Coverage/lcov.info"
+  ]
 }

@@ -8,7 +8,7 @@
 
 namespace
 {
-    const std::filesystem::path compatibilityPath = std::filesystem::path{ KIT_FOLDER };
+    const std::filesystem::path compatibilityPath = std::filesystem::path{ std::source_location::current().file_name() }.parent_path();
 }
 
 WHEN(R"(a JPEG image is attached)")

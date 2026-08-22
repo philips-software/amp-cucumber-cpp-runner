@@ -1,24 +1,26 @@
 #include "cucumber_cpp/library/formatter/helper/PrintMessages.hpp"
-#include "cucumber/messages/attachment.hpp"
-#include "cucumber/messages/feature.hpp"
-#include "cucumber/messages/hook.hpp"
-#include "cucumber/messages/pickle.hpp"
-#include "cucumber/messages/pickle_step.hpp"
-#include "cucumber/messages/rule.hpp"
-#include "cucumber/messages/scenario.hpp"
-#include "cucumber/messages/step.hpp"
-#include "cucumber/messages/step_definition.hpp"
-#include "cucumber/messages/test_step.hpp"
-#include "cucumber/messages/test_step_finished.hpp"
-#include "cucumber/messages/test_step_result_status.hpp"
+#include "cucumber/messages/Attachment.hpp"
+#include "cucumber/messages/Feature.hpp"
+#include "cucumber/messages/Hook.hpp"
+#include "cucumber/messages/Pickle.hpp"
+#include "cucumber/messages/PickleStep.hpp"
+#include "cucumber/messages/Rule.hpp"
+#include "cucumber/messages/Scenario.hpp"
+#include "cucumber/messages/Step.hpp"
+#include "cucumber/messages/StepDefinition.hpp"
+#include "cucumber/messages/TestStep.hpp"
+#include "cucumber/messages/TestStepFinished.hpp"
+#include "cucumber/messages/TestStepResultStatus.hpp"
+#include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/FormatMessages.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "cucumber_cpp/library/query/Query.hpp"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
 #include <algorithm>
 #include <cstddef>
+#include <list>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <ranges>
@@ -41,17 +43,17 @@ namespace cucumber_cpp::library::formatter::helper
         }
     }
 
-    void PrintFeatureLine(std::ostream& stream, const cucumber::messages::feature& feature, const Theme& theme)
+    void PrintFeatureLine(std::ostream& stream, const cucumber::messages::Feature& feature, const Theme& theme)
     {
         fmt::println(stream, "\n{}", FormatFeatureTitle(feature, theme));
     }
 
-    void PrintRuleLine(std::ostream& stream, const cucumber::messages::rule& rule, const Theme& theme)
+    void PrintRuleLine(std::ostream& stream, const cucumber::messages::Rule& rule, const Theme& theme)
     {
         fmt::println(stream, "\n{}{}", std::string(gherkinIndentLength, ' '), FormatRuleTitle(rule, theme));
     }
 
-    void PrintTags(std::ostream& stream, const cucumber::messages::pickle& pickle, std::size_t scenarioIndent, const Theme& theme)
+    void PrintTags(std::ostream& stream, const cucumber::messages::Pickle& pickle, std::size_t scenarioIndent, const Theme& theme)
     {
         if (pickle.tags.empty())
             return;
@@ -59,7 +61,7 @@ namespace cucumber_cpp::library::formatter::helper
         fmt::println(stream, "{}{}", std::string(scenarioIndent, ' '), FormatPickleTags(pickle, theme));
     }
 
-    void PrintScenarioLine(std::ostream& stream, const cucumber::messages::pickle& pickle, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme)
+    void PrintScenarioLine(std::ostream& stream, const cucumber::messages::Pickle& pickle, const cucumber::messages::Scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme)
     {
         PrintGherkinLine(stream,
             FormatPickleTitle(pickle, scenario, theme),
@@ -68,7 +70,7 @@ namespace cucumber_cpp::library::formatter::helper
             maxContentLength, theme);
     }
 
-    void PrintScenarioAttemptLine(std::ostream& stream, const cucumber::messages::pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme)
+    void PrintScenarioAttemptLine(std::ostream& stream, const cucumber::messages::Pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::Scenario& scenario, std::size_t scenarioIndent, std::size_t maxContentLength, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
             FormatPickleAttemptTitle(pickle, attempt, retry, scenario, theme),
@@ -77,23 +79,23 @@ namespace cucumber_cpp::library::formatter::helper
             maxContentLength, theme);
     }
 
-    void PrintHookLine(std::ostream& stream, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::hook& hook, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const Theme& theme)
+    void PrintHookLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::Hook& hook, std::size_t scenarioIndent, std::size_t maxContentLength, bool isBeforeHook, bool useStatusIcon, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
-            helper::FormatHookTitle(hook, testStepFinished.test_step_result.status, isBeforeHook, useStatusIcon, theme),
-            helper::FormatCodeLocation(hook.source_reference, theme),
+            helper::FormatHookTitle(hook, testStepFinished.testStepResult->status, isBeforeHook, useStatusIcon, theme),
+            helper::FormatCodeLocation(*hook.sourceReference, theme),
             scenarioIndent + 2, maxContentLength, theme);
     }
 
-    void PrintStepLine(std::ostream& stream, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, const cucumber::messages::pickle_step& pickleStep, const cucumber::messages::step& step, const cucumber::messages::step_definition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const Theme& theme)
+    void PrintStepLine(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, const cucumber::messages::TestStep& testStep, const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::Step& step, const cucumber::messages::StepDefinition* stepDefinition, std::size_t scenarioIndent, std::size_t maxContentLength, bool useStatusIcon, const Theme& theme) // NOSONAR: cohesive print helper
     {
         PrintGherkinLine(stream,
-            helper::FormatStepTitle(testStep, pickleStep, step, testStepFinished.test_step_result.status, useStatusIcon, theme),
+            helper::FormatStepTitle(testStep, pickleStep, step, testStepFinished.testStepResult->status, useStatusIcon, theme),
             helper::FormatCodeLocation(stepDefinition, theme),
             scenarioIndent + 2, maxContentLength, theme);
     }
 
-    void PrintStepArgument(std::ostream& stream, const cucumber::messages::pickle_step& pickleStep, std::size_t scenarioIndent, bool useStatusIcon, const helper::Theme& theme)
+    void PrintStepArgument(std::ostream& stream, const cucumber::messages::PickleStep& pickleStep, std::size_t scenarioIndent, bool useStatusIcon, const helper::Theme& theme)
     {
         const auto content = FormatPickleStepArgument(pickleStep, theme);
         if (content.empty())
@@ -102,12 +104,15 @@ namespace cucumber_cpp::library::formatter::helper
         PrintlnIndentedContent(stream, content, scenarioIndent + gherkinIndentLength + stepArgumentIndentLength + (useStatusIcon ? gherkinIndentLength : 0));
     }
 
-    void PrintAmbiguousStep(std::ostream& stream, const query::Query& query, const cucumber::messages::test_step_finished& testStepFinished, const cucumber::messages::test_step& testStep, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
+    void PrintAmbiguousStep(std::ostream& stream, const cucumber::query::Query& query, const cucumber::messages::TestStepFinished& testStepFinished, const std::shared_ptr<const cucumber::messages::TestStep>& testStep, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
     {
-        if (testStepFinished.test_step_result.status != cucumber::messages::test_step_result_status::AMBIGUOUS)
+        if (testStepFinished.testStepResult->status != cucumber::messages::TestStepResultStatus::AMBIGUOUS)
             return;
 
-        const auto list = query.FindStepDefinitionsById(testStep);
+        const auto stepDefinitions = query.FindStepDefinitionsBy(testStep);
+        std::list<const cucumber::messages::StepDefinition*> list;
+        for (const auto& stepDefinition : stepDefinitions)
+            list.push_back(stepDefinition.get());
         const auto content = FormatAmbiguousStep(list, theme);
 
         if (content.empty())
@@ -116,9 +121,9 @@ namespace cucumber_cpp::library::formatter::helper
         PrintlnIndentedContent(stream, content, scenarioIndent + gherkinIndentLength + errorIndentLength + (useStatusIcon ? gherkinIndentLength : 0));
     }
 
-    void PrintError(std::ostream& stream, const cucumber::messages::test_step_finished& testStepFinished, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
+    void PrintError(std::ostream& stream, const cucumber::messages::TestStepFinished& testStepFinished, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
     {
-        const auto content = FormatTestStepResultError(testStepFinished.test_step_result, theme);
+        const auto content = FormatTestStepResultError(*testStepFinished.testStepResult, theme);
         if (content.empty())
             return;
 
@@ -136,7 +141,7 @@ namespace cucumber_cpp::library::formatter::helper
         PrintlnIndentedContent(stream, content, indent);
     }
 
-    void PrintAttachment(std::ostream& stream, const cucumber::messages::attachment& attachment, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
+    void PrintAttachment(std::ostream& stream, const cucumber::messages::Attachment& attachment, std::size_t scenarioIndent, bool useStatusIcon, const Theme& theme)
     {
         const auto content = FormatAttachment(attachment, theme);
         const std::string indentStr(scenarioIndent + helper::gherkinIndentLength + helper::attachmentIndentLength + (useStatusIcon ? helper::gherkinIndentLength : 0), ' ');

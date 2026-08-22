@@ -1,7 +1,7 @@
 #ifndef FORMATTER_JUNIT_XML_FORMATTER_HPP
 #define FORMATTER_JUNIT_XML_FORMATTER_HPP
 
-#include "cucumber/messages/envelope.hpp"
+#include "cucumber/messages/Envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "nlohmann/json.hpp"
 #include "pugixml.hpp"
@@ -26,7 +26,7 @@ namespace cucumber_cpp::library::formatter
             const std::optional<std::string> testClassName;
         };
 
-        void OnEnvelope(const cucumber::messages::envelope& envelope) override;
+        void OnEnvelope(const cucumber::messages::Envelope& envelope) override;
         void HandleTestRunFinished();
 
         Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };
