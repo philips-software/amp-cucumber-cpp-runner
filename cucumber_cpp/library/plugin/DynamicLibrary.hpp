@@ -47,6 +47,8 @@ namespace cucumber_cpp::library::plugin
     template<class FnPtr>
     FnPtr DynamicLibrary::GetSymbol(std::string_view name) const
     {
+        static_assert(sizeof(FnPtr) == sizeof(void*), "GetSymbol requires function pointers to be the same size as void*");
+
         // Object-pointer to function-pointer conversion is not portable via a cast;
         // copying the bits is the POSIX-recommended, well-defined idiom for dlsym.
         void* address = GetSymbolAddress(name);
