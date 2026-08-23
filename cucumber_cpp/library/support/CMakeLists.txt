@@ -28,7 +28,7 @@ target_link_libraries(cucumber_cpp.library.support PUBLIC
     GTest::gtest
     GTest::gmock
     cucumber_cpp.library.cucumber_expression
-    cucumber_cpp.library.tag_expression
+    cucumber::tag_expressions
     cucumber_cpp.library.util
     fmt::fmt
 )

@@ -4,8 +4,8 @@
 #include "cucumber/messages/GherkinDocument.hpp"
 #include "cucumber/messages/Location.hpp"
 #include "cucumber/messages/Pickle.hpp"
-#include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include <cstddef>
+#include <cucumber/tag-expressions/Model.hpp>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -26,7 +26,7 @@ namespace cucumber_cpp::library::support
         struct Sources
         {
             std::set<std::filesystem::path, std::less<>> paths{};
-            std::unique_ptr<tag_expression::Expression> tagExpression;
+            std::unique_ptr<cucumber::tag_expressions::Expression> tagExpression;
             Ordering ordering{ Ordering::defined };
 
         } sources;
@@ -38,7 +38,7 @@ namespace cucumber_cpp::library::support
             bool failGlobalHookFast{ false };
             std::size_t retry{ 0 };
             bool strict{ true };
-            std::unique_ptr<tag_expression::Expression> retryTagExpression{};
+            std::unique_ptr<cucumber::tag_expressions::Expression> retryTagExpression{};
             bool featureHooks{ false };
         } runtime;
 

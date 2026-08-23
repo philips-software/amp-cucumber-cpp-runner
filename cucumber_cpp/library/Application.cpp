@@ -6,6 +6,7 @@
 #include "CLI/Validators.hpp"
 #include "CLI/impl/App_inl.hpp"
 #include "cucumber/gherkin/Demangle.hpp"
+#include "cucumber/tag-expressions/Parser.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
@@ -15,7 +16,6 @@
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
 #include "fmt/base.h"
@@ -247,7 +247,7 @@ namespace cucumber_cpp::library
         const auto runOptions = support::RunOptions{
             .sources = {
                 .paths = GetFeatureFiles(options),
-                .tagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.tags, " "))),
+                .tagExpression = cucumber::tag_expressions::Parse(fmt::to_string(fmt::join(options.tags, " "))),
                 .ordering = options.ordering,
             },
             .runtime = {
@@ -256,7 +256,7 @@ namespace cucumber_cpp::library
                 .failGlobalHookFast = options.failGlobalHookFast,
                 .retry = options.retry,
                 .strict = options.strict,
-                .retryTagExpression = tag_expression::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
+                .retryTagExpression = cucumber::tag_expressions::Parse(fmt::to_string(fmt::join(options.retryTagFilter, " "))),
                 .featureHooks = options.featureHooks,
             },
         };

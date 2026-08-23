@@ -2,10 +2,10 @@
 #define CUCUMBER_CPP_HOOKREGISTRY_HPP
 
 #include "cucumber/gherkin/IdGenerator.hpp"
-#include "cucumber_cpp/library/tag_expression/Model.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include <cstddef>
+#include <cucumber/tag-expressions/Model.hpp>
 #include <functional>
 #include <map>
 #include <memory>
@@ -18,7 +18,6 @@
 
 namespace cucumber_cpp::library::support
 {
-
     struct HookMatch
     {
         explicit HookMatch(util::HookFactory factory)
@@ -36,7 +35,7 @@ namespace cucumber_cpp::library::support
 
             util::HookData data;
 
-            std::unique_ptr<tag_expression::Expression> tagExpression;
+            std::unique_ptr<cucumber::tag_expressions::Expression> tagExpression;
             util::HookFactory factory;
         };
 
