@@ -2,10 +2,10 @@
 #define CUCUMBER_CPP_HOOKREGISTRY_HPP
 
 #include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/tag-expressions/Model.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include <cstddef>
-#include <cucumber/tag-expressions/Model.hpp>
 #include <functional>
 #include <map>
 #include <memory>

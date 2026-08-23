@@ -4,8 +4,8 @@
 #include "cucumber/messages/GherkinDocument.hpp"
 #include "cucumber/messages/Location.hpp"
 #include "cucumber/messages/Pickle.hpp"
+#include "cucumber/tag-expressions/Model.hpp"
 #include <cstddef>
-#include <cucumber/tag-expressions/Model.hpp>
 #include <filesystem>
 #include <functional>
 #include <memory>
