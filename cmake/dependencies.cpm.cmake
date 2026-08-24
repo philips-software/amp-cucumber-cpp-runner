@@ -13,10 +13,10 @@ ccr_dependency(NLOHMANN_JSON            v3.12.0    55f93686c01528224f448c1912883
 ccr_dependency(CUCUMBER_MESSAGES        v34.0.0    8cd6cacecd0a657095c93b069c850f51009e0499)
 # renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
 ccr_dependency(CUCUMBER_GHERKIN         v42.0.0    85b41deb147e18421fe1023a0c496558caccaaa9)
-# renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_QUERY           v1.0.0    2d432352bb6d82c4092ce8b33f280149b1f7fcea)
-# renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0    2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
+# renovate: datasource=github-tags packageName=cucumber/query versioning=semver
+ccr_dependency(CUCUMBER_QUERY           v1.0.0     2d432352bb6d82c4092ce8b33f280149b1f7fcea)
+# renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
+ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0     2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
 # renovate: datasource=github-tags packageName=google/googletest versioning=semver
 ccr_dependency(GOOGLE_TEST              v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
 # renovate: datasource=github-tags packageName=CLIUtils/CLI11 versioning=semver
@@ -88,7 +88,7 @@ if(CCR_FETCH_DEPS)
     # cucumber_gherkin
     # ---------------------------------------------------------------------------
     CPMAddPackage(
-        URI "gh:cucumber/gherkin#${CUCUMBER_GHERKIN_DIGEST}"
+        URI "gh:cucumber/gherkin@${CUCUMBER_GHERKIN_VERSION}#${CUCUMBER_GHERKIN_DIGEST}"
         NAME cucumber_gherkin
         SOURCE_SUBDIR cpp
     )
@@ -97,7 +97,7 @@ if(CCR_FETCH_DEPS)
     # cucumber_query
     # ---------------------------------------------------------------------------
     CPMAddPackage(
-        URI "gh:cucumber/query#${CUCUMBER_QUERY_DIGEST}"
+        URI "gh:cucumber/query@${CUCUMBER_QUERY_VERSION}#${CUCUMBER_QUERY_DIGEST}"
         NAME cucumber_query
         SOURCE_SUBDIR cpp
     )
@@ -106,7 +106,7 @@ if(CCR_FETCH_DEPS)
     # cucumber_tag_expressions
     # ---------------------------------------------------------------------------
     CPMAddPackage(
-        URI "gh:cucumber/tag-expressions#${CUCUMBER_TAG_EXPRESSIONS_DIGEST}"
+        URI "gh:cucumber/tag-expressions@${CUCUMBER_TAG_EXPRESSIONS_VERSION}#${CUCUMBER_TAG_EXPRESSIONS_DIGEST}"
         NAME cucumber_tag_expressions
         SOURCE_SUBDIR cpp
     )
@@ -193,6 +193,8 @@ else()
     find_package(nlohmann_json ${NLOHMANN_JSON_VERSION} REQUIRED)
     find_package(cucumber_messages ${CUCUMBER_MESSAGES_VERSION} REQUIRED)
     find_package(cucumber_gherkin ${CUCUMBER_GHERKIN_VERSION} REQUIRED)
+    find_package(cucumber_query ${CUCUMBER_QUERY_VERSION} REQUIRED)
+    find_package(cucumber_tag_expressions ${CUCUMBER_TAG_EXPRESSIONS_VERSION} REQUIRED)
     find_package(GTest REQUIRED)
     find_package(pugixml ${PUGIXML_VERSION} REQUIRED)
     find_package(fmt ${LIBFMT_VERSION} REQUIRED)
