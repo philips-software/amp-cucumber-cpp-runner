@@ -16,17 +16,17 @@ target_include_directories(cucumber_cpp.library PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library PUBLIC
-    GTest::gtest
-    GTest::gmock
-    cucumber_gherkin_lib
+    CLI11::CLI11
     cucumber_cpp.library.api
     cucumber_cpp.library.engine
-    cucumber_cpp.library.plugin
-    cucumber_cpp.library.tag_expression
-    cucumber_cpp.library.util
     cucumber_cpp.library.formatter
+    cucumber_cpp.library.plugin
     cucumber_cpp.library.support
-    CLI11::CLI11
+    cucumber_cpp.library.util
+    cucumber_gherkin_lib
+    cucumber::tag_expressions
+    GTest::gmock
+    GTest::gtest
 )
 
 target_compile_options(cucumber_cpp.library
@@ -45,7 +45,6 @@ add_subdirectory(formatter)
 add_subdirectory(plugin)
 add_subdirectory(runtime)
 add_subdirectory(support)
-add_subdirectory(tag_expression)
 add_subdirectory(util)
 
 if (CCR_BUILD_TESTS)

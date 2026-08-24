@@ -1,9 +1,9 @@
 
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
+#include "cucumber/tag-expressions/Parser.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "cucumber_cpp/library/tag_expression/Parser.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include <cstddef>
@@ -47,7 +47,7 @@ namespace cucumber_cpp::library::support
             .name = name,
             .sourceLocation = sourceLocation,
         }
-        , tagExpression{ tag_expression::Parse(expression.value_or("")) }
+        , tagExpression{ cucumber::tag_expressions::Parse(expression.value_or("")) }
         , factory{ factory }
     {}
 
