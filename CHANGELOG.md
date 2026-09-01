@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.2.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.1.0...v4.2.0) (2026-09-01)
+
+
+### Features
+
+* Add plugin support ([#378](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/378)) ([71acefc](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/71acefce7b03a9d96eebe445b5e2080354f90c5c))
+* Expose scenario information in scenario and step hooks ([#369](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/369)) ([fae5994](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/fae5994294754a0a024c20d219370b66928cdb68))
+* Use cucumber/tag-expressions ([#385](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/385)) ([c4c1bd5](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/c4c1bd567c57fc3b52b96c6837da1f1adc41e69e))
+
+
+### Bug Fixes
+
+* Add early parse-error reporting during feature collection ([#369](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/369)) ([fae5994](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/fae5994294754a0a024c20d219370b66928cdb68))
+* Catch exceptions while constructing a step fixture ([#364](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/364)) ([ca918d5](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/ca918d5d7bf8e00af49e4ea6af3395a024302761))
+
+
+### Chores
+
+* Update cucumber messages and gherkin versions ([#376](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/376)) ([0d8152f](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/0d8152f2dfaaa55596c570c072f1ca1efe2de224))
+
 ## [4.1.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.0.1...v4.1.0) (2026-07-03)
 
 
