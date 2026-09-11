@@ -5,32 +5,35 @@ macro(ccr_dependency PREFIX TAG DIGEST)
 endmacro()
 
 # renovate: datasource=github-tags packageName=cpm-cmake/CPM.cmake versioning=semver
-ccr_dependency(CPM_DOWNLOAD             v0.43.1    456cb6754daaa010d57444d0c8ce6d95ecf006ab)
+ccr_dependency(CPM_DOWNLOAD              v0.43.1    456cb6754daaa010d57444d0c8ce6d95ecf006ab)
 set(CPM_DOWNLOAD_SHA256 "1c40fc102ce9625d7de7eb14f541cab30cc3138dca627f0b0ec40293ce6c2934")
 # renovate: datasource=github-tags packageName=nlohmann/json versioning=semver
-ccr_dependency(NLOHMANN_JSON            v3.12.0    55f93686c01528224f448c19128836e7df245f72)
-# renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
-ccr_dependency(CUCUMBER_MESSAGES        v34.0.0    8cd6cacecd0a657095c93b069c850f51009e0499)
-# renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_GHERKIN         v42.0.0    85b41deb147e18421fe1023a0c496558caccaaa9)
-# renovate: datasource=github-tags packageName=cucumber/query versioning=semver
-ccr_dependency(CUCUMBER_QUERY           v1.0.0     2d432352bb6d82c4092ce8b33f280149b1f7fcea)
-# renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
-ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0     2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
+ccr_dependency(NLOHMANN_JSON             v3.12.0    55f93686c01528224f448c19128836e7df245f72)
 # renovate: datasource=github-tags packageName=google/googletest versioning=semver
-ccr_dependency(GOOGLE_TEST              v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
+ccr_dependency(GOOGLE_TEST               v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
 # renovate: datasource=github-tags packageName=CLIUtils/CLI11 versioning=semver
-ccr_dependency(CLI11                    v2.6.2     37bb6edc5317e99af72ef48405e65d9ca5218861)
+ccr_dependency(CLI11                     v2.6.2     37bb6edc5317e99af72ef48405e65d9ca5218861)
 # renovate: datasource=github-tags packageName=fmtlib/fmt versioning=semver
-ccr_dependency(LIBFMT                   v12.1.0    407c905e45ad75fc29bf0f9bb7c5c2fd3475976f)
+ccr_dependency(LIBFMT                    v12.1.0    407c905e45ad75fc29bf0f9bb7c5c2fd3475976f)
 # renovate: datasource=github-tags packageName=zeux/pugixml versioning=semver
-ccr_dependency(PUGIXML                  v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38)
+ccr_dependency(PUGIXML                   v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38)
 # renovate: datasource=github-tags packageName=abseil/abseil-cpp
-ccr_dependency(ABSEIL_CPP               20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
+ccr_dependency(ABSEIL_CPP                20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
 # renovate: datasource=github-tags packageName=google/re2
-ccr_dependency(RE2                      2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
+ccr_dependency(RE2                       2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
 # renovate: datasource=github-tags packageName=jbeder/yaml-cpp versioning=semver
-ccr_dependency(YAML_CPP                 v0.9.0     56e3bb550c91fd7005566f19c079cb7a503223cf)
+ccr_dependency(YAML_CPP                  v0.9.0     56e3bb550c91fd7005566f19c079cb7a503223cf)
+
+# renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
+ccr_dependency(CUCUMBER_MESSAGES         v34.0.0    c5d7095dedb23fcd89ea79e7e7e59f50e3fe66ee)
+# renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
+ccr_dependency(CUCUMBER_GHERKIN          v42.0.0    02b3efa97a9f88091208fd5476348a24d4aa437c)
+# renovate: datasource=github-tags packageName=cucumber/query versioning=semver
+ccr_dependency(CUCUMBER_QUERY            v1.0.0     282005f191441dc15c74c5d8c9a279327d4ac446)
+# renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
+ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0      2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
+# renovate: datasource=github-tags packageName=cucumber/pretty-formatter versioning=semver
+ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     792b8910370910a36f65d1a01b21759868ca36e2)
 
 if(CCR_FETCH_DEPS)
     if(NOT COMMAND CPMAddPackage)
@@ -76,6 +79,74 @@ if(CCR_FETCH_DEPS)
     )
 
     # ---------------------------------------------------------------------------
+    # GoogleTest
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:google/googletest@${GOOGLE_TEST_VERSION}#${GOOGLE_TEST_DIGEST}"
+        NAME googletest
+        OPTIONS
+            "INSTALL_GTEST OFF"
+            "gtest_force_shared_crt ON"
+    )
+
+    if (TARGET gtest)
+        set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
+            FOLDER External/GoogleTest
+        )
+        target_compile_options(gtest PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
+        target_compile_options(gmock PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
+    endif()
+
+    # ---------------------------------------------------------------------------
+    # cli11
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:CLIUtils/CLI11@${CLI11_VERSION}#${CLI11_DIGEST}"
+        NAME cli11
+    )
+
+    # ---------------------------------------------------------------------------
+    # libfmt
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:fmtlib/fmt@${LIBFMT_VERSION}#${LIBFMT_DIGEST}"
+        NAME fmt
+        OPTIONS
+            "FMT_INSTALL ON"
+    )
+
+    # ---------------------------------------------------------------------------
+    # pugixml
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:zeux/pugixml@${PUGIXML_VERSION}#${PUGIXML_DIGEST}"
+        NAME pugixml
+    )
+
+    if (CCR_USE_RE2)
+        # ---------------------------------------------------------------------------
+        # abseil-cpp
+        # ---------------------------------------------------------------------------
+        CPMAddPackage(
+            URI "gh:abseil/abseil-cpp@${ABSEIL_CPP_VERSION}#${ABSEIL_CPP_DIGEST}"
+            NAME abseil-cpp
+            OPTIONS
+                "ABSL_PROPAGATE_CXX_STD ON"
+                "ABSL_ENABLE_INSTALL ON"
+        )
+
+        # ---------------------------------------------------------------------------
+        # re2
+        # ---------------------------------------------------------------------------
+        CPMAddPackage(
+            URI "gh:google/re2#${RE2_DIGEST}"
+            NAME re2
+            OPTIONS
+                "RE2_BUILD_TESTING OFF"
+        )
+    endif()
+
+    # ---------------------------------------------------------------------------
     # cucumber_messages
     # ---------------------------------------------------------------------------
     CPMAddPackage(
@@ -112,70 +183,13 @@ if(CCR_FETCH_DEPS)
     )
 
     # ---------------------------------------------------------------------------
-    # GoogleTest
+    # cucumber_pretty_formatter
     # ---------------------------------------------------------------------------
     CPMAddPackage(
-        URI "gh:google/googletest@${GOOGLE_TEST_VERSION}#${GOOGLE_TEST_DIGEST}"
-        NAME googletest
-        OPTIONS
-            "INSTALL_GTEST OFF"
-            "gtest_force_shared_crt ON"
+        URI "gh:cucumber/pretty-formatter@${CUCUMBER_PRETTY_FORMATTER_VERSION}#${CUCUMBER_PRETTY_FORMATTER_DIGEST}"
+        NAME cucumber_pretty_formatter
+        SOURCE_SUBDIR cpp
     )
-
-    if (TARGET gtest)
-        set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
-            FOLDER External/GoogleTest
-        )
-        target_compile_options(gtest PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
-        target_compile_options(gmock PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
-    endif()
-
-    # ---------------------------------------------------------------------------
-    # cli11
-    # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:CLIUtils/CLI11@${CLI11_VERSION}#${CLI11_DIGEST}"
-        NAME cli11
-    )
-
-    # ---------------------------------------------------------------------------
-    # libfmt
-    # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:fmtlib/fmt@${LIBFMT_VERSION}#${LIBFMT_DIGEST}"
-        NAME libfmt
-    )
-
-    # ---------------------------------------------------------------------------
-    # pugixml
-    # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:zeux/pugixml@${PUGIXML_VERSION}#${PUGIXML_DIGEST}"
-        NAME pugixml
-    )
-
-    if (CCR_USE_RE2)
-        # ---------------------------------------------------------------------------
-        # abseil-cpp
-        # ---------------------------------------------------------------------------
-        CPMAddPackage(
-            URI "gh:abseil/abseil-cpp@${ABSEIL_CPP_VERSION}#${ABSEIL_CPP_DIGEST}"
-            NAME abseil-cpp
-            OPTIONS
-                "ABSL_PROPAGATE_CXX_STD ON"
-                "ABSL_ENABLE_INSTALL ON"
-        )
-
-        # ---------------------------------------------------------------------------
-        # re2
-        # ---------------------------------------------------------------------------
-        CPMAddPackage(
-            URI "gh:google/re2#${RE2_DIGEST}"
-            NAME re2
-            OPTIONS
-                "RE2_BUILD_TESTING OFF"
-        )
-    endif()
 
     if (CCR_BUILD_TESTS)
         # ---------------------------------------------------------------------------
@@ -191,10 +205,6 @@ if(CCR_FETCH_DEPS)
 else()
     find_package(CLI11 ${CLI11_VERSION} REQUIRED)
     find_package(nlohmann_json ${NLOHMANN_JSON_VERSION} REQUIRED)
-    find_package(cucumber_messages ${CUCUMBER_MESSAGES_VERSION} REQUIRED)
-    find_package(cucumber_gherkin ${CUCUMBER_GHERKIN_VERSION} REQUIRED)
-    find_package(cucumber_query ${CUCUMBER_QUERY_VERSION} REQUIRED)
-    find_package(cucumber_tag_expressions ${CUCUMBER_TAG_EXPRESSIONS_VERSION} REQUIRED)
     find_package(GTest REQUIRED)
     find_package(pugixml ${PUGIXML_VERSION} REQUIRED)
     find_package(fmt ${LIBFMT_VERSION} REQUIRED)
@@ -207,4 +217,9 @@ else()
     if (CCR_BUILD_TESTS)
         find_package(yaml-cpp ${YAML_CPP_VERSION} REQUIRED)
     endif()
+
+    find_package(cucumber_messages ${CUCUMBER_MESSAGES_VERSION} REQUIRED)
+    find_package(cucumber_gherkin ${CUCUMBER_GHERKIN_VERSION} REQUIRED)
+    find_package(cucumber_query ${CUCUMBER_QUERY_VERSION} REQUIRED)
+    find_package(cucumber_tag_expressions ${CUCUMBER_TAG_EXPRESSIONS_VERSION} REQUIRED)
 endif()
