@@ -52,11 +52,10 @@ namespace cucumber_cpp::library::runtime
 
         cucumber::messages::TestStep Assemble(const std::string& step, const support::SupportCodeLibrary& supportCodeLibrary, const util::TestStepStarted& testStepStarted)
         {
-            cucumber::messages::TestStep testStep{
-                .id = testStepStarted.testStepId,
-                .stepDefinitionIds = std::vector<std::string>{},
-                .stepMatchArgumentsLists = std::vector<std::shared_ptr<cucumber::messages::StepMatchArgumentsList>>{}
-            };
+            cucumber::messages::TestStep testStep;
+            testStep.id = testStepStarted.testStepId;
+            testStep.stepDefinitionIds = std::vector<std::string>{};
+            testStep.stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{};
 
             const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
 
@@ -65,12 +64,15 @@ namespace cucumber_cpp::library::runtime
                                                std::views::filter(HasMatch))
             {
                 testStep.stepDefinitionIds.value().push_back(id);
-                const auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
+                auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back();
                 for (const auto& result : *match)
-                    argumentList->stepMatchArguments.emplace_back(std::make_shared<cucumber::messages::StepMatchArgument>(cucumber::messages::StepMatchArgument{
-                        .group = std::make_shared<cucumber::messages::Group>(util::ArgumentGroupToMessageGroup(result.Group())),
-                        .parameterTypeName = result.Name().empty() ? std::nullopt : std::make_optional(result.Name()),
-                    }));
+                {
+                    cucumber::messages::StepMatchArgument stepMatchArgument;
+                    stepMatchArgument.group = util::ArgumentGroupToMessageGroup(result.Group());
+                    if (!result.Name().empty())
+                        stepMatchArgument.parameterTypeName = result.Name();
+                    argumentList.stepMatchArguments.push_back(stepMatchArgument);
+                }
             }
 
             return testStep;
@@ -96,19 +98,18 @@ namespace cucumber_cpp::library::runtime
                                                                        });
 
             if (testStep.stepDefinitionIds->empty())
-                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
-                                                                               .duration = std::make_shared<cucumber::messages::Duration>(),
-                                                                               .status = cucumber::messages::TestStepResultStatus::UNDEFINED,
-                                                                           },
-                    .text = step };
-
+            {
+                cucumber::messages::TestStepResult status{};
+                status.status = cucumber::messages::TestStepResultStatus::UNDEFINED;
+                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = status, .text = step };
+            }
             else if (testStep.stepDefinitionIds->size() > 1)
-                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = {
-                                                                               .duration = std::make_shared<cucumber::messages::Duration>(),
-                                                                               .message = "Ambiguous step definitions",
-                                                                               .status = cucumber::messages::TestStepResultStatus::AMBIGUOUS,
-                                                                           },
-                    .text = step };
+            {
+                cucumber::messages::TestStepResult status{};
+                status.message = "Ambiguous step definitions";
+                status.status = cucumber::messages::TestStepResultStatus::AMBIGUOUS;
+                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = status, .text = step };
+            }
             else
             {
                 const auto& definition = stepDefinitions.front();
@@ -117,7 +118,7 @@ namespace cucumber_cpp::library::runtime
                 {
                     return definition.factory(testStepResult, nestedTestCaseRunner, broadcaster, testCaseContext, testStepStarted, util::TransformTable(dataTable), util::TransformDocString(docString));
                 };
-                Invoke(nesting, step, bodyFactory, *testStep.stepMatchArgumentsLists->front());
+                Invoke(nesting, step, bodyFactory, testStep.stepMatchArgumentsLists->front());
             }
         }
     }

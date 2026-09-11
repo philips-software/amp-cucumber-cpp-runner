@@ -11,14 +11,14 @@ namespace cucumber_cpp::library::util
 {
     cucumber::messages::Group ArgumentGroupToMessageGroup(const cucumber_expression::ArgumentGroup& argumentGroup)
     {
-        auto messageChildren = argumentGroup.children | std::views::transform([](const auto& child)
-                                                            {
-                                                                return std::make_shared<cucumber::messages::Group>(ArgumentGroupToMessageGroup(child));
-                                                            });
-        return {
-            .children = std::optional<std::vector<std::shared_ptr<cucumber::messages::Group>>>{ std::in_place, messageChildren.begin(), messageChildren.end() },
-            .start = argumentGroup.start,
-            .value = argumentGroup.value,
-        };
+        std::vector<cucumber::messages::Group> messageChildren;
+        for (const auto& child : argumentGroup.children)
+            messageChildren.push_back(ArgumentGroupToMessageGroup(child));
+
+        cucumber::messages::Group group;
+        group.children = std::move(messageChildren);
+        group.start = argumentGroup.start;
+        group.value = argumentGroup.value;
+        return group;
     }
 }

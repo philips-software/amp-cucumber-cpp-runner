@@ -75,8 +75,8 @@ namespace cucumber_cpp::library::engine
                 broadcaster,
                 context,
                 stepOrHookStarted,
-                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*(*pickleStepArgument.dataTable)) : std::nullopt),
-                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*(*pickleStepArgument.docString)) : std::nullopt),
+                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*pickleStepArgument.dataTable) : std::nullopt),
+                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*pickleStepArgument.docString) : std::nullopt),
             };
         };
     }

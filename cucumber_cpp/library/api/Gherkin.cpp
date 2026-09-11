@@ -12,7 +12,6 @@
 #include "cucumber/messages/SourceReference.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include <list>
 #include <memory>
 
@@ -26,18 +25,18 @@ namespace cucumber_cpp::library::api
 
         for (const auto& path : sources.paths)
         {
-            auto source = std::make_shared<cucumber::messages::Source>(cucumber::messages::Source{
-                .uri = path.string(),
-                .data = cucumber::gherkin::Slurp(path.string()),
-            });
-            const auto uri = source->uri;
+            cucumber::messages::Source source{};
+            source.uri = path.string();
+            source.data = cucumber::gherkin::Slurp(path.string());
+            const auto uri = source.uri;
+            const auto data = source.data;
 
             broadcaster.BroadcastEvent(source);
 
             try
             {
-                auto ast = std::make_shared<const cucumber::messages::GherkinDocument>(parser.Parse(uri, source->data));
-                broadcaster.BroadcastEvent(util::MakeShared(*ast));
+                auto ast = std::make_shared<const cucumber::messages::GherkinDocument>(parser.Parse(uri, data));
+                broadcaster.BroadcastEvent(*ast);
 
                 cucumber::gherkin::PickleCompiler pc(idGenerator);
                 pc.Compile(*ast, uri, [&pickleSources, ast, &broadcaster](const cucumber::messages::Pickle& pickle)
@@ -46,31 +45,35 @@ namespace cucumber_cpp::library::api
                             std::make_shared<const cucumber::messages::Pickle>(pickle),
                             ast);
 
-                        broadcaster.BroadcastEvent(util::MakeShared(pickle));
+                        broadcaster.BroadcastEvent(pickle);
                     });
             }
             catch (const cucumber::gherkin::CompositeParserError& compositeError)
             {
                 for (const auto& error : compositeError.Errors())
                 {
-                    broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::ParseError{
-                        .source = util::MakeShared(cucumber::messages::SourceReference{
-                            .uri = uri,
-                            .location = util::MakeShared(error->Location()),
-                        }),
-                        .message = error->what(),
-                    }));
+                    cucumber::messages::SourceReference sourceReference;
+                    sourceReference.uri = uri;
+                    sourceReference.location = error->Location();
+
+                    cucumber::messages::ParseError parseError;
+                    parseError.source = sourceReference;
+                    parseError.message = error->what();
+
+                    broadcaster.BroadcastEvent(parseError);
                 }
             }
             catch (const cucumber::gherkin::ParserError& error)
             {
-                broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::ParseError{
-                    .source = util::MakeShared(cucumber::messages::SourceReference{
-                        .uri = uri,
-                        .location = util::MakeShared(error.Location()),
-                    }),
-                    .message = error.what(),
-                }));
+                cucumber::messages::SourceReference sourceReference;
+                sourceReference.uri = uri;
+                sourceReference.location = error.Location();
+
+                cucumber::messages::ParseError parseError;
+                parseError.source = sourceReference;
+                parseError.message = error.what();
+
+                broadcaster.BroadcastEvent(parseError);
             }
         }
 

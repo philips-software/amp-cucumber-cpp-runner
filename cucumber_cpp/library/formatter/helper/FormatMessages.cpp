@@ -39,12 +39,12 @@ namespace cucumber_cpp::library::formatter::helper
     {
         std::vector<std::size_t> CalculateColumnWidths(const cucumber::messages::PickleTable& pickleDataTable)
         {
-            std::vector<std::size_t> columnWidths(pickleDataTable.rows.empty() ? 0 : pickleDataTable.rows.front()->cells.size(), 0);
+            std::vector<std::size_t> columnWidths(pickleDataTable.rows.empty() ? 0 : pickleDataTable.rows.front().cells.size(), 0);
 
             for (const auto& row : pickleDataTable.rows)
-                for (std::size_t colIndex = 0; colIndex < row->cells.size(); ++colIndex)
+                for (std::size_t colIndex = 0; colIndex < row.cells.size(); ++colIndex)
                 {
-                    const auto cellContentLength = row->cells[colIndex]->value.length();
+                    const auto cellContentLength = row.cells[colIndex].value.length();
                     columnWidths[colIndex] = std::max(columnWidths[colIndex], cellContentLength);
                 }
 
@@ -88,16 +88,15 @@ namespace cucumber_cpp::library::formatter::helper
         return builder.Build(theme.scenario.all);
     }
 
-    std::string FormatPickleLocation(const cucumber::messages::Pickle& pickle, const std::shared_ptr<const cucumber::messages::Location>& location, const Theme& theme)
+    std::string FormatPickleLocation(const cucumber::messages::Pickle& pickle, const cucumber::messages::Location& location, const Theme& theme)
     {
         TextBuilder builder{};
 
         builder.Append("#")
             .Space()
             .Append(pickle.uri);
-        if (location)
-            builder.Append(":")
-                .Append(std::to_string(location->line));
+        builder.Append(":")
+            .Append(std::to_string(location.line));
 
         return builder.Build(theme.location);
     }
@@ -109,12 +108,12 @@ namespace cucumber_cpp::library::formatter::helper
 
         if (stepMatchArgumentsLists && stepMatchArgumentsLists->size() == 1)
         {
-            const auto& stepMatchArguments = stepMatchArgumentsLists->front()->stepMatchArguments;
+            const auto& stepMatchArguments = stepMatchArgumentsLists->front().stepMatchArguments;
             std::size_t currentIndex = 0;
 
             for (const auto& argument : stepMatchArguments)
             {
-                const auto& group = *argument->group;
+                const auto& group = argument.group;
 
                 if (group.value.has_value() && group.start.has_value())
                 {
@@ -148,7 +147,7 @@ namespace cucumber_cpp::library::formatter::helper
 
             if (sourceReference.location.has_value())
                 builder.Append(":")
-                    .Append(std::to_string(sourceReference.location.value()->line));
+                    .Append(std::to_string(sourceReference.location.value().line));
             return builder.Build(theme.location);
         }
 
@@ -158,7 +157,7 @@ namespace cucumber_cpp::library::formatter::helper
     std::string FormatCodeLocation(const cucumber::messages::StepDefinition* stepDefinition, const Theme& theme)
     {
         if (stepDefinition != nullptr)
-            return FormatCodeLocation(*stepDefinition->sourceReference, theme);
+            return FormatCodeLocation(stepDefinition->sourceReference, theme);
 
         return "";
     }
@@ -188,7 +187,7 @@ namespace cucumber_cpp::library::formatter::helper
             return TextBuilder{}
                 .Append(fmt::to_string(fmt::join(pickle.tags | std::views::transform([](const auto& tag)
                                                                    {
-                                                                       return tag->name;
+                                                                       return tag.name;
                                                                    }),
                     " ")))
                 .Build(theme.tag);
@@ -253,10 +252,10 @@ namespace cucumber_cpp::library::formatter::helper
                 builder.Line();
             builder.Append("|", theme.dataTable.border);
 
-            for (auto colIndex = 0; colIndex != pickleDataTable.rows[rowIndex]->cells.size(); ++colIndex)
+            for (auto colIndex = 0; colIndex != pickleDataTable.rows[rowIndex].cells.size(); ++colIndex)
             {
-                const auto& cell = row->cells[colIndex];
-                builder.Append(fmt::format(" {:<{}} ", cell->value, columnWidths[colIndex]), theme.dataTable.content)
+                const auto& cell = row.cells[colIndex];
+                builder.Append(fmt::format(" {:<{}} ", cell.value, columnWidths[colIndex]), theme.dataTable.content)
                     .Append("|", theme.dataTable.border);
             }
         }
@@ -266,11 +265,11 @@ namespace cucumber_cpp::library::formatter::helper
 
     std::string FormatPickleStepArgument(const cucumber::messages::PickleStep& pickleStep, const Theme& theme)
     {
-        if (pickleStep.argument && (*pickleStep.argument)->docString.has_value())
-            return FormatDocString(*(*pickleStep.argument)->docString.value(), theme);
+        if (pickleStep.argument && pickleStep.argument->docString.has_value())
+            return FormatDocString(pickleStep.argument->docString.value(), theme);
 
-        if (pickleStep.argument && (*pickleStep.argument)->dataTable.has_value())
-            return FormatDataTable(*(*pickleStep.argument)->dataTable.value(), theme);
+        if (pickleStep.argument && pickleStep.argument->dataTable.has_value())
+            return FormatDataTable(pickleStep.argument->dataTable.value(), theme);
 
         return "";
     }
@@ -283,8 +282,8 @@ namespace cucumber_cpp::library::formatter::helper
         {
             builder.Line().Append("  " + theme.symbol.bullet + " ");
 
-            if (!stepDefinition->pattern->source.empty())
-                builder.Append(stepDefinition->pattern->source);
+            if (!stepDefinition->pattern.source.empty())
+                builder.Append(stepDefinition->pattern.source);
 
             const auto location = FormatCodeLocation(stepDefinition, theme);
             if (!location.empty())
@@ -295,19 +294,19 @@ namespace cucumber_cpp::library::formatter::helper
 
     std::string FormatTestStepResultError(const cucumber::messages::TestStepResult& testStepResult, const Theme& theme)
     {
-        if (testStepResult.exception.has_value() && testStepResult.exception.value()->stackTrace.has_value())
+        if (testStepResult.exception.has_value() && testStepResult.exception.value().stackTrace.has_value())
         {
             return TextBuilder{}
-                .Append(util::Trim(testStepResult.exception.value()->stackTrace.value()))
+                .Append(util::Trim(testStepResult.exception.value().stackTrace.value()))
                 .Build(theme.status.All(testStepResult.status), true);
         }
 
-        if (testStepResult.exception.has_value() && testStepResult.exception.value()->message.has_value())
+        if (testStepResult.exception.has_value() && testStepResult.exception.value().message.has_value())
         {
             return TextBuilder{}
-                .Append(util::Trim(testStepResult.exception.value()->type))
+                .Append(util::Trim(testStepResult.exception.value().type))
                 .Append(": ")
-                .Append(util::Trim(testStepResult.exception.value()->message.value()))
+                .Append(util::Trim(testStepResult.exception.value().message.value()))
                 .Build(theme.status.All(testStepResult.status), true);
         }
 
@@ -323,17 +322,17 @@ namespace cucumber_cpp::library::formatter::helper
 
     std::string FormatTestRunFinishedError(const cucumber::messages::TestRunFinished& testRunFinished, const Theme& theme)
     {
-        if (testRunFinished.exception && (*testRunFinished.exception)->stackTrace)
+        if (testRunFinished.exception && testRunFinished.exception->stackTrace)
         {
             return TextBuilder{}
-                .Append(util::Trim((*testRunFinished.exception)->stackTrace.value()))
+                .Append(util::Trim(testRunFinished.exception->stackTrace.value()))
                 .Build(theme.status.All(cucumber::messages::TestStepResultStatus::FAILED));
         }
 
-        if (testRunFinished.exception && (*testRunFinished.exception)->message)
+        if (testRunFinished.exception && testRunFinished.exception->message)
         {
             return TextBuilder{}
-                .Append(util::Trim((*testRunFinished.exception)->message.value()))
+                .Append(util::Trim(testRunFinished.exception->message.value()))
                 .Build(theme.status.All(cucumber::messages::TestStepResultStatus::FAILED));
         }
 

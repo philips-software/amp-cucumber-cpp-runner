@@ -21,8 +21,8 @@ namespace cucumber_cpp::library::util
                 sawMeta = sawMeta || envelope.meta.has_value();
             } };
 
-        broadcaster.BroadcastEvent(std::make_shared<cucumber::messages::ExternalAttachment>());
-        broadcaster.BroadcastEvent(std::make_shared<cucumber::messages::Meta>());
+        broadcaster.BroadcastEvent(cucumber::messages::ExternalAttachment{});
+        broadcaster.BroadcastEvent(cucumber::messages::Meta{});
 
         EXPECT_THAT(sawExternalAttachment, IsTrue());
         EXPECT_THAT(sawMeta, IsTrue());

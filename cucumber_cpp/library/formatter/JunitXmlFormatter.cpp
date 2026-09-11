@@ -65,20 +65,20 @@ namespace cucumber_cpp::library::formatter
             std::optional<std::string> timestamp;
         };
 
-        std::optional<ReportFailure> MakeFailure(const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+        std::optional<ReportFailure> MakeFailure(const cucumber::query::Query& query, const cucumber::messages::TestCaseStarted& testCaseStarted)
         {
-            const auto result = query.FindMostSevereTestStepResultBy(testCaseStarted);
-            if (!result.has_value() || result.value()->status == cucumber::messages::TestStepResultStatus::PASSED)
+            const auto* result = query.FindMostSevereTestStepResultBy(testCaseStarted);
+            if (result == nullptr || result->status == cucumber::messages::TestStepResultStatus::PASSED)
                 return std::nullopt;
 
-            const auto& testStepResultStatus = result.value();
+            const auto* testStepResultStatus = result;
 
             return std::optional<ReportFailure>{
                 std::in_place,
                 testStepResultStatus->status == cucumber::messages::TestStepResultStatus::SKIPPED ? FailureKind::skipped : FailureKind::failure,
-                testStepResultStatus->exception ? std::make_optional((*testStepResultStatus->exception)->type) : std::nullopt,
-                testStepResultStatus->exception ? (*testStepResultStatus->exception)->message : std::nullopt,
-                testStepResultStatus->exception ? (*testStepResultStatus->exception)->stackTrace : testStepResultStatus->message,
+                testStepResultStatus->exception ? std::make_optional(testStepResultStatus->exception->type) : std::nullopt,
+                testStepResultStatus->exception ? testStepResultStatus->exception->message : std::nullopt,
+                testStepResultStatus->exception ? testStepResultStatus->exception->stackTrace : testStepResultStatus->message,
             };
         }
 
@@ -93,7 +93,7 @@ namespace cucumber_cpp::library::formatter
             return fmt::format("{:.<76}{}", util::Trim(gherkinStep.keyword) + " " + util::Trim(pickleStep.text), statusString);
         }
 
-        std::string MakeOutput(const cucumber::query::Query& query, const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+        std::string MakeOutput(const cucumber::query::Query& query, const cucumber::messages::TestCaseStarted& testCaseStarted)
         {
             const auto testStepFinishedAndTestStep = query.FindTestStepFinishedAndTestStepBy(testCaseStarted);
             auto outputView = testStepFinishedAndTestStep |
@@ -103,9 +103,9 @@ namespace cucumber_cpp::library::formatter
                                   }) |
                               std::views::transform([&query](const cucumber::query::TestStepFinishedAndTestStep& pair)
                                   {
-                                      const auto pickleStep = query.FindPickleStepBy(pair.testStep).value();
-                                      const auto gherkinStep = query.FindStepBy(pickleStep).value();
-                                      return FormatStep(*gherkinStep, *pickleStep, pair.testStepFinished->testStepResult->status);
+                                      const auto* pickleStep = query.FindPickleStepBy(*pair.testStep);
+                                      const auto* gherkinStep = query.FindStepBy(*pickleStep);
+                                      return FormatStep(*gherkinStep, *pickleStep, pair.testStepFinished->testStepResult.status);
                                   });
 
             return fmt::format("\n{}\n", fmt::join(outputView, "\n"));
@@ -120,14 +120,14 @@ namespace cucumber_cpp::library::formatter
             const auto allTestCaseStarted = query.FindAllTestCaseStarted();
             for (const auto& testCaseStartedPtr : allTestCaseStarted)
             {
-                const auto pickle = query.FindPickleBy(testCaseStartedPtr).value();
+                const auto* pickle = query.FindPickleBy(testCaseStartedPtr);
                 const auto lineageAndPickle = query.FindLineageBy(testCaseStartedPtr).value();
                 const auto& lineage = *lineageAndPickle.lineage;
                 const auto durationOpt = query.FindTestCaseDurationBy(testCaseStartedPtr);
 
                 testCases.emplace_back(testClassName.value_or(lineage.feature ? lineage.feature->name : pickle->uri),
                     namingStrategy->Reduce(lineage, *pickle),
-                    util::DurationToMilliseconds(durationOpt.has_value() ? *durationOpt.value() : cucumber::messages::Duration{}).count(),
+                    util::DurationToMilliseconds(durationOpt.has_value() ? durationOpt.value() : cucumber::messages::Duration{}).count(),
                     MakeFailure(query, testCaseStartedPtr),
                     MakeOutput(query, testCaseStartedPtr));
             }
@@ -148,7 +148,7 @@ namespace cucumber_cpp::library::formatter
             const auto testRunStarted = query.FindTestRunStarted();
 
             return {
-                .time = util::DurationToMilliseconds(testRunDuration.has_value() ? *testRunDuration.value() : cucumber::messages::Duration{}).count(),
+                .time = util::DurationToMilliseconds(testRunDuration.has_value() ? testRunDuration.value() : cucumber::messages::Duration{}).count(),
                 .tests = query.CountTestCasesStarted(),
                 .skipped = count(cucumber::messages::TestStepResultStatus::SKIPPED),
                 .failures = count(cucumber::messages::TestStepResultStatus::UNKNOWN) +
@@ -158,7 +158,7 @@ namespace cucumber_cpp::library::formatter
                             count(cucumber::messages::TestStepResultStatus::FAILED),
                 .errors = 0,
                 .testCases = MakeTestCases(query, testClassName),
-                .timestamp = testRunStarted.has_value() ? std::make_optional(util::MakeIso8601Timestamp(*testRunStarted.value()->timestamp)) : std::nullopt,
+                .timestamp = testRunStarted != nullptr ? std::make_optional(util::MakeIso8601Timestamp(testRunStarted->timestamp)) : std::nullopt,
             };
         }
 

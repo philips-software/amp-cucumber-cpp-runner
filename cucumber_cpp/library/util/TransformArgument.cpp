@@ -24,7 +24,7 @@ namespace cucumber_cpp::library::util
 
             auto strings = group.children.value() | std::views::transform([](const auto& child)
                                                         {
-                                                            return ToString(*child);
+                                                            return ToString(child);
                                                         });
 
             return { strings.begin(), strings.end() };
@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::util
     {
         return {
             .converterName = argument.parameterTypeName.value_or(""),
-            .converterArgs = GroupToArgumentGroup(*argument.group),
+            .converterArgs = GroupToArgumentGroup(argument.group),
         };
     }
 }

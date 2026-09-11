@@ -41,11 +41,11 @@ namespace cucumber_cpp::library::formatter
     private:
         void OnEnvelope(const cucumber::messages::Envelope& envelope) override;
 
-        void CalculateIndent(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted);
+        void CalculateIndent(const cucumber::messages::TestCaseStarted& testCaseStarted);
 
-        void HandleTestCaseStarted(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted);
+        void HandleTestCaseStarted(const cucumber::messages::TestCaseStarted& testCaseStarted);
         void HandleAttachment(const cucumber::messages::Attachment& attachment);
-        void HandleTestStepFinished(const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished);
+        void HandleTestStepFinished(const cucumber::messages::TestStepFinished& testStepFinished);
         void HandleTestRunFinished(const cucumber::messages::TestRunFinished& testRunFinished);
 
         Options options{ formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object() };

@@ -42,34 +42,34 @@ namespace cucumber_cpp::library::formatter
         }
 
         if (envelope.attachment)
-            HandleAttachment(*envelope.attachment.value());
+            HandleAttachment(envelope.attachment.value());
 
         if (envelope.testStepFinished)
             HandleTestStepFinished(envelope.testStepFinished.value());
 
         if (envelope.testRunFinished)
-            HandleTestRunFinished(*envelope.testRunFinished.value());
+            HandleTestRunFinished(envelope.testRunFinished.value());
     }
 
-    void PrettyFormatter::CalculateIndent(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+    void PrettyFormatter::CalculateIndent(const cucumber::messages::TestCaseStarted& testCaseStarted)
     {
-        const auto pickle = query.FindPickleBy(testCaseStarted).value();
-        const auto lineageAndPickle = query.FindLineageBy(pickle).value();
+        const auto* pickle = query.FindPickleBy(testCaseStarted);
+        const auto lineageAndPickle = query.FindLineageBy(*pickle).value();
         const auto& lineage = *lineageAndPickle.lineage;
         const auto& scenario = *lineage.scenario;
         const auto scenarioLength = helper::Unstyled(helper::FormatPickleTitle(*pickle, scenario, options.theme)).length();
 
-        const auto testCase = query.FindTestCaseBy(testCaseStarted).value();
+        const auto* testCase = query.FindTestCaseBy(testCaseStarted);
 
-        const auto hasPickleStepId = [](const std::shared_ptr<cucumber::messages::TestStep>& testStep)
+        const auto hasPickleStepId = [](const cucumber::messages::TestStep& testStep)
         {
-            return testStep->pickleStepId.has_value();
+            return testStep.pickleStepId.has_value();
         };
-        const auto toLength = [this](const std::shared_ptr<cucumber::messages::TestStep>& testStep)
+        const auto toLength = [this](const cucumber::messages::TestStep& testStep)
         {
-            const auto pickleStep = query.FindPickleStepBy(testStep).value();
-            const auto step = query.FindStepBy(pickleStep).value();
-            return helper::Unstyled(helper::FormatStepTitle(*testStep, *pickleStep, *step, cucumber::messages::TestStepResultStatus::UNKNOWN, options.useStatusIcon, options.theme)).length();
+            const auto* pickleStep = query.FindPickleStepBy(testStep);
+            const auto* step = query.FindStepBy(*pickleStep);
+            return helper::Unstyled(helper::FormatStepTitle(testStep, *pickleStep, *step, cucumber::messages::TestStepResultStatus::UNKNOWN, options.useStatusIcon, options.theme)).length();
         };
 
         auto steplengths = testCase->testSteps | std::views::filter(hasPickleStepId) | std::views::transform(toLength);
@@ -77,7 +77,7 @@ namespace cucumber_cpp::library::formatter
         const auto maxStepLengthIter = std::ranges::max_element(steplengths);
         const auto maxStepLength = (maxStepLengthIter != steplengths.end()) ? *maxStepLengthIter : 0;
 
-        maxContentLengthByTestCaseStartedId[testCaseStarted->id] = std::max(scenarioLength, options.useStatusIcon ? maxStepLength + 2 : maxStepLength);
+        maxContentLengthByTestCaseStartedId[testCaseStarted.id] = std::max(scenarioLength, options.useStatusIcon ? maxStepLength + 2 : maxStepLength);
 
         std::size_t scenarioIndent{ 0 };
         if (options.includeFeatureLine)
@@ -87,25 +87,25 @@ namespace cucumber_cpp::library::formatter
                 scenarioIndent += helper::gherkinIndentLength;
         }
 
-        scenarioIndentByTestCaseStartedId[testCaseStarted->id] = scenarioIndent;
+        scenarioIndentByTestCaseStartedId[testCaseStarted.id] = scenarioIndent;
     }
 
-    void PrettyFormatter::HandleTestCaseStarted(const std::shared_ptr<const cucumber::messages::TestCaseStarted>& testCaseStarted)
+    void PrettyFormatter::HandleTestCaseStarted(const cucumber::messages::TestCaseStarted& testCaseStarted)
     {
-        const auto pickle = query.FindPickleBy(testCaseStarted).value();
-        const auto lineageAndPickle = query.FindLineageBy(pickle).value();
+        const auto* pickle = query.FindPickleBy(testCaseStarted);
+        const auto lineageAndPickle = query.FindLineageBy(*pickle).value();
         const auto& lineage = *lineageAndPickle.lineage;
-        const auto& scenario = lineage.scenario;
-        const auto& rule = lineage.rule;
-        const auto& feature = lineage.feature;
+        const auto* scenario = lineage.scenario;
+        const auto* rule = lineage.rule;
+        const auto* feature = lineage.feature;
 
-        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testCaseStarted->id);
-        const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testCaseStarted->id);
+        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testCaseStarted.id);
+        const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testCaseStarted.id);
 
-        if (options.includeFeatureLine && rule && !printedFeatureUris.contains(feature.get()))
+        if (options.includeFeatureLine && rule && !printedFeatureUris.contains(feature))
             helper::PrintFeatureLine(outputStream, *feature, options.theme);
 
-        if (options.includeRuleLine && rule && !printedRuleIds.contains(rule.get()))
+        if (options.includeRuleLine && rule && !printedRuleIds.contains(rule))
             helper::PrintRuleLine(outputStream, *rule, options.theme);
 
         outputStream << "\n";
@@ -113,8 +113,8 @@ namespace cucumber_cpp::library::formatter
         helper::PrintTags(outputStream, *pickle, scenarioIndent, options.theme);
         helper::PrintScenarioLine(outputStream, *pickle, *scenario, scenarioIndent, maxContentLength, options.theme);
 
-        printedFeatureUris.insert(feature.get());
-        printedRuleIds.insert(rule.get());
+        printedFeatureUris.insert(feature);
+        printedRuleIds.insert(rule);
     }
 
     void PrettyFormatter::HandleAttachment(const cucumber::messages::Attachment& attachment)
@@ -126,26 +126,24 @@ namespace cucumber_cpp::library::formatter
             helper::PrintAttachment(outputStream, attachment, scenarioIndentByTestCaseStartedId.at(attachment.testCaseStartedId.value()), options.useStatusIcon, options.theme);
     }
 
-    void PrettyFormatter::HandleTestStepFinished(const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished)
+    void PrettyFormatter::HandleTestStepFinished(const cucumber::messages::TestStepFinished& testStepFinished)
     {
-        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testStepFinished->testCaseStartedId);
-        const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testStepFinished->testCaseStartedId);
+        const auto scenarioIndent = scenarioIndentByTestCaseStartedId.at(testStepFinished.testCaseStartedId);
+        const auto maxContentLength = maxContentLengthByTestCaseStartedId.at(testStepFinished.testCaseStartedId);
 
-        const auto testStep = query.FindTestStepBy(testStepFinished).value();
+        const auto* testStep = query.FindTestStepBy(testStepFinished);
 
-        if (const auto pickleStepOpt = query.FindPickleStepBy(testStep); pickleStepOpt.has_value())
+        if (const auto* pickleStep = query.FindPickleStepBy(*testStep); pickleStep != nullptr)
         {
-            const auto& pickleStep = pickleStepOpt.value();
-            const auto step = query.FindStepBy(pickleStep).value();
-            const auto stepDefinitionOpt = query.FindUnambiguousStepDefinitionBy(testStep);
-            const auto* stepDefinition = stepDefinitionOpt.has_value() ? stepDefinitionOpt.value().get() : nullptr;
+            const auto* step = query.FindStepBy(*pickleStep);
+            const auto* stepDefinition = query.FindUnambiguousStepDefinitionBy(*testStep);
 
-            helper::PrintStepLine(outputStream, *testStepFinished, *testStep, *pickleStep, *step, stepDefinition, scenarioIndent, maxContentLength, options.useStatusIcon, options.theme);
+            helper::PrintStepLine(outputStream, testStepFinished, *testStep, *pickleStep, *step, stepDefinition, scenarioIndent, maxContentLength, options.useStatusIcon, options.theme);
             helper::PrintStepArgument(outputStream, *pickleStep, scenarioIndent, options.useStatusIcon, options.theme);
-            helper::PrintAmbiguousStep(outputStream, query, *testStepFinished, testStep, scenarioIndent, options.useStatusIcon, options.theme);
+            helper::PrintAmbiguousStep(outputStream, query, testStepFinished, *testStep, scenarioIndent, options.useStatusIcon, options.theme);
         }
 
-        helper::PrintError(outputStream, *testStepFinished, scenarioIndent, options.useStatusIcon, options.theme);
+        helper::PrintError(outputStream, testStepFinished, scenarioIndent, options.useStatusIcon, options.theme);
     }
 
     void PrettyFormatter::HandleTestRunFinished(const cucumber::messages::TestRunFinished& testRunFinished)

@@ -55,16 +55,17 @@ namespace cucumber_cpp::library::engine
             auto [testCaseStartedId, testStepId] = ReadTestStepStartedIds(stepOrHookStarted);
             auto testRunHookStartedId = ReadTestRunHookStartedIds(stepOrHookStarted);
 
-            broadCaster.BroadcastEvent(util::MakeShared(cucumber::messages::Attachment{
-                .body = std::move(data),
-                .contentEncoding = encoding,
-                .fileName = std::move(options.fileName),
-                .mediaType = std::move(options.mediaType),
-                .testCaseStartedId = std::move(testCaseStartedId),
-                .testStepId = std::move(testStepId),
-                .testRunHookStartedId = std::move(testRunHookStartedId),
-                .timestamp = util::MakeShared(util::TimestampNow()),
-            }));
+            cucumber::messages::Attachment attachment;
+            attachment.body = std::move(data);
+            attachment.contentEncoding = encoding;
+            attachment.fileName = std::move(options.fileName);
+            attachment.mediaType = std::move(options.mediaType);
+            attachment.testCaseStartedId = std::move(testCaseStartedId);
+            attachment.testStepId = std::move(testStepId);
+            attachment.testRunHookStartedId = std::move(testRunHookStartedId);
+            attachment.timestamp = util::TimestampNow();
+
+            broadCaster.BroadcastEvent(attachment);
         }
     }
 

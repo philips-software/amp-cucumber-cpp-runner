@@ -55,25 +55,28 @@ namespace cucumber_cpp::library::assemble
             {
                 const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
 
-                const auto& testStep = testCase.testSteps.emplace_back(std::make_shared<cucumber::messages::TestStep>(cucumber::messages::TestStep{
-                    .hookId = std::nullopt,
-                    .id = idGenerator->NextId(),
-                    .pickleStepId = step->id,
-                    .stepDefinitionIds = std::vector<std::string>{},
-                    .stepMatchArgumentsLists = std::vector<std::shared_ptr<cucumber::messages::StepMatchArgumentsList>>{},
-                }));
+                cucumber::messages::TestStep newTestStep;
+                newTestStep.id = idGenerator->NextId();
+                newTestStep.pickleStepId = step.id;
+                newTestStep.stepDefinitionIds = std::vector<std::string>{};
+                newTestStep.stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{};
+
+                auto& testStep = testCase.testSteps.emplace_back(std::move(newTestStep));
 
                 for (const auto& [id, match] : stepDefinitions |
-                                                   std::views::transform(TransformToMatch(step->text)) |
+                                                   std::views::transform(TransformToMatch(step.text)) |
                                                    std::views::filter(HasMatch))
                 {
-                    testStep->stepDefinitionIds.value().push_back(id);
-                    const auto& argumentList = testStep->stepMatchArgumentsLists.value().emplace_back(std::make_shared<cucumber::messages::StepMatchArgumentsList>());
+                    testStep.stepDefinitionIds.value().push_back(id);
+                    auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back();
                     for (const auto& result : *match)
-                        argumentList->stepMatchArguments.emplace_back(std::make_shared<cucumber::messages::StepMatchArgument>(cucumber::messages::StepMatchArgument{
-                            .group = std::make_shared<cucumber::messages::Group>(util::ArgumentGroupToMessageGroup(result.Group())),
-                            .parameterTypeName = result.Name().empty() ? std::nullopt : std::make_optional(result.Name()),
-                        }));
+                    {
+                        cucumber::messages::StepMatchArgument stepMatchArgument;
+                        stepMatchArgument.group = util::ArgumentGroupToMessageGroup(result.Group());
+                        if (!result.Name().empty())
+                            stepMatchArgument.parameterTypeName = result.Name();
+                        argumentList.stepMatchArguments.push_back(stepMatchArgument);
+                    }
                 }
             }
         }
@@ -86,12 +89,22 @@ namespace cucumber_cpp::library::assemble
             testCase.testSteps.reserve(beforeHooks.size() + pickleSource.pickle->steps.size() + afterHooks.size());
 
             for (const auto& hookId : beforeHooks)
-                testCase.testSteps.emplace_back(std::make_shared<cucumber::messages::TestStep>(cucumber::messages::TestStep{ .hookId = hookId, .id = idGenerator->NextId() }));
+            {
+                cucumber::messages::TestStep testStep;
+                testStep.hookId = hookId;
+                testStep.id = idGenerator->NextId();
+                testCase.testSteps.push_back(testStep);
+            }
 
             AssembleSteps(supportCodeLibrary, pickleSource, testCase, idGenerator);
 
             for (const auto& hookId : afterHooks | std::views::reverse)
-                testCase.testSteps.emplace_back(std::make_shared<cucumber::messages::TestStep>(cucumber::messages::TestStep{ .hookId = hookId, .id = idGenerator->NextId() }));
+            {
+                cucumber::messages::TestStep testStep;
+                testStep.hookId = hookId;
+                testStep.id = idGenerator->NextId();
+                testCase.testSteps.push_back(testStep);
+            }
         }
     }
 
@@ -106,16 +119,14 @@ namespace cucumber_cpp::library::assemble
 
         for (const auto& pickleSource : sourcedPickles)
         {
-            cucumber::messages::TestCase testCase{
-                .id = idGenerator->NextId(),
-                .pickleId = pickleSource.pickle->id,
-                .testSteps = {},
-                .testRunStartedId = std::make_optional<std::string>(testRunStartedId)
-            };
+            cucumber::messages::TestCase testCase;
+            testCase.id = idGenerator->NextId();
+            testCase.pickleId = pickleSource.pickle->id;
+            testCase.testRunStartedId = std::make_optional<std::string>(testRunStartedId);
 
             AssembleTestSteps(supportCodeLibrary, pickleSource, testCase, idGenerator);
 
-            broadcaster.BroadcastEvent(util::MakeShared(testCase));
+            broadcaster.BroadcastEvent(testCase);
 
             if (!assembledTestSuiteMap.contains(pickleSource.gherkinDocument->uri.value()))
             {

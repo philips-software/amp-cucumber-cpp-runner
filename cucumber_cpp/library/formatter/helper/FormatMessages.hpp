@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::formatter::helper
 {
     std::string FormatPickleTitle(const cucumber::messages::Pickle& pickle, const cucumber::messages::Scenario& scenario, const Theme& theme);
     std::string FormatPickleAttemptTitle(const cucumber::messages::Pickle& pickle, std::size_t attempt, bool retry, const cucumber::messages::Scenario& scenario, const Theme& theme);
-    std::string FormatPickleLocation(const cucumber::messages::Pickle& pickle, const std::shared_ptr<const cucumber::messages::Location>& location, const Theme& theme);
+    std::string FormatPickleLocation(const cucumber::messages::Pickle& pickle, const cucumber::messages::Location& location, const Theme& theme);
     std::string FormatStepText(const cucumber::messages::TestStep& testStep, const cucumber::messages::PickleStep& pickleStep, cucumber::messages::TestStepResultStatus status, const Theme& theme);
     std::string FormatCodeLocation(const cucumber::messages::SourceReference& sourceReference, const Theme& theme);
     std::string FormatCodeLocation(const cucumber::messages::StepDefinition* stepDefinition, const Theme& theme);

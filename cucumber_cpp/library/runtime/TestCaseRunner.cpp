@@ -103,38 +103,37 @@ namespace cucumber_cpp::library::runtime
         const auto currentTestCaseStartedId = idGenerator->NextId();
         bool willRetry = false;
 
-        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestCaseStarted{
-            .attempt = attempt,
-            .id = currentTestCaseStartedId,
-            .testCaseId = testCase.id,
-            .timestamp = util::MakeShared(util::TimestampNow()),
-        }));
+        cucumber::messages::TestCaseStarted testCaseStarted;
+        testCaseStarted.attempt = attempt;
+        testCaseStarted.id = currentTestCaseStartedId;
+        testCaseStarted.testCaseId = testCase.id;
+        testCaseStarted.timestamp = util::TimestampNow();
+        broadcaster.BroadcastEvent(testCaseStarted);
 
         bool seenSteps = false;
         bool error = false;
 
         for (const auto& testStep : testCase.testSteps)
         {
-            auto testStepStarted = cucumber::messages::TestStepStarted{
-                .testCaseStartedId = currentTestCaseStartedId,
-                .testStepId = testStep->id,
-                .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-            };
-            broadcaster.BroadcastEvent(util::MakeShared(testStepStarted));
+            cucumber::messages::TestStepStarted testStepStarted;
+            testStepStarted.testCaseStartedId = currentTestCaseStartedId;
+            testStepStarted.testStepId = testStep.id;
+            testStepStarted.timestamp = util::TimestampNow();
+            broadcaster.BroadcastEvent(testStepStarted);
 
             cucumber::messages::TestStepResult testStepResult;
 
-            if (testStep->hookId)
+            if (testStep.hookId)
             {
-                testStepResult = RunHook(supportCodeLibrary.hookRegistry.GetDefinitionById(testStep->hookId.value()), !seenSteps, testCaseContext, testStepStarted, error);
+                testStepResult = RunHook(supportCodeLibrary.hookRegistry.GetDefinitionById(testStep.hookId.value()), !seenSteps, testCaseContext, testStepStarted, error);
             }
             else
             {
                 auto pickleStepIter = std::ranges::find_if(pickle.steps, [&](const auto& pickleStep)
                     {
-                        return pickleStep->id == testStep->pickleStepId.value();
+                        return pickleStep.id == testStep.pickleStepId.value();
                     });
-                testStepResult = RunStep(**pickleStepIter, *testStep, testCaseContext, testStepStarted);
+                testStepResult = RunStep(*pickleStepIter, testStep, testCaseContext, testStepStarted);
                 seenSteps = true;
 
                 if (testStepResult.message.has_value() || testStepResult.exception.has_value())
@@ -142,21 +141,21 @@ namespace cucumber_cpp::library::runtime
             }
             testStepResults.emplace_back(testStepResult);
 
-            broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestStepFinished{
-                .testCaseStartedId = currentTestCaseStartedId,
-                .testStepId = testStep->id,
-                .testStepResult = util::MakeShared(testStepResult),
-                .timestamp = util::MakeShared(util::TimestampNow()),
-            }));
+            cucumber::messages::TestStepFinished testStepFinished;
+            testStepFinished.testCaseStartedId = currentTestCaseStartedId;
+            testStepFinished.testStepId = testStep.id;
+            testStepFinished.testStepResult = testStepResult;
+            testStepFinished.timestamp = util::TimestampNow();
+            broadcaster.BroadcastEvent(testStepFinished);
         }
 
         willRetry = GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::FAILED && moreAttemptsAvailable;
 
-        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestCaseFinished{
-            .testCaseStartedId = currentTestCaseStartedId,
-            .timestamp = util::MakeShared(util::TimestampNow()),
-            .willBeRetried = willRetry,
-        }));
+        cucumber::messages::TestCaseFinished testCaseFinished;
+        testCaseFinished.testCaseStartedId = currentTestCaseStartedId;
+        testCaseFinished.timestamp = util::TimestampNow();
+        testCaseFinished.willBeRetried = willRetry;
+        broadcaster.BroadcastEvent(testCaseFinished);
 
         return willRetry;
     }
@@ -164,10 +163,11 @@ namespace cucumber_cpp::library::runtime
     cucumber::messages::TestStepResult TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError)
     {
         if (ShouldSkipHook(isBeforeHook))
-            return {
-                .duration = std::make_shared<cucumber::messages::Duration>(),
-                .status = cucumber::messages::TestStepResultStatus::SKIPPED,
-            };
+        {
+            cucumber::messages::TestStepResult testStepResult{};
+            testStepResult.status = cucumber::messages::TestStepResultStatus::SKIPPED;
+            return testStepResult;
+        }
 
         const util::BodyFactory bodyFactory = [&hookDefinition, this, &testCaseContext, &testStepStarted, hasError](util::TestStepResult& testStepResult)
         {
@@ -206,39 +206,35 @@ namespace cucumber_cpp::library::runtime
 
         if (const auto count = testStep.stepDefinitionIds->size(); count == 0)
         {
-            broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::Suggestion{
-                .id = idGenerator->NextId(),
-                .pickleStepId = pickleStep.id,
-                .snippets = {},
-            }));
+            cucumber::messages::Suggestion suggestion;
+            suggestion.id = idGenerator->NextId();
+            suggestion.pickleStepId = pickleStep.id;
+            broadcaster.BroadcastEvent(suggestion);
 
-            return {
-                .duration = std::make_shared<cucumber::messages::Duration>(),
-                .status = cucumber::messages::TestStepResultStatus::UNDEFINED,
-            };
+            cucumber::messages::TestStepResult testStepResult{};
+            testStepResult.status = cucumber::messages::TestStepResultStatus::UNDEFINED;
+            return testStepResult;
         }
         else if (count > 1)
         {
-            return {
-                .duration = std::make_shared<cucumber::messages::Duration>(),
-                .message = "Ambiguous step definitions",
-                .status = cucumber::messages::TestStepResultStatus::AMBIGUOUS,
-            };
+            cucumber::messages::TestStepResult testStepResult{};
+            testStepResult.message = "Ambiguous step definitions";
+            testStepResult.status = cucumber::messages::TestStepResultStatus::AMBIGUOUS;
+            return testStepResult;
         }
         else if (IsSkippingSteps())
         {
-            return {
-                .duration = std::make_shared<cucumber::messages::Duration>(),
-                .status = cucumber::messages::TestStepResultStatus::SKIPPED,
-            };
+            cucumber::messages::TestStepResult testStepResult{};
+            testStepResult.status = cucumber::messages::TestStepResultStatus::SKIPPED;
+            return testStepResult;
         }
 
         auto stepResults = RunStepHooks(pickleStep, util::HookType::beforeStep, testCaseContext, testStepStarted);
 
         if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::TestStepResultStatus::FAILED)
         {
-            const auto dataTable = (pickleStep.argument && (*pickleStep.argument)->dataTable) ? std::make_optional(*(*(*pickleStep.argument)->dataTable)) : std::nullopt;
-            const auto docString = (pickleStep.argument && (*pickleStep.argument)->docString) ? std::make_optional(*(*(*pickleStep.argument)->docString)) : std::nullopt;
+            const auto dataTable = (pickleStep.argument && pickleStep.argument->dataTable) ? std::make_optional(*pickleStep.argument->dataTable) : std::nullopt;
+            const auto docString = (pickleStep.argument && pickleStep.argument->docString) ? std::make_optional(*pickleStep.argument->docString) : std::nullopt;
 
             const auto& definition = stepDefinitions.front();
 
@@ -249,7 +245,7 @@ namespace cucumber_cpp::library::runtime
                 return definition.factory(testStepResult, nestedTestCaseRunner, broadcaster, testCaseContext, util::TransformTestStepStarted(testStepStarted), util::TransformTable(dataTable), util::TransformDocString(docString));
             };
 
-            stepResults.push_back(InvokeStep(bodyFactory, *testStep.stepMatchArgumentsLists->front()));
+            stepResults.push_back(InvokeStep(bodyFactory, testStep.stepMatchArgumentsLists->front()));
         }
 
         const auto afterStepHookResults = RunStepHooks(pickleStep, util::HookType::afterStep, testCaseContext, testStepStarted);
@@ -260,19 +256,20 @@ namespace cucumber_cpp::library::runtime
 
         cucumber::messages::Duration finalDuration{};
         for (const auto& stepResult : stepResults)
-            if (stepResult.duration)
-                finalDuration += *stepResult.duration;
+            finalDuration += stepResult.duration;
 
-        finalStepResult.duration = std::make_shared<cucumber::messages::Duration>(finalDuration);
+        finalStepResult.duration = finalDuration;
         return finalStepResult;
     }
 
     cucumber::messages::TestStepResult TestCaseRunner::GetWorstStepResult() const
     {
         if (testStepResults.empty())
-            return {
-                .status = skip ? cucumber::messages::TestStepResultStatus::SKIPPED : cucumber::messages::TestStepResultStatus::PASSED,
-            };
+        {
+            cucumber::messages::TestStepResult testStepResult{};
+            testStepResult.status = skip ? cucumber::messages::TestStepResultStatus::SKIPPED : cucumber::messages::TestStepResultStatus::PASSED;
+            return testStepResult;
+        }
 
         return util::GetWorstTestStepResult(testStepResults);
     }
