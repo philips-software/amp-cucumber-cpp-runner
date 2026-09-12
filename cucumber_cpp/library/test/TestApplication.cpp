@@ -57,8 +57,8 @@ namespace cucumber_cpp::library
 
         std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenarios 1 skipped"));
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1 steps 1 skipped"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenario (1 skipped)"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 step (1 skipped)"));
     }
 
     TEST_F(TestApplication, RunFeatureFile)
@@ -75,8 +75,8 @@ namespace cucumber_cpp::library
 
         std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
 
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenarios 1 passed"));
-        EXPECT_THAT(stdoutString, testing::HasSubstr("1 steps 1 passed"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenario (1 passed)"));
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 step (1 passed)"));
     }
 
     TEST_F(TestApplication, ExposeParameterRegistration)

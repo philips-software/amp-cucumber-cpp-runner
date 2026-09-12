@@ -15,7 +15,7 @@ namespace cucumber_cpp::library::assemble
     std::vector<AssembledTestSuite> AssembleTestSuites(
         const support::SupportCodeLibrary& supportCodeLibrary,
         std::string_view testRunStartedId,
-        const util::Broadcaster& broadcaster,
+        util::Broadcaster& broadcaster,
         const std::list<support::PickleSource>& sourcedPickles,
         cucumber::gherkin::IdGeneratorPtr idGenerator);
 }

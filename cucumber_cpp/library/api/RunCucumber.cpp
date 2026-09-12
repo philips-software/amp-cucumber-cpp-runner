@@ -46,88 +46,109 @@ namespace cucumber_cpp::library::api
 {
     namespace
     {
-        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
+        void EmitParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
         {
             for (const auto& [name, parameter] : supportCodeLibrary.parameterRegistry.GetParameters())
             {
                 if (parameter.isBuiltin)
                     continue;
 
-                cucumber::messages::Location location;
-                location.line = parameter.location.line();
+                broadcaster.BroadcastEvent([&parameter, &idGenerator](cucumber::messages::Envelope& envelope)
+                    {
+                        cucumber::messages::Location location;
+                        location.line = parameter.location.line();
 
-                cucumber::messages::SourceReference sourceReference;
-                sourceReference.uri = parameter.location.file_name();
-                sourceReference.location = location;
+                        cucumber::messages::SourceReference sourceReference;
+                        sourceReference.uri = parameter.location.file_name();
+                        sourceReference.location = location;
 
-                cucumber::messages::ParameterType parameterType{};
-                parameterType.name = parameter.name;
-                parameterType.regularExpressions = parameter.regex;
-                parameterType.useForSnippets = parameter.useForSnippets;
-                parameterType.id = idGenerator->NextId();
-                parameterType.sourceReference = sourceReference;
+                        cucumber::messages::ParameterType parameterType{};
+                        parameterType.name = parameter.name;
+                        parameterType.regularExpressions = parameter.regex;
+                        parameterType.useForSnippets = parameter.useForSnippets;
+                        parameterType.id = idGenerator->NextId();
+                        parameterType.sourceReference = sourceReference;
 
-                broadcaster.BroadcastEvent(parameterType);
+                        envelope.parameterType = std::move(parameterType);
+                    });
             }
         }
 
-        void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
+        void EmitUndefinedParameters(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& parameter : supportCodeLibrary.undefinedParameters.definitions)
-                broadcaster.BroadcastEvent(parameter);
+                broadcaster.BroadcastEvent([&parameter](cucumber::messages::Envelope& envelope)
+                    {
+                        envelope.undefinedParameterType = parameter;
+                    });
         }
 
-        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
+        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
             {
-                cucumber::messages::StepDefinitionPattern pattern;
-                pattern.source = stepDefinition.pattern;
-                pattern.type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION;
+                broadcaster.BroadcastEvent([&stepDefinition](cucumber::messages::Envelope& envelope)
+                    {
+                        cucumber::messages::StepDefinitionPattern pattern;
+                        pattern.source = stepDefinition.pattern;
+                        pattern.type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION;
 
-                cucumber::messages::Location location;
-                location.line = stepDefinition.line;
+                        cucumber::messages::Location location;
+                        location.line = stepDefinition.line;
 
-                cucumber::messages::SourceReference sourceReference;
-                sourceReference.uri = stepDefinition.uri.string();
-                sourceReference.location = location;
+                        cucumber::messages::SourceReference sourceReference;
+                        sourceReference.uri = stepDefinition.uri.string();
+                        sourceReference.location = location;
 
-                cucumber::messages::StepDefinition stepDefinitionMessage;
-                stepDefinitionMessage.id = stepDefinition.id;
-                stepDefinitionMessage.pattern = pattern;
-                stepDefinitionMessage.sourceReference = sourceReference;
+                        cucumber::messages::StepDefinition stepDefinitionMessage;
+                        stepDefinitionMessage.id = stepDefinition.id;
+                        stepDefinitionMessage.pattern = pattern;
+                        stepDefinitionMessage.sourceReference = sourceReference;
 
-                broadcaster.BroadcastEvent(stepDefinitionMessage);
+                        envelope.stepDefinition = std::move(stepDefinitionMessage);
+                    });
             }
         }
 
-        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
+        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(util::TransformHookData(hook));
+                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
+                    {
+                        envelope.hook = util::TransformHookData(hook);
+                    });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(util::TransformHookData(hook));
+                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
+                    {
+                        envelope.hook = util::TransformHookData(hook);
+                    });
         }
 
-        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster)
+        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
         {
             auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
 
             for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent(util::TransformHookData(hook));
+                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
+                    {
+                        envelope.hook = util::TransformHookData(hook);
+                    });
 
             auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
 
             for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent(util::TransformHookData(hook));
+                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
+                    {
+                        envelope.hook = util::TransformHookData(hook);
+                    });
         }
 
-        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, const util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
+        void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
         {
             // Phase 1: Load parameters (must be first, steps reference parameter types)
             plugin::ParameterLoader::Load(support::DefinitionRegistration::Instance(), supportCodeLibrary.parameterRegistry);

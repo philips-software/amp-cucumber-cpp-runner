@@ -33,7 +33,7 @@ ccr_dependency(CUCUMBER_QUERY            v1.0.0     282005f191441dc15c74c5d8c9a2
 # renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
 ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0      2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
 # renovate: datasource=github-tags packageName=cucumber/pretty-formatter versioning=semver
-ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     792b8910370910a36f65d1a01b21759868ca36e2)
+ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     e7fc89b15d5b97a7e2aa935dd884a12fd0ff5a70)
 
 if(CCR_FETCH_DEPS)
     if(NOT COMMAND CPMAddPackage)

@@ -188,7 +188,10 @@ namespace cucumber_cpp::library::runtime
         testRunHookStarted.hookId = definition.data.id;
         testRunHookStarted.timestamp = util::TimestampNow();
 
-        broadcaster.BroadcastEvent(testRunHookStarted);
+        broadcaster.BroadcastEvent([&testRunHookStarted](cucumber::messages::Envelope& envelope)
+            {
+                envelope.testRunHookStarted = testRunHookStarted;
+            });
 
         cucumber::messages::TestStepResult result{};
         result.status = cucumber::messages::TestStepResultStatus::SKIPPED;
@@ -206,11 +209,14 @@ namespace cucumber_cpp::library::runtime
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        cucumber::messages::TestRunHookFinished testRunHookFinished;
-        testRunHookFinished.testRunHookStartedId = testRunHookStartedId;
-        testRunHookFinished.result = result;
-        testRunHookFinished.timestamp = util::TimestampNow();
-        broadcaster.BroadcastEvent(testRunHookFinished);
+        broadcaster.BroadcastEvent([&testRunHookStartedId, &result](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestRunHookFinished testRunHookFinished;
+                testRunHookFinished.testRunHookStartedId = testRunHookStartedId;
+                testRunHookFinished.result = result;
+                testRunHookFinished.timestamp = util::TimestampNow();
+                envelope.testRunHookFinished = std::move(testRunHookFinished);
+            });
 
         return result;
     }

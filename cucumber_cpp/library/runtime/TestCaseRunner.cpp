@@ -103,12 +103,15 @@ namespace cucumber_cpp::library::runtime
         const auto currentTestCaseStartedId = idGenerator->NextId();
         bool willRetry = false;
 
-        cucumber::messages::TestCaseStarted testCaseStarted;
-        testCaseStarted.attempt = attempt;
-        testCaseStarted.id = currentTestCaseStartedId;
-        testCaseStarted.testCaseId = testCase.id;
-        testCaseStarted.timestamp = util::TimestampNow();
-        broadcaster.BroadcastEvent(testCaseStarted);
+        broadcaster.BroadcastEvent([this, attempt, &currentTestCaseStartedId](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestCaseStarted testCaseStarted;
+                testCaseStarted.attempt = attempt;
+                testCaseStarted.id = currentTestCaseStartedId;
+                testCaseStarted.testCaseId = testCase.id;
+                testCaseStarted.timestamp = util::TimestampNow();
+                envelope.testCaseStarted = std::move(testCaseStarted);
+            });
 
         bool seenSteps = false;
         bool error = false;
@@ -119,7 +122,10 @@ namespace cucumber_cpp::library::runtime
             testStepStarted.testCaseStartedId = currentTestCaseStartedId;
             testStepStarted.testStepId = testStep.id;
             testStepStarted.timestamp = util::TimestampNow();
-            broadcaster.BroadcastEvent(testStepStarted);
+            broadcaster.BroadcastEvent([&testStepStarted](cucumber::messages::Envelope& envelope)
+                {
+                    envelope.testStepStarted = testStepStarted;
+                });
 
             cucumber::messages::TestStepResult testStepResult;
 
@@ -141,21 +147,27 @@ namespace cucumber_cpp::library::runtime
             }
             testStepResults.emplace_back(testStepResult);
 
-            cucumber::messages::TestStepFinished testStepFinished;
-            testStepFinished.testCaseStartedId = currentTestCaseStartedId;
-            testStepFinished.testStepId = testStep.id;
-            testStepFinished.testStepResult = testStepResult;
-            testStepFinished.timestamp = util::TimestampNow();
-            broadcaster.BroadcastEvent(testStepFinished);
+            broadcaster.BroadcastEvent([&currentTestCaseStartedId, &testStep, &testStepResult](cucumber::messages::Envelope& envelope)
+                {
+                    cucumber::messages::TestStepFinished testStepFinished;
+                    testStepFinished.testCaseStartedId = currentTestCaseStartedId;
+                    testStepFinished.testStepId = testStep.id;
+                    testStepFinished.testStepResult = testStepResult;
+                    testStepFinished.timestamp = util::TimestampNow();
+                    envelope.testStepFinished = std::move(testStepFinished);
+                });
         }
 
         willRetry = GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::FAILED && moreAttemptsAvailable;
 
-        cucumber::messages::TestCaseFinished testCaseFinished;
-        testCaseFinished.testCaseStartedId = currentTestCaseStartedId;
-        testCaseFinished.timestamp = util::TimestampNow();
-        testCaseFinished.willBeRetried = willRetry;
-        broadcaster.BroadcastEvent(testCaseFinished);
+        broadcaster.BroadcastEvent([&currentTestCaseStartedId, &willRetry](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestCaseFinished testCaseFinished;
+                testCaseFinished.testCaseStartedId = currentTestCaseStartedId;
+                testCaseFinished.timestamp = util::TimestampNow();
+                testCaseFinished.willBeRetried = willRetry;
+                envelope.testCaseFinished = std::move(testCaseFinished);
+            });
 
         return willRetry;
     }
@@ -206,10 +218,13 @@ namespace cucumber_cpp::library::runtime
 
         if (const auto count = testStep.stepDefinitionIds->size(); count == 0)
         {
-            cucumber::messages::Suggestion suggestion;
-            suggestion.id = idGenerator->NextId();
-            suggestion.pickleStepId = pickleStep.id;
-            broadcaster.BroadcastEvent(suggestion);
+            broadcaster.BroadcastEvent([this, &pickleStep](cucumber::messages::Envelope& envelope)
+                {
+                    cucumber::messages::Suggestion suggestion;
+                    suggestion.id = idGenerator->NextId();
+                    suggestion.pickleStepId = pickleStep.id;
+                    envelope.suggestion = std::move(suggestion);
+                });
 
             cucumber::messages::TestStepResult testStepResult{};
             testStepResult.status = cucumber::messages::TestStepResultStatus::UNDEFINED;
