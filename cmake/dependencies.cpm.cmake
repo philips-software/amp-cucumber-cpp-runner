@@ -25,15 +25,15 @@ ccr_dependency(RE2                       2025-08-12 0f6c07eae69151e606acb3d92327
 ccr_dependency(YAML_CPP                  v0.9.0     56e3bb550c91fd7005566f19c079cb7a503223cf)
 
 # renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
-ccr_dependency(CUCUMBER_MESSAGES         v34.0.0    c5d7095dedb23fcd89ea79e7e7e59f50e3fe66ee)
+ccr_dependency(CUCUMBER_MESSAGES         v34.0.0    23012bdd487ee74b84a267a9c6d60a9ab4822739)
 # renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_GHERKIN          v42.0.0    02b3efa97a9f88091208fd5476348a24d4aa437c)
+ccr_dependency(CUCUMBER_GHERKIN          v42.0.0    8e98d323a61ba8c4c651d73f83f5dc68caf1d653)
 # renovate: datasource=github-tags packageName=cucumber/query versioning=semver
-ccr_dependency(CUCUMBER_QUERY            v1.0.0     282005f191441dc15c74c5d8c9a279327d4ac446)
+ccr_dependency(CUCUMBER_QUERY            v1.0.0     3dca317fdab2b16ae837dae7affab4c2e4120adf)
 # renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
-ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0      2d2e9ac1d84a2e05154fa982a276a04e3d1b3650)
+ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0      2a7ff400647e3653863a9d3d7a1a871e708e85e0)
 # renovate: datasource=github-tags packageName=cucumber/pretty-formatter versioning=semver
-ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     e7fc89b15d5b97a7e2aa935dd884a12fd0ff5a70)
+ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     4673730cac084014d3d8b55e4e00dfc422f1b010)
 
 if(CCR_FETCH_DEPS)
     if(NOT COMMAND CPMAddPackage)
