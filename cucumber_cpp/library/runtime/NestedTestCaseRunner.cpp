@@ -1,15 +1,13 @@
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
-#include "cucumber/messages/Group.hpp"
 #include "cucumber/messages/PickleDocString.hpp"
 #include "cucumber/messages/PickleTable.hpp"
-#include "cucumber/messages/StepMatchArgument.hpp"
 #include "cucumber/messages/StepMatchArgumentsList.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/support/MatchStepDefinitions.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
-#include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
@@ -21,34 +19,16 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include <cstddef>
-#include <cucumber/cucumber-expressions/Argument.hpp>
-#include <cucumber/cucumber-expressions/Matcher.hpp>
 #include <cucumber/messages/TestStepResult.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
-#include <utility>
-#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
 {
     namespace
     {
-        auto TransformToMatch(const std::string& text)
-        {
-            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>
-            {
-                const auto match = std::visit(cucumber::cucumber_expressions::MatchVisitor{ text }, definition.regex);
-                return { definition.id, match };
-            };
-        }
-
-        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>& pair)
-        {
-            return pair.second.has_value();
-        }
-
         cucumber::messages::TestStep Assemble(const std::string& step, const support::SupportCodeLibrary& supportCodeLibrary, const util::TestStepStarted& testStepStarted)
         {
             cucumber::messages::TestStep testStep;
@@ -56,23 +36,7 @@ namespace cucumber_cpp::library::runtime
             testStep.stepDefinitionIds = std::vector<std::string>{};
             testStep.stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{};
 
-            const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
-
-            for (const auto& [id, match] : stepDefinitions |
-                                               std::views::transform(TransformToMatch(step)) |
-                                               std::views::filter(HasMatch))
-            {
-                testStep.stepDefinitionIds.value().push_back(id);
-                auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back();
-                for (const auto& result : *match)
-                {
-                    cucumber::messages::StepMatchArgument stepMatchArgument;
-                    stepMatchArgument.group = util::ArgumentGroupToMessageGroup(result.Group());
-                    if (!result.Name().empty())
-                        stepMatchArgument.parameterTypeName = result.Name();
-                    argumentList.stepMatchArguments.push_back(stepMatchArgument);
-                }
-            }
+            support::MatchStepDefinitions(testStep, supportCodeLibrary.stepRegistry.StepDefinitions(), step);
 
             return testStep;
         }

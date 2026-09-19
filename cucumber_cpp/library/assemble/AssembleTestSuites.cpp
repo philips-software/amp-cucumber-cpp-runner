@@ -1,72 +1,31 @@
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Envelope.hpp"
-#include "cucumber/messages/Group.hpp"
-#include "cucumber/messages/StepMatchArgument.hpp"
 #include "cucumber/messages/StepMatchArgumentsList.hpp"
 #include "cucumber/messages/TestCase.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
+#include "cucumber_cpp/library/support/MatchStepDefinitions.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
-#include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
-#include <cucumber/cucumber-expressions/Argument.hpp>
-#include <cucumber/cucumber-expressions/Matcher.hpp>
 #include <cucumber/messages/PickleStep.hpp>
-#include <functional>
 #include <list>
 #include <map>
-#include <optional>
 #include <ranges>
-#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::assemble
 {
     namespace
     {
-        auto TransformToMatch(const std::string& text)
-        {
-            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>
-            {
-                const auto match = std::visit(cucumber::cucumber_expressions::MatchVisitor{ text }, definition.regex);
-                return { definition.id, match };
-            };
-        }
-
-        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>& pair)
-        {
-            return pair.second.has_value();
-        }
-
-        void AssembleTestStep(cucumber::messages::TestStep& testStep, const std::list<support::StepRegistry::Definition>& stepDefinitions, const cucumber::messages::PickleStep& pickleStep)
-        {
-            for (const auto& [id, match] : stepDefinitions |
-                                               std::views::transform(TransformToMatch(pickleStep.text)) |
-                                               std::views::filter(HasMatch))
-            {
-                testStep.stepDefinitionIds.value().push_back(id);
-                auto& argumentList = testStep.stepMatchArgumentsLists.value().emplace_back();
-                for (const auto& result : *match)
-                {
-                    cucumber::messages::StepMatchArgument stepMatchArgument;
-                    stepMatchArgument.group = util::ArgumentGroupToMessageGroup(result.Group());
-                    if (!result.Name().empty())
-                        stepMatchArgument.parameterTypeName = result.Name();
-                    argumentList.stepMatchArguments.push_back(stepMatchArgument);
-                }
-            }
-        }
-
         void AssembleSteps(const support::SupportCodeLibrary& supportCodeLibrary, const support::PickleSource& pickleSource, cucumber::messages::TestCase& testCase, cucumber::gherkin::IdGeneratorBase& idGenerator)
         {
             const auto& stepDefinitions = supportCodeLibrary.stepRegistry.StepDefinitions();
@@ -79,7 +38,7 @@ namespace cucumber_cpp::library::assemble
                 testStep.stepDefinitionIds = std::vector<std::string>{};
                 testStep.stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{};
 
-                AssembleTestStep(testCase.testSteps.emplace_back(std::move(testStep)), stepDefinitions, pickleStep);
+                support::MatchStepDefinitions(testCase.testSteps.emplace_back(std::move(testStep)), stepDefinitions, pickleStep.text);
             }
         }
 

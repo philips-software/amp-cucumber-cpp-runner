@@ -12,6 +12,8 @@ target_sources(cucumber_cpp.library.support PRIVATE
     DefinitionRegistration.hpp
     HookRegistry.cpp
     HookRegistry.hpp
+    MatchStepDefinitions.cpp
+    MatchStepDefinitions.hpp
     StepRegistry.cpp
     StepRegistry.hpp
     StepType.hpp
