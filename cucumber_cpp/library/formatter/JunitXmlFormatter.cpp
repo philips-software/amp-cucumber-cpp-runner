@@ -125,9 +125,9 @@ namespace cucumber_cpp::library::formatter
                 const auto& lineage = *lineageAndPickle.lineage;
                 const auto durationOpt = query.FindTestCaseDurationBy(testCaseStartedPtr);
 
-                testCases.emplace_back(testClassName.value_or(lineage.feature ? lineage.feature->name : pickle->uri),
+                testCases.emplace_back(testClassName.value_or((lineage.feature != nullptr) ? lineage.feature->name : pickle->uri),
                     namingStrategy->Reduce(lineage, *pickle),
-                    util::DurationToMilliseconds(durationOpt.has_value() ? durationOpt.value() : cucumber::messages::Duration{}).count(),
+                    util::DurationToMilliseconds(durationOpt.value_or(cucumber::messages::Duration{})).count(),
                     MakeFailure(query, testCaseStartedPtr),
                     MakeOutput(query, testCaseStartedPtr));
             }
@@ -145,10 +145,10 @@ namespace cucumber_cpp::library::formatter
             };
 
             const auto testRunDuration = query.FindTestRunDuration();
-            const auto testRunStarted = query.FindTestRunStarted();
+            const auto* testRunStarted = query.FindTestRunStarted();
 
             return {
-                .time = util::DurationToMilliseconds(testRunDuration.has_value() ? testRunDuration.value() : cucumber::messages::Duration{}).count(),
+                .time = util::DurationToMilliseconds(testRunDuration.value_or(cucumber::messages::Duration{})).count(),
                 .tests = query.CountTestCasesStarted(),
                 .skipped = count(cucumber::messages::TestStepResultStatus::SKIPPED),
                 .failures = count(cucumber::messages::TestStepResultStatus::UNKNOWN) +
