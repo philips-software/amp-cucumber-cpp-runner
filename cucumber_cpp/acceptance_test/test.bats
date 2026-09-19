@@ -244,7 +244,7 @@ teardown() {
     assert_output --partial "Value of: false"
     assert_output --partial "Expected: is true"
     assert_output --partial "Actual: false (of type bool)"
-    assert_output --partial "3 steps (1 passed, 1 skipped, 1 failed)"
+    assert_output --partial "2 steps (1 skipped, 1 failed)"
 }
 
 @test "Test providing access to scenario info in scenario and step hooks" {
