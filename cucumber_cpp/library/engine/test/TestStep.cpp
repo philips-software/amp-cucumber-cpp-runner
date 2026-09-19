@@ -1,7 +1,6 @@
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/PickleStepArgument.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
@@ -17,6 +16,7 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -50,7 +50,7 @@ namespace cucumber_cpp::library::engine
             util::StepOrHookStarted stepOrHookStarted;
             cucumber::messages::PickleStepArgument pickleStepArgument;
 
-            cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+            cucumber::cucumber_expressions::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
             cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
             support::UndefinedParameters undefinedParameters;
             support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
@@ -75,8 +75,8 @@ namespace cucumber_cpp::library::engine
                 broadcaster,
                 context,
                 stepOrHookStarted,
-                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*(*pickleStepArgument.dataTable)) : std::nullopt),
-                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*(*pickleStepArgument.docString)) : std::nullopt),
+                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*pickleStepArgument.dataTable) : std::nullopt),
+                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*pickleStepArgument.docString) : std::nullopt),
             };
         };
     }

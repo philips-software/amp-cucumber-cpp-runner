@@ -6,7 +6,6 @@
 
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -18,6 +17,7 @@
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
 #include <cstddef>
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -72,7 +72,7 @@ namespace cucumber_cpp::library
 
         CLI::App& CliParser();
         Context& ProgramContext();
-        cucumber_expression::ParameterRegistry& ParameterRegistration();
+        cucumber::cucumber_expressions::ParameterRegistry& ParameterRegistration();
         api::Formatters& Formatters();
 
     private:
@@ -93,7 +93,7 @@ namespace cucumber_cpp::library
 
         plugin::DynamicLibraryManager dynamicLibraryManager;
 
-        cucumber_expression::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
+        cucumber::cucumber_expressions::ParameterRegistry parameterRegistry{ cucumber_cpp::library::support::DefinitionRegistration::Instance().GetRegisteredParameters() };
         bool removeDefaultGoogleTestListener;
         std::unique_ptr<util::Stopwatch> stopwatch;
         std::unique_ptr<util::TimestampGenerator> timestampGenerator;

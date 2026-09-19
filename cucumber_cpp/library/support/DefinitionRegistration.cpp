@@ -1,6 +1,5 @@
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -9,6 +8,7 @@
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <functional>
 #include <map>
 #include <set>
@@ -98,7 +98,7 @@ namespace cucumber_cpp::library::support
         return result;
     }
 
-    std::set<cucumber_expression::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
+    std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> DefinitionRegistration::GetRegisteredParameters() const
     {
         auto result = staticCustomParameters;
         result.insert(customParameters.begin(), customParameters.end());

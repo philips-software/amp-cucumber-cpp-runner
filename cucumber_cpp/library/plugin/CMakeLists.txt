@@ -20,7 +20,7 @@ target_include_directories(cucumber_cpp.library.plugin PUBLIC
 
 target_link_libraries(cucumber_cpp.library.plugin PUBLIC
     cucumber_cpp.library.support
-    cucumber_cpp.library.cucumber_expression
+    cucumber::cucumber_expressions
     ${CMAKE_DL_LIBS}
 )
 

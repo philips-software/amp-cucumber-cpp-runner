@@ -6,14 +6,13 @@
 #include "cucumber_cpp/library/Hooks.hpp"
 #include "cucumber_cpp/library/Parameter.hpp"
 #include "cucumber_cpp/library/Steps.hpp"
-#include "cucumber_cpp/library/cucumber_expression/MatchRange.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/engine/Step.hpp"
 
 namespace cucumber_cpp
 {
+    using cucumber::cucumber_expressions::StringTo;
     using cucumber_cpp::library::Application;
     using cucumber_cpp::library::Context;
-    using cucumber_cpp::library::cucumber_expression::StringTo;
     using cucumber_cpp::library::engine::StepBase;
 }
 

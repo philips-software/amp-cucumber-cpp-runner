@@ -11,11 +11,11 @@
 
 namespace cucumber_cpp::library::util
 {
-    std::set<std::string, std::less<>> TransformPickleTags(std::span<const std::shared_ptr<cucumber::messages::PickleTag>> tags)
+    std::set<std::string, std::less<>> TransformPickleTags(std::span<const cucumber::messages::PickleTag> tags)
     {
         auto tagNames = tags | std::views::transform([](const auto& tag) -> const std::string&
                                    {
-                                       return tag->name;
+                                       return tag.name;
                                    });
         return { std::begin(tagNames), std::end(tagNames) };
     }
