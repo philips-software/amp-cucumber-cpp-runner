@@ -34,6 +34,8 @@ ccr_dependency(CUCUMBER_QUERY            v1.0.0     3dca317fdab2b16ae837dae7affa
 ccr_dependency(CUCUMBER_TAG_EXPRESSIONS v1.0.0      2a7ff400647e3653863a9d3d7a1a871e708e85e0)
 # renovate: datasource=github-tags packageName=cucumber/pretty-formatter versioning=semver
 ccr_dependency(CUCUMBER_PRETTY_FORMATTER v1.0.0     4673730cac084014d3d8b55e4e00dfc422f1b010)
+# renovate: datasource=github-tags packageName=cucumber/cucumber-expressions versioning=semver
+ccr_dependency(CUCUMBER_CUCUMBER_EXPRESSIONS v1.0.0 79aa7b36f8b9ba65a1eaee606e8b3226dcadb750)
 
 if(CCR_FETCH_DEPS)
     if(NOT COMMAND CPMAddPackage)
@@ -188,6 +190,15 @@ if(CCR_FETCH_DEPS)
     CPMAddPackage(
         URI "gh:cucumber/pretty-formatter@${CUCUMBER_PRETTY_FORMATTER_VERSION}#${CUCUMBER_PRETTY_FORMATTER_DIGEST}"
         NAME cucumber_pretty_formatter
+        SOURCE_SUBDIR cpp
+    )
+
+    # ---------------------------------------------------------------------------
+    # cucumber_cucumber_expressions
+    # ---------------------------------------------------------------------------
+    CPMAddPackage(
+        URI "gh:cucumber/cucumber-expressions@${CUCUMBER_CUCUMBER_EXPRESSIONS_VERSION}#${CUCUMBER_CUCUMBER_EXPRESSIONS_DIGEST}"
+        NAME cucumber_cucumber_expressions
         SOURCE_SUBDIR cpp
     )
 

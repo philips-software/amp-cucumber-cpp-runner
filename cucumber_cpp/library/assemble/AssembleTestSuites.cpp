@@ -7,8 +7,6 @@
 #include "cucumber/messages/TestCase.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -16,8 +14,9 @@
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
-#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformPickleTag.hpp"
+#include <cucumber/cucumber-expressions/Argument.hpp>
+#include <cucumber/cucumber-expressions/Matcher.hpp>
 #include <functional>
 #include <list>
 #include <map>
@@ -37,14 +36,14 @@ namespace cucumber_cpp::library::assemble
     {
         auto TransformToMatch(const std::string& text)
         {
-            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
+            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>
             {
-                const auto match = std::visit(cucumber_expression::MatchVisitor{ text }, definition.regex);
+                const auto match = std::visit(cucumber::cucumber_expressions::MatchVisitor{ text }, definition.regex);
                 return { definition.id, match };
             };
         }
 
-        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>& pair)
+        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>& pair)
         {
             return pair.second.has_value();
         }

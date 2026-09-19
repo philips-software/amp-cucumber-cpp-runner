@@ -14,7 +14,7 @@ target_include_directories(cucumber_cpp.library.api PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.api PUBLIC
-    cucumber_cpp.library.cucumber_expression
+    cucumber::cucumber_expressions
     cucumber_cpp.library.formatter
     cucumber_cpp.library.runtime
     cucumber_cpp.library.support

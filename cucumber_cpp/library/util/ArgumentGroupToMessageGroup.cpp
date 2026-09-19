@@ -1,15 +1,13 @@
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
 #include "cucumber/messages/Group.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Group.hpp"
-#include <memory>
+#include <cucumber/cucumber-expressions/Group.hpp>
 #include <optional>
-#include <ranges>
 #include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::util
 {
-    cucumber::messages::Group ArgumentGroupToMessageGroup(const cucumber_expression::ArgumentGroup& argumentGroup)
+    cucumber::messages::Group ArgumentGroupToMessageGroup(const cucumber::cucumber_expressions::ArgumentGroup& argumentGroup)
     {
         std::vector<cucumber::messages::Group> messageChildren;
         for (const auto& child : argumentGroup.children)

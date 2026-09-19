@@ -1,11 +1,11 @@
 #include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <string>
 
 namespace cucumber_cpp::library::plugin
 {
-    void ParameterLoader::Load(const support::DefinitionRegistration& registration, cucumber_expression::ParameterRegistry& parameterRegistry)
+    void ParameterLoader::Load(const support::DefinitionRegistration& registration, cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry)
     {
         const auto& existingParameters = parameterRegistry.GetParameters();
 
@@ -14,7 +14,7 @@ namespace cucumber_cpp::library::plugin
             if (!existingParameters.contains(parameter.params.name))
             {
                 parameterRegistry.AddParameter(
-                    cucumber_expression::ParameterType{
+                    cucumber::cucumber_expressions::ParameterType{
                         .name = parameter.params.name,
                         .regex = { std::string(parameter.params.regex) },
                         .isBuiltin = false,

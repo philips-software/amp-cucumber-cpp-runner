@@ -2,7 +2,6 @@
 #define SUPPORT_DEFINITION_REGISTRATION_HPP
 
 #include "cucumber/gherkin/IdGenerator.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -10,6 +9,8 @@
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
+#include <cucumber/cucumber-expressions/SourceLocation.hpp>
 #include <functional>
 #include <map>
 #include <ranges>
@@ -41,7 +42,7 @@ namespace cucumber_cpp::library::support
 
         std::vector<HookEntry> GetHooks();
 
-        [[nodiscard]] std::set<cucumber_expression::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
+        [[nodiscard]] std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
 
         template<class T>
         static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
@@ -53,7 +54,7 @@ namespace cucumber_cpp::library::support
         static std::size_t Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation = std::source_location::current());
 
         template<class Transformer, class TReturn>
-        static std::size_t Register(cucumber_expression::CustomParameterEntryParams params, std::source_location location = std::source_location::current());
+        static std::size_t Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location = cucumber::cucumber_expressions::SourceLocation::current());
 
     private:
         std::size_t Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation);
@@ -61,12 +62,12 @@ namespace cucumber_cpp::library::support
         std::size_t Register(std::string_view matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation);
 
         std::map<std::source_location, Entry, SourceLocationOrder> registry;
-        std::set<cucumber_expression::CustomParameterEntry, std::less<>> customParameters;
+        std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> customParameters;
 
         std::vector<DefinitionRegistration*> plugins;
 
         std::map<std::source_location, Entry, SourceLocationOrder> staticRegistry;
-        std::set<cucumber_expression::CustomParameterEntry, std::less<>> staticCustomParameters;
+        std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> staticCustomParameters;
     };
 
     //////////////////////////
@@ -119,12 +120,12 @@ namespace cucumber_cpp::library::support
     }
 
     template<class Transformer, class TReturn>
-    std::size_t DefinitionRegistration::Register(cucumber_expression::CustomParameterEntryParams params, std::source_location location)
+    std::size_t DefinitionRegistration::Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location)
     {
         auto& instance = Instance();
         instance.customParameters.emplace(params, instance.customParameters.size() + 1, location);
 
-        cucumber_expression::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
+        cucumber::cucumber_expressions::ConverterTypeMap<TReturn>::Instance()[params.name] = Transformer::Transform;
 
         return instance.customParameters.size();
     }

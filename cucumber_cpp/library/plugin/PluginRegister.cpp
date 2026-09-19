@@ -1,8 +1,8 @@
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/plugin/PluginExport.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <utility>
 
 extern "C" CCR_EXPORT void ccr_register(cucumber_cpp::library::plugin::PluginHostContext* context)
@@ -30,8 +30,8 @@ extern "C" CCR_EXPORT void ccr_register(cucumber_cpp::library::plugin::PluginHos
 
     if (context->converterMap != nullptr)
     {
-        auto* hostMap = static_cast<cucumber_cpp::library::cucumber_expression::ConverterMap*>(context->converterMap);
-        auto& local = cucumber_cpp::library::cucumber_expression::ConverterRegistry::LocalInstance();
+        auto* hostMap = static_cast<cucumber::cucumber_expressions::ConverterMap*>(context->converterMap);
+        auto& local = cucumber::cucumber_expressions::ConverterRegistry::LocalInstance();
 
         // On Linux (ELF unique symbols), host and plugin share the same
         // static map, so migration is unnecessary and clearing would
@@ -48,7 +48,7 @@ extern "C" CCR_EXPORT void ccr_register(cucumber_cpp::library::plugin::PluginHos
 
             // Redirect all future registrations and lookups in this plugin to the
             // host-owned converter map so host and plugin share the same storage.
-            cucumber_cpp::library::cucumber_expression::ConverterRegistry::SetInstance(hostMap);
+            cucumber::cucumber_expressions::ConverterRegistry::SetInstance(hostMap);
         }
     }
 }

@@ -1,5 +1,4 @@
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
-#include "cucumber/messages/Duration.hpp"
 #include "cucumber/messages/Group.hpp"
 #include "cucumber/messages/PickleDocString.hpp"
 #include "cucumber/messages/PickleTable.hpp"
@@ -8,8 +7,6 @@
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/ArgumentGroupToMessageGroup.hpp"
@@ -24,7 +21,9 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include <cstddef>
-#include <memory>
+#include <cucumber/cucumber-expressions/Argument.hpp>
+#include <cucumber/cucumber-expressions/Matcher.hpp>
+#include <cucumber/messages/TestStepResult.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -38,14 +37,14 @@ namespace cucumber_cpp::library::runtime
     {
         auto TransformToMatch(const std::string& text)
         {
-            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>
+            return [&text](const support::StepRegistry::Definition& definition) -> std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>
             {
-                const auto match = std::visit(cucumber_expression::MatchVisitor{ text }, definition.regex);
+                const auto match = std::visit(cucumber::cucumber_expressions::MatchVisitor{ text }, definition.regex);
                 return { definition.id, match };
             };
         }
 
-        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber_expression::Argument>>>& pair)
+        bool HasMatch(const std::pair<std::string, std::optional<std::vector<cucumber::cucumber_expressions::Argument>>>& pair)
         {
             return pair.second.has_value();
         }
@@ -92,7 +91,7 @@ namespace cucumber_cpp::library::runtime
 
         void Run(std::size_t nesting, const std::string& step, const cucumber::messages::TestStep& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, const util::TestStepStarted& testStepStarted, const std::optional<cucumber::messages::PickleTable>& dataTable, const std::optional<cucumber::messages::PickleDocString>& docString) // NOSONAR: cohesive step runner
         {
-            auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([&supportCodeLibrary](const std::string& id)
+            auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([&supportCodeLibrary](const std::string& id) -> const support::StepRegistry::Definition&
                                                                        {
                                                                            return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                        });

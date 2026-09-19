@@ -27,7 +27,6 @@
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/GetWorstTestStepResult.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
-#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/ScenarioInfo.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
@@ -39,7 +38,6 @@
 #include "cucumber_cpp/library/util/TransformTestStepStarted.hpp"
 #include <algorithm>
 #include <cstddef>
-#include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -211,7 +209,7 @@ namespace cucumber_cpp::library::runtime
 
     cucumber::messages::TestStepResult TestCaseRunner::RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted)
     {
-        auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([this](const std::string& id)
+        auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([this](const std::string& id) -> const support::StepRegistry::Definition&
                                                                    {
                                                                        return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                    });
