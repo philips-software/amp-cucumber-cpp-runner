@@ -26,7 +26,7 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CCR_FETCH_DEPS": "Off",
                 "CCR_BUILD_TESTS": "On",
-                "CCR_USE_RE2": "On"
+                "CCR_ENABLE_SANITIZERS": "On"
             }
         },
         {
@@ -35,6 +35,7 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CCR_BUILD_TESTS": "On",
                 "CCR_ENABLE_COVERAGE": "On"
             }
         },
@@ -49,6 +50,7 @@
             "inherits": "defaults",
             "generator": "Ninja",
             "cacheVariables": {
+                "CCR_FETCH_DEPS": "On",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
