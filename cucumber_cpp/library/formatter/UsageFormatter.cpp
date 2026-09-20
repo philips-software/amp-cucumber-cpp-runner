@@ -8,7 +8,6 @@
 #include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
-#include "fmt/chrono.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
@@ -226,7 +225,7 @@ namespace cucumber_cpp::library::formatter
         std::string FormatDuration(const std::optional<std::chrono::nanoseconds>& duration)
         {
             if (duration.has_value())
-                return fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(duration.value()));
+                return fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(duration.value()).count());
             return "-";
         }
 

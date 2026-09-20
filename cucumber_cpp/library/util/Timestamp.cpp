@@ -3,9 +3,9 @@
 #include "cucumber/messages/Duration.hpp"
 #include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
-#include "fmt/chrono.h"
 #include "fmt/format.h"
 #include <chrono>
+#include <ctime>
 #include <string>
 
 namespace cucumber_cpp::library::util
@@ -70,8 +70,19 @@ namespace cucumber_cpp::library::util
 
     std::string MakeIso8601Timestamp(const cucumber::messages::Timestamp& timestamp)
     {
-        const auto duration = std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::seconds(timestamp.seconds) + std::chrono::nanoseconds(timestamp.nanos));
-        const std::chrono::system_clock::time_point tp{ duration };
-        return fmt::format("{:%FT%T%Z}", tp);
+        const std::time_t seconds = timestamp.seconds;
+        std::tm utcTime{};
+        gmtime_r(&seconds, &utcTime);
+        const auto timestampWithoutFraction = fmt::format(
+            "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+            utcTime.tm_year + 1900,
+            utcTime.tm_mon + 1,
+            utcTime.tm_mday,
+            utcTime.tm_hour,
+            utcTime.tm_min,
+            utcTime.tm_sec);
+        if (timestamp.nanos == 0)
+            return timestampWithoutFraction + "Z";
+        return fmt::format("{}.{:09}Z", timestampWithoutFraction, timestamp.nanos);
     }
 }
