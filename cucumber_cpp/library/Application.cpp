@@ -4,7 +4,6 @@
 #include "CLI/Error.hpp"
 #include "CLI/Option.hpp"
 #include "CLI/Validators.hpp"
-#include "CLI/impl/App_inl.hpp"
 #include "cucumber/cucumber-expressions/Errors.hpp"
 #include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/Demangle.hpp"
