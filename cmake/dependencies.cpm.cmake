@@ -21,8 +21,6 @@ ccr_dependency(PUGIXML                   v1.15      ee86beb30e4973f5feffe3ce63bf
 ccr_dependency(ABSEIL_CPP                20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
 # renovate: datasource=github-tags packageName=google/re2
 ccr_dependency(RE2                       2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
-# renovate: datasource=github-tags packageName=jbeder/yaml-cpp versioning=semver
-ccr_dependency(YAML_CPP                  v0.9.0     56e3bb550c91fd7005566f19c079cb7a503223cf)
 
 # renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
 ccr_dependency(CUCUMBER_MESSAGES         v34.0.0    23012bdd487ee74b84a267a9c6d60a9ab4822739)
@@ -201,18 +199,6 @@ if(CCR_FETCH_DEPS)
         NAME cucumber_cucumber_expressions
         SOURCE_SUBDIR cpp
     )
-
-    if (CCR_BUILD_TESTS)
-        # ---------------------------------------------------------------------------
-        # yaml-cpp
-        # ---------------------------------------------------------------------------
-        CPMAddPackage(
-            URI "gh:jbeder/yaml-cpp@${YAML_CPP_VERSION}#${YAML_CPP_DIGEST}"
-            NAME yaml-cpp
-            OPTIONS
-                "YAML_ENABLE_PIC OFF"
-        )
-    endif()
 else()
     find_package(CLI11 ${CLI11_VERSION} REQUIRED)
     find_package(nlohmann_json ${NLOHMANN_JSON_VERSION} REQUIRED)
@@ -223,10 +209,6 @@ else()
     if (CCR_USE_RE2)
         find_package(absl ${ABSEIL_CPP_VERSION})
         find_package(re2)
-    endif()
-
-    if (CCR_BUILD_TESTS)
-        find_package(yaml-cpp ${YAML_CPP_VERSION} REQUIRED)
     endif()
 
     find_package(cucumber_messages ${CUCUMBER_MESSAGES_VERSION} REQUIRED)

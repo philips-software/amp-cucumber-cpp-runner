@@ -165,7 +165,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y nlohmann-json3-dev libgtest-dev libgmock-dev libabsl-dev libre2-dev
+          sudo apt-get install -y nlohmann-json3-dev libgtest-dev libgmock-dev libabsl-dev libre2-dev libcli11-dev libpugixml-dev
 
       # Ubuntu 24.04 ships fmt 9; newer runners provide fmt 10+ via apt.
       - name: Install libfmt (apt)
@@ -246,7 +246,7 @@ jobs:
           save: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install dependencies
-        run: brew install googletest nlohmann-json fmt abseil re2
+        run: brew install googletest nlohmann-json fmt abseil re2 cli11 pugixml
 
       - name: Install cucumber/tag-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
@@ -301,7 +301,7 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
-          vcpkg install gtest nlohmann-json fmt abseil re2 --triplet x64-windows
+          vcpkg install gtest nlohmann-json fmt abseil re2 cli11 pugixml --triplet x64-windows
           # Expose the vcpkg toolchain so find_package() locates the packages.
           echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
 
