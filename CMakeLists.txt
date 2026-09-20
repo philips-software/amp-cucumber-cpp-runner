@@ -32,6 +32,10 @@ if(CCR_ENABLE_SANITIZERS AND CCR_ENABLE_COVERAGE)
     message(FATAL_ERROR "CCR_ENABLE_SANITIZERS and CCR_ENABLE_COVERAGE are mutually exclusive.")
 endif()
 
+if(CCR_ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(WARNING "Code coverage is only enabled with the GNU compiler.")
+endif()
+
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
 endif()
@@ -91,8 +95,10 @@ include(cmake/dependencies.cpm.cmake)
 add_subdirectory(external)
 
 if (CCR_ENABLE_SANITIZERS)
-    add_compile_options(-fsanitize=address -fsanitize=undefined)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-fsanitize=address -fsanitize=undefined)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    endif()
 endif()
 
 if (TARGET re2::re2)
