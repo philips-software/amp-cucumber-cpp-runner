@@ -16,7 +16,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include <algorithm>

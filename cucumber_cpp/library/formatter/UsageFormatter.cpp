@@ -8,7 +8,7 @@
 #include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
