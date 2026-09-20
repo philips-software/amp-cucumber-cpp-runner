@@ -26,11 +26,11 @@ env:
   GHERKIN_REF: main
   # renovate: datasource=git-refs depName=cucumber/query packageName=https://github.com/cucumber/query currentValue=feature/cpp
   QUERY_REF: feature/cpp
-  # renovate: datasource=git-refs depName=cucumber/tag_expressions packageName=https://github.com/cucumber/tag_expressions currentValue=feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/tag-expressions packageName=https://github.com/cucumber/tag-expressions currentValue=feature/cpp
   TAG_EXPRESSIONS_REF: feature/cpp
-  # renovate: datasource=git-refs depName=cucumber/pretty_formatter packageName=https://github.com/cucumber/pretty_formatter currentValue=feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/pretty-formatter packageName=https://github.com/cucumber/pretty-formatter currentValue=feature/cpp
   PRETTY_FORMATTER_REF: feature/cpp
-  # renovate: datasource=git-refs depName=cucumber/cucumber_expressions packageName=https://github.com/cucumber/cucumber_expressions currentValue=feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/cucumber-expressions packageName=https://github.com/cucumber/cucumber-expressions currentValue=feature/cpp
   CUCUMBER_EXPRESSIONS_REF: feature/cpp
 
 jobs:
@@ -191,16 +191,16 @@ jobs:
           cmake --build fmt-src/build
           sudo cmake --install fmt-src/build
 
-      - name: Install cucumber/tag_expressions
+      - name: Install cucumber/tag-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/tag_expressions
+          repository: cucumber/tag-expressions
           ref: ${{ env.TAG_EXPRESSIONS_REF }}
 
-      - name: Install cucumber/cucumber_expressions
+      - name: Install cucumber/cucumber-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/cucumber_expressions
+          repository: cucumber/cucumber-expressions
           ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
 
       - name: Install cucumber/messages
@@ -221,10 +221,10 @@ jobs:
           repository: cucumber/query
           ref: ${{ env.QUERY_REF }}
 
-      - name: Install cucumber/pretty_formatter
+      - name: Install cucumber/pretty-formatter
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/pretty_formatter
+          repository: cucumber/pretty-formatter
           ref: ${{ env.PRETTY_FORMATTER_REF }}
 
       - name: Build and unit test
@@ -248,16 +248,16 @@ jobs:
       - name: Install dependencies
         run: brew install googletest nlohmann-json fmt abseil re2
 
-      - name: Install cucumber/tag_expressions
+      - name: Install cucumber/tag-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/tag_expressions
+          repository: cucumber/tag-expressions
           ref: ${{ env.TAG_EXPRESSIONS_REF }}
 
-      - name: Install cucumber/cucumber_expressions
+      - name: Install cucumber/cucumber-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/cucumber_expressions
+          repository: cucumber/cucumber-expressions
           ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
 
       - name: Install cucumber/messages
@@ -278,10 +278,10 @@ jobs:
           repository: cucumber/query
           ref: ${{ env.QUERY_REF }}
 
-      - name: Install cucumber/pretty_formatter
+      - name: Install cucumber/pretty-formatter
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/pretty_formatter
+          repository: cucumber/pretty-formatter
           ref: ${{ env.PRETTY_FORMATTER_REF }}
 
       - name: Build and unit test
@@ -305,16 +305,16 @@ jobs:
           # Expose the vcpkg toolchain so find_package() locates the packages.
           echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
 
-      - name: Install cucumber/tag_expressions
+      - name: Install cucumber/tag-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/tag_expressions
+          repository: cucumber/tag-expressions
           ref: ${{ env.TAG_EXPRESSIONS_REF }}
 
-      - name: Install cucumber/cucumber_expressions
+      - name: Install cucumber/cucumber-expressions
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/cucumber_expressions
+          repository: cucumber/cucumber-expressions
           ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
 
       - name: Install cucumber/messages
@@ -335,10 +335,10 @@ jobs:
           repository: cucumber/query
           ref: ${{ env.QUERY_REF }}
 
-      - name: Install cucumber/pretty_formatter
+      - name: Install cucumber/pretty-formatter
         uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
         with:
-          repository: cucumber/pretty_formatter
+          repository: cucumber/pretty-formatter
           ref: ${{ env.PRETTY_FORMATTER_REF }}
       - name: Build and unit test
         run: cmake --workflow --preset test-system
