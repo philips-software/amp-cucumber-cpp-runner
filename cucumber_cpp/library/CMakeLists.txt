@@ -23,7 +23,8 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_cpp.library.plugin
     cucumber_cpp.library.support
     cucumber_cpp.library.util
-    cucumber_gherkin_lib
+    cucumber::gherkin
+    cucumber::cucumber_expressions
     cucumber::tag_expressions
     GTest::gmock
     GTest::gtest
@@ -39,7 +40,6 @@ target_compile_options(cucumber_cpp.library
 
 add_subdirectory(api)
 add_subdirectory(assemble)
-add_subdirectory(cucumber_expression)
 add_subdirectory(engine)
 add_subdirectory(formatter)
 add_subdirectory(plugin)

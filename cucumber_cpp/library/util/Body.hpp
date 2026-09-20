@@ -1,7 +1,7 @@
 #ifndef UTIL_BODY_HPP
 #define UTIL_BODY_HPP
 
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "gtest/gtest.h"
 #include <exception>
@@ -49,7 +49,7 @@ namespace cucumber_cpp::library::util
     struct Argument
     {
         std::string converterName;
-        cucumber_expression::ConvertFunctionArg converterArgs;
+        cucumber::cucumber_expressions::ConvertFunctionArg converterArgs;
     };
 
     using ExecuteArgs = std::vector<Argument>;

@@ -8,7 +8,7 @@
 #include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
@@ -64,12 +64,12 @@ namespace cucumber_cpp::library::formatter
             std::map<std::string, Usage, std::less<>> mapping;
 
             for (const auto& stepDefinition : query.FindAllStepDefinitions())
-                mapping[stepDefinition->id] = Usage{
-                    .line = (stepDefinition->sourceReference && stepDefinition->sourceReference->location) ? (*stepDefinition->sourceReference->location)->line : 0,
+                mapping[stepDefinition.id] = Usage{
+                    .line = stepDefinition.sourceReference.location ? stepDefinition.sourceReference.location->line : 0,
                     .matches = {},
-                    .pattern = stepDefinition->pattern->source,
-                    .patternType = std::string{ cucumber::messages::to_string(stepDefinition->pattern->type) },
-                    .uri = stepDefinition->sourceReference ? stepDefinition->sourceReference->uri.value_or("") : "",
+                    .pattern = stepDefinition.pattern.source,
+                    .patternType = std::string{ cucumber::messages::to_string(stepDefinition.pattern.type) },
+                    .uri = stepDefinition.sourceReference.uri.value_or(""),
                     .meanDuration = {},
                 };
 
@@ -83,20 +83,20 @@ namespace cucumber_cpp::library::formatter
 
         UsageMatch CreateUsageMatch(
             const cucumber::query::Query& query,
-            const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
-            const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
+            const cucumber::messages::TestStepFinished* testStepFinished,
+            const cucumber::messages::TestStep* testStep,
             const cucumber::query::Lineage& lineage)
         {
-            const auto pickleStep = query.FindPickleStepBy(testStep).value();
-            const auto step = query.FindStepBy(pickleStep).value();
+            const auto* pickleStep = query.FindPickleStepBy(*testStep);
+            const auto* step = query.FindStepBy(*pickleStep);
 
             std::optional<std::chrono::nanoseconds> duration{};
-            if (HasExecuted(testStepFinished->testStepResult->status) && testStepFinished->testStepResult->duration)
-                duration = util::DurationToNanoSeconds(*testStepFinished->testStepResult->duration);
+            if (HasExecuted(testStepFinished->testStepResult.status))
+                duration = util::DurationToNanoSeconds(testStepFinished->testStepResult.duration);
 
             return UsageMatch{
                 .duration = duration,
-                .line = step->location->line,
+                .line = step->location.line,
                 .text = pickleStep->text,
                 .uri = lineage.gherkinDocument->uri.value_or("")
             };
@@ -104,8 +104,8 @@ namespace cucumber_cpp::library::formatter
 
         void AddUsageMatchToMapping(
             const cucumber::query::Query& query,
-            const std::shared_ptr<const cucumber::messages::TestStepFinished>& testStepFinished,
-            const std::shared_ptr<const cucumber::messages::TestStep>& testStep,
+            const cucumber::messages::TestStepFinished* testStepFinished,
+            const cucumber::messages::TestStep* testStep,
             const cucumber::query::Lineage& lineage,
             std::map<std::string, Usage, std::less<>>& mapping)
         {
@@ -144,7 +144,7 @@ namespace cucumber_cpp::library::formatter
         {
             for (const auto& testCaseStarted : query.FindAllTestCaseStarted())
             {
-                if (!query.FindTestCaseFinishedBy(testCaseStarted).has_value())
+                if (query.FindTestCaseFinishedBy(testCaseStarted) == nullptr)
                     continue;
 
                 const auto lineageAndPickle = query.FindLineageBy(testCaseStarted).value();
@@ -225,7 +225,7 @@ namespace cucumber_cpp::library::formatter
         std::string FormatDuration(const std::optional<std::chrono::nanoseconds>& duration)
         {
             if (duration.has_value())
-                return fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(duration.value()));
+                return fmt::format("{}", std::chrono::duration_cast<std::chrono::milliseconds>(duration.value()).count());
             return "-";
         }
 

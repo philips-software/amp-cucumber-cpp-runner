@@ -12,6 +12,8 @@ target_sources(cucumber_cpp.library.support PRIVATE
     DefinitionRegistration.hpp
     HookRegistry.cpp
     HookRegistry.hpp
+    MatchStepDefinitions.cpp
+    MatchStepDefinitions.hpp
     StepRegistry.cpp
     StepRegistry.hpp
     StepType.hpp
@@ -27,7 +29,7 @@ target_include_directories(cucumber_cpp.library.support PUBLIC
 target_link_libraries(cucumber_cpp.library.support PUBLIC
     GTest::gtest
     GTest::gmock
-    cucumber_cpp.library.cucumber_expression
+    cucumber::cucumber_expressions
     cucumber::tag_expressions
     cucumber_cpp.library.util
     fmt::fmt

@@ -1,7 +1,7 @@
 #ifndef SUPPORT_SUPPORT_CODE_LIBRARY_HPP
 #define SUPPORT_SUPPORT_CODE_LIBRARY_HPP
 
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
@@ -63,7 +63,7 @@ namespace cucumber_cpp::library::support
     {
         HookRegistry& hookRegistry;
         StepRegistry& stepRegistry;
-        cucumber_expression::ParameterRegistry& parameterRegistry;
+        cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry;
         UndefinedParameters& undefinedParameters;
     };
 

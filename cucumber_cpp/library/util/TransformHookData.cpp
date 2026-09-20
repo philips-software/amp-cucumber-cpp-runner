@@ -41,17 +41,21 @@ namespace cucumber_cpp::library::util
 
     cucumber::messages::Hook TransformHookData(const HookData& hookData)
     {
-        return {
-            .id = hookData.id,
-            .name = hookData.name.has_value() ? std::make_optional<std::string>(hookData.name.value()) : std::nullopt,
-            .sourceReference = std::make_shared<cucumber::messages::SourceReference>(cucumber::messages::SourceReference{
-                .uri = hookData.sourceLocation.file_name(),
-                .location = std::make_shared<cucumber::messages::Location>(cucumber::messages::Location{
-                    .line = hookData.sourceLocation.line(),
-                }),
-            }),
-            .tagExpression = hookData.expression.has_value() ? std::make_optional<std::string>(hookData.expression.value()) : std::nullopt,
-            .type = MapHookType(hookData.type),
-        };
+        cucumber::messages::Location location;
+        location.line = hookData.sourceLocation.line();
+
+        cucumber::messages::SourceReference sourceReference;
+        sourceReference.uri = hookData.sourceLocation.file_name();
+        sourceReference.location = location;
+
+        cucumber::messages::Hook hook;
+        hook.id = hookData.id;
+        if (hookData.name.has_value())
+            hook.name = hookData.name.value();
+        hook.sourceReference = sourceReference;
+        if (hookData.expression.has_value())
+            hook.tagExpression = hookData.expression.value();
+        hook.type = MapHookType(hookData.type);
+        return hook;
     }
 }

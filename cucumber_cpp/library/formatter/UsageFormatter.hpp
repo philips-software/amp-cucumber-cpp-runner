@@ -4,7 +4,7 @@
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber_cpp/library/formatter/Formatter.hpp"
 #include "cucumber_cpp/library/formatter/helper/Theme.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include "nlohmann/json.hpp"
 #include <string>

@@ -28,18 +28,24 @@ namespace cucumber_cpp::library::runtime
 
     bool Coordinator::Run()
     {
-        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunStarted{
-            .timestamp = util::MakeShared(util::TimestampNow()),
-            .id = std::string{ testRunStartedId },
-        }));
+        broadcaster.BroadcastEvent([this](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestRunStarted testRunStarted;
+                testRunStarted.timestamp = util::TimestampNow();
+                testRunStarted.id = std::string{ testRunStartedId };
+                envelope.testRunStarted = std::move(testRunStarted);
+            });
 
         const auto success = runtimeAdapter->Run();
 
-        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunFinished{
-            .success = success,
-            .timestamp = util::MakeShared(util::TimestampNow()),
-            .testRunStartedId = std::string{ testRunStartedId },
-        }));
+        broadcaster.BroadcastEvent([this, &success](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestRunFinished testRunFinished;
+                testRunFinished.success = success;
+                testRunFinished.timestamp = util::TimestampNow();
+                testRunFinished.testRunStartedId = std::string{ testRunStartedId };
+                envelope.testRunFinished = std::move(testRunFinished);
+            });
 
         return success;
     }

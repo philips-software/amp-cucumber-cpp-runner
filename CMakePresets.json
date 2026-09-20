@@ -17,11 +17,25 @@
             }
         },
         {
+            "name": "test-system",
+            "displayName": "Test build (system dependencies)",
+            "description": "Build with unit tests and sanitizers enabled using system dependencies. Used by CI to build and run the test suite.",
+            "inherits": "defaults",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CCR_FETCH_DEPS": "Off",
+                "CCR_BUILD_TESTS": "On",
+                "CCR_ENABLE_SANITIZERS": "On"
+            }
+        },
+        {
             "name": "Coverage",
             "inherits": "defaults",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CCR_BUILD_TESTS": "On",
                 "CCR_ENABLE_COVERAGE": "On"
             }
         },
@@ -36,6 +50,7 @@
             "inherits": "defaults",
             "generator": "Ninja",
             "cacheVariables": {
+                "CCR_FETCH_DEPS": "On",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
@@ -112,6 +127,10 @@
         }
     ],
     "buildPresets": [
+        {
+            "name": "test-system",
+            "configurePreset": "test-system"
+        },
         {
             "name": "Coverage",
             "configurePreset": "Coverage"
@@ -196,6 +215,12 @@
             }
         },
         {
+            "name": "test-system",
+            "configurePreset": "test-system",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
             "name": "Coverage",
             "configurePreset": "Coverage",
             "configuration": "Debug",
@@ -251,6 +276,23 @@
         }
     ],
     "workflowPresets": [
+        {
+            "name": "test-system",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "test-system"
+                },
+                {
+                    "type": "build",
+                    "name": "test-system"
+                },
+                {
+                    "type": "test",
+                    "name": "test-system"
+                }
+            ]
+        },
         {
             "name": "ubuntu-Debug-synchronous",
             "steps": [

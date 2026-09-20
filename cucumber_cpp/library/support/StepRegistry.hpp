@@ -1,10 +1,10 @@
 #ifndef CUCUMBER_CPP_STEPREGISTRY_HPP
 #define CUCUMBER_CPP_STEPREGISTRY_HPP
 
+#include "cucumber/cucumber-expressions/Argument.hpp"
+#include "cucumber/cucumber-expressions/Matcher.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Matcher.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <any>
@@ -80,7 +80,7 @@ namespace cucumber_cpp::library::support
 
             StepType type;
             std::string pattern;
-            cucumber_expression::Matcher regex;
+            cucumber::cucumber_expressions::Matcher regex;
             ExpressionPatternType patternType;
 
             std::uint32_t used{ 0 };
@@ -88,20 +88,20 @@ namespace cucumber_cpp::library::support
 
         struct EntryView
         {
-            EntryView(const cucumber_expression::Matcher& stepRegex, const std::uint32_t& used)
+            EntryView(const cucumber::cucumber_expressions::Matcher& stepRegex, const std::uint32_t& used)
                 : stepRegex(stepRegex)
                 , used(used)
             {}
 
-            const cucumber_expression::Matcher& stepRegex;
+            const cucumber::cucumber_expressions::Matcher& stepRegex;
             const std::uint32_t& used;
         };
 
-        explicit StepRegistry(cucumber_expression::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::IdGeneratorPtr idGenerator);
+        explicit StepRegistry(cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry, support::UndefinedParameters& undefinedParameters, cucumber::gherkin::IdGeneratorPtr idGenerator);
 
         void LoadSteps();
 
-        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber_expression::Argument>>> FindDefinitions(const std::string& expression) const;
+        [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::vector<cucumber::cucumber_expressions::Argument>>> FindDefinitions(const std::string& expression) const;
 
         [[nodiscard]] std::size_t Size() const;
 
@@ -113,7 +113,7 @@ namespace cucumber_cpp::library::support
     private:
         void Register(std::string id, const std::string& matcher, StepType stepType, util::StepFactory factory, std::source_location sourceLocation);
 
-        cucumber_expression::ParameterRegistry& parameterRegistry;
+        cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry;
         support::UndefinedParameters& undefinedParameters;
         cucumber::gherkin::IdGeneratorPtr idGenerator;
 

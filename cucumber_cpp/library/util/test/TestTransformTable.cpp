@@ -28,9 +28,9 @@ namespace cucumber_cpp::library::util
 
         ASSERT_THAT(pickle.has_value(), IsTrue());
         ASSERT_THAT(pickle->rows, SizeIs(1));
-        ASSERT_THAT(pickle->rows[0]->cells, SizeIs(2));
-        EXPECT_THAT(pickle->rows[0]->cells[0]->value, Eq("a"));
-        EXPECT_THAT(pickle->rows[0]->cells[1]->value, Eq("b"));
+        ASSERT_THAT(pickle->rows[0].cells, SizeIs(2));
+        EXPECT_THAT(pickle->rows[0].cells[0].value, Eq("a"));
+        EXPECT_THAT(pickle->rows[0].cells[1].value, Eq("b"));
 
         const std::optional<Table> back = TransformTable(pickle);
 

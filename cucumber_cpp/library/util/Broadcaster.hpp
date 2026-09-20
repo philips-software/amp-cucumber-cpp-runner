@@ -23,8 +23,9 @@
 #include "cucumber/messages/TestStepFinished.hpp"
 #include "cucumber/messages/TestStepStarted.hpp"
 #include "cucumber/messages/UndefinedParameterType.hpp"
+#include "cucumber/query/EnvelopeArchive.hpp"
 #include <functional>
-#include <memory>
+#include <utility>
 #include <vector>
 
 namespace cucumber::messages
@@ -45,7 +46,7 @@ namespace cucumber_cpp::library::util
         Listener(Listener&&) = delete;
         Listener& operator=(Listener&&) = delete;
 
-        ~Listener();
+        virtual ~Listener();
 
         void Invoke(const cucumber::messages::Envelope& envelope) const;
 
@@ -59,31 +60,18 @@ namespace cucumber_cpp::library::util
         void AddListener(Listener* listener);
         void RemoveListener(Listener* listener);
 
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Attachment> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::ExternalAttachment> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::GherkinDocument> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Hook> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Meta> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::ParameterType> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::ParseError> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Pickle> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Suggestion> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::Source> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::StepDefinition> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestCase> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestCaseFinished> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestCaseStarted> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestRunFinished> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestRunStarted> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestStepFinished> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestStepStarted> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestRunHookStarted> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::TestRunHookFinished> message) const;
-        void BroadcastEvent(std::shared_ptr<cucumber::messages::UndefinedParameterType> message) const;
+        template<typename Populate>
+        void BroadcastEvent(Populate&& populate)
+        {
+            cucumber::messages::Envelope envelope;
+            std::forward<Populate>(populate)(envelope);
+            Dispatch(std::move(envelope));
+        }
 
     private:
-        void BroadcastEvent(const cucumber::messages::Envelope& envelope) const;
+        void Dispatch(cucumber::messages::Envelope&& envelope);
 
+        cucumber::query::EnvelopeArchive archive;
         std::vector<Listener*> listeners;
     };
 }

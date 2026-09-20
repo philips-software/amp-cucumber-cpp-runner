@@ -19,11 +19,22 @@ endif()
 
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
 option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
-option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
+
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
+option(CCR_ENABLE_SANITIZERS "Enable compiler flags for the address and undefined behaviour sanitizers" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 
+option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(CCR_ENABLE_SANITIZERS AND CCR_ENABLE_COVERAGE)
+    message(FATAL_ERROR "CCR_ENABLE_SANITIZERS and CCR_ENABLE_COVERAGE are mutually exclusive.")
+endif()
+
+if(CCR_ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(WARNING "Code coverage is only enabled with the GNU compiler.")
+endif()
 
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
@@ -80,56 +91,20 @@ include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
 
-# Enable sanitizers globally, before any dependency is added, so every target
-# (including fetched third-party libraries) is instrumented. Consistent
-# instrumentation keeps libc++ container annotations coherent across module
-# boundaries; mixing instrumented and uninstrumented code produces false-positive
-# container-overflow reports.
-if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE
-        AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
-    set(CCR_ENABLE_SANITIZERS On)
-endif()
-
-if (CCR_ENABLE_SANITIZERS)
-    add_compile_options(-fsanitize=address -fsanitize=undefined)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
-endif()
-
 include(cmake/dependencies.cpm.cmake)
 add_subdirectory(external)
+
+if (CCR_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-fsanitize=address -fsanitize=undefined)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    endif()
+endif()
 
 if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
 else()
     set(CCR_HAS_RE2 Off)
-endif()
-
-# Opt specific dependencies out of sanitizer instrumentation because of known
-# limitations: abseil's constexpr function-pointer comparisons are not compatible
-# with GCC's ASan/UBSan instrumentation, which causes build failures. Later target
-# options override the globally inherited flags.
-if (CCR_ENABLE_SANITIZERS)
-    function(ccr_disable_sanitizers dir)
-        get_property(targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
-        foreach(target IN LISTS targets)
-            get_target_property(type ${target} TYPE)
-            if (NOT type STREQUAL "INTERFACE_LIBRARY" AND NOT type STREQUAL "UTILITY")
-                target_compile_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
-                target_link_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
-            endif()
-        endforeach()
-
-        get_property(subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
-        foreach(subdir IN LISTS subdirs)
-            ccr_disable_sanitizers("${subdir}")
-        endforeach()
-    endfunction()
-
-    foreach(dep_dir IN ITEMS "${abseil-cpp_SOURCE_DIR}" "${re2_SOURCE_DIR}")
-        if (dep_dir AND IS_DIRECTORY "${dep_dir}")
-            ccr_disable_sanitizers("${dep_dir}")
-        endif()
-    endforeach()
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)
@@ -138,6 +113,6 @@ endif()
 
 add_subdirectory(cucumber_cpp)
 
-if (PROJECT_IS_TOP_LEVEL)
+if (CCR_BUILD_TESTS)
     add_subdirectory(compatibility)
 endif()

@@ -20,6 +20,18 @@ concurrency:
 env:
   GTEST_COLOR: 1
   CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
+  # renovate: datasource=git-refs depName=cucumber/messages packageName=https://github.com/cucumber/messages currentValue=main
+  MESSAGES_REF: main
+  # renovate: datasource=git-refs depName=cucumber/gherkin packageName=https://github.com/cucumber/gherkin currentValue=main
+  GHERKIN_REF: main
+  # renovate: datasource=git-refs depName=cucumber/query packageName=https://github.com/cucumber/query currentValue=feature/cpp
+  QUERY_REF: feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/tag-expressions packageName=https://github.com/cucumber/tag-expressions currentValue=feature/cpp
+  TAG_EXPRESSIONS_REF: feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/pretty-formatter packageName=https://github.com/cucumber/pretty-formatter currentValue=feature/cpp
+  PRETTY_FORMATTER_REF: feature/cpp
+  # renovate: datasource=git-refs depName=cucumber/cucumber-expressions packageName=https://github.com/cucumber/cucumber-expressions currentValue=feature/cpp
+  CUCUMBER_EXPRESSIONS_REF: feature/cpp
 
 jobs:
   build-in-devcontainer:
@@ -120,3 +132,213 @@ jobs:
         with:
           name: test-logs
           path: .build/${{ matrix.os }}-Debug-${{ matrix.type }}${{ matrix.preset_suffix }}/Testing/Temporary/
+
+  test-cpp-system-packages-linux:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-24.04, cxx: g++, version: 12 }
+          - { os: ubuntu-24.04, cxx: g++, version: 13 }
+          - { os: ubuntu-24.04, cxx: clang++, version: 16 }
+          - { os: ubuntu-24.04, cxx: clang++, version: 17 }
+          - { os: ubuntu-26.04, cxx: g++, version: 14 }
+          - { os: ubuntu-26.04, cxx: g++, version: 15 }
+          - { os: ubuntu-26.04, cxx: clang++, version: 21 }
+          - { os: ubuntu-26.04, cxx: clang++, version: 22 }
+    env:
+      CXX: ${{ matrix.config.cxx }}-${{ matrix.config.version }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: true
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}-${{ github.ref }}
+          append-timestamp: false
+          save: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nlohmann-json3-dev libgtest-dev libgmock-dev libabsl-dev libre2-dev libcli11-dev libpugixml-dev
+
+      # Ubuntu 24.04 ships fmt 9; newer runners provide fmt 10+ via apt.
+      - name: Install libfmt (apt)
+        if: matrix.config.os != 'ubuntu-24.04'
+        run: sudo apt-get install -y libfmt-dev
+
+      - name: Checkout libfmt
+        if: matrix.config.os == 'ubuntu-24.04'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: fmtlib/fmt
+          ref: 10.2.1
+          path: fmt-src
+          persist-credentials: false
+
+      - name: Install libfmt (from source)
+        if: matrix.config.os == 'ubuntu-24.04'
+        run: |
+          cmake -S fmt-src -B fmt-src/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DFMT_TEST=OFF -DFMT_DOC=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+          cmake --build fmt-src/build
+          sudo cmake --install fmt-src/build
+
+      - name: Install cucumber/tag-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/tag-expressions
+          ref: ${{ env.TAG_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/cucumber-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/cucumber-expressions
+          ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/messages
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/messages
+          ref: ${{ env.MESSAGES_REF }}
+
+      - name: Install cucumber/gherkin
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/gherkin
+          ref: ${{ env.GHERKIN_REF }}
+
+      - name: Install cucumber/query
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/query
+          ref: ${{ env.QUERY_REF }}
+
+      - name: Install cucumber/pretty-formatter
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/pretty-formatter
+          ref: ${{ env.PRETTY_FORMATTER_REF }}
+
+      - name: Build and unit test
+        run: cmake --workflow --preset test-system
+
+  test-cpp-system-packages-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: true
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}-${{ github.ref }}
+          append-timestamp: false
+          save: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install dependencies
+        run: brew install googletest nlohmann-json fmt abseil re2 cli11 pugixml
+
+      - name: Install cucumber/tag-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/tag-expressions
+          ref: ${{ env.TAG_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/cucumber-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/cucumber-expressions
+          ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/messages
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/messages
+          ref: ${{ env.MESSAGES_REF }}
+
+      - name: Install cucumber/gherkin
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/gherkin
+          ref: ${{ env.GHERKIN_REF }}
+
+      - name: Install cucumber/query
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/query
+          ref: ${{ env.QUERY_REF }}
+
+      - name: Install cucumber/pretty-formatter
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/pretty-formatter
+          ref: ${{ env.PRETTY_FORMATTER_REF }}
+
+      - name: Build and unit test
+        run: cmake --workflow --preset test-system
+
+  test-cpp-system-packages-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: true
+
+      - name: Install build tools
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          vcpkg install gtest nlohmann-json fmt abseil re2 cli11 pugixml --triplet x64-windows
+          # Expose the vcpkg toolchain so find_package() locates the packages.
+          echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+
+      - name: Install cucumber/tag-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/tag-expressions
+          ref: ${{ env.TAG_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/cucumber-expressions
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/cucumber-expressions
+          ref: ${{ env.CUCUMBER_EXPRESSIONS_REF }}
+
+      - name: Install cucumber/messages
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/messages
+          ref: ${{ env.MESSAGES_REF }}
+
+      - name: Install cucumber/gherkin
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/gherkin
+          ref: ${{ env.GHERKIN_REF }}
+
+      - name: Install cucumber/query
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/query
+          ref: ${{ env.QUERY_REF }}
+
+      - name: Install cucumber/pretty-formatter
+        uses: cucumber/ci-actions/install-cpp-dep@9ba4a623ec838b1358e18683a85a0914f3779363
+        with:
+          repository: cucumber/pretty-formatter
+          ref: ${{ env.PRETTY_FORMATTER_REF }}
+      - name: Build and unit test
+        run: cmake --workflow --preset test-system
