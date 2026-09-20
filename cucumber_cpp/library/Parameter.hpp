@@ -4,8 +4,8 @@
 // IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include <cstddef>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <optional>
 #include <string>
 #include <type_traits>

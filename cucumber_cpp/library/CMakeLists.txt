@@ -23,7 +23,7 @@ target_link_libraries(cucumber_cpp.library PUBLIC
     cucumber_cpp.library.plugin
     cucumber_cpp.library.support
     cucumber_cpp.library.util
-    cucumber_gherkin_lib
+    cucumber::gherkin
     cucumber::cucumber_expressions
     cucumber::tag_expressions
     GTest::gmock

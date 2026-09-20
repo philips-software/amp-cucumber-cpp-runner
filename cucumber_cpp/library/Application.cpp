@@ -5,6 +5,8 @@
 #include "CLI/Option.hpp"
 #include "CLI/Validators.hpp"
 #include "CLI/impl/App_inl.hpp"
+#include "cucumber/cucumber-expressions/Errors.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/Demangle.hpp"
 #include "cucumber/tag-expressions/Parser.hpp"
 #include "cucumber_cpp/library/Context.hpp"
@@ -21,8 +23,6 @@
 #include "fmt/ranges.h"
 #include <algorithm>
 #include <cstdlib>
-#include <cucumber/cucumber-expressions/Errors.hpp>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <exception>
 #include <filesystem>
 #include <fstream>

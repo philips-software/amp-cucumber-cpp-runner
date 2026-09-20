@@ -1,3 +1,4 @@
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/PickleStepArgument.hpp"
 #include "cucumber_cpp/library/Context.hpp"
@@ -16,7 +17,6 @@
 #include "cucumber_cpp/library/util/TransformTable.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <memory>
 #include <optional>
 #include <string>

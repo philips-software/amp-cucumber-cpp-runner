@@ -1,8 +1,8 @@
 #ifndef PLUGIN_PARAMETER_LOADER_HPP
 #define PLUGIN_PARAMETER_LOADER_HPP
 
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 
 namespace cucumber_cpp::library::plugin
 {

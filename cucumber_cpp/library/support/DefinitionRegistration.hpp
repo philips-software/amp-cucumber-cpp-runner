@@ -1,6 +1,8 @@
 #ifndef SUPPORT_DEFINITION_REGISTRATION_HPP
 #define SUPPORT_DEFINITION_REGISTRATION_HPP
 
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
+#include "cucumber/cucumber-expressions/SourceLocation.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
@@ -9,8 +11,6 @@
 #include "cucumber_cpp/library/util/HookFactory.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <cstddef>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
-#include <cucumber/cucumber-expressions/SourceLocation.hpp>
 #include <functional>
 #include <map>
 #include <ranges>

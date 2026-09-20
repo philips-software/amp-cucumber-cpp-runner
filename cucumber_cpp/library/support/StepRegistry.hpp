@@ -1,15 +1,15 @@
 #ifndef CUCUMBER_CPP_STEPREGISTRY_HPP
 #define CUCUMBER_CPP_STEPREGISTRY_HPP
 
+#include "cucumber/cucumber-expressions/Argument.hpp"
+#include "cucumber/cucumber-expressions/Matcher.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <any>
 #include <cstddef>
 #include <cstdint>
-#include <cucumber/cucumber-expressions/Argument.hpp>
-#include <cucumber/cucumber-expressions/Matcher.hpp>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <exception>
 #include <filesystem>
 #include <functional>

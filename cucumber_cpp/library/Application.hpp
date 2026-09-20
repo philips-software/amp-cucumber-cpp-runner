@@ -4,6 +4,7 @@
 // IWYU pragma: private, include "cucumber_cpp/CucumberCpp.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
@@ -17,7 +18,6 @@
 #include <CLI/CLI.hpp>
 #include <CLI/Validators.hpp>
 #include <cstddef>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <filesystem>
 #include <functional>
 #include <memory>

@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/StepType.hpp"
@@ -8,7 +9,6 @@
 #include "cucumber_cpp/library/util/StepFactory.hpp"
 #include <algorithm>
 #include <cstddef>
-#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
 #include <functional>
 #include <map>
 #include <set>
