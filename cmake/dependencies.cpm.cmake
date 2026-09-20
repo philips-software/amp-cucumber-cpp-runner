@@ -206,11 +206,6 @@ else()
     find_package(pugixml REQUIRED)
     find_package(fmt 10 REQUIRED)
 
-    if (CCR_USE_RE2)
-        find_package(absl)
-        find_package(re2)
-    endif()
-
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
     find_package(cucumber_query REQUIRED)
