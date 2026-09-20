@@ -72,7 +72,11 @@ namespace cucumber_cpp::library::util
     {
         const std::time_t seconds = timestamp.seconds;
         std::tm utcTime{};
+    #ifdef _WIN32
+        gmtime_s(&utcTime, &seconds);
+    #else
         gmtime_r(&seconds, &utcTime);
+    #endif
         const auto timestampWithoutFraction = fmt::format(
             "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
             utcTime.tm_year + 1900,
