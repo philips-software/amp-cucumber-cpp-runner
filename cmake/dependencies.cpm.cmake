@@ -10,9 +10,9 @@ set(CPM_DOWNLOAD_SHA256 "1c40fc102ce9625d7de7eb14f541cab30cc3138dca627f0b0ec4029
 # renovate: datasource=github-tags packageName=nlohmann/json versioning=semver
 ccr_dependency(NLOHMANN_JSON            v3.12.0    55f93686c01528224f448c19128836e7df245f72)
 # renovate: datasource=github-tags packageName=cucumber/messages versioning=semver
-ccr_dependency(CUCUMBER_MESSAGES        v34.0.0    8cd6cacecd0a657095c93b069c850f51009e0499)
+ccr_dependency(CUCUMBER_MESSAGES        v34.2.1    23012bdd487ee74b84a267a9c6d60a9ab4822739) # not-released
 # renovate: datasource=github-tags packageName=cucumber/gherkin versioning=semver
-ccr_dependency(CUCUMBER_GHERKIN         v42.0.0    85b41deb147e18421fe1023a0c496558caccaaa9)
+ccr_dependency(CUCUMBER_GHERKIN         v42.0.1    4b0cf059f0da941cb426ba13cfaa92cb8cbd3e2b) # not-released
 # renovate: datasource=github-tags packageName=cucumber/query versioning=semver
 ccr_dependency(CUCUMBER_QUERY           v1.0.0     2d432352bb6d82c4092ce8b33f280149b1f7fcea)
 # renovate: datasource=github-tags packageName=cucumber/tag-expressions versioning=semver
