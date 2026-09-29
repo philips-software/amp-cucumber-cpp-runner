@@ -70,26 +70,30 @@ if(CCR_FETCH_DEPS)
     # ---------------------------------------------------------------------------
     # nlohmann_json
     # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:nlohmann/json@${NLOHMANN_JSON_VERSION}#${NLOHMANN_JSON_DIGEST}"
-        NAME nlohmann_json
-        OPTIONS
-            "JSON_BuildTests Off"
-            "JSON_Install ON"
-    )
+    if(NOT TARGET nlohmann_json::nlohmann_json)
+        CPMAddPackage(
+            URI "gh:nlohmann/json@${NLOHMANN_JSON_VERSION}#${NLOHMANN_JSON_DIGEST}"
+            NAME nlohmann_json
+            OPTIONS
+                "JSON_BuildTests Off"
+                "JSON_Install ON"
+        )
+    endif()
 
     # ---------------------------------------------------------------------------
     # GoogleTest
     # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:google/googletest@${GOOGLE_TEST_VERSION}#${GOOGLE_TEST_DIGEST}"
-        NAME googletest
-        OPTIONS
-            "INSTALL_GTEST OFF"
-            "gtest_force_shared_crt ON"
-    )
+    if(NOT TARGET GTest::gtest)
+        CPMAddPackage(
+            URI "gh:google/googletest@${GOOGLE_TEST_VERSION}#${GOOGLE_TEST_DIGEST}"
+            NAME googletest
+            OPTIONS
+                "INSTALL_GTEST OFF"
+                "gtest_force_shared_crt ON"
+        )
+    endif()
 
-    if (TARGET gtest)
+    if (TARGET GTest::gtest)
         set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES
             FOLDER External/GoogleTest
         )
@@ -100,50 +104,60 @@ if(CCR_FETCH_DEPS)
     # ---------------------------------------------------------------------------
     # cli11
     # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:CLIUtils/CLI11@${CLI11_VERSION}#${CLI11_DIGEST}"
-        NAME cli11
-    )
+    if(NOT TARGET CLI11::CLI11)
+        CPMAddPackage(
+            URI "gh:CLIUtils/CLI11@${CLI11_VERSION}#${CLI11_DIGEST}"
+            NAME cli11
+        )
+    endif()
 
     # ---------------------------------------------------------------------------
     # libfmt
     # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:fmtlib/fmt@${LIBFMT_VERSION}#${LIBFMT_DIGEST}"
-        NAME fmt
-        OPTIONS
-            "FMT_INSTALL ON"
-    )
+    if(NOT TARGET fmt::fmt)
+        CPMAddPackage(
+            URI "gh:fmtlib/fmt@${LIBFMT_VERSION}#${LIBFMT_DIGEST}"
+            NAME fmt
+            OPTIONS
+                "FMT_INSTALL ON"
+        )
+    endif()
 
     # ---------------------------------------------------------------------------
     # pugixml
     # ---------------------------------------------------------------------------
-    CPMAddPackage(
-        URI "gh:zeux/pugixml@${PUGIXML_VERSION}#${PUGIXML_DIGEST}"
-        NAME pugixml
-    )
+    if(NOT TARGET pugixml::pugixml)
+        CPMAddPackage(
+            URI "gh:zeux/pugixml@${PUGIXML_VERSION}#${PUGIXML_DIGEST}"
+            NAME pugixml
+        )
+    endif()
 
     if (CCR_USE_RE2)
         # ---------------------------------------------------------------------------
         # abseil-cpp
         # ---------------------------------------------------------------------------
-        CPMAddPackage(
-            URI "gh:abseil/abseil-cpp@${ABSEIL_CPP_VERSION}#${ABSEIL_CPP_DIGEST}"
-            NAME abseil-cpp
-            OPTIONS
-                "ABSL_PROPAGATE_CXX_STD ON"
-                "ABSL_ENABLE_INSTALL ON"
-        )
+        if(NOT TARGET absl::base)
+            CPMAddPackage(
+                URI "gh:abseil/abseil-cpp@${ABSEIL_CPP_VERSION}#${ABSEIL_CPP_DIGEST}"
+                NAME abseil-cpp
+                OPTIONS
+                    "ABSL_PROPAGATE_CXX_STD ON"
+                    "ABSL_ENABLE_INSTALL ON"
+            )
+        endif()
 
         # ---------------------------------------------------------------------------
         # re2
         # ---------------------------------------------------------------------------
-        CPMAddPackage(
-            URI "gh:google/re2#${RE2_DIGEST}"
-            NAME re2
-            OPTIONS
-                "RE2_BUILD_TESTING OFF"
-        )
+        if(NOT TARGET re2::re2)
+            CPMAddPackage(
+                URI "gh:google/re2#${RE2_DIGEST}"
+                NAME re2
+                OPTIONS
+                    "RE2_BUILD_TESTING OFF"
+            )
+        endif()
     endif()
 
     # ---------------------------------------------------------------------------
