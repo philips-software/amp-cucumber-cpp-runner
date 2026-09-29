@@ -140,4 +140,5 @@ add_subdirectory(cucumber_cpp)
 
 if (PROJECT_IS_TOP_LEVEL)
     add_subdirectory(compatibility)
+    add_subdirectory(acceptance)
 endif()
