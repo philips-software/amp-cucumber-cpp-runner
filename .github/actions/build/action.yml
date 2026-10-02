@@ -18,6 +18,7 @@ runs:
   using: composite
   steps:
     - name: Restore CPM packages cache
+      if: ${{ env.CPM_SOURCE_CACHE != '' }}
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       id: cache-cpm
       with:
@@ -37,7 +38,7 @@ runs:
       run: cmake --workflow --preset "${{ inputs.workflow-preset }}"
 
     - name: Save CPM packages cache
-      if: ${{ github.ref == 'refs/heads/main' && steps.cache-cpm.outputs.cache-hit != 'true' }}
+      if: ${{ env.CPM_SOURCE_CACHE != '' && github.ref == 'refs/heads/main' && steps.cache-cpm.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ env.CPM_SOURCE_CACHE }}
