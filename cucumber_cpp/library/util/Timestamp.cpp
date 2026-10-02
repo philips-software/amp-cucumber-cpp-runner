@@ -3,6 +3,7 @@
 #include "cucumber/messages/Duration.hpp"
 #include "cucumber/messages/Timestamp.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include <chrono>
 #include <ctime>
@@ -72,11 +73,11 @@ namespace cucumber_cpp::library::util
     {
         const std::time_t seconds = timestamp.seconds;
         std::tm utcTime{};
-    #ifdef _WIN32
+#ifdef _WIN32
         gmtime_s(&utcTime, &seconds);
-    #else
+#else
         gmtime_r(&seconds, &utcTime);
-    #endif
+#endif
         const auto timestampWithoutFraction = fmt::format(
             "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
             utcTime.tm_year + 1900,

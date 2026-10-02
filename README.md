@@ -8,7 +8,7 @@
 - A recent C++ compiler that supports C++20. (Ranges library required)
 - CMake 3.24 or higher
 
-### amp-cucumber-cpp-runner is known to build using:
+### amp-cucumber-cpp-runner is known to build using
 - Linux gcc-12
 - Linux clang-16
 - Linux clang-cl-16 (targeting Windows with WinSDK 2022 downloaded through xwin)
@@ -19,7 +19,7 @@ third party libraries
 
 - [fmtlib/fmt](https://github.com/fmtlib/fmt) >= v10
 - [CLIUtils/CLI11](https://github.com/CLIUtils/CLI11)
-- [nlohmman/json](https://github.com/nlohmann/json)
+- [nlohmann/json](https://github.com/nlohmann/json)
 - [google/googletest](https://github.com/google/googletest)
 - [zeux/pugixml](https://github.com/zeux/pugixml)
 
@@ -78,12 +78,12 @@ An example project is provided which shows most features of amp-cucumber-cpp-run
 The following CMake options are supported:
 
 - `CCR_FETCH_DEPS` (default: `Off`): fetch third-party dependencies via `FetchContent`.
-- `CCR_BUILD_TESTS` (default: `Off`): enable building unit/integration tests in this repository.
-- `CCR_BUILD_EXAMPLES` (default: `Off`): enable building unit/integration tests in this repository.
+- `CCR_BUILD_TESTS` (default: `Off`): enable building unit/integration tests.
+- `CCR_BUILD_EXAMPLES` (default: `Off`): enable building example projects.
 - `CCR_ENABLE_COVERAGE` (default: `Off`): enable compiler flags for coverage measurements.
 - `CCR_ENABLE_SANITIZERS` (default: `Off`): Enable compiler flags for the address and undefined behaviour sanitizers (GCC).
 - `CCR_ENABLE_TIME_PROFILE` (default: `Off`): enable compiler time-trace profiling flags (Clang).
-- `CCR_USE_RE2` (default: `Off`): enable optional RE2 usage (`abseil-cpp` + `re2`).
+- `CCR_USE_RE2` (default: `On`): enable optional RE2 usage (`abseil-cpp` + `re2`).
 
 ### FetchContent example
 

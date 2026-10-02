@@ -118,18 +118,18 @@ namespace cucumber_cpp::library::formatter
             const auto namingStrategy = cucumber::query::CreateNamingStrategy(cucumber::query::NamingStrategyLength::longName);
 
             const auto allTestCaseStarted = query.FindAllTestCaseStarted();
-            for (const auto& testCaseStartedPtr : allTestCaseStarted)
+            for (const auto& testCaseStarted : allTestCaseStarted)
             {
-                const auto* pickle = query.FindPickleBy(testCaseStartedPtr);
-                const auto lineageAndPickle = query.FindLineageBy(testCaseStartedPtr).value();
+                const auto* pickle = query.FindPickleBy(testCaseStarted);
+                const auto lineageAndPickle = query.FindLineageBy(testCaseStarted).value();
                 const auto& lineage = *lineageAndPickle.lineage;
-                const auto durationOpt = query.FindTestCaseDurationBy(testCaseStartedPtr);
+                const auto durationOpt = query.FindTestCaseDurationBy(testCaseStarted);
 
                 testCases.emplace_back(testClassName.value_or((lineage.feature != nullptr) ? lineage.feature->name : pickle->uri),
                     namingStrategy->Reduce(lineage, *pickle),
                     util::DurationToMilliseconds(durationOpt.value_or(cucumber::messages::Duration{})).count(),
-                    MakeFailure(query, testCaseStartedPtr),
-                    MakeOutput(query, testCaseStartedPtr));
+                    MakeFailure(query, testCaseStarted),
+                    MakeOutput(query, testCaseStarted));
             }
 
             return testCases;
