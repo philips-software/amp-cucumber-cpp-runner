@@ -103,12 +103,16 @@
             "toolchainFile": "${sourceDir}/cmake/toolchain-clang-x86_64-pc-windows-msvc.cmake",
             "environment": {
                 "CCACHE_DEPEND": "true",
-                "CCACHE_COMPILERTYPE": "clang-cl",
-                "CCR_FETCH_DEPS": "On",
-                "CCR_BUILD_TESTS": "On",
-                "CCR_BUILD_EXAMPLES": "On"
+                "CCACHE_COMPILERTYPE": "clang-cl"
             },
-            "generator": "Ninja Multi-Config"
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CCR_FETCH_DEPS": "On",
+                "CCR_BUILD_TESTS": "Off",
+                "CCR_BUILD_EXAMPLES": "Off",
+                "CCR_ENABLE_SANITIZERS": "Off"
+            }
         }
     ],
     "buildPresets": [
@@ -145,7 +149,8 @@
         },
         {
             "name": "windows-clang-cl",
-            "configurePreset": "windows-clang-cl"
+            "configurePreset": "windows-clang-cl",
+            "configuration": "Debug"
         }
     ],
     "testPresets": [
