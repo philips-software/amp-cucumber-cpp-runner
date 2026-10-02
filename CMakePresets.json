@@ -103,7 +103,10 @@
             "toolchainFile": "${sourceDir}/cmake/toolchain-clang-x86_64-pc-windows-msvc.cmake",
             "environment": {
                 "CCACHE_DEPEND": "true",
-                "CCACHE_COMPILERTYPE": "clang-cl"
+                "CCACHE_COMPILERTYPE": "clang-cl",
+                "CCR_FETCH_DEPS": "On",
+                "CCR_BUILD_TESTS": "On",
+                "CCR_BUILD_EXAMPLES": "On"
             },
             "generator": "Ninja Multi-Config"
         }
