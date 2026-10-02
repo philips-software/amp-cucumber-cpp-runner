@@ -33,8 +33,7 @@ runs:
           exit 1
         fi
 
-        reference=$(cat "${{ inputs.dependency }}" | grep -E "[0-9a-z]+/[0-9a-z]+@[0-9a-z]{40}( #.*)?")
-        if [ -z "$reference" ]; then
+        if ! reference=$(grep -E '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[[:xdigit:]]{40}( #.*)?$' "${{ inputs.dependency }}"); then
           echo "${{ inputs.dependency }} does not contain a valid reference"
           exit 1
         fi
