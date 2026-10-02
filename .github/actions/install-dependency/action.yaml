@@ -62,7 +62,7 @@ runs:
     - name: Build and install (Unix)
       if: runner.os != 'Windows'
       shell: bash
-      working-directory: ${{ steps.resolve.outputs.path }}
+      working-directory: ${{ steps.resolve.outputs.path }}/cpp
       run: |
         cmake --workflow --preset "${{ inputs.preset }}"
         # sudo cmake --install .build/"${{ inputs.preset }}"
@@ -71,7 +71,7 @@ runs:
     - name: Build and install (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
-      working-directory: ${{ steps.resolve.outputs.path }}
+      working-directory: ${{ steps.resolve.outputs.path }}/cpp
       run: |
         cmake --workflow --preset "${{ inputs.preset }}"
         # cmake --install .build/"${{ inputs.preset }}"
