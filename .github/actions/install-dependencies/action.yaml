@@ -1,0 +1,100 @@
+---
+name: Install Dependencies
+description: Installs the project dependencies
+
+inputs:
+  os:
+    description: The operating system to install dependencies for
+    required: true
+  os-version:
+    description: The version of the operating system to install dependencies for
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      if: inputs.os == 'ubuntu'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nlohmann-json3-dev libgtest-dev libgmock-dev libabsl-dev libre2-dev libcli11-dev libpugixml-dev
+
+    # Ubuntu 24.04 ships fmt 9; newer runners provide fmt 10+ via apt.
+    - name: Install libfmt (apt)
+      if: inputs.os == 'ubuntu' && inputs.os-version != '24.04'
+      shell: bash
+      run: sudo apt-get install -y libfmt-dev
+
+    - name: Checkout libfmt
+      if: inputs.os == 'ubuntu' && inputs.os-version == '24.04'
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        repository: fmtlib/fmt
+        ref: 10.2.1
+        path: fmt-src
+        persist-credentials: false
+
+    - name: Install libfmt (from source)
+      if: inputs.os == 'ubuntu' && inputs.os-version == '24.04'
+      shell: bash
+      run: |
+        cmake -S fmt-src -B fmt-src/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DFMT_TEST=OFF -DFMT_DOC=OFF \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        cmake --build fmt-src/build
+        sudo cmake --install fmt-src/build
+
+    - name: Install dependencies
+      if: inputs.os == 'macos'
+      shell: bash
+      run: brew install googletest nlohmann-json fmt abseil re2 cli11 pugixml
+
+    - name: Install build tools
+      if: inputs.os == 'windows'
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+    - name: Install dependencies
+      if: inputs.os == 'windows'
+      shell: pwsh
+      run: |
+        vcpkg install gtest nlohmann-json fmt abseil re2 cli11 pugixml --triplet x64-windows
+        # Expose the vcpkg toolchain so find_package() locates the packages.
+        echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+
+    - name: Install cucumber/tag-expressions
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/tag-expressions.version
+        working-directory: deps
+
+    - name: Install cucumber/cucumber-expressions
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/cucumber-expressions.version
+        working-directory: deps
+
+    - name: Install cucumber/messages
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/messages.version
+        working-directory: deps
+
+    - name: Install cucumber/gherkin
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/gherkin.version
+        working-directory: deps
+
+    - name: Install cucumber/query
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/query.version
+        working-directory: deps
+
+    - name: Install cucumber/pretty-formatter
+      uses: cucumber/ci-actions/install-cpp-dep@8bbc6bac84313ef426e8a0e6ffa64659d0dc174b
+      with:
+        dependency: dependencies/pretty-formatter.version
+        working-directory: deps

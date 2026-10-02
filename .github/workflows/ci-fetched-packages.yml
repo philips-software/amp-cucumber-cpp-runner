@@ -1,0 +1,148 @@
+---
+name: Build & Test using fetched packages
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - v**
+  merge_group:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  GTEST_COLOR: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm
+
+jobs:
+  windows-clang-cl:
+    name: Windows clang-cl
+    runs-on: ubuntu-latest
+    container: ghcr.io/philips-software/amp-devcontainer-cpp:8.1.0@sha256:740110a1a70c336d5b4a2770f84b9d856839ca90a04fec8f0300828e98cb9518
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: cache-winsdk
+        with:
+          path: /winsdk
+          key: cache-winsdk-10.0.26100-14.43.17.13
+
+      - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' }}
+        run: ./get-winsdk.sh
+
+      - if: ${{ steps.cache-winsdk.outputs.cache-hit != 'true' && github.event_name != 'pull_request' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /winsdk
+          key: cache-winsdk-10.0.26100-14.43.17.13
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          workflow-preset: windows-clang-cl
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+  test-fetch-deps-linux:
+    runs-on: ${{ matrix.config.os }}-${{ matrix.config.os-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu, os-version: '24.04', cxx: g++,     version: 12 }
+          - { os: ubuntu, os-version: '24.04', cxx: g++,     version: 13 }
+          - { os: ubuntu, os-version: '24.04', cxx: clang++, version: 16 }
+          - { os: ubuntu, os-version: '24.04', cxx: clang++, version: 17 }
+          - { os: ubuntu, os-version: '26.04', cxx: g++,     version: 14 }
+          - { os: ubuntu, os-version: '26.04', cxx: g++,     version: 15 }
+          - { os: ubuntu, os-version: '26.04', cxx: clang++, version: 21 }
+          - { os: ubuntu, os-version: '26.04', cxx: clang++, version: 22 }
+    env:
+      CXX: ${{ matrix.config.cxx }}-${{ matrix.config.version }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build host
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
+          workflow-preset: host-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+      - name: Build host and unit test
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
+          workflow-preset: test-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+  test-fetch-deps-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build host
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          workflow-preset: host-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+      - name: Build host and unit test
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          workflow-preset: test-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+  test-fetch-deps-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install build tools
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Build host
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          workflow-preset: host-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+
+      - name: Build host and unit test
+        uses: ./.github/actions/build
+        with:
+          use-ccache: true
+          ccache-key: ${{ github.job }}
+          workflow-preset: test-fetch-deps
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}

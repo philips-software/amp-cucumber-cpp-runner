@@ -1,11 +1,5 @@
 add_library(cucumber_cpp.library.support ${CCR_EXCLUDE_FROM_ALL})
 
-if (CCR_STANDALONE)
-    target_compile_definitions(cucumber_cpp.library.support PRIVATE
-        CCR_STANDALONE
-    )
-endif()
-
 target_sources(cucumber_cpp.library.support PRIVATE
     Body.hpp
     DefinitionRegistration.cpp

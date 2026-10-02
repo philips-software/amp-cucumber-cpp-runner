@@ -1,0 +1,36 @@
+{
+    "name": "ubuntu-system-resolute",
+    "image": "mcr.microsoft.com/devcontainers/base:resolute",
+    "features": {
+        "ghcr.io/devcontainer-community/devcontainer-features/collection-c-cpp:1": {},
+        "ghcr.io/devcontainers/features/docker-outside-of-docker": {}
+    },
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert libabsl-dev libcli11-dev libgmock-dev libgtest-dev libpugixml-dev libre2-dev libyaml-cpp-dev nlohmann-json3-dev python3-pip libfmt-dev && python3 -m pip install gcovr==8.6 --break-system-packages",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "cmake.ignoreCMakeListsMissing": true,
+                "cmake.sourceDirectory": "${workspaceFolder}",
+                "cmake.useCMakePresets": "always",
+                "cmake.exportCompileCommandsFile": true,
+                "cmake.copyCompileCommands": "${workspaceFolder}/.build/compile_commands.json",
+                "cmake.postRunCoverageTarget": "generate-lcov-report",
+                "cmake.coverageInfoFiles": [
+                    "${workspaceFolder}/.build/coverage/lcov.info"
+                ]
+            },
+            "extensions": [
+                "akiramiyakoda.cppincludeguard",
+                "alexkrechik.cucumberautocomplete",
+                "github.vscode-github-actions",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools"
+            ]
+        }
+    },
+    "remoteEnv": {
+        "DEBUGINFOD_URLS": "",
+        "CPM_SOURCE_CACHE": "${containerWorkspaceFolder}/.cpm"
+    }
+}

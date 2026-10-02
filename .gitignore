@@ -1,7 +1,8 @@
 .build
+.cpm
 .install
-.xwin-cache
 .vs/
+.xwin-cache
 megalinter-reports/
 
 # compatibility generated files
@@ -10,3 +11,5 @@ expected.ndjson
 
 # bats task generated files
 test-report.xml
+
+deps

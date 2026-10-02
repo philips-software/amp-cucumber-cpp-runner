@@ -1,15 +1,25 @@
 #!/usr/bin/env bats
 
 setup_file() {
-    # select last build executable
-    acceptance_test=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)
-    plugin_test=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)
+    # CTest provides the binaries; otherwise select the last built executables
+    : "${acceptance_test:=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
+    : "${plugin_test:=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
     export acceptance_test plugin_test
 }
 
 setup() {
-    load '/usr/local/bats-support/load'
-    load '/usr/local/bats-assert/load'
+    # amp-devcontainer installs to /usr/local, apt installs to /usr/lib/bats
+    local bats_lib_dir
+    for bats_lib_dir in /usr/local /usr/lib/bats; do
+        if [[ -d "$bats_lib_dir/bats-support" && -d "$bats_lib_dir/bats-assert" ]]; then
+            load "$bats_lib_dir/bats-support/load"
+            load "$bats_lib_dir/bats-assert/load"
+            return
+        fi
+    done
+
+    echo "bats-support/bats-assert not found in /usr/local or /usr/lib/bats" >&2
+    return 1
 }
 
 teardown() {

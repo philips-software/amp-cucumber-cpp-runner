@@ -5,26 +5,21 @@ project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.1.0) # x-release-please-ve
 
 include(cmake/ccr_test_helpers.cmake)
 
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CCR_STANDALONE On)
-endif()
-
-if (CCR_STANDALONE)
-    set(CCR_DEFAULTOPT On)
+if (PROJECT_IS_TOP_LEVEL)
     set(CCR_EXCLUDE_FROM_ALL "")
 else()
-    set(CCR_DEFAULTOPT Off)
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
-option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
-option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
+option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." Off )
+option(CCR_BUILD_TESTS "Enable build of the tests" Off)
+option(CCR_BUILD_EXAMPLES "Enable build of the examples" Off)
 
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_SANITIZERS "Enable compiler flags for the address and undefined behaviour sanitizers" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
 
-option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
+option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" On)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -40,25 +35,63 @@ if (CCR_BUILD_TESTS)
     ccr_enable_testing()
 endif()
 
+if (CCR_BUILD_TESTS)
+    find_program(BATS_PROGRAM bats)
+    if (BATS_PROGRAM)
+        add_test(
+            NAME cucumber_cpp.acceptance_test.bats.build
+            COMMAND ${CMAKE_COMMAND}
+                --build ${CMAKE_BINARY_DIR}
+                --config $<CONFIG>
+                --target
+                    cucumber_cpp.acceptance_test
+                    cucumber_cpp.acceptance_test.custom
+                    cucumber_cpp.acceptance_test.unused
+                    cucumber_cpp.acceptance_test.plugin
+                    cucumber_cpp.acceptance_test.plugin_a
+                    cucumber_cpp.acceptance_test.plugin_b
+        )
+        set_tests_properties(cucumber_cpp.acceptance_test.bats.build PROPERTIES
+            FIXTURES_SETUP cucumber_cpp.acceptance_test.binaries
+        )
+
+        add_test(
+            NAME cucumber_cpp.acceptance_test.bats
+            COMMAND ${BATS_PROGRAM}
+                --report-formatter junit
+                --output ${CMAKE_CURRENT_BINARY_DIR}
+                cucumber_cpp/acceptance_test/test.bats
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        )
+        set_tests_properties(cucumber_cpp.acceptance_test.bats PROPERTIES
+            ENVIRONMENT "acceptance_test=$<TARGET_FILE:cucumber_cpp.acceptance_test>;plugin_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.plugin>"
+            FIXTURES_REQUIRED cucumber_cpp.acceptance_test.binaries
+        )
+    else()
+        message(WARNING "bats not found; acceptance tests will not be run by CTest.")
+    endif()
+endif()
+
 if (CCR_ENABLE_COVERAGE)
     find_program(GCOVR_PROGRAM gcovr REQUIRED)
 
     add_custom_target(
-        generate-coverage-report
-        COMMAND ${GCOVR_PROGRAM} --version
+        generate-lcov-report
         COMMAND ${GCOVR_PROGRAM}
-            --root ${CMAKE_CURRENT_SOURCE_DIR}
+            --root ${PROJECT_SOURCE_DIR}
             --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
             --filter cucumber_cpp
             --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.* --exclude=.*/test_helper/.*
-            --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();'
+            "--exclude-lines-by-pattern=.*assert\\(.*\\);|.*really_assert\\(.*\\);|.*std::abort\\(\\);"
             --txt-summary
             --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
             --cobertura ${CMAKE_CURRENT_BINARY_DIR}/cobertura.xml --cobertura-pretty
-            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
             --markdown-summary ${CMAKE_CURRENT_BINARY_DIR}/coverage-summary.md
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
+
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         COMMENT "Generating code coverage reports"
+        VERBATIM
     )
 endif()
 
@@ -107,7 +140,7 @@ else()
     set(CCR_HAS_RE2 Off)
 endif()
 
-if(PROJECT_IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 endif()
 

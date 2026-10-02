@@ -4,14 +4,68 @@
 
 ## Dependencies
 
-amp-cucumber-cpp-runner requires:
+### amp-cucumber-cpp-runner requires:
 - A recent C++ compiler that supports C++20. (Ranges library required)
 - CMake 3.24 or higher
 
-amp-cucumber-cpp-runner is known to build using:
+### amp-cucumber-cpp-runner is known to build using:
 - Linux gcc-12
 - Linux clang-16
 - Linux clang-cl-16 (targeting Windows with WinSDK 2022 downloaded through xwin)
+
+### amp-cucumber-cpp-runner requires the following dependencies to be installed
+
+third party libraries
+
+- [fmtlib/fmt](https://github.com/fmtlib/fmt) >= v10
+- [CLIUtils/CLI11](https://github.com/CLIUtils/CLI11)
+- [nlohmman/json](https://github.com/nlohmann/json)
+- [google/googletest](https://github.com/google/googletest)
+- [zeux/pugixml](https://github.com/zeux/pugixml)
+
+optionally, but highly recommended
+
+- [abseil/abseil-cpp](https://github.com/abseil/abseil-cpp)
+- [google/re2](https://github.com/google/re2)
+
+Abseil and RE2 are optional dependencies for cucumber-expressions. Their use is nevertheless highly recommended because the RE2 regular-expression engine generally provides superior performance and behavior compared with `std::regex`.
+
+first party libraries
+
+- [cucumber/messages](https://github.com/cucumber/messages)
+- [cucumber/gherkin](https://github.com/cucumber/gherkin)
+- [cucumber/tag-expressions](https://github.com/cucumber/tag-expressions)
+- [cucumber/cucumber-expressions](https://github.com/cucumber/cucumber-expressions)
+- [cucumber/query](https://github.com/cucumber/query)
+- [cucumber/pretty-formatter](https://github.com/cucumber/pretty-formatter)
+
+### Installing dependencies
+
+#### Cmake - CPM
+
+amp-cucumber-cpp-runner comes with an option to download all required dependencies using CPM. Enable `CCR_FETCH_DEPS` when configuring cmake. To also fetch abseil and RE2 enable `CCR_USE_RE2` as well.
+
+#### Ubuntu - apt
+```sh
+apt-get install -y libabsl-dev libcli11-dev libgmock-dev libgtest-dev libpugixml-dev libre2-dev libyaml-cpp-dev nlohmann-json3-dev libfmt-dev
+```
+
+#### MacOS - brew
+```sh
+brew install googletest nlohmann-json fmt abseil re2 cli11 pugixml
+```
+
+#### Windows - VCPKG
+```pwsh
+vcpkg install gtest nlohmann-json fmt abseil re2 cli11 pugixml --triplet x64-windows
+```
+
+#### Installing first party libraries
+Use git to fetch all repositories and install them using:
+```sh
+cmake --workflow --preset host-system
+sudo cmake --install build/host-system
+```
 
 ## How to use the software
 
@@ -23,11 +77,13 @@ An example project is provided which shows most features of amp-cucumber-cpp-run
 
 The following CMake options are supported:
 
-- `CCR_FETCH_DEPS` (default: `Off` when used as a dependency): fetch third-party dependencies via `FetchContent`.
-- `CCR_BUILD_TESTS` (default: `Off` when used as a dependency): enable building unit/integration tests in this repository.
-- `CCR_USE_RE2` (default: `Off` when used as a dependency): enable optional RE2 usage (`abseil-cpp` + `re2`).
+- `CCR_FETCH_DEPS` (default: `Off`): fetch third-party dependencies via `FetchContent`.
+- `CCR_BUILD_TESTS` (default: `Off`): enable building unit/integration tests in this repository.
+- `CCR_BUILD_EXAMPLES` (default: `Off`): enable building unit/integration tests in this repository.
 - `CCR_ENABLE_COVERAGE` (default: `Off`): enable compiler flags for coverage measurements.
+- `CCR_ENABLE_SANITIZERS` (default: `Off`): Enable compiler flags for the address and undefined behaviour sanitizers (GCC).
 - `CCR_ENABLE_TIME_PROFILE` (default: `Off`): enable compiler time-trace profiling flags (Clang).
+- `CCR_USE_RE2` (default: `Off`): enable optional RE2 usage (`abseil-cpp` + `re2`).
 
 ### FetchContent example
 
@@ -261,9 +317,7 @@ Please refer to our [Contributing](CONTRIBUTING.md) guide when you want to contr
 
 ## How to test the software
 
-- `cmake --preset Host`
-- `cmake --build --preset Host-Debug`
-- `ctest --preset Host-Debug`
+- `cmake --workflow --preset test-system`
 
 ## License
 
