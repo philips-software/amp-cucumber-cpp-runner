@@ -65,7 +65,7 @@ runs:
       working-directory: ${{ steps.resolve.outputs.path }}
       run: |
         cmake --workflow --preset "${{ inputs.preset }}"
-        sudo cmake --install build/"${{ inputs.preset }}"
+        # sudo cmake --install .build/"${{ inputs.preset }}"
 
     # Windows: no sudo; the vcpkg/default prefix is user-writable.
     - name: Build and install (Windows)
@@ -74,4 +74,4 @@ runs:
       working-directory: ${{ steps.resolve.outputs.path }}
       run: |
         cmake --workflow --preset "${{ inputs.preset }}"
-        cmake --install build/"${{ inputs.preset }}"
+        # cmake --install .build/"${{ inputs.preset }}"
