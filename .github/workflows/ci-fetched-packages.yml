@@ -49,8 +49,8 @@ jobs:
       - name: Build
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: windows-clang-cl
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -79,8 +79,8 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
+          use-ccache: true
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -88,8 +88,8 @@ jobs:
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
+          use-ccache: true
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -104,8 +104,8 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -113,8 +113,8 @@ jobs:
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -132,8 +132,8 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -141,8 +141,8 @@ jobs:
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          use-ccache: true
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}

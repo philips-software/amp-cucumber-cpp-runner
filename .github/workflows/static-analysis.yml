@@ -30,22 +30,24 @@ jobs:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
 
+      - name: Install bats
+        run: |
+          sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
+          python -m pip install gcovr==8.6
+
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
           os: ubuntu
           os-version: 26.04
 
-      - name: Install bats
-        run: sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
-
       - name: Build host
         uses: ./.github/actions/build
         with:
           ccache-key: ${{ github.job }}
+          use-ccache: true
           workflow-preset: coverage
         env:
-          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
       - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
@@ -69,7 +71,7 @@ jobs:
 
   codeql:
     name: CodeQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       security-events: write
     steps:
@@ -77,17 +79,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          os: ubuntu
+          os-version: 26.04
+
       - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
           languages: cpp
 
-      - name: Build
+      - name: Build host
         uses: ./.github/actions/build
         with:
-          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: true
           ccache-key: ${{ github.job }}
-          configure-preset: "Host"
-          build-preset: "Host-Debug"
+          use-ccache: true
+          workflow-preset: host-system
 
       - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
