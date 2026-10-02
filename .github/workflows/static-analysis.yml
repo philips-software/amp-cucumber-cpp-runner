@@ -66,7 +66,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Show coverage summary
-        working-directory: cpp
         run: cat .build/coverage/coverage-summary.md
 
   codeql:
