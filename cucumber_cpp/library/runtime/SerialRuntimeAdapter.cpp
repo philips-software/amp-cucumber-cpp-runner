@@ -53,7 +53,7 @@ namespace cucumber_cpp::library::runtime
 
         if (!failing)
         {
-            auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, idGenerator);
+            auto assembledTestSuites = assemble::AssembleTestSuites(supportCodeLibrary, testRunStartedId, broadcaster, sourcedPickles, *idGenerator);
 
             for (const auto& assembledTestSuite : assembledTestSuites)
             {

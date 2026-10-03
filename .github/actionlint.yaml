@@ -1,0 +1,4 @@
+paths:
+  .github/workflows/static-analysis.yml:
+    ignore:
+      - '^label "ubuntu-26\.04" is unknown\.'

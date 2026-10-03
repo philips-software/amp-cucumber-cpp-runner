@@ -114,7 +114,7 @@ namespace cucumber_cpp::library::runtime
 
         if (options.featureHooks)
         {
-            const auto beforeHookResults = RunBeforeTestSuiteHooks(**assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+            const auto beforeHookResults = RunBeforeTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
 
             if (IsFailing(util::GetWorstTestStepResult(beforeHookResults).status, options.dryRun))
                 failing = true;
@@ -125,7 +125,7 @@ namespace cucumber_cpp::library::runtime
 
         if (options.featureHooks)
         {
-            const auto afterHookResults = RunAfterTestSuiteHooks(**assembledTestSuite.gherkinDocument.feature, testSuiteContext);
+            const auto afterHookResults = RunAfterTestSuiteHooks(*assembledTestSuite.gherkinDocument.feature, testSuiteContext);
 
             if (IsFailing(util::GetWorstTestStepResult(afterHookResults).status, options.dryRun))
                 failing = true;
@@ -182,16 +182,19 @@ namespace cucumber_cpp::library::runtime
         const auto& definition = supportCodeLibrary.hookRegistry.GetDefinitionById(id);
         const auto testRunHookStartedId = idGenerator->NextId();
 
-        const auto testRunHookStarted = cucumber::messages::TestRunHookStarted{
-            .id = testRunHookStartedId,
-            .testRunStartedId = std::string{ testRunStartedId },
-            .hookId = definition.data.id,
-            .timestamp = std::make_shared<cucumber::messages::Timestamp>(util::TimestampNow()),
-        };
+        cucumber::messages::TestRunHookStarted testRunHookStarted;
+        testRunHookStarted.id = testRunHookStartedId;
+        testRunHookStarted.testRunStartedId = std::string{ testRunStartedId };
+        testRunHookStarted.hookId = definition.data.id;
+        testRunHookStarted.timestamp = util::TimestampNow();
 
-        broadcaster.BroadcastEvent(util::MakeShared(testRunHookStarted));
+        broadcaster.BroadcastEvent([&testRunHookStarted](cucumber::messages::Envelope& envelope)
+            {
+                envelope.testRunHookStarted = testRunHookStarted;
+            });
 
-        cucumber::messages::TestStepResult result{ .duration = std::make_shared<cucumber::messages::Duration>(cucumber::messages::Duration{ .seconds = 0, .nanos = 0 }), .status = cucumber::messages::TestStepResultStatus::SKIPPED };
+        cucumber::messages::TestStepResult result{};
+        result.status = cucumber::messages::TestStepResultStatus::SKIPPED;
 
         if (!options.dryRun)
         {
@@ -206,11 +209,14 @@ namespace cucumber_cpp::library::runtime
                 throw GlobalHookError{ fmt::format("Global Hook Failed: {}\nresult:{}", util::TransformHookData(definition.data).to_string(), result.to_string()) };
         }
 
-        broadcaster.BroadcastEvent(util::MakeShared(cucumber::messages::TestRunHookFinished{
-            .testRunHookStartedId = testRunHookStartedId,
-            .result = util::MakeShared(result),
-            .timestamp = util::MakeShared(util::TimestampNow()),
-        }));
+        broadcaster.BroadcastEvent([&testRunHookStartedId, &result](cucumber::messages::Envelope& envelope)
+            {
+                cucumber::messages::TestRunHookFinished testRunHookFinished;
+                testRunHookFinished.testRunHookStartedId = testRunHookStartedId;
+                testRunHookFinished.result = result;
+                testRunHookFinished.timestamp = util::TimestampNow();
+                envelope.testRunHookFinished = std::move(testRunHookFinished);
+            });
 
         return result;
     }

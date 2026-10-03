@@ -21,8 +21,7 @@ env:
 jobs:
   sonar:
     name: SonarCloud
-    runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:8.1.0@sha256:740110a1a70c336d5b4a2770f84b9d856839ca90a04fec8f0300828e98cb9518
+    runs-on: ubuntu-26.04
     env:
       SONAR_SERVER_URL: "https://sonarcloud.io"
     steps:
@@ -31,43 +30,47 @@ jobs:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
 
-      - name: Build
-        uses: ./.github/actions/build-test
+      - name: Install bats
+        run: |
+          sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
+          python -m pip install gcovr==8.6
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
         with:
-          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: true
+          os: ubuntu
+          os-version: 26.04
+
+      - name: Build host
+        uses: ./.github/actions/build
+        with:
           ccache-key: ${{ github.job }}
-          configure-preset: "Coverage"
-          build-preset: "Coverage"
-          test-preset: "Coverage"
+          use-ccache: true
+          workflow-preset: coverage
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
-      - name: Run acceptance tests
-        run: |
-          bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
-
-      - name: Check testdata coverage
-        run: cmake --build .build/Coverage --target generate-coverage-report
-
       - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
         with:
-          input: ${{ github.workspace }}/.build/Coverage/sonarqube.xml
+          input: ${{ github.workspace }}/.build/coverage/sonarqube.xml
           output: execution.xml
           transformation: gtest-to-generic-execution
 
       - name: Convert results
         run: |
-          cp .build/Coverage/compile_commands.json compile_commands.json
-          cp .build/Coverage/sonarqube.xml sonarqube.xml
+          cp .build/coverage/compile_commands.json compile_commands.json
+          cp .build/coverage/sonarqube.xml sonarqube.xml
 
       - uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Show coverage summary
+        run: cat .build/coverage/coverage-summary.md
+
   codeql:
     name: CodeQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       security-events: write
     steps:
@@ -75,17 +78,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          os: ubuntu
+          os-version: 26.04
+
       - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
           languages: cpp
 
-      - name: Build
+      - name: Build host
         uses: ./.github/actions/build
         with:
-          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: true
           ccache-key: ${{ github.job }}
-          configure-preset: "Host"
-          build-preset: "Host-Debug"
+          use-ccache: true
+          workflow-preset: host-system
 
       - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9

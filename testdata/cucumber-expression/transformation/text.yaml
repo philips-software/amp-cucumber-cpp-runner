@@ -1,3 +1,0 @@
----
-expression: a
-expected_regex: "^a$"

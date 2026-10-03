@@ -10,7 +10,7 @@ namespace cucumber_cpp::library::util
     {
         auto strings = args.stepMatchArguments | std::views::transform([](const auto& arg)
                                                      {
-                                                         return util::ToArgument(*arg);
+                                                         return util::ToArgument(arg);
                                                      });
         return { strings.begin(), strings.end() };
     }

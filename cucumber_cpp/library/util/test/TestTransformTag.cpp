@@ -11,17 +11,17 @@ namespace cucumber_cpp::library::util
 
     namespace
     {
-        std::shared_ptr<cucumber::messages::Tag> MakeTag(std::string name)
+        cucumber::messages::Tag MakeTag(std::string name)
         {
-            auto tag = std::make_shared<cucumber::messages::Tag>();
-            tag->name = std::move(name);
+            cucumber::messages::Tag tag;
+            tag.name = std::move(name);
             return tag;
         }
     }
 
     TEST(TransformTag, collects_unique_sorted_names)
     {
-        const std::vector<std::shared_ptr<cucumber::messages::Tag>> tags{ MakeTag("@b"), MakeTag("@a"), MakeTag("@b") };
+        const std::vector<cucumber::messages::Tag> tags{ MakeTag("@b"), MakeTag("@a"), MakeTag("@b") };
 
         const auto names = TransformTags(tags);
 

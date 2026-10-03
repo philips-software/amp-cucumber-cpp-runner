@@ -1,8 +1,8 @@
 #ifndef CUCUMBER_CPP_BODYMACRO_HPP
 #define CUCUMBER_CPP_BODYMACRO_HPP
 
-#include "cucumber_cpp/library/cucumber_expression/Argument.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber/cucumber-expressions/Argument.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/support/Body.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
@@ -15,9 +15,9 @@
 namespace cucumber_cpp::library::detail
 {
     template<class T>
-    T TransformArg(const std::string& parameterName, const cucumber_expression::ConvertFunctionArg& parameterArgs)
+    T TransformArg(const std::string& parameterName, const cucumber::cucumber_expressions::ConvertFunctionArg& parameterArgs)
     {
-        return cucumber_expression::TransformArg(T{}, parameterName, parameterArgs);
+        return cucumber::cucumber_expressions::TransformArg(T{}, parameterName, parameterArgs);
     }
 
     template<class Base>

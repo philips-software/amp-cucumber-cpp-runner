@@ -385,7 +385,7 @@ Before loading plugins, the host takes snapshots of mutable global state:
 
 ```cpp
 support::DefinitionRegistration::Instance().TakeSnapshot();
-cucumber_expression::ConverterRegistry::TakeSnapshot();
+cucumber::cucumber_expressions::ConverterRegistry::TakeSnapshot();
 dynamicLibraryManager.Load(options.loadPaths);
 ```
 
@@ -394,7 +394,7 @@ statically-registered converters), the host restores to the snapshot:
 
 ```cpp
 support::DefinitionRegistration::Instance().UnregisterPlugins();
-cucumber_expression::ConverterRegistry::RestoreSnapshot();
+cucumber::cucumber_expressions::ConverterRegistry::RestoreSnapshot();
 dynamicLibraryManager.UnloadAll();
 ```
 

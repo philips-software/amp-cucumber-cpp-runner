@@ -18,10 +18,10 @@ namespace cucumber_cpp::library::util
         for (const auto& pickleTableRow : pickleTable->rows)
         {
             TableRow& tableRow = table.rows.emplace_back();
-            tableRow.cells.reserve(pickleTableRow->cells.size());
+            tableRow.cells.reserve(pickleTableRow.cells.size());
 
-            for (const auto& cell : pickleTableRow->cells)
-                tableRow.cells.emplace_back(cell->value);
+            for (const auto& cell : pickleTableRow.cells)
+                tableRow.cells.emplace_back(cell.value);
         }
 
         return table;
@@ -36,11 +36,15 @@ namespace cucumber_cpp::library::util
 
         for (const auto& tableRow : table->rows)
         {
-            const auto& pickleTableRow = pickleTable.rows.emplace_back(std::make_shared<cucumber::messages::PickleTableRow>());
-            pickleTableRow->cells.reserve(tableRow.cells.size());
+            cucumber::messages::PickleTableRow& pickleTableRow = pickleTable.rows.emplace_back();
+            pickleTableRow.cells.reserve(tableRow.cells.size());
 
             for (const auto& cell : tableRow.cells)
-                pickleTableRow->cells.emplace_back(std::make_shared<cucumber::messages::PickleTableCell>(cucumber::messages::PickleTableCell{ .value = cell.value }));
+            {
+                cucumber::messages::PickleTableCell pickleTableCell;
+                pickleTableCell.value = cell.value;
+                pickleTableRow.cells.push_back(pickleTableCell);
+            }
         }
 
         return pickleTable;

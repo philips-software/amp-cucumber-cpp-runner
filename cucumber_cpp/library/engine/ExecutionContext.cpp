@@ -46,7 +46,7 @@ namespace cucumber_cpp::library::engine
             return std::nullopt;
         }
 
-        void BroadcastAttachment(const util::Broadcaster& broadCaster, std::string data, cucumber::messages::AttachmentContentEncoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
+        void BroadcastAttachment(util::Broadcaster& broadCaster, std::string data, cucumber::messages::AttachmentContentEncoding encoding, OptionsOrMediaType mediaType, const util::StepOrHookStarted& stepOrHookStarted)
         {
             auto options = std::holds_alternative<std::string>(mediaType)
                                ? AttachOptions{ .mediaType = std::get<std::string>(mediaType) }
@@ -55,16 +55,20 @@ namespace cucumber_cpp::library::engine
             auto [testCaseStartedId, testStepId] = ReadTestStepStartedIds(stepOrHookStarted);
             auto testRunHookStartedId = ReadTestRunHookStartedIds(stepOrHookStarted);
 
-            broadCaster.BroadcastEvent(util::MakeShared(cucumber::messages::Attachment{
-                .body = std::move(data),
-                .contentEncoding = encoding,
-                .fileName = std::move(options.fileName),
-                .mediaType = std::move(options.mediaType),
-                .testCaseStartedId = std::move(testCaseStartedId),
-                .testStepId = std::move(testStepId),
-                .testRunHookStartedId = std::move(testRunHookStartedId),
-                .timestamp = util::MakeShared(util::TimestampNow()),
-            }));
+            broadCaster.BroadcastEvent([&data, &encoding, &options, &testCaseStartedId, &testStepId, &testRunHookStartedId](cucumber::messages::Envelope& envelope)
+                {
+                    cucumber::messages::Attachment attachment;
+                    attachment.body = std::move(data);
+                    attachment.contentEncoding = encoding;
+                    attachment.fileName = std::move(options.fileName);
+                    attachment.mediaType = std::move(options.mediaType);
+                    attachment.testCaseStartedId = std::move(testCaseStartedId);
+                    attachment.testStepId = std::move(testStepId);
+                    attachment.testRunHookStartedId = std::move(testRunHookStartedId);
+                    attachment.timestamp = util::TimestampNow();
+
+                    envelope.attachment = std::move(attachment);
+                });
         }
     }
 

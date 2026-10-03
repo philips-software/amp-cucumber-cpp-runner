@@ -1,8 +1,11 @@
 add_subdirectory(library)
 add_subdirectory(runner)
 
-if (CCR_STANDALONE)
+if (CCR_BUILD_EXAMPLES)
     add_subdirectory(example)
+endif()
+
+if (CCR_BUILD_TESTS)
     add_subdirectory(acceptance_test)
 endif()
 

@@ -1,9 +1,7 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
-#include "cucumber_cpp/library/formatter/Formatter.hpp"
+#include "cucumber_cpp/library/formatter/ExternalFormatter.hpp"
 #include "cucumber_cpp/library/formatter/JunitXmlFormatter.hpp"
 #include "cucumber_cpp/library/formatter/MessageFormatter.hpp"
-#include "cucumber_cpp/library/formatter/PrettyFormatter.hpp"
-#include "cucumber_cpp/library/formatter/SummaryFormatter.hpp"
 #include "cucumber_cpp/library/formatter/UsageFormatter.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -24,6 +22,14 @@
 
 namespace cucumber_cpp::library::api
 {
+    namespace
+    {
+        nlohmann::json SubOptions(const nlohmann::json& formatOptions, const std::string& name)
+        {
+            return formatOptions.contains(name) ? formatOptions.at(name) : nlohmann::json::object();
+        }
+    }
+
     FormatterOption::FormatterOption(std::string_view str)
     {
         const auto colon = str.find(':');
@@ -33,11 +39,30 @@ namespace cucumber_cpp::library::api
 
     Formatters::Formatters()
     {
-        RegisterFormatter<formatter::PrettyFormatter>();
-        RegisterFormatter<formatter::SummaryFormatter>();
+        RegisterFormatter("pretty", RegisteredFormatter{ [](support::SupportCodeLibrary&, util::Broadcaster& broadcaster, const nlohmann::json& formatOptions, std::ostream& output) -> std::unique_ptr<util::Listener>
+                                        {
+                                            return std::make_unique<formatter::ExternalFormatter>(broadcaster, formatter::MakePrettyPrinter(SubOptions(formatOptions, "pretty"), output));
+                                        } });
+        RegisterFormatter("summary", RegisteredFormatter{ [](support::SupportCodeLibrary&, util::Broadcaster& broadcaster, const nlohmann::json& formatOptions, std::ostream& output) -> std::unique_ptr<util::Listener>
+                                         {
+                                             return std::make_unique<formatter::ExternalFormatter>(broadcaster, formatter::MakeSummaryPrinter(SubOptions(formatOptions, "summary"), output));
+                                         } });
+        RegisterFormatter("progress", RegisteredFormatter{ [](support::SupportCodeLibrary&, util::Broadcaster& broadcaster, const nlohmann::json& formatOptions, std::ostream& output) -> std::unique_ptr<util::Listener>
+                                          {
+                                              return std::make_unique<formatter::ExternalFormatter>(broadcaster, formatter::MakeProgressPrinter(SubOptions(formatOptions, "progress"), output));
+                                          } });
+        RegisterFormatter("progressbar", RegisteredFormatter{ [](support::SupportCodeLibrary&, util::Broadcaster& broadcaster, const nlohmann::json& formatOptions, std::ostream& output) -> std::unique_ptr<util::Listener>
+                                             {
+                                                 return std::make_unique<formatter::ExternalFormatter>(broadcaster, formatter::MakeProgressBarPrinter(SubOptions(formatOptions, "progress-bar"), output));
+                                             } });
         RegisterFormatter<formatter::JunitXmlFormatter>();
         RegisterFormatter<formatter::MessageFormatter>();
         RegisterFormatter<formatter::UsageFormatter>();
+    }
+
+    void Formatters::RegisterFormatter(std::string name, RegisteredFormatter registeredFormatter)
+    {
+        availableFormatters.try_emplace(std::move(name), std::move(registeredFormatter));
     }
 
     std::set<std::pair<std::string, bool>> Formatters::GetAvailableFormatterNames() const
@@ -49,9 +74,9 @@ namespace cucumber_cpp::library::api
         return { view.begin(), view.end() };
     }
 
-    std::list<std::unique_ptr<formatter::Formatter>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, std::ostream& output)
+    std::list<std::unique_ptr<util::Listener>> Formatters::EnableFormatters(const std::set<std::string, std::less<>>& format, const nlohmann::json& formatOptions, support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, std::ostream& output)
     {
-        std::list<std::unique_ptr<formatter::Formatter>> activeFormatters;
+        std::list<std::unique_ptr<util::Listener>> activeFormatters;
 
         for (const auto& formatterName : format)
         {
