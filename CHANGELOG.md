@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.2.0...v4.3.0) (2026-10-03)
+
+
+### Features
+
+* Move separate modules to cucumber.io ([#394](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/394)) ([e7e0622](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/e7e0622736c995bd87ae593f713f999f3fae1560))
+
 ## [4.2.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.1.0...v4.2.0) (2026-09-01)
 
 
