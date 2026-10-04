@@ -134,6 +134,7 @@ jobs:
         with:
           ccache-key: ${{ github.job }}
           use-ccache: true
+          cache-variant: sccache
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -143,6 +144,7 @@ jobs:
         with:
           ccache-key: ${{ github.job }}
           use-ccache: true
+          cache-variant: sccache
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}

@@ -10,6 +10,10 @@ inputs:
   ccache-key:
     description: Key for ccache cache
     required: false
+  cache-variant:
+    description: Compiler cache variant to use, either 'ccache' or 'sccache'
+    required: false
+    default: 'ccache'
   workflow-preset:
     description: CMake workflow
     required: true
@@ -29,6 +33,7 @@ runs:
       if: ${{ inputs.use-ccache == 'true' }}
       with:
         key: ${{ inputs.ccache-key }}
+        variant: ${{ inputs.cache-variant }}
         max-size: 2G
         save: ${{ github.ref == 'refs/heads/main' }}
         evict-old-files: 7d

@@ -124,6 +124,7 @@ jobs:
         with:
           ccache-key: ${{ github.job }}
           use-ccache: true
+          cache-variant: sccache
           workflow-preset: host-system
 
       - name: Build host and unit test
@@ -131,4 +132,5 @@ jobs:
         with:
           ccache-key: ${{ github.job }}
           use-ccache: true
+          cache-variant: sccache
           workflow-preset: test-system
