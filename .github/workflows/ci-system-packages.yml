@@ -45,7 +45,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}-${{ github.ref }}
+          key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
           save: ${{ github.ref == 'refs/heads/main' }}
           max-size: 2G
           evict-old-files: 7d
