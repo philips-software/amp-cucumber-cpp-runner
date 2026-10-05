@@ -31,6 +31,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}
+          save: ${{ github.ref == 'refs/heads/main' }}
+          max-size: 2G
+          evict-old-files: 7d
+
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: cache-winsdk
         with:
@@ -49,8 +57,6 @@ jobs:
       - name: Build
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: windows-clang-cl
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -76,11 +82,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
+          save: ${{ github.ref == 'refs/heads/main' }}
+          max-size: 2G
+          evict-old-files: 7d
+
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
-          use-ccache: true
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -88,8 +100,6 @@ jobs:
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
-          use-ccache: true
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -101,11 +111,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}
+          save: ${{ github.ref == 'refs/heads/main' }}
+          max-size: 2G
+          evict-old-files: 7d
+
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: host-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -113,8 +129,6 @@ jobs:
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: test-fetch-deps
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
@@ -133,9 +147,9 @@ jobs:
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}
+          save: ${{ github.ref == 'refs/heads/main' }}
           variant: sccache
           max-size: 2G
-          save: ${{ github.ref == 'refs/heads/main' }}
           evict-old-files: 7d
 
       - name: Build host

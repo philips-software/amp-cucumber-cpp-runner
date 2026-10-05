@@ -46,8 +46,9 @@ jobs:
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}-${{ github.ref }}
-          append-timestamp: false
           save: ${{ github.ref == 'refs/heads/main' }}
+          max-size: 2G
+          evict-old-files: 7d
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
@@ -58,15 +59,11 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
-          use-ccache: true
           workflow-preset: host-system
 
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}-${{ matrix.config.os }}-${{ matrix.config.os-version }}-${{ matrix.config.cxx }}-${{ matrix.config.version }}
-          use-ccache: true
           workflow-preset: test-system
 
   test-system-macos:
@@ -79,9 +76,10 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: ${{ github.job }}-${{ github.ref }}
-          append-timestamp: false
+          key: ${{ github.job }}
           save: ${{ github.ref == 'refs/heads/main' }}
+          max-size: 2G
+          evict-old-files: 7d
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
@@ -92,15 +90,11 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: host-system
 
       - name: Build host and unit test
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: test-system
 
   test-system-windows:
@@ -117,9 +111,9 @@ jobs:
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: ${{ github.job }}
+          save: ${{ github.ref == 'refs/heads/main' }}
           variant: sccache
           max-size: 2G
-          save: ${{ github.ref == 'refs/heads/main' }}
           evict-old-files: 7d
 
       - name: Install dependencies
