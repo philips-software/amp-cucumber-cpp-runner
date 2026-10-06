@@ -106,17 +106,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
 # Compiler cache
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+#
+# sccache is checked before ccache: GitHub-hosted Windows runners ship a Strawberry Perl
+# installation that includes its own 'ccache.exe' on PATH, which would otherwise shadow the
+# sccache binary installed by CI, causing builds to use an unconfigured, unrestored cache.
+find_program(SCCACHE_PROGRAM sccache)
+if(SCCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
 else()
-    find_program(SCCACHE_PROGRAM sccache)
-    if(SCCACHE_PROGRAM)
-        set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
-        message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
     endif()
 endif()
 
