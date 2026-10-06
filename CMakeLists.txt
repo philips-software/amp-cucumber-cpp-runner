@@ -124,6 +124,22 @@ else()
     endif()
 endif()
 
+if(MSVC AND (SCCACHE_PROGRAM OR CCACHE_PROGRAM))
+    # Neither ccache nor sccache support MSVC's /Zi (and /ZI) debug-information format, which
+    # writes debug info to a single .pdb file shared by every translation unit in a target.
+    # sccache strips the /FS flag (which would otherwise serialize writes to that shared .pdb
+    # via mspdbsrv) whenever it has to fall back to invoking the real compiler, so parallel
+    # builds fail with "fatal error C1041: cannot open program database". Switch to /Z7, which
+    # embeds debug info directly into each .obj file instead of a shared .pdb, avoiding the
+    # race entirely and allowing the compiler cache to work as expected.
+    foreach(flags_var
+        CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    )
+        string(REPLACE "/Zi" "/Z7" ${flags_var} "${${flags_var}}")
+    endforeach()
+endif()
+
 set_directory_properties(PROPERTY USE_FOLDERS ON)
 
 include(FetchContent)
