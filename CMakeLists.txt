@@ -106,16 +106,38 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
 # Compiler cache
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+#
+# sccache is checked before ccache: GitHub-hosted Windows runners ship a Strawberry Perl
+# installation that includes its own 'ccache.exe' on PATH, which would otherwise shadow the
+# sccache binary installed by CI, causing builds to use an unconfigured, unrestored cache.
+find_program(SCCACHE_PROGRAM sccache)
+if(SCCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
 else()
-    find_program(SCCACHE_PROGRAM sccache)
-    if(SCCACHE_PROGRAM)
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
-        message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
     endif()
+endif()
+
+if(MSVC AND (SCCACHE_PROGRAM OR CCACHE_PROGRAM))
+    # Neither ccache nor sccache support MSVC's /Zi (and /ZI) debug-information format, which
+    # writes debug info to a single .pdb file shared by every translation unit in a target.
+    # sccache strips the /FS flag (which would otherwise serialize writes to that shared .pdb
+    # via mspdbsrv) whenever it has to fall back to invoking the real compiler, so parallel
+    # builds fail with "fatal error C1041: cannot open program database". Switch to /Z7, which
+    # embeds debug info directly into each .obj file instead of a shared .pdb, avoiding the
+    # race entirely and allowing the compiler cache to work as expected.
+    foreach(flags_var
+        CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    )
+        string(REPLACE "/Zi" "/Z7" ${flags_var} "${${flags_var}}")
+    endforeach()
 endif()
 
 set_directory_properties(PROPERTY USE_FOLDERS ON)

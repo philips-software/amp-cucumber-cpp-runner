@@ -30,6 +30,14 @@ jobs:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}
+          max-size: 2G
+          save: ${{ github.ref == 'refs/heads/main' }}
+          evict-old-files: 7d
+
       - name: Install bats
         run: |
           sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
@@ -44,8 +52,6 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: coverage
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
@@ -78,6 +84,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}
+          max-size: 2G
+          save: ${{ github.ref == 'refs/heads/main' }}
+          evict-old-files: 7d
+
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
@@ -91,8 +105,6 @@ jobs:
       - name: Build host
         uses: ./.github/actions/build
         with:
-          ccache-key: ${{ github.job }}
-          use-ccache: true
           workflow-preset: host-system
 
       - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
