@@ -21,7 +21,7 @@ namespace compatibility
 {
     namespace
     {
-        void RemoveIncompatibilities(nlohmann::json& json, const std::string& sourceDir)
+        void RemoveIncompatibilities(nlohmann::json& json, const std::string& sourceDir, const std::string& featureDir)
         {
             for (auto jsonIter = json.begin(); jsonIter != json.end();)
             {
@@ -30,16 +30,19 @@ namespace compatibility
 
                 if (key == "exception" || key == "message" || key == "line" || key == "snippets")
                     jsonIter = json.erase(jsonIter);
+                // Newer messages omit empty optional arrays, older ones emit them
+                else if (key == "children" && value.is_array() && value.empty())
+                    jsonIter = json.erase(jsonIter);
                 else if (value.is_object())
                 {
-                    RemoveIncompatibilities(value, sourceDir);
+                    RemoveIncompatibilities(value, sourceDir, featureDir);
                     ++jsonIter;
                 }
                 else if (value.is_array())
                 {
                     for (auto& element : value)
                         if (element.is_object())
-                            RemoveIncompatibilities(element, sourceDir);
+                            RemoveIncompatibilities(element, sourceDir, featureDir);
                     ++jsonIter;
                 }
                 else if (key == "data")
@@ -51,7 +54,8 @@ namespace compatibility
                 {
                     auto uri = value.get<std::string>();
 
-                    uri = std::regex_replace(uri, std::regex(R"(samples\/[^\/]+)"), sourceDir);
+                    const auto& kitDir = uri.ends_with(".feature") ? featureDir : sourceDir;
+                    uri = std::regex_replace(uri, std::regex(R"(^samples\/[^\/]+)"), kitDir);
                     uri = std::regex_replace(uri, std::regex(R"(\.ts$)"), ".cpp");
 
                     std::filesystem::path path{ uri };
@@ -89,12 +93,12 @@ namespace compatibility
             return envelopes;
         }
 
-        void CompareEnvelopes(std::list<nlohmann::json>& actual, std::list<nlohmann::json>& expected, const std::string& sourceDir, const std::filesystem::path& kitDir)
+        void CompareEnvelopes(std::list<nlohmann::json>& actual, std::list<nlohmann::json>& expected, const std::string& sourceDir, const std::string& featureDir, const std::filesystem::path& kitDir)
         {
             for (auto& json : actual)
-                RemoveIncompatibilities(json, sourceDir);
+                RemoveIncompatibilities(json, sourceDir, featureDir);
             for (auto& json : expected)
-                RemoveIncompatibilities(json, sourceDir);
+                RemoveIncompatibilities(json, sourceDir, featureDir);
 
             // Write out normalized envelopes for debugging
             std::filesystem::create_directories(kitDir);
@@ -169,7 +173,7 @@ namespace compatibility
             argStrings.emplace_back(arg);
 
         argStrings.emplace_back("--no-recursive");
-        argStrings.emplace_back(kit.sourceDir.string());
+        argStrings.emplace_back(kit.featureDir.string());
 
         std::vector<const char*> argv;
         argv.reserve(argStrings.size());
@@ -188,7 +192,7 @@ namespace compatibility
         auto actualEnvelopes = LoadNdjson(actualNdjsonPath);
         auto expectedEnvelopes = LoadNdjson(kit.ndjsonFile);
 
-        CompareEnvelopes(actualEnvelopes, expectedEnvelopes, kit.sourceDir.string(), kit.buildDir);
+        CompareEnvelopes(actualEnvelopes, expectedEnvelopes, kit.sourceDir.string(), kit.featureDir.string(), kit.buildDir);
 
         std::filesystem::remove(actualNdjsonPath);
     }

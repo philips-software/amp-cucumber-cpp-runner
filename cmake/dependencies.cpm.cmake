@@ -19,6 +19,7 @@ macro(ccr_cucumber_package cucumber_package)
     CPMAddPackage(
         URI "gh:${ccr_cucumber_git_repo}#${ccr_cucumber_git_hash}"
         SOURCE_SUBDIR cpp
+        ${ARGN}
     )
 endmacro()
 
@@ -31,7 +32,7 @@ ccr_dependency(PUGIXML       v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38
 ccr_dependency(ABSEIL_CPP    20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
 ccr_dependency(RE2           2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
 
-if(CCR_FETCH_DEPS)
+if(CCR_FETCH_DEPS OR CCR_BUILD_TESTS)
     if(NOT COMMAND CPMAddPackage)
         # ---------------------------------------------------------------------------
         # CPM – download on first configure if not already cached
@@ -57,7 +58,9 @@ if(CCR_FETCH_DEPS)
 
         include("${CPM_DOWNLOAD_LOCATION}")
     endif()
+endif()
 
+if(CCR_FETCH_DEPS)
     # ---------------------------------------------------------------------------
     #
     # Dependencies
@@ -176,4 +179,11 @@ else()
     find_package(cucumber_tag_expressions REQUIRED)
     find_package(cucumber_pretty_formatter REQUIRED)
     find_package(cucumber_cucumber_expressions REQUIRED)
+endif()
+
+if(CCR_BUILD_TESTS)
+    # ---------------------------------------------------------------------------
+    # Cucumber Compatibility Kit (feature files only, no CMake project)
+    # ---------------------------------------------------------------------------
+    ccr_cucumber_package(compatibility-kit DOWNLOAD_ONLY YES)
 endif()
