@@ -18,7 +18,6 @@ macro(ccr_cucumber_package cucumber_package)
     string(REPLACE "-" "_" ccr_cucumber_package_name "${cucumber_package}")
     CPMAddPackage(
         URI "gh:${ccr_cucumber_git_repo}#${ccr_cucumber_git_hash}"
-        SOURCE_SUBDIR cpp
         ${ARGN}
     )
 endmacro()
@@ -160,12 +159,12 @@ if(CCR_FETCH_DEPS)
         endif()
     endif()
 
-    ccr_cucumber_package(messages)
-    ccr_cucumber_package(gherkin)
-    ccr_cucumber_package(query)
-    ccr_cucumber_package(tag-expressions)
-    ccr_cucumber_package(pretty-formatter)
-    ccr_cucumber_package(cucumber-expressions)
+    ccr_cucumber_package(messages SOURCE_SUBDIR cpp)
+    ccr_cucumber_package(gherkin SOURCE_SUBDIR cpp)
+    ccr_cucumber_package(query SOURCE_SUBDIR cpp)
+    ccr_cucumber_package(tag-expressions SOURCE_SUBDIR cpp)
+    ccr_cucumber_package(pretty-formatter SOURCE_SUBDIR cpp)
+    ccr_cucumber_package(cucumber-expressions SOURCE_SUBDIR cpp)
 else()
     find_package(CLI11 REQUIRED)
     find_package(nlohmann_json REQUIRED)
