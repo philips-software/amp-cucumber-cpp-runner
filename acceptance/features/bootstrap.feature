@@ -9,7 +9,7 @@ Feature: Child feature
         Then it succeeds
             """
 
-        Given a library named "mylibrary" with:
+        Given a library named "my library" with:
             """
             #include "cucumber_cpp/Steps.hpp"
 
@@ -24,7 +24,7 @@ Feature: Child feature
             }
             """
 
-        When I run cucumber-cpp-runner with "mylibrary"
+        When I run cucumber-cpp-runner with "my library"
         Then it passes
 
     Scenario: Build a plugin library and run a failing feature file

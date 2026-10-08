@@ -90,6 +90,12 @@ namespace
         return value;
     }
 
+    [[nodiscard]] std::filesystem::path LibraryPathFor(const std::filesystem::path& workspace, const std::string& libraryName)
+    {
+        const auto validatedName = ValidateLibraryName(ReplaceSpacesWithUnderscores(libraryName));
+        return workspace / (validatedName + std::string{ DynamicLibrary::PlatformExtension() });
+    }
+
     [[nodiscard]] std::filesystem::path CreateWorkspacePath()
     {
         const auto now = static_cast<std::uint64_t>(
@@ -180,8 +186,7 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
 {
     ASSERT_THAT(docString, testing::IsTrue());
 
-    const auto sanitizedLibraryName = ReplaceSpacesWithUnderscores(libraryName);
-    const auto validatedName = ValidateLibraryName(sanitizedLibraryName);
+    const auto outputPath = LibraryPathFor(context.Get<std::filesystem::path>(scenarioWorkspace), libraryName);
 
     {
         std::ofstream sourceFile(CCR_ACCEPTANCE_SANDBOX_SOURCE, std::ios::binary);
@@ -204,10 +209,6 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
         << "Sandbox build failed\n"
         << FormatProcessResult(buildResult);
 
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
-    const auto extension = std::string{ DynamicLibrary::PlatformExtension() };
-    const auto outputPath = workspace / (validatedName + extension);
-
     std::filesystem::copy_file(
         CCR_ACCEPTANCE_SANDBOX_ARTIFACT,
         outputPath,
@@ -216,10 +217,8 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
 
 WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryName))
 {
-    const auto validatedName = ValidateLibraryName(libraryName);
     const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
-    const auto extension = std::string{ DynamicLibrary::PlatformExtension() };
-    const auto libraryPath = workspace / (validatedName + extension);
+    const auto libraryPath = LibraryPathFor(workspace, libraryName);
     const auto messageOutputPath = workspace / "messages.ndjson";
     const auto prettyOutputPath = workspace / "pretty.txt";
     const auto summaryOutputPath = workspace / "summary.txt";
