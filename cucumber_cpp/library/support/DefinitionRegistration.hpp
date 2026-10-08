@@ -40,6 +40,9 @@ namespace cucumber_cpp::library::support
         template<class T>
         void ForEachRegisteredStep(const T& func);
 
+        template<class T>
+        void ForEachRegisteredEntry(const T& func) const;
+
         std::vector<HookEntry> GetHooks();
 
         [[nodiscard]] std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
@@ -99,6 +102,22 @@ namespace cucumber_cpp::library::support
 
         for (auto* plugin : plugins)
             forEachStep(plugin->registry);
+    }
+
+    template<class T>
+    void DefinitionRegistration::ForEachRegisteredEntry(const T& func) const
+    {
+        auto forEachEntry = [&func](const auto& reg)
+        {
+            for (const auto& entry : reg | std::views::values)
+                func(entry);
+        };
+
+        forEachEntry(staticRegistry);
+        forEachEntry(registry);
+
+        for (const auto* plugin : plugins)
+            forEachEntry(plugin->registry);
     }
 
     template<class T>

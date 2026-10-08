@@ -17,15 +17,17 @@ namespace compatibility
             std::vector<KitInfo> kits;
 
             const std::filesystem::path sourceDir{ COMPAT_SOURCE_DIR };
+            const std::filesystem::path featuresDir{ COMPAT_FEATURES_DIR };
             const std::filesystem::path buildDir{ COMPAT_BUILD_DIR };
             const std::filesystem::path pluginDir{ COMPAT_PLUGIN_DIR };
 
-            for (const auto& entry : std::filesystem::directory_iterator{ sourceDir })
+            for (const auto& entry : std::filesystem::directory_iterator{ featuresDir })
             {
                 if (!entry.is_directory())
                     continue;
 
                 const auto name = entry.path().filename().string();
+                const auto kitSourceDir = sourceDir / name;
                 const auto ndjsonFile = entry.path() / (name + ".ndjson");
 
                 if (!std::filesystem::exists(ndjsonFile))
@@ -35,7 +37,7 @@ namespace compatibility
                 const auto pluginPath = pluginDir / pluginName;
 
                 std::vector<std::string> extraArgs;
-                const auto argsFile = entry.path() / (name + ".arguments.txt");
+                const auto argsFile = kitSourceDir / (name + ".arguments.txt");
                 if (std::filesystem::exists(argsFile))
                 {
                     std::ifstream ifs{ argsFile };
@@ -46,12 +48,13 @@ namespace compatibility
 
                 kits.push_back(KitInfo{
                     .name = name,
-                    .sourceDir = entry.path(),
+                    .sourceDir = kitSourceDir,
+                    .featureDir = entry.path(),
                     .buildDir = buildDir / "compatibility" / name,
                     .ndjsonFile = ndjsonFile,
                     .pluginPath = pluginPath,
                     .extraArgs = std::move(extraArgs),
-                    .hasPlugin = std::filesystem::exists(entry.path() / (name + ".cpp")),
+                    .hasPlugin = std::filesystem::exists(kitSourceDir / (name + ".cpp")),
                 });
             }
 
