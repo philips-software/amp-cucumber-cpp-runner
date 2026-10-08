@@ -34,11 +34,13 @@
 #include <iostream>
 #include <iterator>
 #include <list>
+#include <map>
 #include <memory>
 #include <ranges>
 #include <set>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace cucumber_cpp::library::api
@@ -82,69 +84,55 @@ namespace cucumber_cpp::library::api
                     });
         }
 
-        void EmitStepDefinitions(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        void EmitStepDefinition(const support::StepRegistry::Definition& stepDefinition, util::Broadcaster& broadcaster)
         {
+            broadcaster.BroadcastEvent([&stepDefinition](cucumber::messages::Envelope& envelope)
+                {
+                    cucumber::messages::StepDefinitionPattern pattern;
+                    pattern.source = stepDefinition.pattern;
+                    pattern.type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION;
+
+                    cucumber::messages::Location location;
+                    location.line = stepDefinition.line;
+
+                    cucumber::messages::SourceReference sourceReference;
+                    sourceReference.uri = stepDefinition.uri.string();
+                    sourceReference.location = location;
+
+                    cucumber::messages::StepDefinition stepDefinitionMessage;
+                    stepDefinitionMessage.id = stepDefinition.id;
+                    stepDefinitionMessage.pattern = pattern;
+                    stepDefinitionMessage.sourceReference = sourceReference;
+
+                    envelope.stepDefinition = std::move(stepDefinitionMessage);
+                });
+        }
+
+        void EmitHook(const util::HookData& hook, util::Broadcaster& broadcaster)
+        {
+            broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
+                {
+                    envelope.hook = util::TransformHookData(hook);
+                });
+        }
+
+        void EmitStepDefinitionsAndHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
+        {
+            // Steps with undefined parameter types are not part of the step registry
+            std::map<std::string, const support::StepRegistry::Definition*, std::less<>> stepDefinitions;
             for (const auto& stepDefinition : supportCodeLibrary.stepRegistry.StepDefinitions())
-            {
-                broadcaster.BroadcastEvent([&stepDefinition](cucumber::messages::Envelope& envelope)
+                stepDefinitions.emplace(stepDefinition.id, &stepDefinition);
+
+            support::DefinitionRegistration::Instance().ForEachRegisteredEntry([&](const support::Entry& entry)
+                {
+                    if (const auto* step = std::get_if<support::StepStringRegistration::Entry>(&entry))
                     {
-                        cucumber::messages::StepDefinitionPattern pattern;
-                        pattern.source = stepDefinition.pattern;
-                        pattern.type = stepDefinition.patternType == support::ExpressionPatternType::cucumberExpression ? cucumber::messages::StepDefinitionPatternType::CUCUMBER_EXPRESSION : cucumber::messages::StepDefinitionPatternType::REGULAR_EXPRESSION;
-
-                        cucumber::messages::Location location;
-                        location.line = stepDefinition.line;
-
-                        cucumber::messages::SourceReference sourceReference;
-                        sourceReference.uri = stepDefinition.uri.string();
-                        sourceReference.location = location;
-
-                        cucumber::messages::StepDefinition stepDefinitionMessage;
-                        stepDefinitionMessage.id = stepDefinition.id;
-                        stepDefinitionMessage.pattern = pattern;
-                        stepDefinitionMessage.sourceReference = sourceReference;
-
-                        envelope.stepDefinition = std::move(stepDefinitionMessage);
-                    });
-            }
-        }
-
-        void EmitTestCaseHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
-        {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::before);
-
-            for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
-                    {
-                        envelope.hook = util::TransformHookData(hook);
-                    });
-
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::after);
-
-            for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
-                    {
-                        envelope.hook = util::TransformHookData(hook);
-                    });
-        }
-
-        void EmitTestRunHooks(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster)
-        {
-            auto beforeAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::beforeAll);
-
-            for (const auto& hook : beforeAllHooks)
-                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
-                    {
-                        envelope.hook = util::TransformHookData(hook);
-                    });
-
-            auto afterAllHooks = supportCodeLibrary.hookRegistry.HooksByType(util::HookType::afterAll);
-
-            for (const auto& hook : afterAllHooks)
-                broadcaster.BroadcastEvent([&hook](cucumber::messages::Envelope& envelope)
-                    {
-                        envelope.hook = util::TransformHookData(hook);
-                    });
+                        if (const auto iter = stepDefinitions.find(step->id); iter != stepDefinitions.end())
+                            EmitStepDefinition(*iter->second, broadcaster);
+                    }
+                    else
+                        EmitHook(supportCodeLibrary.hookRegistry.GetDefinitionById(std::get<support::HookEntry>(entry).id).data, broadcaster);
+                });
         }
 
         void EmitSupportCodeMessages(const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, const cucumber::gherkin::IdGeneratorPtr& idGenerator)
@@ -157,14 +145,10 @@ namespace cucumber_cpp::library::api
 
             // Phase 2: Load steps (can now resolve parameter type expressions)
             plugin::StepLoader::Load(supportCodeLibrary.stepRegistry);
+            plugin::HookLoader::Load(supportCodeLibrary.hookRegistry);
 
             EmitUndefinedParameters(supportCodeLibrary, broadcaster);
-            EmitStepDefinitions(supportCodeLibrary, broadcaster);
-
-            // Phase 3: Load hooks (last, no ordering dependency)
-            plugin::HookLoader::Load(supportCodeLibrary.hookRegistry);
-            EmitTestCaseHooks(supportCodeLibrary, broadcaster);
-            EmitTestRunHooks(supportCodeLibrary, broadcaster);
+            EmitStepDefinitionsAndHooks(supportCodeLibrary, broadcaster);
         }
 
         const std::string& TransformPickleTagName(const cucumber::messages::PickleTag& tag)

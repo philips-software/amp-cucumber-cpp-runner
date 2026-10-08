@@ -6,6 +6,7 @@
 #include <numeric>
 #include <source_location>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace
@@ -50,4 +51,10 @@ WHEN(R"(a PDF document is attached and renamed)")
 WHEN(R"(a link to {string} is attached)", (const std::string& url))
 {
     Link(url);
+}
+
+WHEN(R"(the string {string} is attached as {string} before a failure)", (const std::string& text, const std::string& mediaType))
+{
+    Attach(text, mediaType);
+    throw std::runtime_error{ "whoops" };
 }
