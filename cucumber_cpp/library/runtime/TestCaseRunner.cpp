@@ -214,7 +214,10 @@ namespace cucumber_cpp::library::runtime
                                                                        return supportCodeLibrary.stepRegistry.GetDefinitionById(id);
                                                                    });
 
-        if (const auto count = testStep.stepDefinitionIds->size(); count == 0)
+        // Undefined and ambiguous steps following a skipped step are reported as skipped
+        const auto followsSkippedStep = !skip && !testStepResults.empty() && GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::SKIPPED;
+
+        if (const auto count = testStep.stepDefinitionIds->size(); count == 0 && !followsSkippedStep)
         {
             broadcaster.BroadcastEvent([this, &pickleStep](cucumber::messages::Envelope& envelope)
                 {
@@ -228,7 +231,7 @@ namespace cucumber_cpp::library::runtime
             testStepResult.status = cucumber::messages::TestStepResultStatus::UNDEFINED;
             return testStepResult;
         }
-        else if (count > 1)
+        else if (count > 1 && !followsSkippedStep)
         {
             cucumber::messages::TestStepResult testStepResult{};
             testStepResult.message = "Ambiguous step definitions";
