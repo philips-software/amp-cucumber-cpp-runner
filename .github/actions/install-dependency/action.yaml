@@ -1,0 +1,77 @@
+name: Install C++ cucumber dependency
+description: >-
+  Checks out a cucumber C++ sub-project at a given ref, builds it with the
+  host-system CMake workflow preset and installs it so downstream projects can
+  find it via find_package().
+
+inputs:
+  dependency:
+    description: "File containing a fully qualified reference to a GitHub repository (e.g. cucumber/messages@e5769e89dd8dd7aa7e8c8163023f38bad539e3aa # v34.2.1)"
+    required: true
+  path:
+    description: >-
+      Directory the repository is checked out into. Defaults to the repository
+      name with a "-src" suffix (e.g. messages-src).
+    required: false
+    default: ""
+  preset:
+    description: "CMake workflow preset used to build the dependency."
+    required: false
+    default: host-system
+
+runs:
+  using: composite
+  steps:
+    # Resolve contents of dependencies/<name>.version file and
+    # derive a default checkout path (<name>-src) when none is supplied.
+    - name: Resolve dependencies and checkout path
+      id: resolve
+      shell: bash
+      run: |
+        if [ ! -f "${{ inputs.dependency }}" ]; then
+          echo "${{ inputs.dependency }} does not exist"
+          exit 1
+        fi
+
+        if ! reference=$(grep -E '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[[:xdigit:]]{40}( #.*)?$' "${{ inputs.dependency }}"); then
+          echo "${{ inputs.dependency }} does not contain a valid reference"
+          exit 1
+        fi
+
+        repository=$(echo "$reference" | cut -d '@' -f 1)
+        ref=$(echo "$reference" | cut -d '@' -f 2 | cut -d ' ' -f 1)
+
+        echo "repository=${repository}" >> "$GITHUB_OUTPUT"
+        echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+
+        if [ -n "${{ inputs.path }}" ]; then
+          echo "path=${{ inputs.path }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "path=${repository##*/}-src" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Checkout ${{ inputs.repository }}
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        repository: ${{ steps.resolve.outputs.repository }}
+        ref: ${{ steps.resolve.outputs.ref }}
+        path: ${{ steps.resolve.outputs.path }}
+        persist-credentials: false
+
+    # Linux/macOS: install into a system prefix, which requires elevation.
+    - name: Build and install (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      working-directory: ${{ steps.resolve.outputs.path }}/cpp
+      run: |
+        cmake --workflow --preset "${{ inputs.preset }}"
+        sudo cmake --install build/"${{ inputs.preset }}"
+
+    # Windows: no sudo; the vcpkg/default prefix is user-writable.
+    - name: Build and install (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      working-directory: ${{ steps.resolve.outputs.path }}/cpp
+      run: |
+        cmake --workflow --preset "${{ inputs.preset }}"
+        cmake --install build/"${{ inputs.preset }}"

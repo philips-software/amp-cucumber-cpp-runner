@@ -38,7 +38,7 @@ HOOK_AFTER_STEP("@stephook and @bats")
     std::cout << "HOOK_AFTER_STEP\n";
 }
 
-HOOK_BEFORE_SCENARIO("@fail_scenariohook_before")
+HOOK_BEFORE_SCENARIO("@fail_scenariohook_before", "will fail before scenario")
 {
     FAIL();
 }
@@ -53,7 +53,7 @@ HOOK_BEFORE_SCENARIO("@throw_scenariohook")
     throw std::string{ "error" };
 }
 
-HOOK_BEFORE_SCENARIO(.name = "fail if --failprogramhook is set")
+HOOK_BEFORE_SCENARIO("@smoke and @result:OK", "fail if --failprogramhook is set")
 {
     if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
         std::cout << "should not be executed\n";

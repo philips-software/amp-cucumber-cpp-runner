@@ -1,3 +1,0 @@
----
-expression: "{int}"
-expected_regex: "^((?:-?\\d+)|(?:\\d+))$"

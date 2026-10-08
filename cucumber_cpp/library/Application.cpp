@@ -4,21 +4,20 @@
 #include "CLI/Error.hpp"
 #include "CLI/Option.hpp"
 #include "CLI/Validators.hpp"
-#include "CLI/impl/App_inl.hpp"
+#include "cucumber/cucumber-expressions/Errors.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/Demangle.hpp"
 #include "cucumber/tag-expressions/Parser.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
-#include "cucumber_cpp/library/cucumber_expression/Errors.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/Timestamp.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include <algorithm>
@@ -44,7 +43,7 @@ namespace cucumber_cpp::library
             : manager{ manager }
         {
             support::DefinitionRegistration::Instance().TakeSnapshot();
-            cucumber_expression::ConverterRegistry::TakeSnapshot();
+            cucumber::cucumber_expressions::ConverterRegistry::TakeSnapshot();
 
             try
             {
@@ -76,7 +75,7 @@ namespace cucumber_cpp::library
         void Cleanup()
         {
             support::DefinitionRegistration::Instance().UnregisterPlugins();
-            cucumber_expression::ConverterRegistry::RestoreSnapshot();
+            cucumber::cucumber_expressions::ConverterRegistry::RestoreSnapshot();
             manager.UnloadAll();
         }
 
@@ -203,7 +202,7 @@ namespace cucumber_cpp::library
             std::cout << fmt::format("InternalError error:\n{}\n", error.what());
             return EXIT_FAILURE;
         }
-        catch (const cucumber_expression::Error& error)
+        catch (const cucumber::cucumber_expressions::Error& error)
         {
             std::cout << fmt::format("Cucumber Expression error:\n{}\n", error.what());
             return EXIT_FAILURE;
@@ -230,7 +229,7 @@ namespace cucumber_cpp::library
         return programContextRef;
     }
 
-    cucumber_expression::ParameterRegistry& Application::ParameterRegistration()
+    cucumber::cucumber_expressions::ParameterRegistry& Application::ParameterRegistration()
     {
         return parameterRegistry;
     }

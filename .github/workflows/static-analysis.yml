@@ -21,8 +21,7 @@ env:
 jobs:
   sonar:
     name: SonarCloud
-    runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:8.0.1@sha256:489772f6e442f93804c0ccdb8879d84fbb1a70a203e8a2885ec97b39858bddee
+    runs-on: ubuntu-26.04
     env:
       SONAR_SERVER_URL: "https://sonarcloud.io"
     steps:
@@ -31,43 +30,53 @@ jobs:
           fetch-depth: 0 # Disable shallow clone to enable blame information
           persist-credentials: false
 
-      - name: Build
-        uses: ./.github/actions/build-test
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: true
-          ccache-key: ${{ github.job }}
-          configure-preset: "Coverage"
-          build-preset: "Coverage"
-          test-preset: "Coverage"
+          key: ${{ github.job }}
+          max-size: 2G
+          save: ${{ github.ref == 'refs/heads/main' }}
+          evict-old-files: 7d
+
+      - name: Install bats
+        run: |
+          sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
+          python -m pip install gcovr==8.6
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          os: ubuntu
+          os-version: 26.04
+
+      - name: Build host
+        uses: ./.github/actions/build
+        with:
+          workflow-preset: coverage
         env:
           GTEST_OUTPUT: "xml:${{ github.workspace }}/testresults/"
 
-      - name: Run acceptance tests
-        run: |
-          bats --formatter junit cucumber_cpp/acceptance_test/test.bats | tee test-report.xml
-
-      - name: Check testdata coverage
-        run: cmake --build .build/Coverage --target generate-coverage-report
-
       - uses: philips-software/sonarqube-issue-conversion@9e9958764ba5fd1d302b039779dc902bedfa4d01 # v1.2.0
         with:
-          input: ${{ github.workspace }}/.build/Coverage/sonarqube.xml
+          input: ${{ github.workspace }}/.build/coverage/sonarqube.xml
           output: execution.xml
           transformation: gtest-to-generic-execution
 
       - name: Convert results
         run: |
-          cp .build/Coverage/compile_commands.json compile_commands.json
-          cp .build/Coverage/sonarqube.xml sonarqube.xml
+          cp .build/coverage/compile_commands.json compile_commands.json
+          cp .build/coverage/sonarqube.xml sonarqube.xml
 
       - uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Show coverage summary
+        run: cat .build/coverage/coverage-summary.md
+
   codeql:
     name: CodeQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       security-events: write
     steps:
@@ -75,17 +84,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: ${{ github.job }}
+          max-size: 2G
+          save: ${{ github.ref == 'refs/heads/main' }}
+          evict-old-files: 7d
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          os: ubuntu
+          os-version: 26.04
+
+      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
           languages: cpp
 
-      - name: Build
+      - name: Build host
         uses: ./.github/actions/build
         with:
-          cpm-source-cache: ${{ env.CPM_SOURCE_CACHE }}
-          use-ccache: true
-          ccache-key: ${{ github.job }}
-          configure-preset: "Host"
-          build-preset: "Host-Debug"
+          workflow-preset: host-system
 
-      - uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9

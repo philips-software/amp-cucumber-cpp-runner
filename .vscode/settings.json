@@ -27,8 +27,8 @@
     "connectionId": "philips-software",
     "projectKey": "philips-software_amp-cucumber-cpp-runner"
   },
-  "cmake.postRunCoverageTarget": "generate-coverage-report",
+  "cmake.postRunCoverageTarget": "generate-lcov-report",
   "cmake.coverageInfoFiles": [
-    "${workspaceFolder}/.build/Coverage/lcov.info"
+    "${workspaceFolder}/.build/coverage/lcov.info"
   ]
 }

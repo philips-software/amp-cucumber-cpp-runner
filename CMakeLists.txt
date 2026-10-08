@@ -1,53 +1,97 @@
 cmake_minimum_required(VERSION 3.24)
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.1.0) # x-release-please-version
+project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.3.0) # x-release-please-version
 
 include(cmake/ccr_test_helpers.cmake)
 
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CCR_STANDALONE On)
-endif()
-
-if (CCR_STANDALONE)
-    set(CCR_DEFAULTOPT On)
+if (PROJECT_IS_TOP_LEVEL)
     set(CCR_EXCLUDE_FROM_ALL "")
 else()
-    set(CCR_DEFAULTOPT Off)
     set(CCR_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
 endif()
 
-option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." ${CCR_DEFAULTOPT} )
-option(CCR_BUILD_TESTS "Enable build of the tests" ${CCR_DEFAULTOPT})
-option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" ${CCR_DEFAULTOPT})
+option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." Off )
+option(CCR_BUILD_TESTS "Enable build of the tests" Off)
+option(CCR_BUILD_EXAMPLES "Enable build of the examples" Off)
+
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
+option(CCR_ENABLE_SANITIZERS "Enable compiler flags for the address and undefined behaviour sanitizers" Off)
 option(CCR_ENABLE_TIME_PROFILE "Enable compiler flags for time profiling measurements" Off)
+
+option(CCR_USE_RE2 "Use the RE2 regex engine (fetched when CCR_FETCH_DEPS is set, otherwise auto-detected)" On)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(CCR_ENABLE_SANITIZERS AND CCR_ENABLE_COVERAGE)
+    message(FATAL_ERROR "CCR_ENABLE_SANITIZERS and CCR_ENABLE_COVERAGE are mutually exclusive.")
+endif()
+
+if(CCR_ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(WARNING "Code coverage is only enabled with the GNU compiler.")
+endif()
+
 if (CCR_BUILD_TESTS)
     ccr_enable_testing()
+endif()
+
+if (CCR_BUILD_TESTS)
+    find_program(BATS_PROGRAM bats)
+    if (BATS_PROGRAM)
+        add_test(
+            NAME cucumber_cpp.acceptance_test.bats.build
+            COMMAND ${CMAKE_COMMAND}
+                --build ${CMAKE_BINARY_DIR}
+                --config $<CONFIG>
+                --target
+                    cucumber_cpp.acceptance_test
+                    cucumber_cpp.acceptance_test.custom
+                    cucumber_cpp.acceptance_test.unused
+                    cucumber_cpp.acceptance_test.plugin
+                    cucumber_cpp.acceptance_test.plugin_a
+                    cucumber_cpp.acceptance_test.plugin_b
+        )
+        set_tests_properties(cucumber_cpp.acceptance_test.bats.build PROPERTIES
+            FIXTURES_SETUP cucumber_cpp.acceptance_test.binaries
+        )
+
+        add_test(
+            NAME cucumber_cpp.acceptance_test.bats
+            COMMAND ${BATS_PROGRAM}
+                --report-formatter junit
+                --output ${CMAKE_CURRENT_BINARY_DIR}
+                cucumber_cpp/acceptance_test/test.bats
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        )
+        set_tests_properties(cucumber_cpp.acceptance_test.bats PROPERTIES
+            ENVIRONMENT "acceptance_test=$<TARGET_FILE:cucumber_cpp.acceptance_test>;plugin_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.plugin>"
+            FIXTURES_REQUIRED cucumber_cpp.acceptance_test.binaries
+        )
+    else()
+        message(WARNING "bats not found; acceptance tests will not be run by CTest.")
+    endif()
 endif()
 
 if (CCR_ENABLE_COVERAGE)
     find_program(GCOVR_PROGRAM gcovr REQUIRED)
 
     add_custom_target(
-        generate-coverage-report
-        COMMAND ${GCOVR_PROGRAM} --version
+        generate-lcov-report
         COMMAND ${GCOVR_PROGRAM}
-            --root ${CMAKE_CURRENT_SOURCE_DIR}
+            --root ${PROJECT_SOURCE_DIR}
             --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
             --filter cucumber_cpp
             --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.* --exclude=.*/test_helper/.*
-            --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();'
+            "--exclude-lines-by-pattern=.*assert\\(.*\\);|.*really_assert\\(.*\\);|.*std::abort\\(\\);"
             --txt-summary
             --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info
             --cobertura ${CMAKE_CURRENT_BINARY_DIR}/cobertura.xml --cobertura-pretty
-            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
             --markdown-summary ${CMAKE_CURRENT_BINARY_DIR}/coverage-summary.md
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            --sonarqube ${CMAKE_CURRENT_BINARY_DIR}/sonarqube.xml
+
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         COMMENT "Generating code coverage reports"
+        VERBATIM
     )
 endif()
 
@@ -62,16 +106,38 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
 # Compiler cache
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+#
+# sccache is checked before ccache: GitHub-hosted Windows runners ship a Strawberry Perl
+# installation that includes its own 'ccache.exe' on PATH, which would otherwise shadow the
+# sccache binary installed by CI, causing builds to use an unconfigured, unrestored cache.
+find_program(SCCACHE_PROGRAM sccache)
+if(SCCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
 else()
-    find_program(SCCACHE_PROGRAM sccache)
-    if(SCCACHE_PROGRAM)
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
-        message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
     endif()
+endif()
+
+if(MSVC AND (SCCACHE_PROGRAM OR CCACHE_PROGRAM))
+    # Neither ccache nor sccache support MSVC's /Zi (and /ZI) debug-information format, which
+    # writes debug info to a single .pdb file shared by every translation unit in a target.
+    # sccache strips the /FS flag (which would otherwise serialize writes to that shared .pdb
+    # via mspdbsrv) whenever it has to fall back to invoking the real compiler, so parallel
+    # builds fail with "fatal error C1041: cannot open program database". Switch to /Z7, which
+    # embeds debug info directly into each .obj file instead of a shared .pdb, avoiding the
+    # race entirely and allowing the compiler cache to work as expected.
+    foreach(flags_var
+        CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    )
+        string(REPLACE "/Zi" "/Z7" ${flags_var} "${${flags_var}}")
+    endforeach()
 endif()
 
 set_directory_properties(PROPERTY USE_FOLDERS ON)
@@ -80,23 +146,15 @@ include(FetchContent)
 include(GNUInstallDirs)
 include(CTest)
 
-# Enable sanitizers globally, before any dependency is added, so every target
-# (including fetched third-party libraries) is instrumented. Consistent
-# instrumentation keeps libc++ container annotations coherent across module
-# boundaries; mixing instrumented and uninstrumented code produces false-positive
-# container-overflow reports.
-if (PROJECT_IS_TOP_LEVEL AND NOT CCR_ENABLE_COVERAGE
-        AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC"))
-    set(CCR_ENABLE_SANITIZERS On)
-endif()
-
-if (CCR_ENABLE_SANITIZERS)
-    add_compile_options(-fsanitize=address -fsanitize=undefined)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
-endif()
-
 include(cmake/dependencies.cpm.cmake)
 add_subdirectory(external)
+
+if (CCR_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-fsanitize=address -fsanitize=undefined)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    endif()
+endif()
 
 if (TARGET re2::re2)
     set(CCR_HAS_RE2 On)
@@ -104,41 +162,13 @@ else()
     set(CCR_HAS_RE2 Off)
 endif()
 
-# Opt specific dependencies out of sanitizer instrumentation because of known
-# limitations: abseil's constexpr function-pointer comparisons are not compatible
-# with GCC's ASan/UBSan instrumentation, which causes build failures. Later target
-# options override the globally inherited flags.
-if (CCR_ENABLE_SANITIZERS)
-    function(ccr_disable_sanitizers dir)
-        get_property(targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
-        foreach(target IN LISTS targets)
-            get_target_property(type ${target} TYPE)
-            if (NOT type STREQUAL "INTERFACE_LIBRARY" AND NOT type STREQUAL "UTILITY")
-                target_compile_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
-                target_link_options(${target} PRIVATE -fno-sanitize=address -fno-sanitize=undefined)
-            endif()
-        endforeach()
-
-        get_property(subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
-        foreach(subdir IN LISTS subdirs)
-            ccr_disable_sanitizers("${subdir}")
-        endforeach()
-    endfunction()
-
-    foreach(dep_dir IN ITEMS "${abseil-cpp_SOURCE_DIR}" "${re2_SOURCE_DIR}")
-        if (dep_dir AND IS_DIRECTORY "${dep_dir}")
-            ccr_disable_sanitizers("${dep_dir}")
-        endif()
-    endforeach()
-endif()
-
-if(PROJECT_IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 endif()
 
 add_subdirectory(cucumber_cpp)
 
-if (PROJECT_IS_TOP_LEVEL)
+if (CCR_BUILD_TESTS)
     add_subdirectory(compatibility)
     add_subdirectory(acceptance)
 endif()

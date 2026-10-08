@@ -1,8 +1,8 @@
 
 #include "cucumber_cpp/library/util/TransformArgument.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/messages/Group.hpp"
 #include "cucumber/messages/StepMatchArgument.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include <optional>
 #include <ranges>
@@ -17,14 +17,14 @@ namespace cucumber_cpp::library::util
             return group.value;
         }
 
-        cucumber_expression::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::Group& group)
+        cucumber::cucumber_expressions::ConvertFunctionArg GroupToArgumentGroup(const cucumber::messages::Group& group)
         {
             if (!group.children.has_value() || group.children->empty())
                 return { group.value };
 
             auto strings = group.children.value() | std::views::transform([](const auto& child)
                                                         {
-                                                            return ToString(*child);
+                                                            return ToString(child);
                                                         });
 
             return { strings.begin(), strings.end() };
@@ -35,7 +35,7 @@ namespace cucumber_cpp::library::util
     {
         return {
             .converterName = argument.parameterTypeName.value_or(""),
-            .converterArgs = GroupToArgumentGroup(*argument.group),
+            .converterArgs = GroupToArgumentGroup(argument.group),
         };
     }
 }

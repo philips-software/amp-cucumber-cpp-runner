@@ -15,6 +15,7 @@ Checks:          '
     -misc-non-private-member-variables-in-classes,
     modernize*,
     -modernize-use-trailing-return-type,
+    -modernize-use-designated-initializers,
     performance*,
     -performance-no-int-to-ptr,
     readability*,

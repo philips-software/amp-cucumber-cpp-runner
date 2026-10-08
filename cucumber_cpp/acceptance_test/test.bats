@@ -1,14 +1,25 @@
 #!/usr/bin/env bats
 
 setup_file() {
-    acceptance_test=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -print -quit)
-    plugin_test=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -print -quit)
+    # CTest provides the binaries; otherwise select the last built executables
+    : "${acceptance_test:=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
+    : "${plugin_test:=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
     export acceptance_test plugin_test
 }
 
 setup() {
-    load '/usr/local/bats-support/load'
-    load '/usr/local/bats-assert/load'
+    # amp-devcontainer installs to /usr/local, apt installs to /usr/lib/bats
+    local bats_lib_dir
+    for bats_lib_dir in /usr/local /usr/lib/bats; do
+        if [[ -d "$bats_lib_dir/bats-support" && -d "$bats_lib_dir/bats-assert" ]]; then
+            load "$bats_lib_dir/bats-support/load"
+            load "$bats_lib_dir/bats-assert/load"
+            return
+        fi
+    done
+
+    echo "bats-support/bats-assert not found in /usr/local or /usr/lib/bats" >&2
+    return 1
 }
 
 teardown() {
@@ -33,8 +44,8 @@ teardown() {
 @test "■ tests" {
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "■ Given a missing step"
-    assert_output --partial "↷ Then this should be skipped"
+    assert_output --partial "Undefined scenarios:"
+    assert_output --partial "Given a missing step"
 }
 
 @test "No tests" {
@@ -121,7 +132,7 @@ teardown() {
 
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" --dry-run  cucumber_cpp/acceptance_test/features
     assert_success
-    assert_output --partial "■ Given a missing step"
+    assert_output --partial "Given a missing step"
 }
 
 @test "Test the and keyword" {
@@ -155,19 +166,22 @@ teardown() {
 @test "Test failing hook before results in error" {
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_before" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "✘ Before"
+    assert_output --partial "Failed scenarios:"
+    assert_output --partial "Before(will fail before scenario) #"
 }
 
 @test "Test failing hook after results in error" {
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_after" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "✘ After"
+    assert_output --partial "Failed scenarios:"
+    assert_output --partial "After #"
 }
 
 @test "Test throwing hook results in error" {
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@throw_scenariohook" -- cucumber_cpp/acceptance_test/features
     assert_failure
-    assert_output --partial "✘ Before"
+    assert_output --partial "Failed scenarios:"
+    assert_output --partial "Before #"
 }
 
 @test "Test error program hook results in error and skipped steps" {
@@ -228,8 +242,9 @@ teardown() {
     run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_step_fixture" -- cucumber_cpp/acceptance_test/features
     assert_failure
     assert_output --partial "key not found: \"nonExistentKey\""
-    assert_output --partial "2 scenarios 1 passed, 1 failed"
-    assert_output --partial "2 steps 1 passed, 1 failed"
+    assert_output --partial "2 hooks (2 passed)"
+    assert_output --partial "2 scenarios (1 passed, 1 failed)"
+    assert_output --partial "2 steps (1 passed, 1 failed)"
 }
 
 @test "Test nested failures propagate properly" {
@@ -239,7 +254,7 @@ teardown() {
     assert_output --partial "Value of: false"
     assert_output --partial "Expected: is true"
     assert_output --partial "Actual: false (of type bool)"
-    assert_output --partial "↷ Then this should be skipped"
+    assert_output --partial "2 steps (1 skipped, 1 failed)"
 }
 
 @test "Test providing access to scenario info in scenario and step hooks" {

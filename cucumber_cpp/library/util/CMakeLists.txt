@@ -59,7 +59,9 @@ target_include_directories(cucumber_cpp.library.util PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.util PUBLIC
-    cucumber_gherkin_lib
+    cucumber::cucumber_expressions
+    cucumber::gherkin
+    cucumber::query
     fmt::fmt
     GTest::gtest
 )

@@ -1,5 +1,5 @@
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
-#include "cucumber_cpp/library/cucumber_expression/ParameterRegistry.hpp"
+#include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibrary.hpp"
 #include "cucumber_cpp/library/plugin/PluginExport.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
@@ -66,7 +66,7 @@ namespace cucumber_cpp::library::plugin
             .registration = &support::DefinitionRegistration::Instance(),
             .stopwatch = &util::Stopwatch::Instance(),
             .timestampGenerator = &util::TimestampGenerator::Instance(),
-            .converterMap = &cucumber_expression::ConverterRegistry::Instance(),
+            .converterMap = &cucumber::cucumber_expressions::ConverterRegistry::Instance(),
         };
 
         registerFn(&context);

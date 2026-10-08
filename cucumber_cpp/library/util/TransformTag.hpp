@@ -10,7 +10,7 @@
 
 namespace cucumber_cpp::library::util
 {
-    std::set<std::string, std::less<>> TransformTags(std::span<const std::shared_ptr<cucumber::messages::Tag>> tags);
+    std::set<std::string, std::less<>> TransformTags(std::span<const cucumber::messages::Tag> tags);
 }
 
 #endif
