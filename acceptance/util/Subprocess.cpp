@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -345,9 +344,6 @@ namespace acceptance::util
             for (auto& arg : executableAndArguments)
                 argv.push_back(const_cast<char*>(arg.c_str()));
             argv.push_back(nullptr);
-
-            for (const auto& arg : argv)
-                std::cout << arg << " ";
 
             execvp(argv[0], argv.data());
             _exit(127);

@@ -66,6 +66,16 @@ namespace acceptance::util
         EXPECT_THAT(result.standardError.front(), testing::Eq('E'));
     }
 
+    TEST(Subprocess, does_not_leak_arguments_into_stdout)
+    {
+        const std::string largeArgument(8192, 'x');
+        const auto result = RunChild({ "--stdout", "ok", "--stderr", largeArgument, "--exit", "0" });
+
+        EXPECT_THAT(result.exitCode, testing::Eq(0));
+        EXPECT_THAT(result.standardOutput, testing::StrEq("ok"));
+        EXPECT_THAT(result.standardError, testing::StrEq(largeArgument));
+    }
+
     TEST(Subprocess, throws_for_missing_executable)
     {
         const auto missingPath = std::filesystem::temp_directory_path() / "cucumber_cpp_missing_executable";
