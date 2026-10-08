@@ -4,6 +4,11 @@
 #include <stdexcept>
 #include <string>
 
+#if defined(_WIN32)
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 namespace
 {
     std::size_t ParseSize(const char* value)
@@ -19,6 +24,11 @@ namespace
 
 int main(int argc, char** argv)
 {
+#if defined(_WIN32)
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stderr), _O_BINARY);
+#endif
+
     std::string stdoutText;
     std::string stderrText;
     std::size_t stdoutBytes = 0;

@@ -10,6 +10,11 @@ target_link_libraries(cucumber_cpp.runner PUBLIC
 
 add_executable(cucumber_cpp.cli ${CCR_EXCLUDE_FROM_ALL})
 
+# MSVC linkers need at least one object file to pick up the CRT entry point.
+target_sources(cucumber_cpp.cli PRIVATE
+    Main.cpp
+)
+
 target_link_libraries(cucumber_cpp.cli PRIVATE
     cucumber_cpp.runner
 )
