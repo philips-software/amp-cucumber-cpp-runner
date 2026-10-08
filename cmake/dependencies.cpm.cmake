@@ -31,32 +31,31 @@ ccr_dependency(PUGIXML       v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38
 ccr_dependency(ABSEIL_CPP    20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
 ccr_dependency(RE2           2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
 
-if(CCR_FETCH_DEPS OR CCR_BUILD_TESTS)
-    if(NOT COMMAND CPMAddPackage)
-        # ---------------------------------------------------------------------------
-        # CPM – download on first configure if not already cached
-        # ---------------------------------------------------------------------------
-        set(CPM_USE_LOCAL_PACKAGES ON)
-        set(CPM_DOWNLOAD_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-        set(CPM_DOWNLOAD_SHA256 "1c40fc102ce9625d7de7eb14f541cab30cc3138dca627f0b0ec40293ce6c2934")
+if((CCR_FETCH_DEPS OR CCR_BUILD_TESTS) AND NOT COMMAND CPMAddPackage)
+    # ---------------------------------------------------------------------------
+    # CPM – download on first configure if not already cached
+    # ---------------------------------------------------------------------------
+    set(CPM_USE_LOCAL_PACKAGES ON)
+    set(CPM_DOWNLOAD_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    set(CPM_DOWNLOAD_SHA256 "1c40fc102ce9625d7de7eb14f541cab30cc3138dca627f0b0ec40293ce6c2934")
 
-        if(NOT EXISTS "${CPM_DOWNLOAD_LOCATION}")
-            message(STATUS "Downloading CPM.cmake ${CPM_DOWNLOAD_VERSION}…")
-            file(DOWNLOAD
-                "https://github.com/cpm-cmake/CPM.cmake/releases/download/${CPM_DOWNLOAD_TAG}/CPM.cmake"
-                "${CPM_DOWNLOAD_LOCATION}"
-                TLS_VERIFY ON
-                EXPECTED_HASH SHA256=${CPM_DOWNLOAD_SHA256}
-                STATUS CPM_DOWNLOAD_STATUS
-            )
-             list(GET CPM_DOWNLOAD_STATUS 0 CPM_DOWNLOAD_STATUS_code)
-             if(NOT CPM_DOWNLOAD_STATUS_code EQUAL 0)
-                 message(FATAL_ERROR "Failed to download CPM.cmake: ${CPM_DOWNLOAD_STATUS}")
-             endif()
+    if(NOT EXISTS "${CPM_DOWNLOAD_LOCATION}")
+        message(STATUS "Downloading CPM.cmake ${CPM_DOWNLOAD_VERSION}…")
+        file(DOWNLOAD
+            "https://github.com/cpm-cmake/CPM.cmake/releases/download/${CPM_DOWNLOAD_TAG}/CPM.cmake"
+            "${CPM_DOWNLOAD_LOCATION}"
+            TLS_VERIFY ON
+            EXPECTED_HASH SHA256=${CPM_DOWNLOAD_SHA256}
+            STATUS CPM_DOWNLOAD_STATUS
+        )
+
+        list(GET CPM_DOWNLOAD_STATUS 0 CPM_DOWNLOAD_STATUS_code)
+        if(NOT CPM_DOWNLOAD_STATUS_code EQUAL 0)
+            message(FATAL_ERROR "Failed to download CPM.cmake: ${CPM_DOWNLOAD_STATUS}")
         endif()
-
-        include("${CPM_DOWNLOAD_LOCATION}")
     endif()
+
+    include("${CPM_DOWNLOAD_LOCATION}")
 endif()
 
 if(CCR_FETCH_DEPS)
