@@ -7,9 +7,10 @@
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <exception>
+#include <cucumber/query/EnvelopeArchive.hpp>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -18,7 +19,6 @@
 #include <string>
 #include <string_view>
 #include <system_error>
-#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -35,9 +35,7 @@ namespace
     using cucumber_cpp::library::plugin::DynamicLibrary;
 
     constexpr std::string_view scenarioWorkspace = "scenario_workspace";
-    constexpr std::string_view lastProcessResult = "last_process_result";
     constexpr std::string_view lastBuildResult = "last_build_result";
-    constexpr std::string_view lastMessageQuery = "last_message_query";
     constexpr std::string_view lastMessageOutputPath = "last_message_output_path";
     constexpr std::string_view lastPrettyOutputPath = "last_pretty_output_path";
     constexpr std::string_view lastSummaryOutputPath = "last_summary_output_path";
@@ -59,13 +57,10 @@ namespace
 
     [[nodiscard]] bool ContainsParentReference(const std::filesystem::path& path)
     {
-        for (const auto& part : path)
-        {
-            if (part == "..")
-                return true;
-        }
-
-        return false;
+        return std::any_of(path.begin(), path.end(), [](const auto& part)
+            {
+                return part == "..";
+            });
     }
 
     [[nodiscard]] std::filesystem::path ValidateRelativePath(const std::string& name)
@@ -125,7 +120,7 @@ namespace
         return out.str();
     }
 
-    [[nodiscard]] cucumber::query::Query LoadQueryFromMessageFile(const std::filesystem::path& messagePath)
+    [[nodiscard]] cucumber::query::Query LoadQueryFromMessageFile(const std::filesystem::path& messagePath, cucumber::query::EnvelopeArchive& envelopeArchive)
     {
         std::ifstream input(messagePath, std::ios::binary);
         if (!input.is_open())
@@ -139,7 +134,8 @@ namespace
                 continue;
 
             const auto json = nlohmann::json::parse(line);
-            query.Update(json.get<cucumber::messages::Envelope>());
+
+            query.Update(envelopeArchive.Store(json.get<cucumber::messages::Envelope>()));
         }
 
         return query;
@@ -247,8 +243,9 @@ WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryNa
         },
         workspace);
 
-    context.InsertAt<ProcessResult>(lastProcessResult, runResult);
-    context.InsertAt<cucumber::query::Query>(lastMessageQuery, LoadQueryFromMessageFile(messageOutputPath));
+    context.Insert<ProcessResult>(runResult);
+    context.Insert<cucumber::query::Query>(LoadQueryFromMessageFile(messageOutputPath, *context.Emplace<cucumber::query::EnvelopeArchive>()));
+
     context.InsertAt<std::filesystem::path>(lastMessageOutputPath, messageOutputPath);
     context.InsertAt<std::filesystem::path>(lastPrettyOutputPath, prettyOutputPath);
     context.InsertAt<std::filesystem::path>(lastSummaryOutputPath, summaryOutputPath);
@@ -256,12 +253,12 @@ WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryNa
 
 THEN("it passes")
 {
-    const auto& processResult = context.Get<ProcessResult>(lastProcessResult);
+    const auto& processResult = context.Get<ProcessResult>();
     ASSERT_THAT(processResult.exitCode, testing::Eq(0)) << FormatProcessResult(processResult);
 }
 
 THEN("it fails")
 {
-    const auto& processResult = context.Get<ProcessResult>(lastProcessResult);
+    const auto& processResult = context.Get<ProcessResult>();
     ASSERT_THAT(processResult.exitCode, testing::Ne(0)) << FormatProcessResult(processResult);
 }
