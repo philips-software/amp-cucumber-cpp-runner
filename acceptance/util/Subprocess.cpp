@@ -283,30 +283,37 @@ namespace acceptance::util
         std::thread outputReader{ ReadPipe, standardOutputRead, std::ref(result.standardOutput) };
         std::thread errorReader{ ReadPipe, standardErrorRead, std::ref(result.standardError) };
 
-        WaitForSingleObject(processInformation.hProcess, INFINITE);
+        // Readers stop at EOF once the child exits; join before closing their handles.
+        outputReader.join();
+        errorReader.join();
+
+        CloseHandle(standardOutputRead);
+        CloseHandle(standardErrorRead);
+
+        const auto closeProcessHandles = [&processInformation]
+        {
+            CloseHandle(processInformation.hThread);
+            CloseHandle(processInformation.hProcess);
+        };
+
+        if (WaitForSingleObject(processInformation.hProcess, INFINITE) != WAIT_OBJECT_0)
+        {
+            const auto message = GetLastErrorMessage();
+            closeProcessHandles();
+            ThrowRuntimeError("Failed to wait for process: " + message);
+        }
 
         DWORD exitCode = 0;
         if (!GetExitCodeProcess(processInformation.hProcess, &exitCode))
         {
-            CloseHandle(standardOutputRead);
-            CloseHandle(standardErrorRead);
-            CloseHandle(processInformation.hThread);
-            CloseHandle(processInformation.hProcess);
-            outputReader.join();
-            errorReader.join();
-            ThrowRuntimeError("Failed to read process exit code: " + GetLastErrorMessage());
+            const auto message = GetLastErrorMessage();
+            closeProcessHandles();
+            ThrowRuntimeError("Failed to read process exit code: " + message);
         }
 
+        closeProcessHandles();
+
         result.exitCode = static_cast<int>(exitCode);
-
-        CloseHandle(standardOutputRead);
-        CloseHandle(standardErrorRead);
-        CloseHandle(processInformation.hThread);
-        CloseHandle(processInformation.hProcess);
-
-        outputReader.join();
-        errorReader.join();
-
         return result;
 #else
         Pipe standardOutput = CreatePipeOrThrow();
