@@ -40,6 +40,8 @@ namespace cucumber_cpp::library::support
             bool strict{ true };
             std::unique_ptr<cucumber::tag_expressions::Expression> retryTagExpression{};
             bool featureHooks{ false };
+            std::optional<std::size_t> repeat{};
+            std::unique_ptr<cucumber::tag_expressions::Expression> repeatTagExpression{};
         } runtime;
 
         struct RunEnvironment

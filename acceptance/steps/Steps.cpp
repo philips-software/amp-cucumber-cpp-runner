@@ -10,16 +10,21 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <cucumber/messages/TestCaseFinished.hpp>
+#include <cucumber/messages/TestCaseStarted.hpp>
 #include <cucumber/query/EnvelopeArchive.hpp>
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -37,9 +42,6 @@ namespace
 
     constexpr std::string_view scenarioWorkspace = "scenario_workspace";
     constexpr std::string_view lastBuildResult = "last_build_result";
-    constexpr std::string_view lastMessageOutputPath = "last_message_output_path";
-    constexpr std::string_view lastPrettyOutputPath = "last_pretty_output_path";
-    constexpr std::string_view lastSummaryOutputPath = "last_summary_output_path";
 
     class MessageFormatterOutputError : public std::runtime_error
     {
@@ -143,25 +145,56 @@ namespace
         return RunProcess(std::filesystem::path{ CCR_ACCEPTANCE_CLI }, arguments, workspace);
     }
 
-    [[nodiscard]] cucumber::query::Query LoadQueryFromMessageFile(const std::filesystem::path& messagePath, cucumber::query::EnvelopeArchive& envelopeArchive)
+    template<class OnEnvelope>
+    void LoadMessageEnvelopes(const std::filesystem::path& messagePath, const OnEnvelope& onEnvelope)
     {
         std::ifstream input(messagePath, std::ios::binary);
         if (!input.is_open())
             throw MessageFormatterOutputError{ "Could not read message formatter output: " + messagePath.string() };
 
-        cucumber::query::Query query;
         std::string line;
         while (std::getline(input, line))
         {
             if (line.empty())
                 continue;
 
-            const auto json = nlohmann::json::parse(line);
-
-            query.Update(envelopeArchive.Store(json.get<cucumber::messages::Envelope>()));
+            onEnvelope(nlohmann::json::parse(line).get<cucumber::messages::Envelope>());
         }
+    }
 
+    [[nodiscard]] cucumber::query::Query LoadQueryFromMessageFile(const std::filesystem::path& messagePath, cucumber::query::EnvelopeArchive& envelopeArchive)
+    {
+        cucumber::query::Query query;
+        LoadMessageEnvelopes(messagePath, [&query, &envelopeArchive](cucumber::messages::Envelope envelope)
+            {
+                query.Update(envelopeArchive.Store(std::move(envelope)));
+            });
         return query;
+    }
+
+    [[nodiscard]] std::vector<const cucumber::messages::TestCaseStarted*> FindScenarioAttempts(const cucumber::query::Query& query, std::string_view scenarioName)
+    {
+        std::vector<const cucumber::messages::TestCaseStarted*> attempts;
+        std::set<std::string> attemptIds;
+
+        const auto collectAttempt = [&query, scenarioName, &attemptIds, &attempts](const cucumber::messages::TestCaseStarted* start)
+        {
+            if (start == nullptr)
+                return;
+
+            const auto* pickle = query.FindPickleBy(*start);
+            if (pickle != nullptr && pickle->name == scenarioName && attemptIds.insert(start->id).second)
+                attempts.push_back(start);
+        };
+
+        for (const auto& step : query.FindAllTestStepStarted())
+            collectAttempt(query.FindTestCaseStartedBy(step));
+
+        for (const auto& start : query.FindAllTestCaseStarted())
+            collectAttempt(&start);
+
+        std::ranges::sort(attempts, {}, &cucumber::messages::TestCaseStarted::attempt);
+        return attempts;
     }
 }
 
@@ -260,11 +293,6 @@ WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryNa
         workspace);
 
     context.Insert<ProcessResult>(runResult);
-    context.Insert<cucumber::query::Query>(LoadQueryFromMessageFile(messageOutputPath, *context.Emplace<cucumber::query::EnvelopeArchive>()));
-
-    context.InsertAt<std::filesystem::path>(lastMessageOutputPath, messageOutputPath);
-    context.InsertAt<std::filesystem::path>(lastPrettyOutputPath, prettyOutputPath);
-    context.InsertAt<std::filesystem::path>(lastSummaryOutputPath, summaryOutputPath);
 }
 
 WHEN(R"(I run cucumber-cpp-runner with {string} and arguments:)", (const std::string& libraryName))
@@ -323,4 +351,24 @@ THEN("the output does not contain {string}", (const std::string& unexpected))
 {
     const auto& processResult = context.Get<ProcessResult>();
     ASSERT_THAT(CombinedOutput(processResult), testing::Not(testing::HasSubstr(unexpected))) << FormatProcessResult(processResult);
+}
+
+THEN("the message file {string} contains {int} attempts for scenario {string}", (const std::string& filename, std::int32_t expectedCount, const std::string& scenarioName))
+{
+    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto query = LoadQueryFromMessageFile(workspace / ValidateRelativePath(filename), *context.Emplace<cucumber::query::EnvelopeArchive>());
+    const auto attempts = FindScenarioAttempts(query, scenarioName);
+
+    ASSERT_THAT(attempts.size(), testing::Eq(expectedCount));
+
+    for (std::size_t attempt = 0; attempt < attempts.size(); ++attempt)
+    {
+        const auto& start = *attempts.at(attempt);
+        const auto* finish = query.FindTestCaseFinishedBy(start);
+
+        ASSERT_THAT(finish, testing::NotNull());
+        EXPECT_THAT(start.attempt, testing::Eq(attempt));
+        EXPECT_THAT(start.testCaseId, testing::Eq(attempts.front()->testCaseId));
+        EXPECT_THAT(finish->willBeRetried, testing::Eq(attempt + 1 < attempts.size()));
+    }
 }
