@@ -44,9 +44,7 @@ if (CCR_BUILD_TESTS)
                 --build ${CMAKE_BINARY_DIR}
                 --config $<CONFIG>
                 --target
-                    cucumber_cpp.acceptance_test
                     cucumber_cpp.acceptance_test.custom
-                    cucumber_cpp.acceptance_test.unused
                     cucumber_cpp.acceptance_test.plugin
                     cucumber_cpp.acceptance_test.plugin_a
                     cucumber_cpp.acceptance_test.plugin_b
@@ -64,7 +62,7 @@ if (CCR_BUILD_TESTS)
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         )
         set_tests_properties(cucumber_cpp.acceptance_test.bats PROPERTIES
-            ENVIRONMENT "acceptance_test=$<TARGET_FILE:cucumber_cpp.acceptance_test>;plugin_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.plugin>"
+            ENVIRONMENT "custom_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.custom>;plugin_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.plugin>"
             FIXTURES_REQUIRED cucumber_cpp.acceptance_test.binaries
         )
     else()
@@ -170,4 +168,5 @@ add_subdirectory(cucumber_cpp)
 
 if (CCR_BUILD_TESTS)
     add_subdirectory(compatibility)
+    add_subdirectory(acceptance)
 endif()

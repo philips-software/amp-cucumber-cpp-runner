@@ -107,11 +107,19 @@
             },
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
                 "CCR_FETCH_DEPS": "On",
                 "CCR_BUILD_TESTS": "Off",
                 "CCR_BUILD_EXAMPLES": "Off",
                 "CCR_ENABLE_SANITIZERS": "Off"
+            }
+        },
+        {
+            "name": "windows-clang-cl-test",
+            "displayName": "Windows cross test build (clang-cl + wine)",
+            "description": "Cross-compile with tests enabled; tests run through wine. Requires the Windows SDK in /winsdk (see get-winsdk.sh).",
+            "inherits": "windows-clang-cl",
+            "cacheVariables": {
+                "CCR_BUILD_TESTS": "On"
             }
         }
     ],
@@ -151,6 +159,11 @@
             "name": "windows-clang-cl",
             "configurePreset": "windows-clang-cl",
             "configuration": "Debug"
+        },
+        {
+            "name": "windows-clang-cl-test",
+            "configurePreset": "windows-clang-cl-test",
+            "configuration": "RelWithDebInfo"
         }
     ],
     "testPresets": [
@@ -179,6 +192,20 @@
             "name": "coverage",
             "configurePreset": "coverage",
             "inherits": "defaults"
+        },
+        {
+            "name": "windows-clang-cl-test",
+            "configurePreset": "windows-clang-cl-test",
+            "configuration": "RelWithDebInfo",
+            "inherits": "defaults",
+            "environment": {
+                "WINEDEBUG": "-all"
+            },
+            "filter": {
+                "exclude": {
+                    "name": "^(acceptance\\.test|cucumber_cpp\\.acceptance_test\\.bats.*)$"
+                }
+            }
         }
     ],
     "workflowPresets": [
@@ -286,6 +313,23 @@
                 {
                     "type": "build",
                     "name": "windows-clang-cl"
+                }
+            ]
+        },
+        {
+            "name": "windows-clang-cl-test",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "windows-clang-cl-test"
+                },
+                {
+                    "type": "build",
+                    "name": "windows-clang-cl-test"
+                },
+                {
+                    "type": "test",
+                    "name": "windows-clang-cl-test"
                 }
             ]
         }

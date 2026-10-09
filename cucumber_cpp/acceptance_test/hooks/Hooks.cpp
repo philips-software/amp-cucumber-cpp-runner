@@ -3,7 +3,6 @@
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <iostream>
-#include <string>
 
 HOOK_BEFORE_ALL()
 {
@@ -18,61 +17,8 @@ HOOK_AFTER_ALL()
     std::cout << "HOOK_AFTER_ALL\n";
 }
 
-HOOK_BEFORE_SCENARIO("@scenariohook and @bats")
-{
-    std::cout << "HOOK_BEFORE_SCENARIO\n";
-}
-
-HOOK_AFTER_SCENARIO("@scenariohook and @bats")
-{
-    std::cout << "HOOK_AFTER_SCENARIO\n";
-}
-
-HOOK_BEFORE_STEP("@stephook and @bats")
-{
-    std::cout << "HOOK_BEFORE_STEP\n";
-}
-
-HOOK_AFTER_STEP("@stephook and @bats")
-{
-    std::cout << "HOOK_AFTER_STEP\n";
-}
-
-HOOK_BEFORE_SCENARIO("@fail_scenariohook_before", "will fail before scenario")
-{
-    FAIL();
-}
-
-HOOK_AFTER_SCENARIO("@fail_scenariohook_after")
-{
-    FAIL();
-}
-
-HOOK_BEFORE_SCENARIO("@throw_scenariohook")
-{
-    throw std::string{ "error" };
-}
-
 HOOK_BEFORE_SCENARIO("@smoke and @result:OK", "fail if --failprogramhook is set")
 {
     if (context.Contains("--failprogramhook") && context.Get<bool>("--failprogramhook"))
         std::cout << "should not be executed\n";
-}
-
-HOOK_BEFORE_SCENARIO("@expose_scenario_info")
-{
-    const auto& scenarioInfo = ScenarioInfo();
-    if (scenarioInfo.tags.contains("@store_scenario_info"))
-    {
-        context.InsertAt("ScenarioInfoHook", scenarioInfo);
-    }
-}
-
-HOOK_BEFORE_STEP("@expose_scenario_info")
-{
-    const auto& scenarioInfo = ScenarioInfo();
-    if (scenarioInfo.tags.contains("@store_scenario_info"))
-    {
-        context.InsertAt("StepHookInfo", scenarioInfo);
-    }
 }

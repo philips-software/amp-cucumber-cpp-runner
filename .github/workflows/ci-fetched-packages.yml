@@ -61,6 +61,18 @@ jobs:
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
 
+      - name: Install wine
+        run: apt-get update && apt-get install -y wine64
+
+      - name: Build and unit test
+        uses: ./.github/actions/build
+        with:
+          workflow-preset: windows-clang-cl-test
+        env:
+          CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+          # $HOME (/github/home) is owned by the host runner user, which wine refuses to use.
+          WINEPREFIX: /root/.wine
+
   test-fetch-deps-linux:
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os-version }}
     strategy:
