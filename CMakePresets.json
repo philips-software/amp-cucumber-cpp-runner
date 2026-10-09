@@ -203,7 +203,7 @@
             },
             "filter": {
                 "exclude": {
-                    "name": "^(acceptance\\.test|cucumber_cpp\\.acceptance_test\\.bats)$"
+                    "name": "^(acceptance\\.test|cucumber_cpp\\.acceptance_test\\.bats.*)$"
                 }
             }
         }
