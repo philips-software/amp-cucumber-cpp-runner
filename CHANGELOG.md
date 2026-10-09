@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.3.0...v4.3.1) (2026-10-09)
+
+
+### Chores
+
+* Remove unnecessary nesting in dependencies.cpm.cmake ([#403](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/403)) ([c42fe45](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/c42fe454eb5415f5b1d51ae27d5e13eabe3754e1))
+
 ## [4.3.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.2.0...v4.3.0) (2026-10-03)
 
 
