@@ -90,4 +90,38 @@ namespace cucumber_cpp::library
     {
         EXPECT_THAT(&Application{}.ParameterRegistration(), testing::NotNull());
     }
+
+    TEST_F(TestApplication, RepeatAndRetryAreMutuallyExclusive)
+    {
+        RunWithArgs(std::array{ "application", "--repeat", "3", "--retry", "2" }, static_cast<int>(CLI::ExitCodes::ExcludesError));
+        RunWithArgs(std::array{ "application", "--retry", "0", "--repeat", "1" }, static_cast<int>(CLI::ExitCodes::ExcludesError));
+    }
+
+    TEST_F(TestApplication, RepeatRequiresPositiveInteger)
+    {
+        RunWithArgs(std::array{ "application", "--repeat", "0" }, static_cast<int>(CLI::ExitCodes::ValidationError));
+        RunWithArgs(std::array{ "application", "--repeat", "-1" }, static_cast<int>(CLI::ExitCodes::ValidationError));
+        RunWithArgs(std::array{ "application", "--repeat", "invalid" }, static_cast<int>(CLI::ExitCodes::ValidationError));
+    }
+
+    TEST_F(TestApplication, RepeatTagFilterRequiresRepeat)
+    {
+        RunWithArgs(std::array{ "application", "--repeat-tag-filter", "@repeat" }, static_cast<int>(CLI::ExitCodes::RequiresError));
+    }
+
+    TEST_F(TestApplication, ConfigRepeatConflictsWithCommandLineRetry)
+    {
+        auto config = engine::test_helper::TemporaryFile{ "repeat.toml" };
+        config << "repeat=3\n";
+        const auto path = config.Path().string();
+        RunWithArgs(std::array{ "application", "--config", path.c_str(), "--retry", "0" }, static_cast<int>(CLI::ExitCodes::ExcludesError));
+    }
+
+    TEST_F(TestApplication, ConfigRetryConflictsWithCommandLineRepeat)
+    {
+        auto config = engine::test_helper::TemporaryFile{ "retry.toml" };
+        config << "retry=0\n";
+        const auto path = config.Path().string();
+        RunWithArgs(std::array{ "application", "--config", path.c_str(), "--repeat", "1" }, static_cast<int>(CLI::ExitCodes::ExcludesError));
+    }
 }

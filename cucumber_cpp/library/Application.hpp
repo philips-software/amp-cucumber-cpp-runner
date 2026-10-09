@@ -9,7 +9,6 @@
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
-#include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/Duration.hpp"
@@ -21,6 +20,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -50,6 +50,8 @@ namespace cucumber_cpp::library
 
             std::size_t retry{ 0 };
             std::vector<std::string> retryTagFilter{};
+            std::optional<std::size_t> repeat{};
+            std::vector<std::string> repeatTagFilter{};
 
             bool strict{ true };
 
