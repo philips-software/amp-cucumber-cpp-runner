@@ -68,10 +68,20 @@ runs:
         sudo cmake --install build/"${{ inputs.preset }}"
 
     # Windows: no sudo; the vcpkg/default prefix is user-writable.
-    - name: Build and install (Windows)
+    - name: Build and install (Windows Debug)
       if: runner.os == 'Windows'
       shell: pwsh
       working-directory: ${{ steps.resolve.outputs.path }}/cpp
       run: |
-        cmake --workflow --preset "${{ inputs.preset }}"
-        cmake --install build/"${{ inputs.preset }}"
+        cmake --preset host-system -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEBUG_POSTFIX=d  -B build/debug
+        cmake --build build/debug
+        cmake --install build/debug
+
+    - name: Build and install (Windows Release)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      working-directory: ${{ steps.resolve.outputs.path }}/cpp
+      run: |
+        cmake --preset host-system -DCMAKE_BUILD_TYPE=Release -B build/release
+        cmake --build build/release
+        cmake --install build/release
