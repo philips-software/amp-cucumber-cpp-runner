@@ -16,6 +16,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
@@ -30,7 +31,8 @@ namespace cucumber_cpp::library::runtime
             std::size_t retries,
             bool skip,
             support::SupportCodeLibrary& supportCodeLibrary,
-            Context& testSuiteContext);
+            Context& testSuiteContext,
+            std::optional<std::size_t> repeat = std::nullopt);
 
         cucumber::messages::TestStepResultStatus Run();
 
@@ -54,6 +56,7 @@ namespace cucumber_cpp::library::runtime
         const cucumber::messages::Pickle& pickle;
         const cucumber::messages::TestCase& testCase;
         std::size_t maximumAttempts;
+        bool repeat;
         bool skip;
         support::SupportCodeLibrary& supportCodeLibrary;
         Context& testSuiteContext;

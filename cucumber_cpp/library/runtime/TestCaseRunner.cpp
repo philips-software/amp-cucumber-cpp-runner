@@ -37,10 +37,12 @@
 #include "cucumber_cpp/library/util/TransformTestStepResult.hpp"
 #include "cucumber_cpp/library/util/TransformTestStepStarted.hpp"
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ranges>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -68,28 +70,39 @@ namespace cucumber_cpp::library::runtime
         std::size_t retries,
         bool skip,
         support::SupportCodeLibrary& supportCodeLibrary,
-        Context& testSuiteContext)
+        Context& testSuiteContext,
+        std::optional<std::size_t> repeat)
         : broadcaster{ broadcaster }
         , idGenerator{ std::move(idGenerator) }
         , gherkinDocument{ gherkinDocument }
         , pickle{ pickle }
         , testCase{ testCase }
-        , maximumAttempts{ 1 + (skip ? 0 : retries) }
+        , maximumAttempts{ skip ? 1 : repeat.value_or(1 + retries) }
+        , repeat{ repeat.has_value() }
         , skip{ skip }
         , supportCodeLibrary{ supportCodeLibrary }
         , testSuiteContext{ testSuiteContext }
-    {}
+    {
+        if (repeat && *repeat == 0)
+            throw std::invalid_argument{ "repeat must be at least 1" };
+        if (repeat && retries != 0)
+            throw std::invalid_argument{ "repeat and retry are mutually exclusive" };
+    }
 
     cucumber::messages::TestStepResultStatus TestCaseRunner::Run()
     {
+        cucumber::messages::TestStepResult overallResult{ .status = cucumber::messages::TestStepResultStatus::PASSED };
+
         for (std::size_t attempt = 0; attempt < maximumAttempts; ++attempt)
         {
             testStepResults.clear();
 
-            if (RunAttempt(attempt, (attempt + 1) < maximumAttempts))
-                continue;
+            const auto willRetry = RunAttempt(attempt, (attempt + 1) < maximumAttempts);
+            const auto result = GetWorstStepResult();
+            overallResult = util::GetWorstTestStepResult(std::array{ overallResult, result });
 
-            return GetWorstStepResult().status;
+            if (!willRetry)
+                return repeat ? overallResult.status : result.status;
         }
 
         return cucumber::messages::TestStepResultStatus::UNKNOWN;
@@ -156,7 +169,7 @@ namespace cucumber_cpp::library::runtime
                 });
         }
 
-        willRetry = GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::FAILED && moreAttemptsAvailable;
+        willRetry = moreAttemptsAvailable && (repeat || GetWorstStepResult().status == cucumber::messages::TestStepResultStatus::FAILED);
 
         broadcaster.BroadcastEvent([&currentTestCaseStartedId, &willRetry](cucumber::messages::Envelope& envelope)
             {

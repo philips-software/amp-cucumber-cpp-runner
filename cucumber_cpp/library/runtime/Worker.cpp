@@ -35,6 +35,7 @@
 #include <ranges>
 #include <set>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -81,7 +82,12 @@ namespace cucumber_cpp::library::runtime
         , options{ options }
         , supportCodeLibrary{ supportCodeLibrary }
         , programContext{ programContext }
-    {}
+    {
+        if (options.repeat && *options.repeat == 0)
+            throw std::invalid_argument{ "repeat must be at least 1" };
+        if (options.repeat && options.retry != 0)
+            throw std::invalid_argument{ "repeat and retry are mutually exclusive" };
+    }
 
     std::vector<cucumber::messages::TestStepResult> Worker::RunBeforeAllHooks()
     {
@@ -146,6 +152,9 @@ namespace cucumber_cpp::library::runtime
             options.dryRun || (options.failFast && failing),
             supportCodeLibrary,
             testSuiteContext,
+            options.repeat && (!options.repeatTagExpression || options.repeatTagExpression->Evaluate(util::TransformPickleTags(assembledTestCase.pickle.tags)))
+                ? options.repeat
+                : std::nullopt,
         };
 
         const auto status = testCaseRunner.Run();
