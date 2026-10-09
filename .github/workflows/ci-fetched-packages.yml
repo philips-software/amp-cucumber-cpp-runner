@@ -70,6 +70,8 @@ jobs:
           workflow-preset: windows-clang-cl-test
         env:
           CPM_SOURCE_CACHE: ${{ env.CPM_SOURCE_CACHE }}
+          # $HOME (/github/home) is owned by the host runner user, which wine refuses to use.
+          WINEPREFIX: /root/.wine
 
   test-fetch-deps-linux:
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os-version }}
