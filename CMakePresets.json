@@ -315,6 +315,23 @@
                     "name": "windows-clang-cl"
                 }
             ]
+        },
+        {
+            "name": "windows-clang-cl-test",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "windows-clang-cl-test"
+                },
+                {
+                    "type": "build",
+                    "name": "windows-clang-cl-test"
+                },
+                {
+                    "type": "test",
+                    "name": "windows-clang-cl-test"
+                }
+            ]
         }
     ]
 }
