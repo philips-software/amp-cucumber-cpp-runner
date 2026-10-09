@@ -2,9 +2,9 @@
 
 setup_file() {
     # CTest provides the binaries; otherwise select the last built executables
-    : "${acceptance_test:=$(find . -name "cucumber_cpp.acceptance_test" -not -name "*.plugin*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
+    : "${custom_test:=$(find . -name "cucumber_cpp.acceptance_test.custom" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
     : "${plugin_test:=$(find . -name "cucumber_cpp.acceptance_test.plugin" -not -name "*.plugin_*" -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)}"
-    export acceptance_test plugin_test
+    export custom_test plugin_test
 }
 
 setup() {
@@ -26,256 +26,19 @@ teardown() {
     rm -rf ./out/
 }
 
-@test "Successful test" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:OK" --no-recursive -- cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "Parse tag expression" {
-    run $acceptance_test --format summary pretty message junit --tags "@smoke and @result:OK" -- cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "Failed tests" {
-    run $acceptance_test --format summary pretty message junit --tags "@smoke and @result:FAILED" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-}
-
-@test "■ tests" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "Undefined scenarios:"
-    assert_output --partial "Given a missing step"
-}
-
-@test "No tests" {
-    run $acceptance_test --format summary pretty message junit --tags "@invalidtag" -- cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "All features in a folder" {
-    run $acceptance_test --format summary pretty message junit -- cucumber_cpp/acceptance_test/features/subfolder
-    assert_success
-    assert_output --partial "2 scenarios"
-    assert_output --partial "2 passed"
-}
-
 @test "Missing mandatory custom argument" {
-    run $acceptance_test.custom --format summary pretty message junit -- cucumber_cpp/acceptance_test/features
+    run $custom_test --format summary pretty message junit -- cucumber_cpp/acceptance_test/features
     assert_failure
     assert_output --partial "--required is required"
 }
 
-@test "Second feature file does not overwrite success with an ■ status" {
-    run $acceptance_test --format summary pretty message junit --tags @undefinedsuccess -- cucumber_cpp/acceptance_test/features/test_undefined_success_1.feature cucumber_cpp/acceptance_test/features/test_undefined_success_2.feature
-    assert_failure
-}
-
-@test "Valid reporters only" {
-    run $acceptance_test --format doesnotexist -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "--format: 'doesnotexist' is not a valid formatter"
-}
-
-@test "Run Program hooks" {
-    run $acceptance_test --format summary pretty message junit --tags @bats and @program_hooks -- cucumber_cpp/acceptance_test/features
-    assert_success
-
-    assert_output --partial "HOOK_BEFORE_ALL"
-    assert_output --partial "HOOK_AFTER_ALL"
-}
-
-@test "Run Scenario hooks" {
-    run $acceptance_test --format summary pretty message junit --tags @bats and @scenariohook and not @stephook -- cucumber_cpp/acceptance_test/features
-    assert_success
-
-    assert_output --partial "HOOK_BEFORE_SCENARIO"
-    assert_output --partial "HOOK_AFTER_SCENARIO"
-
-    refute_output --partial "HOOK_BEFORE_STEP"
-    refute_output --partial "HOOK_AFTER_STEP"
-}
-
-@test "Run Step hooks" {
-    run $acceptance_test --format summary pretty message junit --tags @bats and @stephook and not @scenariohook -- cucumber_cpp/acceptance_test/features
-    assert_success
-
-    refute_output --partial "HOOK_BEFORE_SCENARIO"
-    refute_output --partial "HOOK_AFTER_SCENARIO"
-
-    assert_output --partial "HOOK_BEFORE_STEP"
-    assert_output --partial "HOOK_AFTER_STEP"
-}
-
-@test "Run Scenario and Step hooks" {
-    run $acceptance_test --format summary pretty message junit --tags "@bats and (@scenariohook or @stephook)" -- cucumber_cpp/acceptance_test/features
-    assert_success
-
-    assert_output --partial "HOOK_BEFORE_SCENARIO"
-    assert_output --partial "HOOK_AFTER_SCENARIO"
-
-    assert_output --partial "HOOK_BEFORE_STEP"
-    assert_output --partial "HOOK_AFTER_STEP"
-}
-
-@test "Dry run with known failing steps" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:FAILED" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-
-    run $acceptance_test --format summary pretty message junit --tags "@result:FAILED" --dry-run cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "Dry run with known missing steps" {
-    run $acceptance_test --format summary pretty message junit --tags "@result:UNDEFINED" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@result:UNDEFINED" --dry-run  cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "Given a missing step"
-}
-
-@test "Test the and keyword" {
-    run $acceptance_test --format summary pretty message junit --tags "@keyword-and" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "--when--"
-    assert_output --partial "--and--"
-}
-
-@test "Test the but keyword" {
-    run $acceptance_test --format summary pretty message junit --tags "@keyword-but" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "--when--"
-    assert_output --partial "--but--"
-}
-
-@test "Test the asterisk keyword" {
-    run $acceptance_test --format summary pretty message junit --tags "@keyword-asterisk" -- cucumber_cpp/acceptance_test/features
-    assert_output --partial "print: --when--"
-    assert_output --partial "print: --asterisk--"
-    assert_success
-}
-
-@test "Test passing scenario after failed scenario reports feature as failed" {
-    run $acceptance_test --format summary pretty message junit  --tags "@fail_feature" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "2 scenarios"
-    assert_output --partial "1 passed"
-}
-
-@test "Test failing hook before results in error" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_before" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "Failed scenarios:"
-    assert_output --partial "Before(will fail before scenario) #"
-}
-
-@test "Test failing hook after results in error" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_scenariohook_after" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "Failed scenarios:"
-    assert_output --partial "After #"
-}
-
-@test "Test throwing hook results in error" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@throw_scenariohook" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "Failed scenarios:"
-    assert_output --partial "Before #"
-}
-
 @test "Test error program hook results in error and skipped steps" {
-    run $acceptance_test.custom --format summary pretty message junit --tags "@smoke and @result:OK" --required --failprogramhook cucumber_cpp/acceptance_test/features
+    run $custom_test --format summary pretty message junit --tags "@smoke and @result:OK" --required --failprogramhook cucumber_cpp/acceptance_test/features
     assert_failure
     assert_output --partial "HOOK_BEFORE_ALL"
     assert_output --partial "HOOK_AFTER_ALL"
     assert_output --partial "0 scenarios"
     assert_output --partial "0 steps"
-}
-
-@test "Test unicode" {
-    run $acceptance_test --format summary pretty message junit --tags "@unicode" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "1 scenario"
-    assert_output --partial "1 passed"
-}
-
-# @test "Test unused step reporting" {
-#     run $acceptance_test --format summary pretty message junit --tags "@unused_steps" --report cucumber_cpp/acceptance_test/features
-#     assert_success
-#     assert_output --regexp ".*The following steps have not been used:.*this step is not being used.*"
-#     refute_output --regexp ".*The following steps have not been used:.*this step is being used.*"
-# }
-
-@test "Test unused steps by default not reported" {
-    run $acceptance_test --format summary pretty message junit --tags "@unused_steps" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    refute_output --partial "The following steps have not been used:"
-}
-
-@test "Test nested steps" {
-    run $acceptance_test --format summary pretty --tags "@nested_steps" -- cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "Test usage formatter" {
-    run $acceptance_test.unused --format usage --tags "@unused" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "│ this step is used   │ "
-    assert_output --partial "│   this step is used │ "
-    assert_output --partial "│ This step is unused │ UNUSED   │"
-
-    run $acceptance_test.unused --format usage --tags "@unused" --dry-run -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "│ this step is used   │ -        │"
-    assert_output --partial "│   this step is used │ -        │"
-    assert_output --partial "│ This step is unused │ UNUSED   │"
-
-    run $acceptance_test.unused --format usage --tags "@unused" --dry-run --format-options "{ \"usage\" : {\"theme\": \"plain\"} }" -- cucumber_cpp/acceptance_test/features
-    assert_success
-    assert_output --partial "| this step is used   | -        |"
-    assert_output --partial "|   this step is used | -        |"
-    assert_output --partial "| This step is unused | UNUSED   |"
-}
-
-@test "Test failure in step fixture results in error" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }"  --tags "@fail_step_fixture" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "key not found: \"nonExistentKey\""
-    assert_output --partial "2 hooks (2 passed)"
-    assert_output --partial "2 scenarios (1 passed, 1 failed)"
-    assert_output --partial "2 steps (1 passed, 1 failed)"
-}
-
-@test "Test nested failures propagate properly" {
-    run $acceptance_test --format summary --format-options "{ \"summary\": {\"theme\":\"plain\"} }" --tags "@nested_failing_steps" -- cucumber_cpp/acceptance_test/features
-    assert_failure
-    assert_output --partial "FAILED nested step: \"* a nested step that fails\""
-    assert_output --partial "Value of: false"
-    assert_output --partial "Expected: is true"
-    assert_output --partial "Actual: false (of type bool)"
-    assert_output --partial "2 steps (1 skipped, 1 failed)"
-}
-
-@test "Test providing access to scenario info in scenario and step hooks" {
-    run $acceptance_test --tags "@expose_scenario_info" -- cucumber_cpp/acceptance_test/features
-    assert_success
-}
-
-@test "Test parse errors are printed to cerr" {
-    run $acceptance_test cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature
-    assert_failure
-    assert_output --partial "Parse error in: \"cucumber_cpp/acceptance_test/features_with_parse_error/test_parse_error.feature:4:9\""
-    assert_output --partial "got 'when this line is a parse error (when should be When)'"
-}
-
-@test "Test multiple parse errors in a single feature are all reported" {
-    run $acceptance_test cucumber_cpp/acceptance_test/features_with_parse_error/test_multiple_parse_errors.feature
-    assert_failure
-    assert_output --partial "test_multiple_parse_errors.feature:5:9"
-    assert_output --partial "got 'when this is the first parse error'"
-    assert_output --partial "test_multiple_parse_errors.feature:7:1"
-    assert_output --partial "got 'when this is the second parse error'"
 }
 
 @test "Plugin test: load two plugins sequentially with static step" {

@@ -3,6 +3,7 @@
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibrary.hpp"
+#include "cucumber_cpp/library/util/Table.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "gmock/gmock.h"
@@ -124,6 +125,22 @@ namespace
         out << "--- stderr ---\n"
             << result.standardError << "\n";
         return out.str();
+    }
+
+    [[nodiscard]] std::string CombinedOutput(const ProcessResult& result)
+    {
+        return result.standardOutput + result.standardError;
+    }
+
+    void AppendTableArguments(const cucumber_cpp::library::util::Table& table, std::vector<std::string>& arguments)
+    {
+        for (const auto& row : table.rows)
+            arguments.push_back(row.cells.at(0).value);
+    }
+
+    [[nodiscard]] ProcessResult RunCli(const std::filesystem::path& workspace, const std::vector<std::string>& arguments)
+    {
+        return RunProcess(std::filesystem::path{ CCR_ACCEPTANCE_CLI }, arguments, workspace);
     }
 
     [[nodiscard]] cucumber::query::Query LoadQueryFromMessageFile(const std::filesystem::path& messagePath, cucumber::query::EnvelopeArchive& envelopeArchive)
@@ -250,6 +267,32 @@ WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryNa
     context.InsertAt<std::filesystem::path>(lastSummaryOutputPath, summaryOutputPath);
 }
 
+WHEN(R"(I run cucumber-cpp-runner with {string} and arguments:)", (const std::string& libraryName))
+{
+    ASSERT_THAT(dataTable, testing::IsTrue());
+
+    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto libraryPath = LibraryPathFor(workspace, libraryName);
+
+    ASSERT_THAT(std::filesystem::is_regular_file(libraryPath), testing::IsTrue())
+        << "Expected plugin library at: " << libraryPath;
+
+    std::vector<std::string> arguments{ "--load", libraryPath.string() };
+    AppendTableArguments(*dataTable, arguments);
+
+    context.Insert<ProcessResult>(RunCli(workspace, arguments));
+}
+
+WHEN(R"(I run cucumber-cpp-runner with arguments:)")
+{
+    ASSERT_THAT(dataTable, testing::IsTrue());
+
+    std::vector<std::string> arguments;
+    AppendTableArguments(*dataTable, arguments);
+
+    context.Insert<ProcessResult>(RunCli(context.Get<std::filesystem::path>(scenarioWorkspace), arguments));
+}
+
 THEN("it passes")
 {
     const auto& processResult = context.Get<ProcessResult>();
@@ -260,4 +303,24 @@ THEN("it fails")
 {
     const auto& processResult = context.Get<ProcessResult>();
     ASSERT_THAT(processResult.exitCode, testing::Ne(0)) << FormatProcessResult(processResult);
+}
+
+THEN("the output contains {string}", (const std::string& expected))
+{
+    const auto& processResult = context.Get<ProcessResult>();
+    ASSERT_THAT(CombinedOutput(processResult), testing::HasSubstr(expected)) << FormatProcessResult(processResult);
+}
+
+THEN("the output contains:")
+{
+    ASSERT_THAT(docString, testing::IsTrue());
+
+    const auto& processResult = context.Get<ProcessResult>();
+    ASSERT_THAT(CombinedOutput(processResult), testing::HasSubstr(docString->content)) << FormatProcessResult(processResult);
+}
+
+THEN("the output does not contain {string}", (const std::string& unexpected))
+{
+    const auto& processResult = context.Get<ProcessResult>();
+    ASSERT_THAT(CombinedOutput(processResult), testing::Not(testing::HasSubstr(unexpected))) << FormatProcessResult(processResult);
 }
