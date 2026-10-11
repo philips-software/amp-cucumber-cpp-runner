@@ -79,6 +79,13 @@ namespace cucumber_cpp::library
         EXPECT_THAT(stdoutString, testing::HasSubstr("1 step (1 passed)"));
     }
 
+    TEST_F(TestApplication, AcceptsSlashPrefixedPathAfterMultiValueOption)
+    {
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--format", "summary", "--", "/nonexistent-ccr-dir" };
+
+        RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+    }
+
     TEST_F(TestApplication, ExposeParameterRegistration)
     {
         EXPECT_THAT(&Application{}.ParameterRegistration(), testing::NotNull());

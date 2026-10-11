@@ -33,7 +33,8 @@
                 "cucumber_cpp/example/features/rule.feature",
                 "cucumber_cpp/example/features/substep.feature",
                 "cucumber_cpp/acceptance_test/features",
-                "cucumber_cpp/devkit/empty/features"
+                "cucumber_cpp/devkit/empty/features",
+                "acceptance"
             ]
         }
     ],
@@ -108,10 +109,8 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
-                "--com",
-                "COMx",
-                "--nordic",
                 "--format",
+                "pretty",
                 "summary",
                 "--",
                 "${input:features}"

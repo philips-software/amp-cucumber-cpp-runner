@@ -19,5 +19,10 @@ find_program(CMAKE_C_COMPILER NAMES clang-cl REQUIRED)
 find_program(CMAKE_CXX_COMPILER NAMES clang-cl REQUIRED)
 find_program(CMAKE_AR NAMES llvm-lib REQUIRED)
 
+find_program(WINE_EXECUTABLE NAMES wine64 wine)
+if (WINE_EXECUTABLE)
+    set(CMAKE_CROSSCOMPILING_EMULATOR ${WINE_EXECUTABLE})
+endif()
+
 add_compile_options(--target=x86_64-pc-windows-msvc -Wno-error -fuse-ld=lld /winsdkdir ${WINDOWS_SDK_ROOT}/sdk /vctoolsdir ${WINDOWS_SDK_ROOT}/crt)
 add_link_options(/manifest:no -libpath:${WINDOWS_SDK_ROOT}/sdk/lib/um/x64 -libpath:${WINDOWS_SDK_ROOT}/sdk/lib/ucrt/x64 -libpath:${WINDOWS_SDK_ROOT}/crt/lib/x64)

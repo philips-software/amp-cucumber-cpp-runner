@@ -122,6 +122,8 @@ namespace cucumber_cpp::library
         , timestampGenerator{ std::move(timestampGenerator) }
     {
         cli.set_config("--config", "cucumber.toml");
+        // CLI11 defaults to '/option' parsing on Windows, which rejects POSIX-style absolute paths.
+        cli.allow_windows_style_options(false);
     }
 
     Application::~Application() = default;

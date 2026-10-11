@@ -2,6 +2,7 @@
   "cmake.useCMakePresets": "always",
   "cucumberautocomplete.steps": [
     "compatibility/*/*.cpp",
+    "acceptance/*/*.cpp",
     "cucumber_cpp/example/*/*.cpp",
     "cucumber_cpp/acceptance_test/*/*.cpp"
   ],

@@ -48,16 +48,16 @@ namespace cucumber_cpp::library::support
         [[nodiscard]] std::set<cucumber::cucumber_expressions::CustomParameterEntry, std::less<>> GetRegisteredParameters() const;
 
         template<class T>
-        static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
+        static std::size_t Register(Hook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current()) noexcept(true);
 
         template<class T>
-        static std::size_t Register(GlobalHook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current());
+        static std::size_t Register(GlobalHook hook, util::HookType hookType, std::source_location sourceLocation = std::source_location::current()) noexcept(true);
 
         template<class T>
-        static std::size_t Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation = std::source_location::current());
+        static std::size_t Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation = std::source_location::current()) noexcept(true);
 
         template<class Transformer, class TReturn>
-        static std::size_t Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location = cucumber::cucumber_expressions::SourceLocation::current());
+        static std::size_t Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location = cucumber::cucumber_expressions::SourceLocation::current()) noexcept(true);
 
     private:
         std::size_t Register(Hook hook, util::HookType hookType, util::HookFactory factory, std::source_location sourceLocation);
@@ -121,25 +121,25 @@ namespace cucumber_cpp::library::support
     }
 
     template<class T>
-    std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, std::source_location sourceLocation)
+    std::size_t DefinitionRegistration::Register(Hook hook, util::HookType hookType, std::source_location sourceLocation) noexcept(true)
     {
         return Instance().Register(hook, hookType, util::HookBodyFactory<T>, sourceLocation);
     }
 
     template<class T>
-    std::size_t DefinitionRegistration::Register(GlobalHook hook, util::HookType hookType, std::source_location sourceLocation)
+    std::size_t DefinitionRegistration::Register(GlobalHook hook, util::HookType hookType, std::source_location sourceLocation) noexcept(true)
     {
         return Instance().Register(hook, hookType, util::HookBodyFactory<T>, sourceLocation);
     }
 
     template<class T>
-    std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation)
+    std::size_t DefinitionRegistration::Register(std::string_view matcher, StepType stepType, std::source_location sourceLocation) noexcept(true)
     {
         return Instance().Register(matcher, stepType, util::StepBodyFactory<T>, sourceLocation);
     }
 
     template<class Transformer, class TReturn>
-    std::size_t DefinitionRegistration::Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location)
+    std::size_t DefinitionRegistration::Register(cucumber::cucumber_expressions::CustomParameterEntryParams params, cucumber::cucumber_expressions::SourceLocation location) noexcept(true)
     {
         auto& instance = Instance();
         instance.customParameters.emplace(params, instance.customParameters.size() + 1, location);
