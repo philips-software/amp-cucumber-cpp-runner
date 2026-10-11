@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cucumber-cpp-runner LANGUAGES C CXX VERSION 4.3.0) # x-release-please-version
 
@@ -145,7 +145,6 @@ include(GNUInstallDirs)
 include(CTest)
 
 include(cmake/dependencies.cpm.cmake)
-add_subdirectory(external)
 
 if (CCR_ENABLE_SANITIZERS)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

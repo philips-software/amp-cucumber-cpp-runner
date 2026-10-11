@@ -30,6 +30,7 @@ ccr_dependency(LIBFMT        v12.1.0    407c905e45ad75fc29bf0f9bb7c5c2fd3475976f
 ccr_dependency(PUGIXML       v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38)
 ccr_dependency(ABSEIL_CPP    20250814.2 0cf0a5c9d12cc3783363ab20f11613e69fd04c9a)
 ccr_dependency(RE2           2025-08-12 0f6c07eae69151e606acb3d9232750c3442dff23)
+ccr_dependency(BASE64        v0.0.0     8d96a2a737ac1396304b1de289beb3a5ea0cb752)
 
 if((CCR_FETCH_DEPS OR CCR_BUILD_TESTS) AND NOT COMMAND CPMAddPackage)
     # ---------------------------------------------------------------------------
@@ -130,6 +131,17 @@ if(CCR_FETCH_DEPS)
             NAME pugixml
         )
     endif()
+    # ---------------------------------------------------------------------------
+    # tobiaslocker/base64
+    # ---------------------------------------------------------------------------
+    if(NOT TARGET base64::base64)
+        CPMAddPackage(
+            URI "gh:tobiaslocker/base64@${BASE64_VERSION}#${BASE64_DIGEST}"
+            NAME base64
+            OPTIONS
+                "BASE64_ENABLE_TESTING OFF"
+        )
+    endif()
 
     if (CCR_USE_RE2)
         # ---------------------------------------------------------------------------
@@ -170,6 +182,7 @@ else()
     find_package(GTest REQUIRED)
     find_package(pugixml REQUIRED)
     find_package(fmt 10 REQUIRED)
+    find_package(base64 REQUIRED)
 
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
@@ -184,4 +197,8 @@ if(CCR_BUILD_TESTS)
     # Cucumber Compatibility Kit (feature files only, no CMake project)
     # ---------------------------------------------------------------------------
     ccr_cucumber_package(compatibility-kit DOWNLOAD_ONLY YES)
+endif()
+
+if(TARGET base64 AND NOT TARGET base64::base64)
+    add_library(base64::base64 ALIAS base64)
 endif()
