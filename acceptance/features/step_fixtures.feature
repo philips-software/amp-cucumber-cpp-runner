@@ -1,4 +1,3 @@
-@step_fixtures
 Feature: Handle custom step fixtures
     Background: Create feature file that calls step with custom fixture
         Given a file named "custom-step-fixtures.feature" with:
@@ -51,4 +50,3 @@ Feature: Handle custom step fixtures
 
         When I run cucumber-cpp-runner with "steps"
         Then it fails
-        When a custom fixture is used
