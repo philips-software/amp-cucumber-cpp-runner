@@ -4,12 +4,15 @@
 // IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+// IWYU pragma: begin_keep
 #include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
+#include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
+// IWYU pragma: end_keep
 
 namespace cucumber_cpp::library::detail
 {
