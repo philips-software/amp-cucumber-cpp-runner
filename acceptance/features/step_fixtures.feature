@@ -7,7 +7,7 @@ Feature: Handle custom step fixtures
         When a custom fixture is used
             """
 
-    Scenario: Use custom step fixtures that does not assert
+    Scenario: Use a custom step fixture that does not assert
         Given a library named "steps" with:
             """
             #include "cucumber_cpp/Steps.hpp"
