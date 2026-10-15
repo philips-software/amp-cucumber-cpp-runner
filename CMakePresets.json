@@ -79,7 +79,7 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CCR_FETCH_DEPS": "Off",
+                "CCR_FETCH_DEPS": "On",
                 "CCR_BUILD_TESTS": "On",
                 "CCR_BUILD_EXAMPLES": "Off",
                 "CCR_ENABLE_COVERAGE": "On"

@@ -43,12 +43,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
           python -m pip install gcovr==8.6
 
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          os: ubuntu
-          os-version: 26.04
-
       - name: Build host
         uses: ./.github/actions/build
         with:

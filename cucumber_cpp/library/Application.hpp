@@ -59,6 +59,9 @@ namespace cucumber_cpp::library
 
             std::vector<std::string> tags{};
 
+            std::vector<std::string> nameRegexes{};
+            bool listScenarios{ false };
+
             std::vector<std::string> loadPaths{};
         };
 
@@ -78,6 +81,7 @@ namespace cucumber_cpp::library
     private:
         void DryRunFeatures();
         [[nodiscard]] int RunFeatures();
+        [[nodiscard]] int ListScenarios();
 
         Options options;
 

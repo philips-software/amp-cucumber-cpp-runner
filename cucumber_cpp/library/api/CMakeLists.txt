@@ -5,6 +5,10 @@ target_sources(cucumber_cpp.library.api PRIVATE
     Formatters.hpp
     Gherkin.cpp
     Gherkin.hpp
+    ListScenarios.cpp
+    ListScenarios.hpp
+    LoadPickles.cpp
+    LoadPickles.hpp
     RunCucumber.cpp
     RunCucumber.hpp
 )
@@ -15,6 +19,7 @@ target_include_directories(cucumber_cpp.library.api PUBLIC
 
 target_link_libraries(cucumber_cpp.library.api PUBLIC
     cucumber::cucumber_expressions
+    cucumber::query
     cucumber_cpp.library.formatter
     cucumber_cpp.library.runtime
     cucumber_cpp.library.support

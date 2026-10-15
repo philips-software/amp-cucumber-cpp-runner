@@ -79,7 +79,11 @@ if (CCR_ENABLE_COVERAGE)
             --root ${PROJECT_SOURCE_DIR}
             --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
             --filter cucumber_cpp
-            --exclude=.*/example/.* --exclude=.*/external/.* --exclude=.*/test/.* --exclude=.*/test_helper/.*
+            --exclude=.*/acceptance_test/.*
+            --exclude=.*/example/.*
+            --exclude=.*/external/.*
+            --exclude=.*/test/.*
+            --exclude=.*/test_helper/.*
             "--exclude-lines-by-pattern=.*assert\\(.*\\);|.*really_assert\\(.*\\);|.*std::abort\\(\\);"
             --txt-summary
             --lcov ${CMAKE_CURRENT_BINARY_DIR}/lcov.info

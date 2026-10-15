@@ -1,17 +1,17 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
+#include "cucumber/cucumber-expressions/RegexStrategyFactory.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Envelope.hpp"
 #include "cucumber/messages/Location.hpp"
 #include "cucumber/messages/ParameterType.hpp"
-#include "cucumber/messages/ParseError.hpp"
-#include "cucumber/messages/PickleTag.hpp"
 #include "cucumber/messages/SourceReference.hpp"
 #include "cucumber/messages/StepDefinition.hpp"
 #include "cucumber/messages/StepDefinitionPattern.hpp"
 #include "cucumber/messages/StepDefinitionPatternType.hpp"
+#include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
-#include "cucumber_cpp/library/api/Gherkin.hpp"
+#include "cucumber_cpp/library/api/LoadPickles.hpp"
 #include "cucumber_cpp/library/plugin/HookLoader.hpp"
 #include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
 #include "cucumber_cpp/library/plugin/StepLoader.hpp"
@@ -23,6 +23,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
+#include "cucumber_cpp/library/util/GetHierarchicalTestName.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
 #include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
@@ -151,22 +152,38 @@ namespace cucumber_cpp::library::api
             EmitStepDefinitionsAndHooks(supportCodeLibrary, broadcaster);
         }
 
-        const std::string& TransformPickleTagName(const cucumber::messages::PickleTag& tag)
+        auto FilterByNameRegex(const support::RunOptions::Sources& sources, const cucumber::query::Query& query)
         {
-            return tag.name;
-        }
-
-        std::set<std::string, std::less<>> PickleTagsToSet(const std::vector<cucumber::messages::PickleTag>& tags)
-        {
-            auto tagNames = tags | std::views::transform(TransformPickleTagName);
-            return { std::begin(tagNames), std::end(tagNames) };
-        }
-
-        auto FilterByTagExpression(const support::RunOptions::Sources& sources)
-        {
-            return [&sources](const support::PickleSource& pickle)
+            std::vector<std::shared_ptr<cucumber::cucumber_expressions::RegexStrategy>> strategies;
+            for (const auto& pattern : sources.nameRegexes)
             {
-                return sources.tagExpression->Evaluate(PickleTagsToSet(pickle.pickle->tags));
+                try
+                {
+                    strategies.push_back(cucumber::cucumber_expressions::CreateRegexStrategy(pattern));
+                }
+                catch (const std::exception& e)
+                {
+                    fmt::println(std::cerr, "Invalid regex pattern '{}': {}", pattern, e.what());
+                }
+            }
+
+            return [&query, strategies = std::move(strategies)](const support::PickleSource& pickleSource)
+            {
+                if (strategies.empty())
+                    return true;
+
+                const auto& pickle = *pickleSource.pickle;
+                const auto fullName = util::GetHierarchicalTestName(query, pickle);
+
+                for (const auto& strategy : strategies)
+                {
+                    if (strategy)
+                    {
+                        if (strategy->Match(pickle.name).has_value() || strategy->Match(fullName).has_value())
+                            return true;
+                    }
+                }
+                return false;
             };
         }
 
@@ -181,30 +198,6 @@ namespace cucumber_cpp::library::api
                 return createOrderedPickleList(std::move(pickles));
             else
                 return createOrderedPickleList(std::move(pickles) | std::views::reverse);
-        };
-
-        struct ParseErrorListener : util::Listener
-        {
-            explicit ParseErrorListener(util::Broadcaster& broadcaster)
-                : Listener{ broadcaster, [this](const cucumber::messages::Envelope& envelope)
-                    {
-                        OnEvent(envelope);
-                    } }
-            {}
-
-            void OnEvent(const cucumber::messages::Envelope& envelope)
-            {
-                if (envelope.parseError)
-                    parseErrors.push_back(envelope.parseError.value());
-            }
-
-            [[nodiscard]] const std::vector<cucumber::messages::ParseError>& GetParseErrors() const
-            {
-                return parseErrors;
-            }
-
-        private:
-            std::vector<cucumber::messages::ParseError> parseErrors;
         };
     }
 
@@ -226,27 +219,17 @@ namespace cucumber_cpp::library::api
         const auto formatOptionsJson = formatOptions.empty() ? nlohmann::json::object() : nlohmann::json::parse(formatOptions);
         const auto activeFormatters = formatters.EnableFormatters(format, formatOptionsJson, supportCodeLibrary, broadcaster);
 
-        ParseErrorListener parseErrorListener{ broadcaster };
-        auto pickleSources = CollectPickles(options.sources, idGenerator, broadcaster);
-
-        if (const auto& parseErrors = parseErrorListener.GetParseErrors(); !parseErrors.empty())
-        {
-            for (const auto& parseError : parseErrors)
+        cucumber::query::Query query;
+        util::Listener queryListener{ broadcaster, [&query](const cucumber::messages::Envelope& envelope)
             {
-                const auto uri = parseError.source.uri.value_or("unknown source");
-                const auto line = parseError.source.location.has_value() ? fmt::format(":{}", parseError.source.location.value().line) : "";
-                const auto column = parseError.source.location.has_value() && parseError.source.location.value().column.has_value() ? fmt::format(":{}", parseError.source.location.value().column.value()) : "";
+                query.Update(envelope);
+            } };
 
-                const auto messageStart = parseError.message.find(": ");
-                const auto message = messageStart != std::string::npos ? parseError.message.substr(messageStart + 2) : parseError.message;
-
-                fmt::println(std::cerr, "Parse error in: \"{}{}{}\" {}", uri, line, column, message);
-            }
-
+        const auto pickleSources = LoadPickles(options.sources, idGenerator, broadcaster);
+        if (!pickleSources)
             return false;
-        }
 
-        const auto orderedPickles = OrderPickles(options.sources, pickleSources | std::views::filter(FilterByTagExpression(options.sources)));
+        const auto orderedPickles = OrderPickles(options.sources, *pickleSources | std::views::filter(FilterByNameRegex(options.sources, query)));
 
         EmitSupportCodeMessages(supportCodeLibrary, broadcaster, idGenerator);
 

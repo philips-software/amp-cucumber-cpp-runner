@@ -16,4 +16,7 @@ target_compile_definitions(acceptance.steps PRIVATE
     CCR_ACCEPTANCE_SANDBOX_TARGET="acceptance.sandbox"
     CCR_ACCEPTANCE_SANDBOX_ARTIFACT="$<TARGET_FILE:acceptance.sandbox>"
     CCR_ACCEPTANCE_CLI="$<TARGET_FILE:cucumber_cpp.cli>"
+    CCR_ACCEPTANCE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
+    CCR_ACCEPTANCE_SANDBOX_RSP="${CMAKE_CURRENT_BINARY_DIR}/../sandbox/compile_flags.rsp"
+    CCR_ACCEPTANCE_PLUGIN_REGISTER_OBJ="$<TARGET_OBJECTS:ccr_plugin_register>"
 )

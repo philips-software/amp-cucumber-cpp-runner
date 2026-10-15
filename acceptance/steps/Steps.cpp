@@ -203,33 +203,38 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
 {
     ASSERT_THAT(docString, testing::IsTrue());
 
-    const auto outputPath = LibraryPathFor(context.Get<std::filesystem::path>(scenarioWorkspace), libraryName);
+    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto outputPath = LibraryPathFor(workspace, libraryName);
 
+    // Write source file directly in the per-scenario workspace directory
+    const auto sourcePath = workspace / (ValidateLibraryName(ReplaceSpacesWithUnderscores(libraryName)) + ".cpp");
     {
-        std::ofstream sourceFile(CCR_ACCEPTANCE_SANDBOX_SOURCE, std::ios::binary);
-        ASSERT_THAT(sourceFile.is_open(), testing::IsTrue()) << "Could not write sandbox source: " << CCR_ACCEPTANCE_SANDBOX_SOURCE;
+        std::ofstream sourceFile(sourcePath, std::ios::binary);
+        ASSERT_THAT(sourceFile.is_open(), testing::IsTrue()) << "Could not write library source: " << sourcePath;
         sourceFile << docString->content;
     }
 
+    std::vector<std::string> compileArgs = {
+        "-std=c++20",
+        "-fPIC",
+        "-shared",
+        "@" CCR_ACCEPTANCE_SANDBOX_RSP,
+        CCR_ACCEPTANCE_PLUGIN_REGISTER_OBJ,
+        "-o",
+        outputPath.string(),
+        sourcePath.string(),
+    };
+
     const auto buildResult = RunProcess(
-        std::filesystem::path{ CCR_ACCEPTANCE_CMAKE_COMMAND },
-        {
-            "--build",
-            CCR_ACCEPTANCE_BUILD_DIR,
-            "--target",
-            CCR_ACCEPTANCE_SANDBOX_TARGET,
-        });
+        std::filesystem::path{ CCR_ACCEPTANCE_CXX_COMPILER },
+        compileArgs,
+        workspace);
 
     context.InsertAt<ProcessResult>(lastBuildResult, buildResult);
 
     ASSERT_THAT(buildResult.exitCode, testing::Eq(0))
         << "Sandbox build failed\n"
         << FormatProcessResult(buildResult);
-
-    std::filesystem::copy_file(
-        CCR_ACCEPTANCE_SANDBOX_ARTIFACT,
-        outputPath,
-        std::filesystem::copy_options::overwrite_existing);
 }
 
 WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryName))

@@ -27,6 +27,7 @@ namespace cucumber_cpp::library::support
         {
             std::set<std::filesystem::path, std::less<>> paths{};
             std::unique_ptr<cucumber::tag_expressions::Expression> tagExpression;
+            std::vector<std::string> nameRegexes{};
             Ordering ordering{ Ordering::defined };
 
         } sources;

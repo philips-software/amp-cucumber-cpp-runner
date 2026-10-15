@@ -11,6 +11,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
+#include "cucumber_cpp/library/api/ListScenarios.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
@@ -111,6 +112,16 @@ namespace cucumber_cpp::library
 
             return foundFiles;
         }
+
+        support::RunOptions::Sources MakeSources(const Application::Options& options)
+        {
+            return {
+                .paths = GetFeatureFiles(options),
+                .tagExpression = cucumber::tag_expressions::Parse(fmt::to_string(fmt::join(options.tags, " "))),
+                .nameRegexes = options.nameRegexes,
+                .ordering = options.ordering,
+            };
+        }
     }
 
     Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener,
@@ -183,6 +194,9 @@ namespace cucumber_cpp::library
 
             cli.add_option("--load", options.loadPaths, "Load cucumber step/hook/parameter dynamic libraries from files or directories");
 
+            auto* listScenariosOpt = cli.add_flag("--list-scenarios", options.listScenarios, "List scenario test names and exit");
+            cli.add_option("-n,--name", options.nameRegexes, "Only run scenarios with name matching the regex pattern")->excludes(listScenariosOpt);
+
             ProgramContext().InsertRef(options);
 
             cli.parse(argc, argv);
@@ -192,6 +206,9 @@ namespace cucumber_cpp::library
 
             if (!options.loadPaths.empty())
                 pluginSession = std::make_unique<PluginSession>(dynamicLibraryManager, options.loadPaths);
+
+            if (options.listScenarios)
+                return ListScenarios();
 
             return RunFeatures();
         }
@@ -246,11 +263,7 @@ namespace cucumber_cpp::library
         fmt::println("Running with tags: {}", options.tags);
 
         const auto runOptions = support::RunOptions{
-            .sources = {
-                .paths = GetFeatureFiles(options),
-                .tagExpression = cucumber::tag_expressions::Parse(fmt::to_string(fmt::join(options.tags, " "))),
-                .ordering = options.ordering,
-            },
+            .sources = MakeSources(options),
             .runtime = {
                 .dryRun = options.dryRun,
                 .failFast = options.failFast,
@@ -264,5 +277,13 @@ namespace cucumber_cpp::library
 
         const auto runPassed = api::RunCucumber(runOptions, parameterRegistry, *programContext, broadcaster, formatters, options.format, options.formatOptions);
         return runPassed ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    int Application::ListScenarios()
+    {
+        for (const auto& scenario : api::ListScenarios(MakeSources(options), broadcaster))
+            fmt::println("{}", scenario);
+
+        return EXIT_SUCCESS;
     }
 }
