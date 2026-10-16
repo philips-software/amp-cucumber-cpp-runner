@@ -307,6 +307,42 @@ $ example --load myhooks.so myparameters.so allmysteps/ -- ./feature
 
 > ℹ️ use --help to see all available arguments and options
 
+### Repeating scenarios
+
+`--repeat N` executes each selected scenario exactly `N` times, including the
+initial execution. `N` must be a positive integer. Repetition continues after
+passing, failing, pending, skipped, undefined, or ambiguous results. Normal
+step-skipping rules still apply within each execution. A failing execution is
+retained in the overall run result even if a later execution passes; the existing
+`--strict` policy still applies to pending results.
+
+```sh
+example --repeat 3 -- ./features
+example --repeat 3 --repeat-tag-filter "@sample and not @slow" -- ./features
+```
+
+`--repeat-tag-filter` requires `--repeat`. Selected scenarios that do not match
+the repetition filter run once. Unlike `--retry`, which retries failures and
+stops at the first pass, repetition always completes its configured count.
+`--repeat` and `--retry` are mutually exclusive, including when supplied through
+a combination of command-line arguments and `cucumber.toml` configuration.
+
+Dry-run and fail-fast-skipped scenarios produce only one skipped attempt. An
+active repeated scenario completes all its attempts before fail-fast skips
+subsequent scenarios.
+
+Executions use incrementing attempt numbers on the same test case, with a fresh
+scenario context and scenario hooks for each attempt. `willBeRetried` is true
+until the final attempt. Summaries count one scenario, but existing formatters
+report the final attempt's result, which can differ from the aggregate exit
+result when an earlier attempt failed. Message output retains every attempt's
+actual result.
+
+Measurement aggregation, such as averaging timings, belongs in
+`HOOK_AFTER_FEATURE` or `HOOK_AFTER_ALL`. Store measurements in feature or
+program context so they survive individual scenario attempts. Feature hooks
+require `--feature-hooks`.
+
 ## Contributing
 
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
