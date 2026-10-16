@@ -281,7 +281,11 @@ namespace cucumber_cpp::library
 
     int Application::ListScenarios()
     {
-        for (const auto& scenario : api::ListScenarios(MakeSources(options), broadcaster))
+        const auto scenarios = api::ListScenarios(MakeSources(options), broadcaster);
+        if (!scenarios)
+            return EXIT_FAILURE;
+
+        for (const auto& scenario : *scenarios)
             fmt::println("{}", scenario);
 
         return EXIT_SUCCESS;

@@ -1,9 +1,15 @@
 # Distributed under the Apache-2.0 License.
 # Defines cucumber_discover_tests for automatic scenario discovery with CTest.
 
+# Scope policy settings to this file so including it never alters the
+# caller's policies; functions defined here record these settings.
+cmake_policy(PUSH)
+
 if(POLICY CMP0174)
   cmake_policy(SET CMP0174 NEW)
 endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/cucumber_add_tests.cmake")
 
 function(cucumber_discover_tests target)
   set(options "")
@@ -84,7 +90,20 @@ function(cucumber_discover_tests target)
     set(test_executor "")
   endif()
 
+  set(add_tests_script "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cucumber_add_tests.cmake")
+
+  get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL
+    PROPERTY GENERATOR_IS_MULTI_CONFIG
+  )
+
   if(arg_DISCOVERY_MODE STREQUAL "POST_BUILD")
+    if(GENERATOR_IS_MULTI_CONFIG)
+      set(ctest_tests_file "${ctest_file_base}_tests-$<CONFIG>.cmake")
+      set(ctest_tests_include_file "${ctest_file_base}_tests-\${CTEST_CONFIGURATION_TYPE}.cmake")
+    else()
+      set(ctest_tests_include_file "${ctest_tests_file}")
+    endif()
+
     add_custom_command(
       TARGET ${target} POST_BUILD
       BYPRODUCTS "${ctest_tests_file}"
@@ -100,50 +119,47 @@ function(cucumber_discover_tests target)
               -D "TEST_LIST=${arg_TEST_LIST}"
               -D "CTEST_FILE=${ctest_tests_file}"
               -D "TEST_DISCOVERY_TIMEOUT=${arg_DISCOVERY_TIMEOUT}"
-              -P "${PROJECT_SOURCE_DIR}/cmake/cucumber_add_tests.cmake"
+              -P "${add_tests_script}"
       VERBATIM
     )
 
     file(WRITE "${ctest_include_file}"
-      "if(EXISTS \"${ctest_tests_file}\")\n"
-      "  include(\"${ctest_tests_file}\")\n"
+      "if(EXISTS \"${ctest_tests_include_file}\")\n"
+      "  include(\"${ctest_tests_include_file}\")\n"
       "else()\n"
       "  add_test(${target}_NOT_BUILT ${target}_NOT_BUILT)\n"
       "endif()\n"
     )
   elseif(arg_DISCOVERY_MODE STREQUAL "PRE_TEST")
-    get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL
-      PROPERTY GENERATOR_IS_MULTI_CONFIG
-    )
-
     if(GENERATOR_IS_MULTI_CONFIG)
       set(ctest_tests_file "${ctest_file_base}_tests-$<CONFIG>.cmake")
     endif()
 
+    foreach(name IN ITEMS WORKING_DIRECTORY EXTRA_ARGS PROPERTIES TEST_PREFIX TEST_SUFFIX TEST_LIST)
+      _cucumber_bracket_argument(quoted_${name} "${arg_${name}}")
+    endforeach()
+
+    # Always rediscover so that changes to feature files are picked up
     string(CONCAT ctest_include_content
-      "if(EXISTS \"$<TARGET_FILE:${target}>\")"                                    "\n"
-      "  if(NOT EXISTS \"${ctest_tests_file}\" OR"                                 "\n"
-      "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"$<TARGET_FILE:${target}>\" OR\n"
-      "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"\${CMAKE_CURRENT_LIST_FILE}\")\n"
-      "    include(\"${PROJECT_SOURCE_DIR}/cmake/cucumber_add_tests.cmake\")"      "\n"
-      "    cucumber_discover_tests_impl("                                          "\n"
-      "      TEST_TARGET"            " [==[${target}]==]"                          "\n"
-      "      TEST_EXECUTABLE"        " [==[$<TARGET_FILE:${target}>]==]"           "\n"
-      "      TEST_EXECUTOR"          " [==[${test_executor}]==]"                   "\n"
-      "      TEST_WORKING_DIR"       " [==[${arg_WORKING_DIRECTORY}]==]"           "\n"
-      "      TEST_EXTRA_ARGS"        " [==[${arg_EXTRA_ARGS}]==]"                  "\n"
-      "      TEST_PROPERTIES"        " [==[${arg_PROPERTIES}]==]"                  "\n"
-      "      TEST_PREFIX"            " [==[${arg_TEST_PREFIX}]==]"                 "\n"
-      "      TEST_SUFFIX"            " [==[${arg_TEST_SUFFIX}]==]"                 "\n"
-      "      TEST_LIST"              " [==[${arg_TEST_LIST}]==]"                   "\n"
-      "      CTEST_FILE"             " [==[${ctest_tests_file}]==]"                "\n"
-      "      TEST_DISCOVERY_TIMEOUT" " [==[${arg_DISCOVERY_TIMEOUT}]==]"           "\n"
-      "    )"                                                                      "\n"
-      "  endif()"                                                                  "\n"
-      "  include(\"${ctest_tests_file}\")"                                         "\n"
-      "else()"                                                                     "\n"
-      "  add_test(${target}_NOT_BUILT ${target}_NOT_BUILT)"                        "\n"
-      "endif()"                                                                    "\n"
+      "if(EXISTS \"$<TARGET_FILE:${target}>\")"                                  "\n"
+      "  include(\"${add_tests_script}\")"                                       "\n"
+      "  cucumber_discover_tests_impl("                                          "\n"
+      "    TEST_TARGET"            " [==[${target}]==]"                          "\n"
+      "    TEST_EXECUTABLE"        " [==[$<TARGET_FILE:${target}>]==]"           "\n"
+      "    TEST_EXECUTOR"          " [==[${test_executor}]==]"                   "\n"
+      "    TEST_WORKING_DIR"       " ${quoted_WORKING_DIRECTORY}"                "\n"
+      "    TEST_EXTRA_ARGS"        " ${quoted_EXTRA_ARGS}"                       "\n"
+      "    TEST_PROPERTIES"        " ${quoted_PROPERTIES}"                       "\n"
+      "    TEST_PREFIX"            " ${quoted_TEST_PREFIX}"                      "\n"
+      "    TEST_SUFFIX"            " ${quoted_TEST_SUFFIX}"                      "\n"
+      "    TEST_LIST"              " ${quoted_TEST_LIST}"                        "\n"
+      "    CTEST_FILE"             " [==[${ctest_tests_file}]==]"                "\n"
+      "    TEST_DISCOVERY_TIMEOUT" " [==[${arg_DISCOVERY_TIMEOUT}]==]"           "\n"
+      "  )"                                                                      "\n"
+      "  include(\"${ctest_tests_file}\")"                                       "\n"
+      "else()"                                                                   "\n"
+      "  add_test(${target}_NOT_BUILT ${target}_NOT_BUILT)"                      "\n"
+      "endif()"                                                                  "\n"
     )
 
     if(GENERATOR_IS_MULTI_CONFIG)
@@ -168,3 +184,5 @@ function(cucumber_discover_tests target)
     APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_include_file}"
   )
 endfunction()
+
+cmake_policy(POP)

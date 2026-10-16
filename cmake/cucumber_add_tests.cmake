@@ -1,11 +1,54 @@
 # Distributed under the Apache-2.0 License.
 # Helper script to discover and register cucumber-cpp scenarios in CTest.
 
-cmake_minimum_required(VERSION 3.24)
+# Scope policy settings to this file so including it never alters the
+# caller's policies; functions defined here record these settings.
+cmake_policy(PUSH)
+cmake_policy(VERSION 3.24)
 
 if(POLICY CMP0174)
   cmake_policy(SET CMP0174 NEW)
 endif()
+
+# Quote VALUE as a CMake bracket argument, choosing a bracket level that does
+# not clash with the content, and store the result in OUT_VAR.
+function(_cucumber_bracket_argument out_var value)
+  set(level "==")
+  string(LENGTH "${value}" length)
+  while(TRUE)
+    string(FIND "${value}]${level}]" "]${level}]" position)
+    if(position EQUAL length)
+      break()
+    endif()
+    string(APPEND level "=")
+  endwhile()
+  # A newline directly after the opening bracket is ignored by the parser
+  if(value MATCHES "^[\r\n]")
+    set(value "\n${value}")
+  endif()
+  set(${out_var} "[${level}[${value}]${level}]" PARENT_SCOPE)
+endfunction()
+
+# Quote every element of the list VALUES as a separate bracket argument and
+# store the space-separated result in OUT_VAR.
+function(_cucumber_bracket_arguments out_var values)
+  set(result "")
+  foreach(value IN LISTS values)
+    _cucumber_bracket_argument(quoted "${value}")
+    string(APPEND result " ${quoted}")
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+# Escape all ECMAScript regex metacharacters in VALUE and store the result in
+# OUT_VAR. The backslash is escaped first so added escapes are not doubled.
+function(_cucumber_escape_regex out_var value)
+  string(REPLACE "\\" "\\\\" value "${value}")
+  foreach(char IN ITEMS "^" "$" "." "*" "+" "?" "(" ")" "[" "]" "{" "}" "|")
+    string(REPLACE "${char}" "\\${char}" value "${value}")
+  endforeach()
+  set(${out_var} "${value}" PARENT_SCOPE)
+endfunction()
 
 function(cucumber_discover_tests_impl)
   set(options "")
@@ -47,10 +90,10 @@ function(cucumber_discover_tests_impl)
     set(extra_args_list ${arg_TEST_EXTRA_ARGS})
   endif()
 
-  set(extra_args_script "")
-  foreach(extra_arg IN LISTS extra_args_list)
-    string(APPEND extra_args_script " [==[${extra_arg}]==]")
-  endforeach()
+  _cucumber_bracket_arguments(extra_args_script "${extra_args_list}")
+  _cucumber_bracket_argument(quoted_executable "${arg_TEST_EXECUTABLE}")
+  _cucumber_bracket_argument(quoted_working_dir "${arg_TEST_WORKING_DIR}")
+  _cucumber_bracket_arguments(properties_script "${arg_TEST_PROPERTIES}")
 
   set(launcher_args "")
   if(NOT "${arg_TEST_EXECUTOR}" STREQUAL "")
@@ -78,13 +121,18 @@ function(cucumber_discover_tests_impl)
     )
   endif()
 
-  # Split output into lines
+  # Split output into lines without CMake list semantics, which would mangle
+  # scenario names containing ';', '[' or ']'
   string(REPLACE "\r\n" "\n" output "${output}")
   string(REPLACE "\r" "\n" output "${output}")
-  string(REPLACE ";" "\\;" output "${output}")
-  string(REPLACE "\n" ";" output "${output}")
+  string(APPEND output "\n")
 
-  foreach(line IN LISTS output)
+  while(NOT output STREQUAL "")
+    string(FIND "${output}" "\n" line_end)
+    string(SUBSTRING "${output}" 0 ${line_end} line)
+    math(EXPR line_end "${line_end} + 1")
+    string(SUBSTRING "${output}" ${line_end} -1 output)
+
     string(STRIP "${line}" line)
     if(line STREQUAL "")
       continue()
@@ -99,26 +147,31 @@ function(cucumber_discover_tests_impl)
     endif()
 
     # Escape regex special characters in test_name for exact matching
-    string(REGEX REPLACE "([\\^\\$\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\])" "\\\\\\1" escaped_test_name "${test_name}")
+    _cucumber_escape_regex(escaped_test_name "${test_name}")
+    _cucumber_bracket_argument(quoted_name_filter "^${escaped_test_name}$")
 
     set(full_test_name "${prefix}${test_name}${suffix}")
+    _cucumber_bracket_argument(quoted_test_name "${full_test_name}")
 
-    string(APPEND script "add_test([==[${full_test_name}]==] [==[${arg_TEST_EXECUTABLE}]==]${extra_args_script} [==[--name]==] [==[^${escaped_test_name}$]==])\n")
-    string(APPEND script "set_tests_properties([==[${full_test_name}]==] PROPERTIES WORKING_DIRECTORY [==[${arg_TEST_WORKING_DIR}]==])\n")
+    string(APPEND script "add_test(${quoted_test_name} ${quoted_executable}${extra_args_script} [==[--name]==] ${quoted_name_filter})\n")
+    string(APPEND script "set_tests_properties(${quoted_test_name} PROPERTIES WORKING_DIRECTORY ${quoted_working_dir})\n")
 
     if(NOT "${source_location}" STREQUAL "")
-      string(APPEND script "set_tests_properties([==[${full_test_name}]==] PROPERTIES DEF_SOURCE_LINE [==[${source_location}]==])\n")
+      _cucumber_bracket_argument(quoted_source_location "${source_location}")
+      string(APPEND script "set_tests_properties(${quoted_test_name} PROPERTIES DEF_SOURCE_LINE ${quoted_source_location})\n")
     endif()
 
-    if(NOT "${arg_TEST_PROPERTIES}" STREQUAL "")
-      string(APPEND script "set_tests_properties([==[${full_test_name}]==] PROPERTIES ${arg_TEST_PROPERTIES})\n")
+    if(NOT "${properties_script}" STREQUAL "")
+      string(APPEND script "set_tests_properties(${quoted_test_name} PROPERTIES${properties_script})\n")
     endif()
 
     list(APPEND tests "${full_test_name}")
-  endforeach()
+  endwhile()
 
   if(NOT "${arg_TEST_LIST}" STREQUAL "")
-    string(APPEND script "set([==[${arg_TEST_LIST}]==] [==[${tests}]==])\n")
+    _cucumber_bracket_argument(quoted_test_list "${arg_TEST_LIST}")
+    _cucumber_bracket_argument(quoted_tests "${tests}")
+    string(APPEND script "set(${quoted_test_list} ${quoted_tests})\n")
   endif()
 
   file(WRITE "${arg_CTEST_FILE}" "${script}")
@@ -139,3 +192,5 @@ if(CMAKE_SCRIPT_MODE_FILE)
     TEST_PROPERTIES "${TEST_PROPERTIES}"
   )
 endif()
+
+cmake_policy(POP)

@@ -1,4 +1,5 @@
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
+#include "cucumber/cucumber-expressions/RegexStrategy.hpp"
 #include "cucumber/cucumber-expressions/RegexStrategyFactory.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/Envelope.hpp"
@@ -12,6 +13,7 @@
 #include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/LoadPickles.hpp"
+#include "cucumber_cpp/library/api/MakeUniqueTestNames.hpp"
 #include "cucumber_cpp/library/plugin/HookLoader.hpp"
 #include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
 #include "cucumber_cpp/library/plugin/StepLoader.hpp"
@@ -23,20 +25,21 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/support/UndefinedParameters.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/GetHierarchicalTestName.hpp"
 #include "cucumber_cpp/library/util/HookData.hpp"
-#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/TransformHookData.hpp"
-#include "fmt/format.h"
 #include "fmt/ostream.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include <algorithm>
+#include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <iterator>
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <string>
@@ -152,10 +155,14 @@ namespace cucumber_cpp::library::api
             EmitStepDefinitionsAndHooks(supportCodeLibrary, broadcaster);
         }
 
-        auto FilterByNameRegex(const support::RunOptions::Sources& sources, const cucumber::query::Query& query)
+        using RegexStrategies = std::vector<std::unique_ptr<cucumber::cucumber_expressions::RegexStrategy>>;
+
+        std::optional<RegexStrategies> CreateNameRegexStrategies(const std::vector<std::string>& nameRegexes)
         {
-            std::vector<std::shared_ptr<cucumber::cucumber_expressions::RegexStrategy>> strategies;
-            for (const auto& pattern : sources.nameRegexes)
+            RegexStrategies strategies;
+            bool allValid = true;
+
+            for (const auto& pattern : nameRegexes)
             {
                 try
                 {
@@ -164,26 +171,30 @@ namespace cucumber_cpp::library::api
                 catch (const std::exception& e)
                 {
                     fmt::println(std::cerr, "Invalid regex pattern '{}': {}", pattern, e.what());
+                    allValid = false;
                 }
             }
 
-            return [&query, strategies = std::move(strategies)](const support::PickleSource& pickleSource)
+            if (!allValid)
+                return std::nullopt;
+
+            return strategies;
+        }
+
+        auto FilterByNameRegex(const RegexStrategies& strategies, const std::map<std::string, std::string, std::less<>>& uniqueNames)
+        {
+            return [&strategies, &uniqueNames](const support::PickleSource& pickleSource)
             {
                 if (strategies.empty())
                     return true;
 
                 const auto& pickle = *pickleSource.pickle;
-                const auto fullName = util::GetHierarchicalTestName(query, pickle);
+                const auto& fullName = uniqueNames.at(pickle.id);
 
-                for (const auto& strategy : strategies)
-                {
-                    if (strategy)
+                return std::ranges::any_of(strategies, [&pickle, &fullName](const auto& strategy)
                     {
-                        if (strategy->Match(pickle.name).has_value() || strategy->Match(fullName).has_value())
-                            return true;
-                    }
-                }
-                return false;
+                        return strategy->Match(pickle.name).has_value() || strategy->Match(fullName).has_value();
+                    });
             };
         }
 
@@ -225,11 +236,17 @@ namespace cucumber_cpp::library::api
                 query.Update(envelope);
             } };
 
+        const auto nameRegexStrategies = CreateNameRegexStrategies(options.sources.nameRegexes);
+        if (!nameRegexStrategies)
+            return false;
+
         const auto pickleSources = LoadPickles(options.sources, idGenerator, broadcaster);
         if (!pickleSources)
             return false;
 
-        const auto orderedPickles = OrderPickles(options.sources, *pickleSources | std::views::filter(FilterByNameRegex(options.sources, query)));
+        // Unique names are derived in defined order, before reordering, to match the names reported by ListScenarios
+        const auto uniqueNames = MakeUniqueTestNames(query, *pickleSources);
+        const auto orderedPickles = OrderPickles(options.sources, *pickleSources | std::views::filter(FilterByNameRegex(*nameRegexStrategies, uniqueNames)));
 
         EmitSupportCodeMessages(supportCodeLibrary, broadcaster, idGenerator);
 

@@ -2,10 +2,10 @@
 #include "cucumber/messages/Pickle.hpp"
 #include "cucumber/query/Query.hpp"
 #include "cucumber_cpp/library/util/Trim.hpp"
-#include "fmt/format.h"
 #include <algorithm>
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <string>
-#include <utility>
 
 namespace cucumber_cpp::library::util
 {
@@ -15,6 +15,7 @@ namespace cucumber_cpp::library::util
         {
             std::ranges::replace(name, '\n', ' ');
             std::ranges::replace(name, '\r', ' ');
+            std::ranges::replace(name, '\t', ' ');
             std::ranges::replace(name, ';', ',');
             return Trim(name);
         }

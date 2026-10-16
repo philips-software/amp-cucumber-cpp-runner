@@ -9,6 +9,8 @@ target_sources(cucumber_cpp.library.api PRIVATE
     ListScenarios.hpp
     LoadPickles.cpp
     LoadPickles.hpp
+    MakeUniqueTestNames.cpp
+    MakeUniqueTestNames.hpp
     RunCucumber.cpp
     RunCucumber.hpp
 )
