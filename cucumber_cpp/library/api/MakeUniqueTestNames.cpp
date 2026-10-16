@@ -18,8 +18,9 @@ namespace cucumber_cpp::library::api
         std::string MakeUnique(const std::string& testName, std::set<std::string, std::less<>>& seenNames)
         {
             auto uniqueName = testName;
-            for (std::size_t counter = 2; seenNames.contains(uniqueName); ++counter)
-                uniqueName = fmt::format("{}.#{}", testName, counter);
+            std::size_t counter = 1;
+            while (seenNames.contains(uniqueName))
+                uniqueName = fmt::format("{}.#{}", testName, ++counter);
 
             seenNames.insert(uniqueName);
             return uniqueName;
@@ -32,7 +33,7 @@ namespace cucumber_cpp::library::api
         std::set<std::string, std::less<>> seenNames;
 
         for (const auto& pickleSource : pickleSources)
-            uniqueNames.emplace(pickleSource.pickle->id, MakeUnique(util::GetHierarchicalTestName(query, *pickleSource.pickle), seenNames));
+            uniqueNames.try_emplace(pickleSource.pickle->id, MakeUnique(util::GetHierarchicalTestName(query, *pickleSource.pickle), seenNames));
 
         return uniqueNames;
     }

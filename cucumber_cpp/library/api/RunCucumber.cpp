@@ -32,7 +32,6 @@
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <cucumber/cucumber-expressions/ParameterRegistry.hpp>
-#include <exception>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -41,6 +40,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -168,7 +168,7 @@ namespace cucumber_cpp::library::api
                 {
                     strategies.push_back(cucumber::cucumber_expressions::CreateRegexStrategy(pattern));
                 }
-                catch (const std::exception& e)
+                catch (const std::regex_error& e)
                 {
                     fmt::println(std::cerr, "Invalid regex pattern '{}': {}", pattern, e.what());
                     allValid = false;
