@@ -133,7 +133,7 @@ namespace cucumber_cpp::library
                "  Scenario: Test scenario\n"
                "    Given 5 and 5 are equal\n"
                "  Scenario: Test scenario\n"
-               "    Given 5 and 6 are equal\n";
+               "    When I throw an exception\n";
 
         const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", R"(^Test feature\.Test scenario$)", "--", path.c_str() };
 
@@ -151,7 +151,7 @@ namespace cucumber_cpp::library
                "  Scenario: Test scenario\n"
                "    Given 5 and 5 are equal\n"
                "  Scenario: Test scenario\n"
-               "    Given 5 and 6 are equal\n";
+               "    When I throw an exception\n";
 
         const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", R"(^Test feature\.Test scenario\.#2$)", "--", path.c_str() };
 
@@ -169,7 +169,7 @@ namespace cucumber_cpp::library
                "  Scenario: Test scenario\n"
                "    Given 5 and 5 are equal\n"
                "  Scenario: Test scenario\n"
-               "    Given 5 and 6 are equal\n";
+               "    When I throw an exception\n";
 
         const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--order", "reverse", "--name", R"(^Test feature\.Test scenario$)", "--", path.c_str() };
 
@@ -189,7 +189,7 @@ namespace cucumber_cpp::library
                "  Scenario: Test scenario\n"
                "    Given 5 and 5 are equal\n"
                "  Scenario: Other scenario\n"
-               "    Given 5 and 6 are equal\n";
+               "    When I throw an exception\n";
 
         const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", "^Test scenario$", "--", path.c_str() };
 
