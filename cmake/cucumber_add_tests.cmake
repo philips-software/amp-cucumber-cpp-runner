@@ -100,6 +100,8 @@ function(cucumber_discover_tests_impl)
     set(launcher_args ${arg_TEST_EXECUTOR})
   endif()
 
+  _cucumber_bracket_arguments(launcher_args_script "${launcher_args}")
+
   # Run test executable with --list-scenarios to get available scenarios
   execute_process(
     COMMAND ${launcher_args} "${arg_TEST_EXECUTABLE}" ${extra_args_list} --list-scenarios
@@ -153,7 +155,7 @@ function(cucumber_discover_tests_impl)
     set(full_test_name "${prefix}${test_name}${suffix}")
     _cucumber_bracket_argument(quoted_test_name "${full_test_name}")
 
-    string(APPEND script "add_test(${quoted_test_name} ${quoted_executable}${extra_args_script} [==[--name]==] ${quoted_name_filter})\n")
+    string(APPEND script "add_test(${quoted_test_name}${launcher_args_script} ${quoted_executable}${extra_args_script} [==[--name]==] ${quoted_name_filter})\n")
     string(APPEND script "set_tests_properties(${quoted_test_name} PROPERTIES WORKING_DIRECTORY ${quoted_working_dir})\n")
 
     if(NOT "${source_location}" STREQUAL "")
