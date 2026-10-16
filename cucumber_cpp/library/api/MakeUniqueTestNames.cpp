@@ -3,6 +3,7 @@
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/GetHierarchicalTestName.hpp"
 #include "fmt/core.h"
+#include "fmt/format.h"
 #include <cstddef>
 #include <functional>
 #include <list>
