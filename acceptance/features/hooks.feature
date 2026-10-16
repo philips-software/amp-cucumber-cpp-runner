@@ -299,3 +299,52 @@ Feature: Test scenario and step hook bindings
                 | .                     |
             Then it passes
             And the output contains "5 scenarios"
+
+        Scenario: A failing before all hook prevents scenarios but still runs the after all hook
+            Given a file named "failing_program_hook.feature" with:
+                """
+Feature: Failing program hook
+    Scenario: This scenario must not run
+        Given a scenario step
+                """
+            And a library named "failing_program_hook" with:
+                """
+                #include "cucumber_cpp/Steps.hpp"
+                #include "gtest/gtest.h"
+                #include <iostream>
+
+                HOOK_BEFORE_ALL()
+                {
+                std::cout << "HOOK_BEFORE_ALL\n";
+                FAIL();
+                }
+
+                HOOK_AFTER_ALL()
+                {
+                std::cout << "HOOK_AFTER_ALL\n";
+                }
+
+                HOOK_BEFORE_SCENARIO()
+                {
+                std::cout << "HOOK_BEFORE_SCENARIO\n";
+                }
+
+                GIVEN("a scenario step")
+                {
+                std::cout << "SCENARIO_STEP_EXECUTED\n";
+                }
+                """
+            When I run cucumber-cpp-runner with "failing_program_hook" and arguments:
+                | --format                         |
+                | summary                          |
+                | --format-options                 |
+                | { "summary": {"theme":"plain"} } |
+                | --                               |
+                | failing_program_hook.feature     |
+            Then it fails
+            And the output contains "HOOK_BEFORE_ALL"
+            And the output contains "HOOK_AFTER_ALL"
+            And the output contains "0 scenarios"
+            And the output contains "0 steps"
+            And the output does not contain "HOOK_BEFORE_SCENARIO"
+            And the output does not contain "SCENARIO_STEP_EXECUTED"

@@ -32,7 +32,6 @@
                 "cucumber_cpp/example/features",
                 "cucumber_cpp/example/features/rule.feature",
                 "cucumber_cpp/example/features/substep.feature",
-                "cucumber_cpp/acceptance_test/features",
                 "cucumber_cpp/devkit/empty/features",
                 "acceptance"
             ]

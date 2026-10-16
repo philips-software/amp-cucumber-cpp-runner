@@ -205,7 +205,7 @@
             },
             "filter": {
                 "exclude": {
-                    "name": "^(acceptance\\.test(_NOT_BUILT)?|cucumber_cpp\\.acceptance_test\\.bats.*)$",
+                    "name": "^acceptance\\.test(_NOT_BUILT)?$",
                     "label": "^acceptance$"
                 }
             }
