@@ -11,21 +11,6 @@ set_target_properties(acceptance.sandbox PROPERTIES
     EXCLUDE_FROM_ALL ON
 )
 
-# Export compiler command line configuration for on-the-fly plugin compilation in acceptance tests
-set(CCR_ACCEPTANCE_SANDBOX_RSP "${CMAKE_CURRENT_BINARY_DIR}/sandbox/compile_flags.rsp")
-file(GENERATE
-    OUTPUT "${CCR_ACCEPTANCE_SANDBOX_RSP}"
-    CONTENT "$<JOIN:$<TARGET_PROPERTY:acceptance.sandbox,COMPILE_OPTIONS>,
->
-$<JOIN:$<LIST:TRANSFORM,$<TARGET_PROPERTY:acceptance.sandbox,COMPILE_DEFINITIONS>,PREPEND,-D>,
->
-$<JOIN:$<LIST:TRANSFORM,$<TARGET_PROPERTY:acceptance.sandbox,INCLUDE_DIRECTORIES>,PREPEND,-isystem >,
->
-"
-    # file(GENERATE) evaluates once per enabled language; only the C++ flags are relevant
-    CONDITION "$<COMPILE_LANGUAGE:CXX>"
-)
-
 add_subdirectory(util)
 add_subdirectory(steps)
 add_subdirectory(test)
@@ -43,5 +28,6 @@ if (CCR_BUILD_TESTS)
     cucumber_discover_tests(acceptance.test
         EXTRA_ARGS --format summary -- ${CMAKE_CURRENT_LIST_DIR}/features
         DISCOVERY_MODE PRE_TEST
+        PROPERTIES LABELS acceptance
     )
 endif()

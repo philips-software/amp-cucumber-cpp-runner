@@ -206,7 +206,7 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
     const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
     const auto outputPath = LibraryPathFor(workspace, libraryName);
 
-    // Write source file directly in the per-scenario workspace directory
+    // Write the scenario's plugin source to its own workspace; the sandbox build script copies it into the shared sandbox
     const auto sourcePath = workspace / (ValidateLibraryName(ReplaceSpacesWithUnderscores(libraryName)) + ".cpp");
     {
         std::ofstream sourceFile(sourcePath, std::ios::binary);
@@ -214,20 +214,28 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
         sourceFile << docString->content;
     }
 
-    std::vector<std::string> compileArgs = {
-        "-std=c++20",
-        "-fPIC",
-        "-shared",
-        "@" CCR_ACCEPTANCE_SANDBOX_RSP,
-        CCR_ACCEPTANCE_PLUGIN_REGISTER_OBJ,
-        "-o",
-        outputPath.string(),
-        sourcePath.string(),
-    };
-
     const auto buildResult = RunProcess(
-        std::filesystem::path{ CCR_ACCEPTANCE_CXX_COMPILER },
-        compileArgs,
+        std::filesystem::path{ CCR_ACCEPTANCE_CMAKE_COMMAND },
+        {
+            "-D",
+            "SOURCE=" + sourcePath.string(),
+            "-D",
+            "OUTPUT=" + outputPath.string(),
+            "-D",
+            "SANDBOX_SOURCE=" CCR_ACCEPTANCE_SANDBOX_SOURCE,
+            "-D",
+            "SANDBOX_TARGET=" CCR_ACCEPTANCE_SANDBOX_TARGET,
+            "-D",
+            "ARTIFACT=" CCR_ACCEPTANCE_SANDBOX_ARTIFACT,
+            "-D",
+            "BUILD_DIR=" CCR_ACCEPTANCE_BUILD_DIR,
+            "-D",
+            "CONFIG=" CCR_ACCEPTANCE_BUILD_CONFIG,
+            "-D",
+            "LOCK_FILE=" CCR_ACCEPTANCE_SANDBOX_LOCK,
+            "-P",
+            CCR_ACCEPTANCE_SANDBOX_BUILD_SCRIPT,
+        },
         workspace);
 
     context.InsertAt<ProcessResult>(lastBuildResult, buildResult);
