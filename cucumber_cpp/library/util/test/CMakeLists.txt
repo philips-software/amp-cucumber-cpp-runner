@@ -11,6 +11,7 @@ target_sources(cucumber_cpp.library.util.test PRIVATE
     TestBroadcaster.cpp
     TestDummy.cpp
     TestDuration.cpp
+    TestGetHierarchicalTestName.cpp
     TestTransformDocString.cpp
     TestTransformTable.cpp
     TestTransformTag.cpp

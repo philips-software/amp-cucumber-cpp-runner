@@ -10,6 +10,8 @@ target_sources(cucumber_cpp.library.util PRIVATE
     DocString.hpp
     Duration.cpp
     Duration.hpp
+    GetHierarchicalTestName.cpp
+    GetHierarchicalTestName.hpp
     GetWorstTestStepResult.cpp
     GetWorstTestStepResult.hpp
     HookData.hpp

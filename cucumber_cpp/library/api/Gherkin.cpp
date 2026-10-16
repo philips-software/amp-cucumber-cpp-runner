@@ -14,6 +14,7 @@
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include <list>
 #include <memory>
+#include <utility>
 
 namespace cucumber_cpp::library::api
 {
@@ -67,7 +68,7 @@ namespace cucumber_cpp::library::api
                             sourceReference.location = error->Location();
 
                             cucumber::messages::ParseError parseError;
-                            parseError.source = sourceReference;
+                            parseError.source = std::move(sourceReference);
                             parseError.message = error->what();
 
                             envelope.parseError = std::move(parseError);
@@ -82,7 +83,7 @@ namespace cucumber_cpp::library::api
                         sourceReference.location = error.Location();
 
                         cucumber::messages::ParseError parseError;
-                        parseError.source = sourceReference;
+                        parseError.source = std::move(sourceReference);
                         parseError.message = error.what();
 
                         envelope.parseError = std::move(parseError);

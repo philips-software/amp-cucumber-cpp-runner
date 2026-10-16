@@ -3,10 +3,13 @@ add_test(NAME cucumber_cpp.library.api.test COMMAND cucumber_cpp.library.api.tes
 
 target_link_libraries(cucumber_cpp.library.api.test PUBLIC
     cucumber_cpp.library.api
+    cucumber_cpp.library.engine.test_helper
     GTest::gmock
     GTest::gmock_main
 )
 
 target_sources(cucumber_cpp.library.api.test PRIVATE
     TestDummy.cpp
+    TestListScenarios.cpp
+    TestMakeUniqueTestNames.cpp
 )

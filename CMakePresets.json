@@ -79,7 +79,7 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CCR_FETCH_DEPS": "Off",
+                "CCR_FETCH_DEPS": "On",
                 "CCR_BUILD_TESTS": "On",
                 "CCR_BUILD_EXAMPLES": "Off",
                 "CCR_ENABLE_COVERAGE": "On"
@@ -195,15 +195,18 @@
         },
         {
             "name": "windows-clang-cl-test",
+            "description": "Wine's builtin msvcp140.dll lacks std::_Xregex_error, so tests that throw std::regex_error abort under wine and are filtered out.",
             "configurePreset": "windows-clang-cl-test",
             "configuration": "RelWithDebInfo",
             "inherits": "defaults",
             "environment": {
-                "WINEDEBUG": "-all"
+                "WINEDEBUG": "-all",
+                "GTEST_FILTER": "-TestApplication.InvalidNameRegexFails"
             },
             "filter": {
                 "exclude": {
-                    "name": "^(acceptance\\.test|cucumber_cpp\\.acceptance_test\\.bats.*)$"
+                    "name": "^(acceptance\\.test(_NOT_BUILT)?|cucumber_cpp\\.acceptance_test\\.bats.*)$",
+                    "label": "^acceptance$"
                 }
             }
         }

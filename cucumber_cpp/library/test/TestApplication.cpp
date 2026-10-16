@@ -6,8 +6,7 @@
 #include <CLI/Error.hpp>
 #include <array>
 #include <cstddef>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -84,6 +83,138 @@ namespace cucumber_cpp::library
         const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--format", "summary", "--", "/nonexistent-ccr-dir" };
 
         RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+    }
+
+    TEST_F(TestApplication, ListScenariosPrintsUniqueNames)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 6 are equal\n";
+
+        const std::array args{ "application", "--list-scenarios", path.c_str() };
+
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+
+        EXPECT_THAT(stdoutString, testing::StrEq("Test feature.Test scenario\t" + path + ":2\n" +
+                                                 "Test feature.Test scenario.#2\t" + path + ":4\n"));
+    }
+
+    TEST_F(TestApplication, ListScenariosFailsOnParseError)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  This is not gherkin\n";
+
+        const std::array args{ "application", "--list-scenarios", path.c_str() };
+
+        testing::internal::CaptureStderr();
+        std::string stdoutString = RunWithArgs(args, EXIT_FAILURE);
+        const auto stderrString = testing::internal::GetCapturedStderr();
+
+        EXPECT_THAT(stdoutString, testing::IsEmpty());
+        EXPECT_THAT(stderrString, testing::HasSubstr("Parse error in"));
+    }
+
+    TEST_F(TestApplication, NameSelectsFirstOfDuplicateScenarios)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Test scenario\n"
+               "    When I throw an exception\n";
+
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", R"(^Test feature\.Test scenario$)", "--", path.c_str() };
+
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenario (1 passed)"));
+    }
+
+    TEST_F(TestApplication, NameSelectsSecondOfDuplicateScenarios)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Test scenario\n"
+               "    When I throw an exception\n";
+
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", R"(^Test feature\.Test scenario\.#2$)", "--", path.c_str() };
+
+        std::string stdoutString = RunWithArgs(args, EXIT_FAILURE);
+
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenario (1 failed)"));
+    }
+
+    TEST_F(TestApplication, NameSelectsDuplicatesInReverseOrder)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Test scenario\n"
+               "    When I throw an exception\n";
+
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--order", "reverse", "--name", R"(^Test feature\.Test scenario$)", "--", path.c_str() };
+
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+
+        EXPECT_THAT(stdoutString, testing::HasSubstr("1 scenario (1 passed)"));
+    }
+
+    TEST_F(TestApplication, NameMatchesScenarioName)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n"
+               "  Scenario: Other scenario\n"
+               "    When I throw an exception\n";
+
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", "^Test scenario$", "--", path.c_str() };
+
+        std::string stdoutString = RunWithArgs(args, static_cast<std::underlying_type_t<CLI::ExitCodes>>(CLI::ExitCodes::Success));
+
+        EXPECT_THAT(stdoutString, testing::HasSubstr("2 scenarios (2 passed)"));
+    }
+
+    TEST_F(TestApplication, InvalidNameRegexFails)
+    {
+        auto tmp = engine::test_helper::TemporaryFile{ "tmpfile.feature" };
+        const auto path = tmp.Path().string();
+
+        tmp << "Feature: Test feature\n"
+               "  Scenario: Test scenario\n"
+               "    Given 5 and 5 are equal\n";
+
+        const std::array args{ "application", "--format-options", R"({ "summary": {"theme":"plain"} })", "--name", "[", "--", path.c_str() };
+
+        testing::internal::CaptureStderr();
+        std::string stdoutString = RunWithArgs(args, EXIT_FAILURE);
+        const auto stderrString = testing::internal::GetCapturedStderr();
+
+        EXPECT_THAT(stdoutString, testing::Not(testing::HasSubstr("1 scenario")));
+        EXPECT_THAT(stderrString, testing::HasSubstr("Invalid regex pattern '['"));
     }
 
     TEST_F(TestApplication, ExposeParameterRegistration)
