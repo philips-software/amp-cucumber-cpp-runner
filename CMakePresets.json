@@ -195,11 +195,13 @@
         },
         {
             "name": "windows-clang-cl-test",
+            "description": "Wine's builtin msvcp140.dll lacks std::_Xregex_error, so tests that throw std::regex_error abort under wine and are filtered out.",
             "configurePreset": "windows-clang-cl-test",
             "configuration": "RelWithDebInfo",
             "inherits": "defaults",
             "environment": {
-                "WINEDEBUG": "-all"
+                "WINEDEBUG": "-all",
+                "GTEST_FILTER": "-TestApplication.InvalidNameRegexFails"
             },
             "filter": {
                 "exclude": {
