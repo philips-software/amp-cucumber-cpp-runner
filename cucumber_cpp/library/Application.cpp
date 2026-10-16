@@ -199,7 +199,7 @@ namespace cucumber_cpp::library
             cli.add_option("--load", options.loadPaths, "Load cucumber step/hook/parameter dynamic libraries from files or directories");
 
             auto* listScenariosOpt = cli.add_flag("--list-scenarios", options.listScenarios, "List scenario test names and exit");
-            cli.add_option("-n,--name", options.nameRegexes, "Only run scenarios with name matching the regex pattern")->excludes(listScenariosOpt);
+            auto* nameOpt = cli.add_option("-n,--name", options.nameRegexes, "Only run scenarios with name matching the regex pattern")->excludes(listScenariosOpt);
 
             ProgramContext().InsertRef(options);
 
@@ -211,7 +211,12 @@ namespace cucumber_cpp::library
                 retryTagOpt->configurable(!options.repeat.has_value());
                 repeatOpt->configurable(options.repeat.has_value());
                 repeatTagOpt->configurable(options.repeat.has_value());
-                std::ofstream{ "cucumber.toml" } << cli.config_to_str(true, true);
+
+                listScenariosOpt->configurable(!listScenariosOpt->empty());
+                nameOpt->configurable(listScenariosOpt->empty());
+
+                std::ofstream{ "cucumber.toml" }
+                    << cli.config_to_str(true, true);
             }
 
             if (!options.loadPaths.empty())
