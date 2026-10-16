@@ -9,7 +9,4 @@ megalinter-reports/
 actual.ndjson
 expected.ndjson
 
-# bats task generated files
-test-report.xml
-
 deps

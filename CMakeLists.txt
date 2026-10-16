@@ -35,41 +35,6 @@ if (CCR_BUILD_TESTS)
     ccr_enable_testing()
 endif()
 
-if (CCR_BUILD_TESTS)
-    find_program(BATS_PROGRAM bats)
-    if (BATS_PROGRAM)
-        add_test(
-            NAME cucumber_cpp.acceptance_test.bats.build
-            COMMAND ${CMAKE_COMMAND}
-                --build ${CMAKE_BINARY_DIR}
-                --config $<CONFIG>
-                --target
-                    cucumber_cpp.acceptance_test.custom
-                    cucumber_cpp.acceptance_test.plugin
-                    cucumber_cpp.acceptance_test.plugin_a
-                    cucumber_cpp.acceptance_test.plugin_b
-        )
-        set_tests_properties(cucumber_cpp.acceptance_test.bats.build PROPERTIES
-            FIXTURES_SETUP cucumber_cpp.acceptance_test.binaries
-        )
-
-        add_test(
-            NAME cucumber_cpp.acceptance_test.bats
-            COMMAND ${BATS_PROGRAM}
-                --report-formatter junit
-                --output ${CMAKE_CURRENT_BINARY_DIR}
-                cucumber_cpp/acceptance_test/test.bats
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        )
-        set_tests_properties(cucumber_cpp.acceptance_test.bats PROPERTIES
-            ENVIRONMENT "custom_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.custom>;plugin_test=$<TARGET_FILE:cucumber_cpp.acceptance_test.plugin>"
-            FIXTURES_REQUIRED cucumber_cpp.acceptance_test.binaries
-        )
-    else()
-        message(WARNING "bats not found; acceptance tests will not be run by CTest.")
-    endif()
-endif()
-
 if (CCR_ENABLE_COVERAGE)
     find_program(GCOVR_PROGRAM gcovr REQUIRED)
 
@@ -79,7 +44,6 @@ if (CCR_ENABLE_COVERAGE)
             --root ${PROJECT_SOURCE_DIR}
             --merge-lines --delete --exclude-unreachable-branches --exclude-throw-branches --exclude-noncode-lines
             --filter cucumber_cpp
-            --exclude=.*/acceptance_test/.*
             --exclude=.*/example/.*
             --exclude=.*/external/.*
             --exclude=.*/test/.*

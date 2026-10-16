@@ -15,6 +15,10 @@
 #   BUILD_DIR       top-level build directory
 #   CONFIG          build configuration (may be empty)
 #   LOCK_FILE       file used for inter-process locking
+#
+# Optional variables:
+#   RUNTIME_DLLS    '|' separated runtime DLLs of the sandbox target, copied
+#                   next to OUTPUT so a copied executable can start on Windows
 
 cmake_minimum_required(VERSION 3.24)
 
@@ -54,6 +58,18 @@ endif()
 file(COPY_FILE "${ARTIFACT}" "${OUTPUT}" RESULT copy_result)
 if(NOT copy_result EQUAL 0)
     message(FATAL_ERROR "BuildSandbox.cmake: failed to copy '${ARTIFACT}' to '${OUTPUT}': ${copy_result}")
+endif()
+
+if(DEFINED RUNTIME_DLLS AND NOT "${RUNTIME_DLLS}" STREQUAL "")
+    get_filename_component(output_dir "${OUTPUT}" DIRECTORY)
+    string(REPLACE "|" ";" runtime_dlls "${RUNTIME_DLLS}")
+    foreach(runtime_dll IN LISTS runtime_dlls)
+        get_filename_component(runtime_dll_name "${runtime_dll}" NAME)
+        file(COPY_FILE "${runtime_dll}" "${output_dir}/${runtime_dll_name}" RESULT copy_result ONLY_IF_DIFFERENT)
+        if(NOT copy_result EQUAL 0)
+            message(FATAL_ERROR "BuildSandbox.cmake: failed to copy runtime DLL '${runtime_dll}' to '${output_dir}': ${copy_result}")
+        endif()
+    endforeach()
 endif()
 
 file(LOCK "${LOCK_FILE}" RELEASE)

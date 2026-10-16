@@ -5,10 +5,6 @@ if (CCR_BUILD_EXAMPLES)
     add_subdirectory(example)
 endif()
 
-if (CCR_BUILD_TESTS)
-    add_subdirectory(acceptance_test)
-endif()
-
 add_library(cucumber_cpp INTERFACE)
 
 target_sources(cucumber_cpp INTERFACE

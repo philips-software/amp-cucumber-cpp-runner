@@ -97,6 +97,76 @@ namespace
         return workspace / (validatedName + std::string{ DynamicLibrary::PlatformExtension() });
     }
 
+    // Executables live in a subdirectory so `--load <workspace>` never picks up runtime DLLs copied next to them
+    [[nodiscard]] std::filesystem::path ExecutablePathFor(const std::filesystem::path& workspace, const std::string& executableName)
+    {
+        const auto validatedName = ValidateLibraryName(ReplaceSpacesWithUnderscores(executableName));
+        return workspace / "bin" / (validatedName + CCR_ACCEPTANCE_HOST_SUFFIX);
+    }
+
+    [[nodiscard]] std::filesystem::path WriteScenarioSource(const std::filesystem::path& workspace, const std::string& name, std::string_view content)
+    {
+        const auto sourcePath = workspace / (ValidateLibraryName(ReplaceSpacesWithUnderscores(name)) + ".cpp");
+        std::ofstream sourceFile(sourcePath, std::ios::binary);
+        if (!sourceFile.is_open())
+            throw std::runtime_error{ "Could not write source: " + sourcePath.string() };
+
+        sourceFile << content;
+        return sourcePath;
+    }
+
+    struct SandboxTarget
+    {
+        std::string_view source;
+        std::string_view target;
+        std::string_view artifact;
+        std::string_view runtimeDlls;
+    };
+
+    constexpr SandboxTarget pluginSandbox{
+        CCR_ACCEPTANCE_SANDBOX_SOURCE,
+        CCR_ACCEPTANCE_SANDBOX_TARGET,
+        CCR_ACCEPTANCE_SANDBOX_ARTIFACT,
+        "",
+    };
+
+    constexpr SandboxTarget hostSandbox{
+        CCR_ACCEPTANCE_HOST_SOURCE,
+        CCR_ACCEPTANCE_HOST_TARGET,
+        CCR_ACCEPTANCE_HOST_ARTIFACT,
+        CCR_ACCEPTANCE_HOST_RUNTIME_DLLS,
+    };
+
+    // Builds sourcePath through the shared sandbox build tree and copies the artifact to outputPath
+    [[nodiscard]] ProcessResult BuildInSandbox(const SandboxTarget& sandbox, const std::filesystem::path& sourcePath, const std::filesystem::path& outputPath, const std::filesystem::path& workspace)
+    {
+        return RunProcess(
+            std::filesystem::path{ CCR_ACCEPTANCE_CMAKE_COMMAND },
+            {
+                "-D",
+                "SOURCE=" + sourcePath.string(),
+                "-D",
+                "OUTPUT=" + outputPath.string(),
+                "-D",
+                "SANDBOX_SOURCE=" + std::string{ sandbox.source },
+                "-D",
+                "SANDBOX_TARGET=" + std::string{ sandbox.target },
+                "-D",
+                "ARTIFACT=" + std::string{ sandbox.artifact },
+                "-D",
+                "RUNTIME_DLLS=" + std::string{ sandbox.runtimeDlls },
+                "-D",
+                "BUILD_DIR=" CCR_ACCEPTANCE_BUILD_DIR,
+                "-D",
+                "CONFIG=" CCR_ACCEPTANCE_BUILD_CONFIG,
+                "-D",
+                "LOCK_FILE=" CCR_ACCEPTANCE_SANDBOX_LOCK,
+                "-P",
+                CCR_ACCEPTANCE_SANDBOX_BUILD_SCRIPT,
+            },
+            workspace);
+    }
+
     [[nodiscard]] std::filesystem::path CreateWorkspacePath()
     {
         const auto now = static_cast<std::uint64_t>(
@@ -207,41 +277,32 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
     const auto outputPath = LibraryPathFor(workspace, libraryName);
 
     // Write the scenario's plugin source to its own workspace; the sandbox build script copies it into the shared sandbox
-    const auto sourcePath = workspace / (ValidateLibraryName(ReplaceSpacesWithUnderscores(libraryName)) + ".cpp");
-    {
-        std::ofstream sourceFile(sourcePath, std::ios::binary);
-        ASSERT_THAT(sourceFile.is_open(), testing::IsTrue()) << "Could not write library source: " << sourcePath;
-        sourceFile << docString->content;
-    }
-
-    const auto buildResult = RunProcess(
-        std::filesystem::path{ CCR_ACCEPTANCE_CMAKE_COMMAND },
-        {
-            "-D",
-            "SOURCE=" + sourcePath.string(),
-            "-D",
-            "OUTPUT=" + outputPath.string(),
-            "-D",
-            "SANDBOX_SOURCE=" CCR_ACCEPTANCE_SANDBOX_SOURCE,
-            "-D",
-            "SANDBOX_TARGET=" CCR_ACCEPTANCE_SANDBOX_TARGET,
-            "-D",
-            "ARTIFACT=" CCR_ACCEPTANCE_SANDBOX_ARTIFACT,
-            "-D",
-            "BUILD_DIR=" CCR_ACCEPTANCE_BUILD_DIR,
-            "-D",
-            "CONFIG=" CCR_ACCEPTANCE_BUILD_CONFIG,
-            "-D",
-            "LOCK_FILE=" CCR_ACCEPTANCE_SANDBOX_LOCK,
-            "-P",
-            CCR_ACCEPTANCE_SANDBOX_BUILD_SCRIPT,
-        },
-        workspace);
+    const auto sourcePath = WriteScenarioSource(workspace, libraryName, docString->content);
+    const auto buildResult = BuildInSandbox(pluginSandbox, sourcePath, outputPath, workspace);
 
     context.InsertAt<ProcessResult>(lastBuildResult, buildResult);
 
     ASSERT_THAT(buildResult.exitCode, testing::Eq(0))
         << "Sandbox build failed\n"
+        << FormatProcessResult(buildResult);
+}
+
+GIVEN(R"(an executable named {string} with:)", (const std::string& executableName))
+{
+    if (!docString.has_value())
+        FAIL() << "Expected a doc string";
+
+    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto outputPath = ExecutablePathFor(workspace, executableName);
+    std::filesystem::create_directories(outputPath.parent_path());
+
+    const auto sourcePath = WriteScenarioSource(workspace, executableName, docString->content);
+    const auto buildResult = BuildInSandbox(hostSandbox, sourcePath, outputPath, workspace);
+
+    context.InsertAt<ProcessResult>(lastBuildResult, buildResult);
+
+    ASSERT_THAT(buildResult.exitCode, testing::Eq(0))
+        << "Sandbox host build failed\n"
         << FormatProcessResult(buildResult);
 }
 
@@ -294,6 +355,23 @@ WHEN(R"(I run cucumber-cpp-runner with {string} and arguments:)", (const std::st
     AppendTableArguments(*dataTable, arguments);
 
     context.Insert<ProcessResult>(RunCli(workspace, arguments));
+}
+
+WHEN(R"(I run the executable {string} with arguments:)", (const std::string& executableName))
+{
+    if (!dataTable.has_value())
+        FAIL() << "Expected a data table";
+
+    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto executablePath = ExecutablePathFor(workspace, executableName);
+
+    ASSERT_THAT(std::filesystem::is_regular_file(executablePath), testing::IsTrue())
+        << "Expected executable at: " << executablePath;
+
+    std::vector<std::string> arguments;
+    AppendTableArguments(*dataTable, arguments);
+
+    context.Insert<ProcessResult>(RunProcess(executablePath, arguments, workspace));
 }
 
 WHEN(R"(I run cucumber-cpp-runner with arguments:)")

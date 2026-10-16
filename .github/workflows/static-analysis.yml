@@ -38,10 +38,8 @@ jobs:
           save: ${{ github.ref == 'refs/heads/main' }}
           evict-old-files: 7d
 
-      - name: Install bats
-        run: |
-          sudo apt-get update && sudo apt-get install -y bats bats-support bats-assert
-          python -m pip install gcovr==8.6
+      - name: Install gcovr
+        run: python -m pip install gcovr==8.6
 
       - name: Build host
         uses: ./.github/actions/build

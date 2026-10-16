@@ -11,6 +11,27 @@ set_target_properties(acceptance.sandbox PROPERTIES
     EXCLUDE_FROM_ALL ON
 )
 
+# Host executable built from a scenario provided source containing main().
+# Like cucumber_cpp.cli it exports all cucumber_cpp symbols, so plugins built by
+# acceptance.sandbox can resolve them from the host at runtime.
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sandbox/SandboxHost.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/sandbox/SandboxHost.cpp COPYONLY)
+
+add_executable(acceptance.sandbox_host EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/sandbox/SandboxHost.cpp)
+
+target_link_libraries(acceptance.sandbox_host PRIVATE
+    cucumber_cpp
+)
+
+set_target_properties(acceptance.sandbox_host PROPERTIES
+    ENABLE_EXPORTS ON
+)
+
+if (NOT WIN32)
+    target_link_libraries(acceptance.sandbox_host PRIVATE
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,cucumber_cpp.library,cucumber_cpp.library.api,cucumber_cpp.library.engine,cucumber_cpp.library.support,cucumber_cpp.library.util,GTest::gtest,GTest::gmock>
+    )
+endif()
+
 add_subdirectory(util)
 add_subdirectory(steps)
 add_subdirectory(test)
