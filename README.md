@@ -201,6 +201,36 @@ PARAMETER(int, ("optint", "([0-9]+)?", false), (const std::optional<std::string>
 }
 ```
 
+### Custom Parameter Maps
+
+Many custom parameters simply map a fixed set of words to values, for example enum values. The `PARAMETER_MAP` macro builds such a parameter from an inline list of key/value pairs:
+
+```cpp
+enum class State
+{
+    connected,
+    disconnected,
+    standby,
+};
+
+PARAMETER_MAP(State, ("state", true), ({ "connected", State::connected }, { "disconnected", State::disconnected }, { "standby", State::standby }));
+
+STEP(R"(the device is {state})", (State state))
+{
+    EXPECT_THAT(state, testing::Eq(State::connected));
+}
+```
+
+The `PARAMETER_MAP` macro API is as follows:
+```
+PARAMETER_MAP(<value type>, (<name>, <use for snippets>), ({<key1>, <value1>}, {<key2>, <value2>}, ...))
+```
+
+- The keys are turned into a single capture group, e.g. `(disconnected|connected|standby)`.
+- Keys are matched literally and case-sensitively; regular expression characters in keys are escaped.
+- Longer keys are tried first, so a key that is a prefix of another key (e.g. `on` and `one`) is resolved correctly.
+- An empty list, an empty key or a duplicate key is rejected with a `std::invalid_argument` exception when the parameter is registered.
+
 ### Custom step fixtures
 
 amp-cucumber-cpp-runner has support for custom base classes for step definitions using the `GIVEN_F`, `WHEN_F`, `THEN_F` or `STEP_F` macros. These give additional flexibility for re-using common patterns for steps. For example:
