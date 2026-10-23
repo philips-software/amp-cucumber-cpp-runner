@@ -8,6 +8,8 @@ target_sources(cucumber_cpp.library.support PRIVATE
     HookRegistry.hpp
     MatchStepDefinitions.cpp
     MatchStepDefinitions.hpp
+    ParameterMap.cpp
+    ParameterMap.hpp
     StepRegistry.cpp
     StepRegistry.hpp
     StepType.hpp

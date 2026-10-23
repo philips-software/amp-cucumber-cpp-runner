@@ -1,6 +1,7 @@
 ---
 Checks:          '
     bugprone-*,
+    -bugprone-easily-swappable-parameters,
     clang-analyzer-*,
     cppcoreguidelines*,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
