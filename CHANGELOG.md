@@ -1,5 +1,24 @@
 # Changelog
 
+## [4.4.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.3.0...v4.4.0) (2026-10-26)
+
+
+### Features
+
+* Add --repeat option ([#406](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/406)) ([00dfc8c](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/00dfc8cbaf7ef3740838c71fd2a9d6c02819624c))
+* Add cucumber_discover_tests function to integrate with ctest ([#413](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/413)) ([f6eb4c7](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/f6eb4c7981c331bf3b4faa4a7ee79591b281f6e7))
+* Add PARAMETER_MAP key-value mapping for custom parameters ([#417](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/417)) ([5d99b69](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/5d99b693fb5528e9f2fa4dbd3d8bf35b014b0fcb))
+
+
+### Bug Fixes
+
+* Add missing DefinitionRegistration.hpp include in Paramter.hpp ([#407](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/407)) ([2504131](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/25041315e0e4026f33842ecdfabbf842868f9d8b)), closes [#318](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/318)
+
+
+### Chores
+
+* Remove unnecessary nesting in dependencies.cpm.cmake ([#403](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/403)) ([c42fe45](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/c42fe454eb5415f5b1d51ae27d5e13eabe3754e1))
+
 ## [4.3.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.2.0...v4.3.0) (2026-10-03)
 
 
