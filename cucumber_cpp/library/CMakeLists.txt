@@ -8,6 +8,7 @@ target_sources(cucumber_cpp.library PRIVATE
     Errors.hpp
     Hooks.hpp
     Parameter.hpp
+    ParameterMap.hpp
     Steps.hpp
 )
 
