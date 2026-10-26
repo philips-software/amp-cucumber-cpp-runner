@@ -27,6 +27,8 @@ namespace
 
         bool operator==(const TestVersion&) const = default;
     };
+
+    constexpr int entries = 7;
 }
 
 PARAMETER_MAP(TestState, ("testParameterMapState", true), ({ "connected", TestState::connected }, { "disconnected", TestState::disconnected }, { "standby", TestState::standby }));
@@ -34,6 +36,8 @@ PARAMETER_MAP(TestState, ("testParameterMapState", true), ({ "connected", TestSt
 PARAMETER_MAP(int, ("testParameterMapNumber", false), ({ "on", 100 }, { "one", 1 }, { "c++", 3 }, { "a.b", 4 }));
 
 PARAMETER_MAP(TestVersion, ("testParameterMapVersion", false), ({ "v1", TestVersion{ 1, 0 } }, { "v1.1", TestVersion{ 1, 1 } }));
+
+PARAMETER_MAP(int, ("testParameterMapEntriesName", false), ({ "seven", entries }));
 
 namespace cucumber_cpp::library
 {
@@ -131,6 +135,11 @@ namespace cucumber_cpp::library
     {
         EXPECT_THAT(Match<TestVersion>("version {testParameterMapVersion}", "version v1"), Eq(TestVersion{ 1, 0 }));
         EXPECT_THAT(Match<TestVersion>("version {testParameterMapVersion}", "version v1.1"), Eq(TestVersion{ 1, 1 }));
+    }
+
+    TEST(ParameterMap, mapped_value_can_be_named_entries)
+    {
+        EXPECT_THAT(Match<int>("{testParameterMapEntriesName}", "seven"), Eq(7));
     }
 
     TEST(ParameterMap, entries_reject_duplicate_and_empty_keys)

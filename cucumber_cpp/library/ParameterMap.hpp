@@ -14,6 +14,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+
 // IWYU pragma: end_keep
 
 namespace cucumber_cpp::library::detail
@@ -58,22 +59,23 @@ namespace cucumber_cpp::library::detail
 #define PARAMETER_MAP_NAME(name, snippets) name
 #define PARAMETER_MAP_SNIPPETS(name, snippets) snippets
 #define PARAMETER_MAP_ENTRIES CONCAT(ParameterMapEntries, __LINE__)
+#define PARAMETER_MAP_STORAGE CONCAT(ParameterMapStorage, __LINE__)
 
 // The entries live in a function-local static so they are initialized on first use,
 // which avoids static initialization order issues during parameter registration.
-#define PARAMETER_MAP_BODY(Type, Info, Entries)                                                                                        \
-    namespace                                                                                                                          \
-    {                                                                                                                                  \
-        const cucumber_cpp::library::detail::ParameterMapEntries<Type>& PARAMETER_MAP_ENTRIES()                                        \
-        {                                                                                                                              \
-            static const cucumber_cpp::library::detail::ParameterMapEntries<Type> entries({ PARAMETER_MAP_UNPAREN Entries });          \
-            return entries;                                                                                                            \
-        }                                                                                                                              \
-    }                                                                                                                                  \
-    PARAMETER(Type, (PARAMETER_MAP_NAME Info, PARAMETER_MAP_ENTRIES().Regex(), PARAMETER_MAP_SNIPPETS Info), (const std::string& key)) \
-    {                                                                                                                                  \
-        return PARAMETER_MAP_ENTRIES().Lookup(key);                                                                                    \
-    }                                                                                                                                  \
+#define PARAMETER_MAP_BODY(Type, Info, Entries)                                                                                             \
+    namespace                                                                                                                               \
+    {                                                                                                                                       \
+        const cucumber_cpp::library::detail::ParameterMapEntries<Type>& PARAMETER_MAP_ENTRIES()                                             \
+        {                                                                                                                                   \
+            static const cucumber_cpp::library::detail::ParameterMapEntries<Type> PARAMETER_MAP_STORAGE({ PARAMETER_MAP_UNPAREN Entries }); \
+            return PARAMETER_MAP_STORAGE;                                                                                                   \
+        }                                                                                                                                   \
+    }                                                                                                                                       \
+    PARAMETER(Type, (PARAMETER_MAP_NAME Info, PARAMETER_MAP_ENTRIES().Regex(), PARAMETER_MAP_SNIPPETS Info), (const std::string& key))      \
+    {                                                                                                                                       \
+        return PARAMETER_MAP_ENTRIES().Lookup(key);                                                                                         \
+    }                                                                                                                                       \
     static_assert(true, "")
 
 #define PARAMETER_MAP(Type, Info, Entries) PARAMETER_MAP_BODY(Type, Info, Entries)
