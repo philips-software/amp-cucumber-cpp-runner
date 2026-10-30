@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.1](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.4.0...v4.4.1) (2026-10-30)
+
+
+### Chores
+
+* Move example project to the root of the repository ([#420](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/420)) ([261e218](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/261e218bfb55609e75f24e0ee4031f1eba1a68f6))
+
 ## [4.4.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.3.0...v4.4.0) (2026-10-26)
 
 
