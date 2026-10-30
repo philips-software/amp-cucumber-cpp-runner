@@ -63,6 +63,31 @@ runs:
         # Expose the vcpkg toolchain so find_package() locates the packages.
         echo "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
 
+    # tobiaslocker/base64 is header-only without install rules; keep ref in sync with BASE64_DIGEST in cmake/dependencies.cpm.cmake.
+    - name: Checkout tobiaslocker/base64
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        repository: tobiaslocker/base64
+        ref: 8d96a2a737ac1396304b1de289beb3a5ea0cb752
+        path: base64-src
+        persist-credentials: false
+
+    - name: Install tobiaslocker/base64 (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        sudo mkdir -p /usr/local/include
+        sudo cp base64-src/include/base64.hpp /usr/local/include/
+
+    - name: Install tobiaslocker/base64 (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $prefix = "${{ runner.temp }}/base64"
+        New-Item -ItemType Directory -Force -Path "$prefix/include" | Out-Null
+        Copy-Item base64-src/include/base64.hpp "$prefix/include/"
+        echo "CMAKE_PREFIX_PATH=$prefix" >> $env:GITHUB_ENV
+
     - name: Install cucumber/tag-expressions
       uses: ./.github/actions/install-dependency
       with:

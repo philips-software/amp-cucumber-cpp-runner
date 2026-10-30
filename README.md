@@ -60,6 +60,27 @@ brew install googletest nlohmann-json fmt abseil re2 cli11 pugixml
 vcpkg install gtest nlohmann-json fmt abseil re2 cli11 pugixml --triplet x64-windows
 ```
 
+#### tobiaslocker/base64
+
+[tobiaslocker/base64](https://github.com/tobiaslocker/base64) is a single header without CMake install rules and is not available through package managers. Copy `base64.hpp` into the `include` directory of any prefix CMake searches; [cmake/Findbase64.cmake](cmake/Findbase64.cmake) then provides the `base64::base64` target.
+
+Linux/MacOS:
+```sh
+git clone https://github.com/tobiaslocker/base64.git base64-src
+git -C base64-src checkout 8d96a2a737ac1396304b1de289beb3a5ea0cb752
+sudo mkdir -p /usr/local/include
+sudo cp base64-src/include/base64.hpp /usr/local/include/
+```
+
+Windows (or any custom prefix):
+```pwsh
+git clone https://github.com/tobiaslocker/base64.git base64-src
+git -C base64-src checkout 8d96a2a737ac1396304b1de289beb3a5ea0cb752
+New-Item -ItemType Directory -Force -Path C:/base64/include
+Copy-Item base64-src/include/base64.hpp C:/base64/include/
+# then configure with -DCMAKE_PREFIX_PATH=C:/base64 (or -Dbase64_INCLUDE_DIR=C:/base64/include)
+```
+
 #### Installing first party libraries
 Use git to fetch all repositories and install them using:
 ```sh
