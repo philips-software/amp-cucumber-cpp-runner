@@ -134,6 +134,10 @@ endif()
 
 add_subdirectory(cucumber_cpp)
 
+if (CCR_BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif()
+
 if (CCR_BUILD_TESTS)
     add_subdirectory(compatibility)
     add_subdirectory(acceptance)

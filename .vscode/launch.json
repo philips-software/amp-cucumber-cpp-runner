@@ -26,12 +26,12 @@
         },
         {
             "id": "features",
-            "description": "Enter the tag to run",
+            "description": "Enter the feature to run",
             "type": "pickString",
             "options": [
-                "cucumber_cpp/example/features",
-                "cucumber_cpp/example/features/rule.feature",
-                "cucumber_cpp/example/features/substep.feature",
+                "cucumber_cpp/features",
+                "cucumber_cpp/features/rule.feature",
+                "cucumber_cpp/features/substep.feature",
                 "cucumber_cpp/devkit/empty/features",
                 "acceptance"
             ]
