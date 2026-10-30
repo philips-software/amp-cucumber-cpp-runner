@@ -3,7 +3,7 @@
   "cucumberautocomplete.steps": [
     "compatibility/*/*.cpp",
     "acceptance/*/*.cpp",
-    "cucumber_cpp/example/*/*.cpp"
+    "example/*/*.cpp"
   ],
   "cucumberautocomplete.gherkinDefinitionPart": "(GIVEN|WHEN|THEN|STEP)\\(",
   "cucumberautocomplete.customParameters": [

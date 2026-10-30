@@ -1,7 +1,6 @@
 #include "cucumber_cpp/library/Hooks.hpp"
-#include "cucumber_cpp/example/fixtures/Fixture.hpp"
 #include "cucumber_cpp/library/Context.hpp"
-#include <iostream>
+#include "fixtures/Fixture.hpp"
 #include <string>
 
 HOOK_BEFORE_ALL()
