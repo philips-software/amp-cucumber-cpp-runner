@@ -1,19 +1,23 @@
 set(CMAKE_COMPILE_WARNING_AS_ERROR On)
 
-add_executable(cucumber_cpp.example ${CCR_EXCLUDE_FROM_ALL})
+add_library(example.include INTERFACE)
+target_include_directories(example.include INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_sources(cucumber_cpp.example PRIVATE
+add_executable(example ${CCR_EXCLUDE_FROM_ALL})
+
+target_sources(example PRIVATE
     fixtures/Fixture.hpp
     Main.cpp
 )
 
-target_link_libraries(cucumber_cpp.example PRIVATE
+target_link_libraries(example PRIVATE
     cucumber_cpp
-    cucumber_cpp.example.hooks
-    cucumber_cpp.example.steps
+    example.hooks
+    example.steps
+    example.include
 )
 
-set_target_properties(cucumber_cpp.example PROPERTIES
+set_target_properties(example PROPERTIES
     ENABLE_EXPORTS ON
 )
 
