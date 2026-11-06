@@ -4,6 +4,7 @@
 // IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include <list>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -32,6 +33,8 @@ namespace cucumber_cpp::library::context
             virtual void Erase(const std::string& key) = 0;
 
             virtual std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) = 0;
+
+            virtual void Clear() = 0;
         };
 
         struct ContextStorageImpl : ContextStorage
@@ -40,15 +43,28 @@ namespace cucumber_cpp::library::context
 
             explicit ContextStorageImpl(ContextStorage& parent);
 
+            ContextStorageImpl(const ContextStorageImpl&) = delete;
+            ContextStorageImpl& operator=(const ContextStorageImpl&) = delete;
+            ~ContextStorageImpl() override;
+
             [[nodiscard]] bool Contains(const std::string& key) const override;
             [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
             void Erase(const std::string& key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
 
+            void Clear() override;
+
         private:
+            struct Entry
+            {
+                const std::string* key;
+                std::shared_ptr<void> value;
+            };
+
             ContextStorage* parent{ nullptr };
 
-            std::unordered_map<std::string, std::shared_ptr<void>> contextMap;
+            std::list<Entry> orderedEntries;
+            std::unordered_map<std::string, std::list<Entry>::iterator> contextMap;
         };
 
         struct ContextStorageDecorator : ContextStorage
@@ -59,6 +75,8 @@ namespace cucumber_cpp::library::context
             [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
             void Erase(const std::string& key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
+
+            void Clear() override;
 
         private:
             std::unique_ptr<ContextStorage> contextStorage;
@@ -72,6 +90,8 @@ namespace cucumber_cpp::library::context
             [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
             void Erase(const std::string& key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
+
+            void Clear() override;
 
         private:
             mutable std::recursive_mutex mutex;
@@ -103,10 +123,20 @@ namespace cucumber_cpp::library::context
         [[nodiscard]] std::unique_ptr<detail::ContextStorage> Create(detail::ContextStorage& parent) const override;
     };
 
+    // Releases local values in reverse insertion order; overwrites count as new insertions.
+    // External shared owners may delay actual destruction beyond the Context's lifetime.
     struct Context
     {
         explicit Context(std::shared_ptr<ContextStorageFactory> contextStorageFactory);
         explicit Context(const Context* parent);
+
+        ~Context();
+
+        Context(const Context&) = delete;
+        Context& operator=(const Context&) = delete;
+
+        Context(Context&&) = default;
+        Context& operator=(Context&&) = default;
 
         template<class T>
         void SetShared(const std::shared_ptr<T>& value);

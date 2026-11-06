@@ -1,7 +1,11 @@
 #include "cucumber_cpp/library/context/Context.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace cucumber_cpp::library::context
 {
@@ -276,4 +280,221 @@ namespace cucumber_cpp::library::context
         privateContext->Clear("ckey");
         privateContext = nullptr;
     }
+
+    TEST_F(TestContext, OrderOfDestructionReverseOfOrderOfInsertionWithoutDiagnosticOutput)
+    {
+        auto privateContext = std::make_unique<Context>(std::make_shared<ContextStorageFactoryImpl>());
+        Mock mock;
+
+        const auto* dkey = privateContext->EmplaceAt<Obj>("dkey", &mock).get();
+        const auto* ckey = privateContext->EmplaceAt<Obj>("ckey", &mock).get();
+        const auto* bkey = privateContext->EmplaceAt<Obj>("bkey", &mock).get();
+        const auto* akey = privateContext->EmplaceAt<Obj>("akey", &mock).get();
+        const auto* xkey = privateContext->EmplaceAt<Obj>("xkey", &mock).get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(ckey));
+
+        EXPECT_CALL(mock, Deconstructing(xkey));
+        EXPECT_CALL(mock, Deconstructing(akey));
+        EXPECT_CALL(mock, Deconstructing(bkey));
+        EXPECT_CALL(mock, Deconstructing(dkey));
+
+        privateContext->Clear("ckey");
+        privateContext = nullptr;
+    }
+
+    namespace
+    {
+        struct TestContextOrdering : TestContext
+            , testing::WithParamInterface<bool>
+        {
+            static std::shared_ptr<ContextStorageFactory> CreateFactory()
+            {
+                if (GetParam())
+                {
+                    return std::make_shared<ContextStorageFactoryThreadSafe>();
+                }
+
+                return std::make_shared<ContextStorageFactoryImpl>();
+            }
+        };
+    }
+
+    TEST_P(TestContextOrdering, DestructionReleasesNewestFirst)
+    {
+        testing::StrictMock<Mock> mock;
+        auto context = std::make_unique<Context>(CreateFactory());
+
+        const auto* first = context->EmplaceAt<Obj>("first", &mock).get();
+        const auto* second = context->EmplaceAt<Obj>("second", &mock).get();
+        const auto* third = context->EmplaceAt<Obj>("third", &mock).get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(third));
+        EXPECT_CALL(mock, Deconstructing(second));
+        EXPECT_CALL(mock, Deconstructing(first));
+
+        context.reset();
+    }
+
+    TEST_P(TestContextOrdering, OverwriteBecomesNewestInsertion)
+    {
+        testing::StrictMock<Mock> mock;
+        auto context = std::make_unique<Context>(CreateFactory());
+
+        const auto* first = context->EmplaceAt<Obj>("first", &mock).get();
+        const auto* second = context->EmplaceAt<Obj>("second", &mock).get();
+        const auto* third = context->EmplaceAt<Obj>("third", &mock).get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(first));
+        const auto* replacement = context->EmplaceAt<Obj>("first", &mock).get();
+        EXPECT_THAT(context->GetShared<Obj>("first").get(), testing::Eq(replacement));
+
+        EXPECT_CALL(mock, Deconstructing(replacement));
+        EXPECT_CALL(mock, Deconstructing(third));
+        EXPECT_CALL(mock, Deconstructing(second));
+
+        context.reset();
+    }
+
+    TEST_P(TestContextOrdering, ClearAndReinsertBecomesNewestInsertion)
+    {
+        testing::StrictMock<Mock> mock;
+        auto context = std::make_unique<Context>(CreateFactory());
+
+        const auto* first = context->EmplaceAt<Obj>("first", &mock).get();
+        const auto* second = context->EmplaceAt<Obj>("second", &mock).get();
+        const auto* third = context->EmplaceAt<Obj>("third", &mock).get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(second));
+        context->Clear("second");
+        EXPECT_FALSE(context->Contains("second"));
+        context->Clear("missing");
+        context->Clear("second");
+
+        const auto* replacement = context->EmplaceAt<Obj>("second", &mock).get();
+        EXPECT_CALL(mock, Deconstructing(replacement));
+        EXPECT_CALL(mock, Deconstructing(third));
+        EXPECT_CALL(mock, Deconstructing(first));
+
+        context.reset();
+    }
+
+    TEST_P(TestContextOrdering, ChildRemovalAndDestructionLeaveParentUntouched)
+    {
+        testing::StrictMock<Mock> mock;
+        auto parent = std::make_unique<Context>(CreateFactory());
+        auto child = std::make_unique<Context>(parent.get());
+
+        const auto* parentFirst = parent->EmplaceAt<Obj>("first", &mock).get();
+        const auto* parentSecond = parent->EmplaceAt<Obj>("second", &mock).get();
+        const auto* childFirst = child->EmplaceAt<Obj>("first", &mock).get();
+        const auto* childSecond = child->EmplaceAt<Obj>("local", &mock).get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(childFirst));
+        child->Clear("first");
+        child->Clear("second");
+        EXPECT_THAT(child->GetShared<Obj>("first").get(), testing::Eq(parentFirst));
+        EXPECT_THAT(child->GetShared<Obj>("second").get(), testing::Eq(parentSecond));
+
+        EXPECT_CALL(mock, Deconstructing(childSecond));
+        child.reset();
+        EXPECT_THAT(parent->GetShared<Obj>("first").get(), testing::Eq(parentFirst));
+        EXPECT_CALL(mock, Deconstructing(parentSecond));
+        EXPECT_CALL(mock, Deconstructing(parentFirst));
+        parent.reset();
+    }
+
+    TEST_P(TestContextOrdering, ExternalOwnerDelaysObjectDestruction)
+    {
+        testing::StrictMock<Mock> mock;
+        auto context = std::make_unique<Context>(CreateFactory());
+
+        const auto* first = context->EmplaceAt<Obj>("first", &mock).get();
+        auto retained = context->EmplaceAt<Obj>("second", &mock);
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(first));
+        context.reset();
+        EXPECT_THAT(retained.use_count(), testing::Eq(1));
+        EXPECT_CALL(mock, Deconstructing(retained.get()));
+        retained.reset();
+    }
+
+    TEST_P(TestContextOrdering, OlderEntriesRemainAvailableDuringDestruction)
+    {
+        testing::StrictMock<Mock> mock;
+        auto context = std::make_unique<Context>(CreateFactory());
+        const auto* first = context->EmplaceAt<Obj>("first", &mock).get();
+        const auto* second = context->EmplaceAt<Obj>("second", &mock).get();
+        auto* activeContext = context.get();
+
+        testing::InSequence seq;
+        EXPECT_CALL(mock, Deconstructing(second)).WillOnce([&](const Obj*)
+            {
+                EXPECT_FALSE(activeContext->Contains("second"));
+                EXPECT_THAT(activeContext->GetShared<Obj>("first").get(), testing::Eq(first));
+            });
+        EXPECT_CALL(mock, Deconstructing(first));
+
+        context.reset();
+    }
+
+    TEST_P(TestContextOrdering, OrderingSurvivesRehashing)
+    {
+        struct Ordered
+        {
+            Ordered(std::vector<int>& destroyed, int id)
+                : destroyed{ destroyed }
+                , id{ id }
+            {}
+
+            ~Ordered()
+            {
+                destroyed.push_back(id);
+            }
+
+            std::vector<int>& destroyed;
+            int id;
+        };
+
+        constexpr int count = 1000;
+        std::vector<int> destroyed;
+        auto context = std::make_unique<Context>(CreateFactory());
+
+        for (int id = 0; id != count; ++id)
+        {
+            context->EmplaceAt<Ordered>(std::to_string(id), destroyed, id);
+        }
+
+        for (int id = 0; id != count; ++id)
+        {
+            EXPECT_THAT(context->Get<Ordered>(std::to_string(id)).id, testing::Eq(id));
+        }
+
+        context->Clear("250");
+        context->EmplaceAt<Ordered>("100", destroyed, count);
+        context->EmplaceAt<Ordered>("250", destroyed, count + 1);
+        context.reset();
+
+        std::vector<int> expected{ 250, 100, count + 1, count };
+        for (int id = count - 1; id >= 0; --id)
+        {
+            if (id != 250 && id != 100)
+            {
+                expected.push_back(id);
+            }
+        }
+
+        EXPECT_THAT(destroyed, testing::ElementsAreArray(expected));
+    }
+
+    INSTANTIATE_TEST_SUITE_P(StorageFactories, TestContextOrdering, testing::Bool(), [](const auto& info)
+        {
+            return info.param ? "ThreadSafe" : "Plain";
+        });
 }

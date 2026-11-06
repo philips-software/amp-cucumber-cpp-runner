@@ -1,5 +1,6 @@
 #include "cucumber_cpp/library/context/Context.hpp"
 #include <iostream>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -12,6 +13,11 @@ namespace cucumber_cpp::library::context
         ContextStorageImpl::ContextStorageImpl(ContextStorage& parent)
             : parent{ &parent }
         {}
+
+        ContextStorageImpl::~ContextStorageImpl()
+        {
+            Clear();
+        }
 
         bool ContextStorageImpl::Contains(const std::string& key) const
         {
@@ -32,7 +38,7 @@ namespace cucumber_cpp::library::context
         {
             if (auto iter = contextMap.find(key); iter != contextMap.end())
             {
-                return iter->second;
+                return iter->second->value;
             }
 
             if (parent != nullptr)
@@ -47,12 +53,41 @@ namespace cucumber_cpp::library::context
 
         void ContextStorageImpl::Erase(const std::string& key)
         {
-            contextMap.erase(key);
+            if (auto iter = contextMap.find(key); iter != contextMap.end())
+            {
+                auto entry = iter->second;
+                contextMap.erase(iter); // removes the key object, don't use entry->key after this
+                orderedEntries.erase(entry);
+            }
         }
 
         std::shared_ptr<void> ContextStorageImpl::Assign(std::string key, std::shared_ptr<void> value)
         {
-            return contextMap[std::move(key)] = value;
+            auto [iter, inserted] = contextMap.try_emplace(std::move(key));
+            if (!inserted)
+            {
+                auto entry = iter->second;
+                entry->value.swap(value);
+                orderedEntries.splice(orderedEntries.end(), orderedEntries, entry);
+                return entry->value;
+            }
+
+            try
+            {
+                iter->second = orderedEntries.insert(orderedEntries.end(), Entry{ &iter->first, value });
+            }
+            catch (...)
+            {
+                contextMap.erase(iter);
+                throw;
+            }
+            return value;
+        }
+
+        void ContextStorageImpl::Clear()
+        {
+            while (!orderedEntries.empty())
+                Erase(*orderedEntries.back().key);
         }
 
         ContextStorageDecorator::ContextStorageDecorator(std::unique_ptr<ContextStorage> contextStorage)
@@ -77,6 +112,11 @@ namespace cucumber_cpp::library::context
         std::shared_ptr<void> ContextStorageDecorator::Assign(std::string key, std::shared_ptr<void> value)
         {
             return contextStorage->Assign(std::move(key), value);
+        }
+
+        void ContextStorageDecorator::Clear()
+        {
+            contextStorage->Clear();
         }
 
         ThreadSafeContextStorage::ThreadSafeContextStorage(std::unique_ptr<ContextStorage> contextStorage)
@@ -105,6 +145,12 @@ namespace cucumber_cpp::library::context
         {
             std::scoped_lock lock{ mutex };
             return ContextStorageDecorator::Assign(std::move(key), value);
+        }
+
+        void ThreadSafeContextStorage::Clear()
+        {
+            std::scoped_lock lock{ mutex };
+            ContextStorageDecorator::Clear();
         }
     }
 
@@ -136,6 +182,14 @@ namespace cucumber_cpp::library::context
         : contextStorageFactory{ parent->contextStorageFactory }
         , storage{ contextStorageFactory->Create(*parent->storage) }
     {}
+
+    Context::~Context()
+    {
+        if (storage)
+        {
+            storage->Clear();
+        }
+    }
 
     bool Context::Contains(const std::string& key) const
     {
