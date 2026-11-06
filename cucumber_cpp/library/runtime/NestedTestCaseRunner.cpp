@@ -4,7 +4,7 @@
 #include "cucumber/messages/StepMatchArgumentsList.hpp"
 #include "cucumber/messages/TestStep.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/support/MatchStepDefinitions.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
@@ -23,6 +23,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::runtime
@@ -46,14 +47,10 @@ namespace cucumber_cpp::library::runtime
             const auto status = util::ConstructAndExecute(bodyFactory, util::StepMatchArgumentsListToExecuteArgs(args));
 
             if (status.status != util::TestStepResultStatus::PASSED)
-                throw util::NestedTestCaseRunnerError{
-                    .nesting = nesting,
-                    .status = util::TransformTestStepResult(status),
-                    .text = step,
-                };
+                throw util::NestedTestCaseRunnerError{ nesting, util::TransformTestStepResult(status), step };
         }
 
-        void Run(std::size_t nesting, const std::string& step, const cucumber::messages::TestStep& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, const util::TestStepStarted& testStepStarted, const std::optional<cucumber::messages::PickleTable>& dataTable, const std::optional<cucumber::messages::PickleDocString>& docString) // NOSONAR: cohesive step runner
+        void Run(std::size_t nesting, const std::string& step, const cucumber::messages::TestStep& testStep, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, context::Context& testCaseContext, const util::TestStepStarted& testStepStarted, const std::optional<cucumber::messages::PickleTable>& dataTable, const std::optional<cucumber::messages::PickleDocString>& docString) // NOSONAR: cohesive step runner
         {
             auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([&supportCodeLibrary](const std::string& id) -> const support::StepRegistry::Definition&
                                                                        {
@@ -64,14 +61,14 @@ namespace cucumber_cpp::library::runtime
             {
                 cucumber::messages::TestStepResult status{};
                 status.status = cucumber::messages::TestStepResultStatus::UNDEFINED;
-                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = status, .text = step };
+                throw util::NestedTestCaseRunnerError{ nesting, status, step };
             }
             else if (testStep.stepDefinitionIds->size() > 1)
             {
                 cucumber::messages::TestStepResult status{};
                 status.message = "Ambiguous step definitions";
                 status.status = cucumber::messages::TestStepResultStatus::AMBIGUOUS;
-                throw util::NestedTestCaseRunnerError{ .nesting = nesting, .status = status, .text = step };
+                throw util::NestedTestCaseRunnerError{ nesting, status, step };
             }
             else
             {
@@ -86,7 +83,7 @@ namespace cucumber_cpp::library::runtime
         }
     }
 
-    NestedTestCaseRunner::NestedTestCaseRunner(std::size_t nesting, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, util::TestStepStarted testStepStarted)
+    NestedTestCaseRunner::NestedTestCaseRunner(std::size_t nesting, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, context::Context& testCaseContext, util::TestStepStarted testStepStarted)
         : nesting{ nesting + 1 }
         , supportCodeLibrary{ supportCodeLibrary }
         , broadcaster{ broadcaster }

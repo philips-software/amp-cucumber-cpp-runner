@@ -1,9 +1,9 @@
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
 
-namespace cucumber_cpp::library
+namespace cucumber_cpp::library::context
 {
     struct TestContext : testing::Test
     {

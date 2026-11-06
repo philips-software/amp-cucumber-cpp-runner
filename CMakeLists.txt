@@ -14,6 +14,7 @@ endif()
 option(CCR_FETCH_DEPS "Fetch dependencies via FetchContent." Off )
 option(CCR_BUILD_TESTS "Enable build of the tests" Off)
 option(CCR_BUILD_EXAMPLES "Enable build of the examples" Off)
+option(CCR_BUILD_BENCHMARKS "Enable build of the benchmarks" Off)
 
 option(CCR_ENABLE_COVERAGE "Enable compiler flags for code coverage measurements" Off)
 option(CCR_ENABLE_SANITIZERS "Enable compiler flags for the address and undefined behaviour sanitizers" Off)

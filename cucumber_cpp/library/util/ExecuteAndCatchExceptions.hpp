@@ -4,13 +4,11 @@
 #include "cucumber/gherkin/Demangle.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
-#include "cucumber_cpp/library/util/Duration.hpp"
 #include "cucumber_cpp/library/util/NestedTestCaseRunnerError.hpp"
 #include "cucumber_cpp/library/util/TestException.hpp"
 #include "cucumber_cpp/library/util/TestStepResult.hpp"
 #include "cucumber_cpp/library/util/TestStepResultStatus.hpp"
 #include "fmt/format.h"
-#include <cstddef>
 #include <exception>
 #include <optional>
 #include <string>

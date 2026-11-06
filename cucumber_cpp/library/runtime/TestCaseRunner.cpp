@@ -17,7 +17,7 @@
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber/messages/TestStepStarted.hpp"
 #include "cucumber/messages/Timestamp.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/StepRegistry.hpp"
@@ -70,7 +70,7 @@ namespace cucumber_cpp::library::runtime
         std::size_t retries,
         bool skip,
         support::SupportCodeLibrary& supportCodeLibrary,
-        Context& testSuiteContext,
+        context::Context& testSuiteContext,
         std::optional<std::size_t> repeat)
         : broadcaster{ broadcaster }
         , idGenerator{ std::move(idGenerator) }
@@ -110,7 +110,7 @@ namespace cucumber_cpp::library::runtime
 
     bool TestCaseRunner::RunAttempt(std::size_t attempt, bool moreAttemptsAvailable)
     {
-        Context testCaseContext{ &testSuiteContext };
+        context::Context testCaseContext{ &testSuiteContext };
         const auto currentTestCaseStartedId = idGenerator->NextId();
         bool willRetry = false;
 
@@ -183,7 +183,7 @@ namespace cucumber_cpp::library::runtime
         return willRetry;
     }
 
-    cucumber::messages::TestStepResult TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError)
+    cucumber::messages::TestStepResult TestCaseRunner::RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError)
     {
         if (ShouldSkipHook(isBeforeHook))
         {
@@ -200,7 +200,7 @@ namespace cucumber_cpp::library::runtime
         return InvokeStep(bodyFactory, {});
     }
 
-    std::vector<cucumber::messages::TestStepResult> TestCaseRunner::RunStepHooks(const cucumber::messages::PickleStep& /*pickleStep*/, util::HookType hookType, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted)
+    std::vector<cucumber::messages::TestStepResult> TestCaseRunner::RunStepHooks(const cucumber::messages::PickleStep& /*pickleStep*/, util::HookType hookType, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted)
     {
         auto ids = supportCodeLibrary.hookRegistry.FindIds(hookType, util::TransformPickleTags(pickle.tags));
         std::vector<cucumber::messages::TestStepResult> results;
@@ -220,7 +220,7 @@ namespace cucumber_cpp::library::runtime
         return results;
     }
 
-    cucumber::messages::TestStepResult TestCaseRunner::RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted)
+    cucumber::messages::TestStepResult TestCaseRunner::RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted)
     {
         auto stepDefinitions = (*testStep.stepDefinitionIds) | std::views::transform([this](const std::string& id) -> const support::StepRegistry::Definition&
                                                                    {
@@ -262,8 +262,8 @@ namespace cucumber_cpp::library::runtime
 
         if (util::GetWorstTestStepResult(stepResults).status != cucumber::messages::TestStepResultStatus::FAILED)
         {
-            const auto dataTable = (pickleStep.argument && pickleStep.argument->dataTable) ? std::make_optional(*pickleStep.argument->dataTable) : std::nullopt;
-            const auto docString = (pickleStep.argument && pickleStep.argument->docString) ? std::make_optional(*pickleStep.argument->docString) : std::nullopt;
+            const auto dataTable = (pickleStep.argument && pickleStep.argument->dataTable) ? pickleStep.argument->dataTable : std::nullopt;
+            const auto docString = (pickleStep.argument && pickleStep.argument->docString) ? pickleStep.argument->docString : std::nullopt;
 
             const auto& definition = stepDefinitions.front();
 

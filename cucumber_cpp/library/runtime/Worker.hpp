@@ -6,9 +6,9 @@
 #include "cucumber/messages/GherkinDocument.hpp"
 #include "cucumber/messages/TestStepResult.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestCase.hpp"
 #include "cucumber_cpp/library/assemble/AssembledTestSuite.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -31,19 +31,19 @@ namespace cucumber_cpp::library::runtime
             cucumber::gherkin::IdGeneratorPtr idGenerator,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary& supportCodeLibrary,
-            Context& programContext);
+            context::Context& programContext);
 
         std::vector<cucumber::messages::TestStepResult> RunBeforeAllHooks();
         std::vector<cucumber::messages::TestStepResult> RunAfterAllHooks();
 
         bool RunTestSuite(const assemble::AssembledTestSuite& assembledTestSuite, bool failing);
-        bool RunTestCase(const cucumber::messages::GherkinDocument& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, Context& testSuiteContext, bool failing);
+        bool RunTestCase(const cucumber::messages::GherkinDocument& gherkinDocument, const assemble::AssembledTestCase& assembledTestCase, context::Context& testSuiteContext, bool failing);
 
     private:
-        std::vector<cucumber::messages::TestStepResult> RunBeforeTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context);
-        std::vector<cucumber::messages::TestStepResult> RunAfterTestSuiteHooks(const cucumber::messages::Feature& feature, Context& context);
+        std::vector<cucumber::messages::TestStepResult> RunBeforeTestSuiteHooks(const cucumber::messages::Feature& feature, context::Context& context);
+        std::vector<cucumber::messages::TestStepResult> RunAfterTestSuiteHooks(const cucumber::messages::Feature& feature, context::Context& context);
 
-        cucumber::messages::TestStepResult RunTestHook(const std::string& id, Context& context);
+        cucumber::messages::TestStepResult RunTestHook(const std::string& id, context::Context& context);
 
         bool IsStatusFailed(cucumber::messages::TestStepResultStatus status) const;
 
@@ -52,7 +52,7 @@ namespace cucumber_cpp::library::runtime
         cucumber::gherkin::IdGeneratorPtr idGenerator;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary& supportCodeLibrary;
-        Context& programContext;
+        context::Context& programContext;
     };
 }
 

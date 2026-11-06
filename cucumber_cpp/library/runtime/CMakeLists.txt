@@ -21,9 +21,10 @@ target_include_directories(cucumber_cpp.library.runtime PUBLIC
 
 target_link_libraries(cucumber_cpp.library.runtime PUBLIC
     cucumber_cpp.library.assemble
-    cucumber::cucumber_expressions
+    cucumber_cpp.library.context
     cucumber_cpp.library.support
     cucumber_cpp.library.util
+    cucumber::cucumber_expressions
     fmt::fmt
 )
 

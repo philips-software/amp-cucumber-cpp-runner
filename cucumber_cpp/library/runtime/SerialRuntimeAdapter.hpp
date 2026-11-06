@@ -2,7 +2,7 @@
 #define RUNTIME_SERIAL_RUNTIME_ADAPTER_HPP
 
 #include "cucumber/gherkin/IdGenerator.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -19,7 +19,7 @@ namespace cucumber_cpp::library::runtime
             const std::list<support::PickleSource>& sourcedPickles,
             const support::RunOptions::Runtime& options,
             support::SupportCodeLibrary& supportCodeLibrary,
-            Context& programContext);
+            context::Context& programContext);
 
         bool Run() override;
 
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::runtime
         const std::list<support::PickleSource>& sourcedPickles;
         const support::RunOptions::Runtime& options;
         support::SupportCodeLibrary& supportCodeLibrary;
-        Context& programContext;
+        context::Context& programContext;
     };
 }
 

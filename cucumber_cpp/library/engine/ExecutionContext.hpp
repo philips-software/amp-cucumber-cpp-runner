@@ -1,7 +1,7 @@
 #ifndef ENGINE_EXECUTION_CONTEXT_HPP
 #define ENGINE_EXECUTION_CONTEXT_HPP
 
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/util/Body.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include <istream>
@@ -17,8 +17,8 @@ namespace cucumber_cpp::library::util
 
 namespace cucumber_cpp::library::engine
 {
-    using StepSkipped = util::StepSkipped;
-    using StepPending = util::StepPending;
+    using util::StepPending;
+    using util::StepSkipped;
 
     struct AttachOptions
     {
@@ -30,7 +30,7 @@ namespace cucumber_cpp::library::engine
 
     struct ExecutionContext
     {
-        ExecutionContext(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted);
+        ExecutionContext(util::Broadcaster& broadCaster, context::Context& context, util::StepOrHookStarted stepOrHookStarted);
 
     protected:
         void Attach(std::string data, OptionsOrMediaType mediaType) const;
@@ -41,7 +41,7 @@ namespace cucumber_cpp::library::engine
         [[noreturn]] static void Skipped(const std::string& message = "", std::source_location current = std::source_location::current()) noexcept(false);
         [[noreturn]] static void Pending(const std::string& message = "", std::source_location current = std::source_location::current()) noexcept(false);
 
-        Context& context;
+        context::Context& context;
 
     private:
         util::Broadcaster& broadCaster;

@@ -4,7 +4,7 @@
 #include "cucumber/messages/PickleDocString.hpp"
 #include "cucumber/messages/PickleTable.hpp"
 #include "cucumber/messages/TestStepResult.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
@@ -16,7 +16,7 @@ namespace cucumber_cpp::library::runtime
 {
     struct NestedTestCaseRunner
     {
-        NestedTestCaseRunner(std::size_t nesting, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, Context& testCaseContext, util::TestStepStarted testStepStarted);
+        NestedTestCaseRunner(std::size_t nesting, const support::SupportCodeLibrary& supportCodeLibrary, util::Broadcaster& broadcaster, context::Context& testCaseContext, util::TestStepStarted testStepStarted);
 
         void Step(const std::string& step) const;
         void Step(const std::string& step, const std::optional<cucumber::messages::PickleDocString>& docString) const;
@@ -27,7 +27,7 @@ namespace cucumber_cpp::library::runtime
         std::size_t nesting;
         const support::SupportCodeLibrary& supportCodeLibrary;
         util::Broadcaster& broadcaster;
-        Context& testCaseContext;
+        context::Context& testCaseContext;
         util::TestStepStarted testStepStarted;
     };
 }
