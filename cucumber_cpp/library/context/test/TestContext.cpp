@@ -5,6 +5,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace cucumber_cpp::library::context
@@ -493,7 +494,161 @@ namespace cucumber_cpp::library::context
         EXPECT_THAT(destroyed, testing::ElementsAreArray(expected));
     }
 
+    namespace
+    {
+        struct Released
+        {
+            explicit Released(int& count)
+                : count{ count }
+            {}
+
+            ~Released()
+            {
+                ++count;
+            }
+
+            int& count;
+        };
+
+        // Inserts 64 entries into the context from its destructor.
+        struct Grower
+        {
+            Grower(Context& context, int& released)
+                : context{ context }
+                , released{ released }
+            {}
+
+            ~Grower()
+            {
+                for (int id = 0; id != 64; ++id)
+                {
+                    context.EmplaceAt<Released>("late-" + std::to_string(id), released);
+                }
+            }
+
+            Context& context;
+            int& released;
+        };
+    }
+
+    TEST_P(TestContextOrdering, ErasedValueMayGrowContext)
+    {
+        int released = 0;
+        auto context = std::make_unique<Context>(CreateFactory());
+        context->InsertAt("first", 1);
+        context->EmplaceAt<Grower>("grower", *context, released);
+
+        context->Clear("grower");
+
+        EXPECT_FALSE(context->Contains("grower"));
+        EXPECT_THAT(context->Get<int>("first"), testing::Eq(1));
+        EXPECT_TRUE(context->Contains("late-0"));
+        EXPECT_TRUE(context->Contains("late-63"));
+        EXPECT_THAT(released, testing::Eq(0));
+
+        context.reset();
+        EXPECT_THAT(released, testing::Eq(64));
+    }
+
+    TEST_P(TestContextOrdering, ReplacedValueMayGrowContext)
+    {
+        int released = 0;
+        auto context = std::make_unique<Context>(CreateFactory());
+        context->EmplaceAt<Grower>("grower", *context, released);
+
+        context->InsertAt("grower", 2);
+
+        EXPECT_THAT(context->Get<int>("grower"), testing::Eq(2));
+        EXPECT_TRUE(context->Contains("late-63"));
+
+        context.reset();
+        EXPECT_THAT(released, testing::Eq(64));
+    }
+
+    TEST_P(TestContextOrdering, ValueReleasedDuringDestructionMayGrowContext)
+    {
+        int released = 0;
+        auto context = std::make_unique<Context>(CreateFactory());
+        context->InsertAt("first", 1);
+        context->EmplaceAt<Grower>("grower", *context, released);
+
+        context.reset();
+
+        EXPECT_THAT(released, testing::Eq(64));
+    }
+
     INSTANTIATE_TEST_SUITE_P(StorageFactories, TestContextOrdering, testing::Bool(), [](const auto& info)
+        {
+            return info.param ? "ThreadSafe" : "Plain";
+        });
+
+    namespace
+    {
+        // Same storage-factory parameterization as TestContextOrdering.
+        struct TestContextKeyLifetime : TestContextOrdering
+        {};
+    }
+
+    // The context must own its keys: the caller's buffer is freed before the next lookup.
+    TEST_P(TestContextKeyLifetime, StoredKeyDoesNotDependOnCallersBuffer)
+    {
+        Context context{ CreateFactory() };
+        auto key = std::make_unique<std::string>("a key longer than the small string buffer");
+
+        context.InsertAt(*key, 42);
+        EXPECT_TRUE(context.Contains(*key));
+        key.reset();
+
+        EXPECT_THAT(context.Get<int>("a key longer than the small string buffer"), testing::Eq(42));
+    }
+
+    TEST_P(TestContextKeyLifetime, LookupWithTemporaryKey)
+    {
+        Context parent{ CreateFactory() };
+        Context child{ &parent };
+        parent.InsertAt("a key longer than the small string buffer", 7);
+
+        EXPECT_THAT(child.Get<int>(std::string{ "a key longer than the small string buffer" }), testing::Eq(7));
+        EXPECT_TRUE(child.Contains(std::string{ "a key longer than the small string buffer" }));
+
+        parent.Clear(std::string{ "a key longer than the small string buffer" });
+        EXPECT_FALSE(child.Contains("a key longer than the small string buffer"));
+    }
+
+    TEST_P(TestContextKeyLifetime, LookupWithKeyThatIsNotNullTerminated)
+    {
+        constexpr std::string_view buffer{ "firstmissing!" };
+        const auto first = buffer.substr(0, 5);
+        const auto missing = buffer.substr(5, 7);
+
+        Context context{ CreateFactory() };
+        context.InsertAt("first", 1);
+
+        EXPECT_THAT(context.Get<int>(first), testing::Eq(1));
+        EXPECT_FALSE(context.Contains(missing));
+        EXPECT_THAT([&]
+            {
+                (void)context.Get<int>(missing);
+            },
+            testing::ThrowsMessage<std::out_of_range>(testing::StrEq("missing")));
+
+        context.Clear(first);
+        EXPECT_FALSE(context.Contains("first"));
+    }
+
+    // The key refers to the value that Clear destroys, so Erase must not read it afterwards.
+    TEST_P(TestContextKeyLifetime, KeyMayAliasTheErasedValue)
+    {
+        Context context{ CreateFactory() };
+        const std::string key{ "a key longer than the small string buffer" };
+        context.InsertAt(key, key);
+
+        context.Clear(context.Get<std::string>(key));
+
+        EXPECT_FALSE(context.Contains(key));
+    }
+
+    INSTANTIATE_TEST_SUITE_P(StorageFactories, TestContextKeyLifetime, testing::Bool(), [](const auto& info)
         {
             return info.param ? "ThreadSafe" : "Plain";
         });

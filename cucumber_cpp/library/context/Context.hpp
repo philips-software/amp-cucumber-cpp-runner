@@ -9,8 +9,8 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <typeinfo>
-#include <unordered_map>
 #include <utility>
 
 namespace cucumber_cpp::library::context
@@ -26,11 +26,11 @@ namespace cucumber_cpp::library::context
 
             virtual ~ContextStorage() = default;
 
-            [[nodiscard]] virtual bool Contains(const std::string& key) const = 0;
+            [[nodiscard]] virtual bool Contains(std::string_view key) const = 0;
 
-            [[nodiscard]] virtual std::shared_ptr<void> Get(const std::string& key) const = 0;
+            [[nodiscard]] virtual std::shared_ptr<void> Get(std::string_view key) const = 0;
 
-            virtual void Erase(const std::string& key) = 0;
+            virtual void Erase(std::string_view key) = 0;
 
             virtual std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) = 0;
 
@@ -47,9 +47,9 @@ namespace cucumber_cpp::library::context
             ContextStorageImpl& operator=(const ContextStorageImpl&) = delete;
             ~ContextStorageImpl() override;
 
-            [[nodiscard]] bool Contains(const std::string& key) const override;
-            [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
-            void Erase(const std::string& key) override;
+            [[nodiscard]] bool Contains(std::string_view key) const override;
+            [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
 
             void Clear() override;
@@ -57,23 +57,27 @@ namespace cucumber_cpp::library::context
         private:
             struct Entry
             {
-                const std::string* key;
+                std::string key;
                 std::shared_ptr<void> value;
             };
 
+            using Entries = std::list<Entry>;
+
+            [[nodiscard]] Entries::const_iterator Find(std::string_view key) const;
+            void ReleaseNewest();
+
             ContextStorage* parent{ nullptr };
 
-            std::list<Entry> orderedEntries;
-            std::unordered_map<std::string, std::list<Entry>::iterator> contextMap;
+            Entries entries;
         };
 
         struct ContextStorageDecorator : ContextStorage
         {
             explicit ContextStorageDecorator(std::unique_ptr<ContextStorage> contextStorage);
 
-            [[nodiscard]] bool Contains(const std::string& key) const override;
-            [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
-            void Erase(const std::string& key) override;
+            [[nodiscard]] bool Contains(std::string_view key) const override;
+            [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
 
             void Clear() override;
@@ -86,9 +90,9 @@ namespace cucumber_cpp::library::context
         {
             explicit ThreadSafeContextStorage(std::unique_ptr<ContextStorage> contextStorage);
 
-            [[nodiscard]] bool Contains(const std::string& key) const override;
-            [[nodiscard]] std::shared_ptr<void> Get(const std::string& key) const override;
-            void Erase(const std::string& key) override;
+            [[nodiscard]] bool Contains(std::string_view key) const override;
+            [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
 
             void Clear() override;
@@ -166,21 +170,21 @@ namespace cucumber_cpp::library::context
 
         template<class T>
         [[nodiscard]] bool Contains() const;
-        [[nodiscard]] bool Contains(const std::string& key) const;
+        [[nodiscard]] bool Contains(std::string_view key) const;
 
         template<class T>
         void Clear();
-        void Clear(const std::string& key);
+        void Clear(std::string_view key);
 
         template<class T>
         [[nodiscard]] std::shared_ptr<T> GetShared() const;
         template<class T>
-        [[nodiscard]] std::shared_ptr<T> GetShared(const std::string& key) const;
+        [[nodiscard]] std::shared_ptr<T> GetShared(std::string_view key) const;
 
         template<class T>
         [[nodiscard]] T& Get() const;
         template<class T>
-        [[nodiscard]] T& Get(const std::string& key) const;
+        [[nodiscard]] T& Get(std::string_view key) const;
 
     private:
         std::shared_ptr<ContextStorageFactory> contextStorageFactory;
@@ -272,7 +276,7 @@ namespace cucumber_cpp::library::context
     }
 
     template<class T>
-    [[nodiscard]] std::shared_ptr<T> Context::GetShared(const std::string& key) const
+    [[nodiscard]] std::shared_ptr<T> Context::GetShared(std::string_view key) const
     {
         return std::static_pointer_cast<T>(storage->Get(key));
     }
@@ -284,7 +288,7 @@ namespace cucumber_cpp::library::context
     }
 
     template<class T>
-    [[nodiscard]] T& Context::Get(const std::string& key) const
+    [[nodiscard]] T& Context::Get(std::string_view key) const
     {
         return *GetShared<T>(key);
     }

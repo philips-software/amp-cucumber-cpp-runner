@@ -1,9 +1,11 @@
 #include "cucumber_cpp/library/context/Context.hpp"
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace cucumber_cpp::library::context
@@ -19,9 +21,9 @@ namespace cucumber_cpp::library::context
             Clear();
         }
 
-        bool ContextStorageImpl::Contains(const std::string& key) const
+        bool ContextStorageImpl::Contains(std::string_view key) const
         {
-            if (contextMap.contains(key))
+            if (Find(key) != entries.end())
             {
                 return true;
             }
@@ -34,11 +36,11 @@ namespace cucumber_cpp::library::context
             return false;
         }
 
-        std::shared_ptr<void> ContextStorageImpl::Get(const std::string& key) const
+        std::shared_ptr<void> ContextStorageImpl::Get(std::string_view key) const
         {
-            if (auto iter = contextMap.find(key); iter != contextMap.end())
+            if (auto iter = Find(key); iter != entries.end())
             {
-                return iter->second->value;
+                return iter->value;
             }
 
             if (parent != nullptr)
@@ -48,63 +50,68 @@ namespace cucumber_cpp::library::context
 
             std::cerr << "key not found: \"" << key << "\"\n";
 
-            throw KeyNotFound{ key };
+            throw KeyNotFound{ std::string{ key } };
         }
 
-        void ContextStorageImpl::Erase(const std::string& key)
+        void ContextStorageImpl::Erase(std::string_view key)
         {
-            if (auto iter = contextMap.find(key); iter != contextMap.end())
+            if (auto iter = Find(key); iter != entries.end())
             {
-                auto entry = iter->second;
-                contextMap.erase(iter); // removes the key object, don't use entry->key after this
-                orderedEntries.erase(entry);
+                entries.splice(entries.end(), entries, iter); // makes it the entry ReleaseNewest releases
+                ReleaseNewest();
             }
         }
 
         std::shared_ptr<void> ContextStorageImpl::Assign(std::string key, std::shared_ptr<void> value)
         {
-            auto [iter, inserted] = contextMap.try_emplace(std::move(key));
-            if (!inserted)
+            if (auto iter = Find(key); iter != entries.end())
             {
-                auto entry = iter->second;
-                entry->value.swap(value);
-                orderedEntries.splice(orderedEntries.end(), orderedEntries, entry);
-                return entry->value;
+                entries.splice(entries.end(), entries, iter);
+                entries.back().value.swap(value); // the replaced value is released on return
+                return entries.back().value;
             }
 
-            try
-            {
-                iter->second = orderedEntries.insert(orderedEntries.end(), Entry{ &iter->first, value });
-            }
-            catch (...)
-            {
-                contextMap.erase(iter);
-                throw;
-            }
+            entries.push_back({ std::move(key), value });
+
             return value;
         }
 
         void ContextStorageImpl::Clear()
         {
-            while (!orderedEntries.empty())
-                Erase(*orderedEntries.back().key);
+            while (!entries.empty())
+            {
+                ReleaseNewest();
+            }
+        }
+
+        ContextStorageImpl::Entries::const_iterator ContextStorageImpl::Find(std::string_view key) const
+        {
+            return std::ranges::find(entries, key, &Entry::key);
+        }
+
+        // Unlinks the newest entry before its value is released, so a destructor that calls back
+        // into the context sees a consistent context.
+        void ContextStorageImpl::ReleaseNewest()
+        {
+            const auto value = std::move(entries.back().value);
+            entries.pop_back();
         }
 
         ContextStorageDecorator::ContextStorageDecorator(std::unique_ptr<ContextStorage> contextStorage)
             : contextStorage{ std::move(contextStorage) }
         {}
 
-        bool ContextStorageDecorator::Contains(const std::string& key) const
+        bool ContextStorageDecorator::Contains(std::string_view key) const
         {
             return contextStorage->Contains(key);
         }
 
-        std::shared_ptr<void> ContextStorageDecorator::Get(const std::string& key) const
+        std::shared_ptr<void> ContextStorageDecorator::Get(std::string_view key) const
         {
             return contextStorage->Get(key);
         }
 
-        void ContextStorageDecorator::Erase(const std::string& key)
+        void ContextStorageDecorator::Erase(std::string_view key)
         {
             contextStorage->Erase(key);
         }
@@ -123,19 +130,19 @@ namespace cucumber_cpp::library::context
             : ContextStorageDecorator{ std::move(contextStorage) }
         {}
 
-        bool ThreadSafeContextStorage::Contains(const std::string& key) const
+        bool ThreadSafeContextStorage::Contains(std::string_view key) const
         {
             std::scoped_lock lock{ mutex };
             return ContextStorageDecorator::Contains(key);
         }
 
-        std::shared_ptr<void> ThreadSafeContextStorage::Get(const std::string& key) const
+        std::shared_ptr<void> ThreadSafeContextStorage::Get(std::string_view key) const
         {
             std::scoped_lock lock{ mutex };
             return ContextStorageDecorator::Get(key);
         }
 
-        void ThreadSafeContextStorage::Erase(const std::string& key)
+        void ThreadSafeContextStorage::Erase(std::string_view key)
         {
             std::scoped_lock lock{ mutex };
             ContextStorageDecorator::Erase(key);
@@ -191,12 +198,12 @@ namespace cucumber_cpp::library::context
         }
     }
 
-    bool Context::Contains(const std::string& key) const
+    bool Context::Contains(std::string_view key) const
     {
         return storage->Contains(key);
     }
 
-    void Context::Clear(const std::string& key)
+    void Context::Clear(std::string_view key)
     {
         storage->Erase(key);
     }
