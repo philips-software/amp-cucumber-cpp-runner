@@ -3,7 +3,6 @@
 #include "cucumber/messages/PickleTableCell.hpp"
 #include "cucumber/messages/PickleTableRow.hpp"
 #include "cucumber_cpp/library/util/Table.hpp"
-#include <memory>
 #include <optional>
 
 namespace cucumber_cpp::library::util

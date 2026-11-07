@@ -1,8 +1,8 @@
 #include "cucumber_cpp/library/runtime/SerialRuntimeAdapter.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/assemble/AssembleTestSuites.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/runtime/Worker.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -11,6 +11,7 @@
 #include <list>
 #include <span>
 #include <string>
+#include <utility>
 
 namespace cucumber_cpp::library::runtime
 {
@@ -31,10 +32,10 @@ namespace cucumber_cpp::library::runtime
         const std::list<support::PickleSource>& sourcedPickles,
         const support::RunOptions::Runtime& options,
         support::SupportCodeLibrary& supportCodeLibrary,
-        Context& programContext)
-        : testRunStartedId{ testRunStartedId }
+        context::Context& programContext)
+        : testRunStartedId{ std::move(testRunStartedId) }
         , broadcaster{ broadcaster }
-        , idGenerator{ idGenerator }
+        , idGenerator{ std::move(idGenerator) }
         , sourcedPickles{ sourcedPickles }
         , options{ options }
         , supportCodeLibrary{ supportCodeLibrary }

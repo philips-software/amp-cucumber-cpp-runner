@@ -25,6 +25,7 @@ endmacro()
 ccr_dependency(CPM_DOWNLOAD  v0.43.1    456cb6754daaa010d57444d0c8ce6d95ecf006ab)
 ccr_dependency(NLOHMANN_JSON v3.12.0    55f93686c01528224f448c19128836e7df245f72)
 ccr_dependency(GOOGLE_TEST   v1.17.0    52eb8108c5bdec04579160ae17225d66034bd723)
+ccr_dependency(GOOGLE_BM     v1.10.0    a6b4a9f00b36c19af9997d68a1cf6e0b5b3d032c)
 ccr_dependency(CLI11         v2.6.2     37bb6edc5317e99af72ef48405e65d9ca5218861)
 ccr_dependency(LIBFMT        v12.1.0    407c905e45ad75fc29bf0f9bb7c5c2fd3475976f)
 ccr_dependency(PUGIXML       v1.15      ee86beb30e4973f5feffe3ce63bfa4fbadf72f38)
@@ -97,6 +98,21 @@ if(CCR_FETCH_DEPS)
         )
         target_compile_options(gtest PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
         target_compile_options(gmock PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-character-conversion>)
+    endif()
+
+    # ---------------------------------------------------------------------------
+    # GoogleBenchmark
+    # ---------------------------------------------------------------------------
+    if(CCR_BUILD_BENCHMARKS AND NOT TARGET benchmark::benchmark)
+        CPMAddPackage(
+            URI "gh:google/benchmark@${GOOGLE_BM_VERSION}#${GOOGLE_BM_DIGEST}"
+            NAME googlebenchmark
+            OPTIONS
+                "BENCHMARK_DOWNLOAD_DEPENDENCIES ON"
+                "BENCHMARK_ENABLE_GTEST_TESTS OFF"
+                "BENCHMARK_ENABLE_INSTALL ON"
+                "BENCHMARK_ENABLE_TESTING OFF"
+        )
     endif()
 
     # ---------------------------------------------------------------------------

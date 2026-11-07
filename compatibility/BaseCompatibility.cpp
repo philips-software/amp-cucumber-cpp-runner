@@ -29,10 +29,14 @@ namespace compatibility
                 auto& value = jsonIter.value();
 
                 if (key == "exception" || key == "message" || key == "line" || key == "snippets")
+                {
                     jsonIter = json.erase(jsonIter);
+                }
                 // Newer messages omit empty optional arrays, older ones emit them
                 else if (key == "children" && value.is_array() && value.empty())
+                {
                     jsonIter = json.erase(jsonIter);
+                }
                 else if (value.is_object())
                 {
                     RemoveIncompatibilities(value, sourceDir, featureDir);
@@ -47,7 +51,7 @@ namespace compatibility
                 }
                 else if (key == "data")
                 {
-                    json[key] = std::regex_replace(json[key].get<std::string>(), std::regex(R"(\r\n)"), "\n");
+                    json.at(key) = std::regex_replace(json.at(key).get<std::string>(), std::regex(R"(\r\n)"), "\n");
                     ++jsonIter;
                 }
                 else if (key == "uri")
@@ -62,12 +66,14 @@ namespace compatibility
                     if (path.is_relative())
                         path = std::filesystem::path{ CCR_BINARY_DIR } / path;
 
-                    json[key] = std::filesystem::canonical(path).string();
+                    json.at(key) = std::filesystem::canonical(path).string();
 
                     ++jsonIter;
                 }
                 else
+                {
                     ++jsonIter;
+                }
             }
         }
 
@@ -182,7 +188,7 @@ namespace compatibility
 
         {
             cucumber_cpp::library::Application app{
-                std::make_shared<cucumber_cpp::library::ContextStorageFactoryImpl>(), false,
+                std::make_shared<cucumber_cpp::library::context::ContextStorageFactoryImpl>(), false,
                 std::make_unique<StopwatchIncremental>(),
                 std::make_unique<TimestampGeneratorIncremental>()
             };

@@ -5,8 +5,8 @@
 // IWYU pragma: friend cucumber_cpp/.*
 
 #include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -49,9 +49,9 @@ namespace cucumber_cpp::library
             enum support::RunOptions::Ordering ordering{ support::RunOptions::Ordering::defined };
 
             std::size_t retry{ 0 };
-            std::vector<std::string> retryTagFilter{};
-            std::optional<std::size_t> repeat{};
-            std::vector<std::string> repeatTagFilter{};
+            std::vector<std::string> retryTagFilter;
+            std::optional<std::size_t> repeat;
+            std::vector<std::string> repeatTagFilter;
 
             bool strict{ true };
 
@@ -59,15 +59,15 @@ namespace cucumber_cpp::library
 
             bool recursive{ true };
 
-            std::vector<std::string> tags{};
+            std::vector<std::string> tags;
 
-            std::vector<std::string> nameRegexes{};
+            std::vector<std::string> nameRegexes;
             bool listScenarios{ false };
 
-            std::vector<std::string> loadPaths{};
+            std::vector<std::string> loadPaths;
         };
 
-        explicit Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory = std::make_shared<ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true,
+        explicit Application(std::shared_ptr<context::ContextStorageFactory> contextStorageFactory = std::make_shared<context::ContextStorageFactoryImpl>(), bool removeDefaultGoogleTestListener = true,
             std::unique_ptr<util::Stopwatch> stopwatch = std::make_unique<util::StopWatchHighResolutionClock>(),
             std::unique_ptr<util::TimestampGenerator> timestampGenerator = std::make_unique<util::TimestampGeneratorSystemClock>());
 
@@ -76,7 +76,7 @@ namespace cucumber_cpp::library
         [[nodiscard]] int Run(int argc, const char* const* argv);
 
         CLI::App& CliParser();
-        Context& ProgramContext();
+        context::Context& ProgramContext();
         cucumber::cucumber_expressions::ParameterRegistry& ParameterRegistration();
         api::Formatters& Formatters();
 
@@ -89,9 +89,9 @@ namespace cucumber_cpp::library
 
         CLI::App cli;
 
-        std::shared_ptr<ContextStorageFactory> contextStorageFactory;
-        std::unique_ptr<Context> programContext{ std::make_unique<Context>(contextStorageFactory) };
-        Context& programContextRef{ *programContext };
+        std::shared_ptr<context::ContextStorageFactory> contextStorageFactory;
+        std::unique_ptr<context::Context> programContext{ std::make_unique<context::Context>(contextStorageFactory) };
+        context::Context& programContextRef{ *programContext };
 
         api::Formatters formatters;
 

@@ -40,8 +40,8 @@ namespace
     using acceptance::util::RunProcess;
     using cucumber_cpp::library::plugin::DynamicLibrary;
 
-    constexpr std::string_view scenarioWorkspace = "scenario_workspace";
-    constexpr std::string_view lastBuildResult = "last_build_result";
+    constexpr auto* scenarioWorkspace = "scenario_workspace";
+    constexpr auto* lastBuildResult = "last_build_result";
 
     class MessageFormatterOutputError : public std::runtime_error
     {

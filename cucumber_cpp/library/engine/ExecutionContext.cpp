@@ -3,9 +3,8 @@
 #include "cucumber/messages/Attachment.hpp"
 #include "cucumber/messages/AttachmentContentEncoding.hpp"
 #include "cucumber/messages/Envelope.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
-#include "cucumber_cpp/library/util/MakeShared.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestRunHookStarted.hpp"
 #include "cucumber_cpp/library/util/TestStepStarted.hpp"
@@ -72,7 +71,7 @@ namespace cucumber_cpp::library::engine
         }
     }
 
-    ExecutionContext::ExecutionContext(util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted)
+    ExecutionContext::ExecutionContext(util::Broadcaster& broadCaster, context::Context& context, util::StepOrHookStarted stepOrHookStarted)
         : context{ context }
         , broadCaster{ broadCaster }
         , stepOrHookStarted{ std::move(stepOrHookStarted) }

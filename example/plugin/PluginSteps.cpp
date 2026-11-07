@@ -1,5 +1,4 @@
-#include "cucumber_cpp/library/Context.hpp"
-#include "cucumber_cpp/library/Steps.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include <string>
 
 GIVEN(R"(the greeter says {string})", (std::string greeting))
