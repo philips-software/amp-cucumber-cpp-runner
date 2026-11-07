@@ -186,7 +186,6 @@ else()
     find_package(GTest REQUIRED)
     find_package(pugixml REQUIRED)
     find_package(fmt 10 REQUIRED)
-    find_package(benchmark REQUIRED)
 
     find_package(cucumber_messages REQUIRED)
     find_package(cucumber_gherkin REQUIRED)
