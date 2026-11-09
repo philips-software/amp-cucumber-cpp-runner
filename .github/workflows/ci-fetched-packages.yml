@@ -25,7 +25,9 @@ jobs:
   windows-clang-cl:
     name: Windows clang-cl
     runs-on: ubuntu-latest
-    container: ghcr.io/philips-software/amp-devcontainer-cpp:v9.0.0@sha256:4220f72ef76957f9b24eb6faf558d90a427e290c99ce1ad7bd27be7a7ac0e944
+    container:
+      image: ghcr.io/philips-software/amp-devcontainer-cpp:v9.0.0@sha256:4220f72ef76957f9b24eb6faf558d90a427e290c99ce1ad7bd27be7a7ac0e944
+      options: --user 0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
