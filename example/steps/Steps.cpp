@@ -56,8 +56,8 @@ STEP("expect and assert")
 
 THEN(R"(I should have {int} cucumbers)", (std::int32_t num))
 {
-    const auto& before = context.Get<std::int32_t>("cucumbers_before");
-    const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");
+    const auto& before = context.GetAt<std::int32_t>("cucumbers_before");
+    const auto& eaten = context.GetAt<std::int32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 
@@ -66,8 +66,8 @@ THEN(R"(I should have {int} cucumbers)", (std::int32_t num))
 
 THEN(R"(I should have {int} cucumbers left)", (std::int32_t num))
 {
-    const auto& before = context.Get<std::int32_t>("cucumbers_before");
-    const auto& eaten = context.Get<std::int32_t>("cucumbers_eaten");
+    const auto& before = context.GetAt<std::int32_t>("cucumbers_before");
+    const auto& eaten = context.GetAt<std::int32_t>("cucumbers_eaten");
 
     const auto actual = before - eaten;
 
@@ -107,7 +107,7 @@ STEP(R"(^a step calls another step$)")
 STEP(R"(^the called step is executed$)")
 {
     ASSERT_THAT(context.Contains("substep"), testing::IsTrue());
-    ASSERT_THAT(context.Get<std::string>("substep"), testing::Eq("was executed"));
+    ASSERT_THAT(context.GetAt<std::string>("substep"), testing::Eq("was executed"));
 }
 
 STEP("this step should be skipped")
@@ -122,7 +122,7 @@ STEP(R"(a step stores the value at row {int} and column {int} from the table:)",
 
 STEP(R"(the value should be {string})", (const std::string& expected_value))
 {
-    const auto& actual = context.Get<std::string>("cell");
+    const auto& actual = context.GetAt<std::string>("cell");
 
     ASSERT_THAT(actual, testing::StrEq(expected_value));
 }

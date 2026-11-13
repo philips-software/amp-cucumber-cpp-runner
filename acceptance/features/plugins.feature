@@ -42,7 +42,7 @@ Feature: Plugins loaded together
 
             THEN("plugin A can read the shared context")
             {
-            ASSERT_TRUE(context.Get<bool>("shared_plugin_context"));
+            ASSERT_TRUE(context.GetAt<bool>("shared_plugin_context"));
             context.InsertAt("plugin_a_wrote", true);
             }
 
@@ -53,12 +53,12 @@ Feature: Plugins loaded together
 
             THEN("the color name is {string}", (const std::string& expected))
             {
-            ASSERT_EQ(context.Get<std::string>("selected_color"), expected);
+            ASSERT_EQ(context.GetAt<std::string>("selected_color"), expected);
             }
 
             THEN("plugin A can read plugin B context")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_b_wrote"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_b_wrote"));
             }
             """
         And a library named "plugin_b" with:
@@ -85,13 +85,13 @@ Feature: Plugins loaded together
 
             THEN("plugin B can read plugin A context")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_a_wrote"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_a_wrote"));
             context.InsertAt("plugin_b_wrote", true);
             }
 
             THEN("plugin B hook was executed")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_b_hook_ran"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_b_hook_ran"));
             }
             """
         When I run cucumber-cpp-runner with arguments:

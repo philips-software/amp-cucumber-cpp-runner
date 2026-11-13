@@ -55,7 +55,7 @@ Feature: Plugins share context with statically linked steps
 
             THEN("plugin A can read the static context")
             {
-            ASSERT_TRUE(context.Get<bool>("static_step_ran"));
+            ASSERT_TRUE(context.GetAt<bool>("static_step_ran"));
             context.InsertAt("plugin_a_wrote", true);
             }
 
@@ -66,7 +66,7 @@ Feature: Plugins share context with statically linked steps
 
             THEN("the color name is {string}", (const std::string& expected))
             {
-            ASSERT_EQ(context.Get<std::string>("selected_color"), expected);
+            ASSERT_EQ(context.GetAt<std::string>("selected_color"), expected);
             }
             """
         And a library named "plugin_b" with:
@@ -88,13 +88,13 @@ Feature: Plugins share context with statically linked steps
 
             THEN("plugin B can read the static context")
             {
-            ASSERT_TRUE(context.Get<bool>("static_step_ran"));
+            ASSERT_TRUE(context.GetAt<bool>("static_step_ran"));
             context.InsertAt("plugin_b_wrote", true);
             }
 
             THEN("plugin B hook was executed")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_b_hook_ran"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_b_hook_ran"));
             }
             """
         And an executable named "sequential_host" with:
@@ -115,12 +115,12 @@ Feature: Plugins share context with statically linked steps
 
             THEN("the static step can read plugin A context")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_a_wrote"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_a_wrote"));
             }
 
             THEN("the static step can read plugin B context")
             {
-            ASSERT_TRUE(context.Get<bool>("plugin_b_wrote"));
+            ASSERT_TRUE(context.GetAt<bool>("plugin_b_wrote"));
             }
 
             namespace
