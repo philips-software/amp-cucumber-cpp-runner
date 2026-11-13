@@ -4,7 +4,7 @@
 // IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/util/DocString.hpp"
 #include "cucumber_cpp/library/util/StepOrHookStarted.hpp"
@@ -26,7 +26,7 @@ namespace cucumber_cpp::library::engine
 {
     struct StepBase : ExecutionContext
     {
-        StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, Context& context, util::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString);
+        StepBase(const runtime::NestedTestCaseRunner& nestedTestCaseRunner, util::Broadcaster& broadCaster, context::Context& context, util::StepOrHookStarted stepOrHookStarted, const std::optional<util::Table>& dataTable, const std::optional<util::DocString>& docString);
         virtual ~StepBase() = default;
 
         virtual void SetUp()

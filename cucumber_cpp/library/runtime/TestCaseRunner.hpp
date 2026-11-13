@@ -10,7 +10,7 @@
 #include "cucumber/messages/TestStepResult.hpp"
 #include "cucumber/messages/TestStepResultStatus.hpp"
 #include "cucumber/messages/TestStepStarted.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/support/HookRegistry.hpp"
 #include "cucumber_cpp/library/support/SupportCodeLibrary.hpp"
 #include "cucumber_cpp/library/util/Broadcaster.hpp"
@@ -31,18 +31,18 @@ namespace cucumber_cpp::library::runtime
             std::size_t retries,
             bool skip,
             support::SupportCodeLibrary& supportCodeLibrary,
-            Context& testSuiteContext,
+            context::Context& testSuiteContext,
             std::optional<std::size_t> repeat = std::nullopt);
 
         cucumber::messages::TestStepResultStatus Run();
 
         bool RunAttempt(std::size_t attempt, bool moreAttemptsAvailable);
 
-        cucumber::messages::TestStepResult RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError);
+        cucumber::messages::TestStepResult RunHook(const support::HookRegistry::Definition& hookDefinition, bool isBeforeHook, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted, bool hasError);
 
-        std::vector<cucumber::messages::TestStepResult> RunStepHooks(const cucumber::messages::PickleStep& pickleStep, util::HookType hookType, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
+        std::vector<cucumber::messages::TestStepResult> RunStepHooks(const cucumber::messages::PickleStep& pickleStep, util::HookType hookType, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
 
-        cucumber::messages::TestStepResult RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
+        cucumber::messages::TestStepResult RunStep(const cucumber::messages::PickleStep& pickleStep, const cucumber::messages::TestStep& testStep, context::Context& testCaseContext, const cucumber::messages::TestStepStarted& testStepStarted);
 
         [[nodiscard]] cucumber::messages::TestStepResult GetWorstStepResult() const;
 
@@ -59,7 +59,7 @@ namespace cucumber_cpp::library::runtime
         bool repeat;
         bool skip;
         support::SupportCodeLibrary& supportCodeLibrary;
-        Context& testSuiteContext;
+        context::Context& testSuiteContext;
 
         std::vector<cucumber::messages::TestStepResult> testStepResults;
     };

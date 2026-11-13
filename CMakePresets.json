@@ -73,6 +73,18 @@
             }
         },
         {
+            "name": "benchmark-fetch-deps",
+            "displayName": "Benchmark build (fetch dependencies)",
+            "description": "Build with benchmarks enabled using fetched dependencies. Used by CI to build and run the benchmark suite.",
+            "inherits": "defaults",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CCR_FETCH_DEPS": "On",
+                "CCR_BUILD_BENCHMARKS": "On"
+            }
+        },
+        {
             "name": "coverage",
             "inherits": "defaults",
             "description": "Build with unit tests and coverage enabled using fetched dependencies. Used by CI to build and run the test suite.",
@@ -139,6 +151,10 @@
         {
             "name": "test-fetch-deps",
             "configurePreset": "test-fetch-deps"
+        },
+        {
+            "name": "benchmark-fetch-deps",
+            "configurePreset": "benchmark-fetch-deps"
         },
         {
             "name": "coverage",

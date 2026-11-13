@@ -1,4 +1,5 @@
 #include "cucumber_cpp/CucumberCpp.hpp"
+#include "cucumber_cpp/Steps.hpp"
 #include "cucumber_cpp/library/Application.hpp"
 #include "cucumber_cpp/library/engine/test_helper/TemporaryFile.hpp"
 #include "gmock/gmock.h"
@@ -13,25 +14,28 @@
 
 namespace cucumber_cpp::library
 {
-    struct TestApplication : testing::Test
-    {};
+    namespace
+    {
+        struct TestApplication : testing::Test
+        {};
+
+        template<std::size_t S>
+        std::string RunWithArgs(const std::array<const char*, S>& args, int expectedExitCode)
+        {
+            testing::internal::CaptureStdout();
+
+            const auto exitCode = Application{ std::make_shared<context::ContextStorageFactoryImpl>(), false }.Run(args.size(), args.data());
+
+            const auto capturedStdout = testing::internal::GetCapturedStdout();
+
+            EXPECT_THAT(exitCode, testing::Eq(expectedExitCode));
+
+            return capturedStdout;
+        }
+    }
 
     TEST_F(TestApplication, Construct)
     {
-    }
-
-    template<std::size_t S>
-    std::string RunWithArgs(const std::array<const char*, S>& args, int expectedExitCode)
-    {
-        testing::internal::CaptureStdout();
-
-        const auto exitCode = Application{ std::make_shared<ContextStorageFactoryImpl>(), false }.Run(args.size(), args.data());
-
-        const auto capturedStdout = testing::internal::GetCapturedStdout();
-
-        EXPECT_THAT(exitCode, testing::Eq(expectedExitCode));
-
-        return capturedStdout;
     }
 
     TEST_F(TestApplication, InvalidArgument)

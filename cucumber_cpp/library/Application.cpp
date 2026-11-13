@@ -8,11 +8,11 @@
 #include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/Demangle.hpp"
 #include "cucumber/tag-expressions/Parser.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/Errors.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/ListScenarios.hpp"
 #include "cucumber_cpp/library/api/RunCucumber.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/plugin/DynamicLibraryManager.hpp"
 #include "cucumber_cpp/library/support/DefinitionRegistration.hpp"
 #include "cucumber_cpp/library/support/Types.hpp"
@@ -124,7 +124,7 @@ namespace cucumber_cpp::library
         }
     }
 
-    Application::Application(std::shared_ptr<ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener,
+    Application::Application(std::shared_ptr<context::ContextStorageFactory> contextStorageFactory, bool removeDefaultGoogleTestListener,
         std::unique_ptr<util::Stopwatch> stopwatch,
         std::unique_ptr<util::TimestampGenerator> timestampGenerator)
         : contextStorageFactory{ std::move(contextStorageFactory) }
@@ -258,7 +258,7 @@ namespace cucumber_cpp::library
         return cli;
     }
 
-    Context& Application::ProgramContext()
+    context::Context& Application::ProgramContext()
     {
         return programContextRef;
     }

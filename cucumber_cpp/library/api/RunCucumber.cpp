@@ -10,10 +10,10 @@
 #include "cucumber/messages/StepDefinitionPattern.hpp"
 #include "cucumber/messages/StepDefinitionPatternType.hpp"
 #include "cucumber/query/Query.hpp"
-#include "cucumber_cpp/library/Context.hpp"
 #include "cucumber_cpp/library/api/Formatters.hpp"
 #include "cucumber_cpp/library/api/LoadPickles.hpp"
 #include "cucumber_cpp/library/api/MakeUniqueTestNames.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/plugin/HookLoader.hpp"
 #include "cucumber_cpp/library/plugin/ParameterLoader.hpp"
 #include "cucumber_cpp/library/plugin/StepLoader.hpp"
@@ -105,8 +105,8 @@ namespace cucumber_cpp::library::api
 
                     cucumber::messages::StepDefinition stepDefinitionMessage;
                     stepDefinitionMessage.id = stepDefinition.id;
-                    stepDefinitionMessage.pattern = pattern;
-                    stepDefinitionMessage.sourceReference = sourceReference;
+                    stepDefinitionMessage.pattern = std::move(pattern);
+                    stepDefinitionMessage.sourceReference = std::move(sourceReference);
 
                     envelope.stepDefinition = std::move(stepDefinitionMessage);
                 });
@@ -135,7 +135,9 @@ namespace cucumber_cpp::library::api
                             EmitStepDefinition(*iter->second, broadcaster);
                     }
                     else
+                    {
                         EmitHook(supportCodeLibrary.hookRegistry.GetDefinitionById(std::get<support::HookEntry>(entry).id).data, broadcaster);
+                    }
                 });
         }
 
@@ -212,7 +214,7 @@ namespace cucumber_cpp::library::api
         };
     }
 
-    bool RunCucumber(const support::RunOptions& options, cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry, Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
+    bool RunCucumber(const support::RunOptions& options, cucumber::cucumber_expressions::ParameterRegistry& parameterRegistry, context::Context& programContext, util::Broadcaster& broadcaster, Formatters& formatters, const std::set<std::string, std::less<>>& format, const std::string& formatOptions)
     {
         cucumber::gherkin::IdGeneratorPtr idGenerator = std::make_shared<cucumber::gherkin::IdGenerator>();
 

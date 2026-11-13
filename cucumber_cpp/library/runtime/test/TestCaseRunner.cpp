@@ -102,7 +102,7 @@ namespace cucumber_cpp::library::runtime
             support::HookRegistry hookRegistry{ idGenerator };
             support::StepRegistry stepRegistry{ parameterRegistry, undefinedParameters, idGenerator };
             support::SupportCodeLibrary supportCode{ hookRegistry, stepRegistry, parameterRegistry, undefinedParameters };
-            Context suiteContext{ std::make_shared<ContextStorageFactoryImpl>() };
+            context::Context suiteContext{ std::make_shared<context::ContextStorageFactoryImpl>() };
             AttemptOutcomes outcomes;
             std::vector<cucumber::messages::TestCaseStarted> started;
             std::vector<cucumber::messages::TestCaseFinished> finished;

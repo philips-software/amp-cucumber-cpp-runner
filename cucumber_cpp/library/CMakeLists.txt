@@ -4,7 +4,6 @@ target_sources(cucumber_cpp.library PRIVATE
     Application.cpp
     Application.hpp
     BodyMacro.hpp
-    Context.hpp
     Errors.hpp
     Hooks.hpp
     Parameter.hpp
@@ -19,6 +18,7 @@ target_include_directories(cucumber_cpp.library PUBLIC
 target_link_libraries(cucumber_cpp.library PUBLIC
     CLI11::CLI11
     cucumber_cpp.library.api
+    cucumber_cpp.library.context
     cucumber_cpp.library.engine
     cucumber_cpp.library.formatter
     cucumber_cpp.library.plugin
@@ -41,6 +41,7 @@ target_compile_options(cucumber_cpp.library
 
 add_subdirectory(api)
 add_subdirectory(assemble)
+add_subdirectory(context)
 add_subdirectory(engine)
 add_subdirectory(formatter)
 add_subdirectory(plugin)

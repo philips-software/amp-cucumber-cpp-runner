@@ -1,7 +1,7 @@
 #include "cucumber/cucumber-expressions/ParameterRegistry.hpp"
 #include "cucumber/gherkin/IdGenerator.hpp"
 #include "cucumber/messages/PickleStepArgument.hpp"
-#include "cucumber_cpp/library/Context.hpp"
+#include "cucumber_cpp/library/context/Context.hpp"
 #include "cucumber_cpp/library/engine/ExecutionContext.hpp"
 #include "cucumber_cpp/library/engine/Step.hpp"
 #include "cucumber_cpp/library/runtime/NestedTestCaseRunner.hpp"
@@ -45,8 +45,7 @@ namespace cucumber_cpp::library::engine
         struct TestStep : testing::Test
         {
             util::Broadcaster broadcaster;
-            std::shared_ptr<ContextStorageFactory> contextStorageFactory{ std::make_shared<ContextStorageFactoryImpl>() };
-            Context context{ contextStorageFactory };
+            context::Context context{ std::make_shared<context::ContextStorageFactoryImpl>() };
             util::StepOrHookStarted stepOrHookStarted;
             cucumber::messages::PickleStepArgument pickleStepArgument;
 
@@ -60,7 +59,7 @@ namespace cucumber_cpp::library::engine
                 .hookRegistry = hookRegistry,
                 .stepRegistry = stepRegistry,
                 .parameterRegistry = parameterRegistry,
-                .undefinedParameters = undefinedParameters
+                .undefinedParameters = undefinedParameters,
             };
             runtime::NestedTestCaseRunner nestedTestCaseRunner{
                 0,
@@ -75,8 +74,8 @@ namespace cucumber_cpp::library::engine
                 broadcaster,
                 context,
                 stepOrHookStarted,
-                util::TransformTable(pickleStepArgument.dataTable ? std::make_optional(*pickleStepArgument.dataTable) : std::nullopt),
-                util::TransformDocString(pickleStepArgument.docString ? std::make_optional(*pickleStepArgument.docString) : std::nullopt),
+                util::TransformTable(pickleStepArgument.dataTable),
+                util::TransformDocString(pickleStepArgument.docString),
             };
         };
     }

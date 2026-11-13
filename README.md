@@ -255,6 +255,14 @@ GIVEN_F(CustomFixture, R"(a custom fixture background step)")
 }
 ```
 
+### Context keys
+
+`SetShared`, `EmplaceAt`, `InsertRefAt`, and `InsertAt` store owned keys. They accept
+`std::string` (copied from lvalues, moved from rvalues), string literals, and
+C-strings. Their `std::string_view` overloads remain available for backwards
+compatibility but are deprecated; migrate by passing `std::string(keyView)`.
+Lookup and removal methods continue to accept `std::string_view` without deprecation.
+
 ### Assertion Framework
 
 amp-cucumber-cpp-runner uses GoogleTest and GoogleMock as the basis for the assertion framework. For example:
