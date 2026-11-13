@@ -146,6 +146,11 @@ namespace cucumber_cpp::library::context
         void SetShared(const std::shared_ptr<T>& value);
         template<class T>
         void SetShared(std::string key, const std::shared_ptr<T>& value);
+        template<class T>
+        [[deprecated("Pass std::string instead")]]
+        void SetShared(std::string_view key, const std::shared_ptr<T>& value);
+        template<class T>
+        void SetShared(const char* key, const std::shared_ptr<T>& value);
 
         template<class T, class... Args>
         std::shared_ptr<T> Emplace(Args&&... args);
@@ -153,6 +158,11 @@ namespace cucumber_cpp::library::context
         std::shared_ptr<T> EmplaceAs(Args&&... args);
         template<class T, class... Args>
         std::shared_ptr<T> EmplaceAt(std::string key, Args&&... args);
+        template<class T, class... Args>
+        [[deprecated("Pass std::string instead")]]
+        std::shared_ptr<T> EmplaceAt(std::string_view key, Args&&... args);
+        template<class T, class... Args>
+        std::shared_ptr<T> EmplaceAt(const char* key, Args&&... args);
 
         template<class T>
         void InsertRef(T& ref);
@@ -160,6 +170,11 @@ namespace cucumber_cpp::library::context
         void InsertRefAs(U& ref);
         template<class T>
         void InsertRefAt(std::string key, T& ref);
+        template<class T>
+        [[deprecated("Pass std::string instead")]]
+        void InsertRefAt(std::string_view key, T& ref);
+        template<class T>
+        void InsertRefAt(const char* key, T& ref);
 
         template<class T>
         void Insert(const T& value);
@@ -167,6 +182,11 @@ namespace cucumber_cpp::library::context
         void InsertAs(const U& value);
         template<class T>
         void InsertAt(std::string key, const T& value);
+        template<class T>
+        [[deprecated("Pass std::string instead")]]
+        void InsertAt(std::string_view key, const T& value);
+        template<class T>
+        void InsertAt(const char* key, const T& value);
 
         template<class T>
         [[nodiscard]] bool Contains() const;
@@ -203,6 +223,18 @@ namespace cucumber_cpp::library::context
         storage->Assign(std::move(key), value);
     }
 
+    template<class T>
+    void Context::SetShared(std::string_view key, const std::shared_ptr<T>& value)
+    {
+        SetShared<T>(std::string(key), value);
+    }
+
+    template<class T>
+    void Context::SetShared(const char* key, const std::shared_ptr<T>& value)
+    {
+        SetShared<T>(std::string(key), value);
+    }
+
     template<class T, class... Args>
     std::shared_ptr<T> Context::Emplace(Args&&... args)
     {
@@ -219,6 +251,18 @@ namespace cucumber_cpp::library::context
     std::shared_ptr<T> Context::EmplaceAt(std::string key, Args&&... args)
     {
         return std::static_pointer_cast<T>(storage->Assign(std::move(key), std::make_shared<T>(std::forward<Args>(args)...)));
+    }
+
+    template<class T, class... Args>
+    std::shared_ptr<T> Context::EmplaceAt(std::string_view key, Args&&... args)
+    {
+        return EmplaceAt<T, Args...>(std::string(key), std::forward<Args>(args)...);
+    }
+
+    template<class T, class... Args>
+    std::shared_ptr<T> Context::EmplaceAt(const char* key, Args&&... args)
+    {
+        return EmplaceAt<T, Args...>(std::string(key), std::forward<Args>(args)...);
     }
 
     template<class T>
@@ -240,6 +284,18 @@ namespace cucumber_cpp::library::context
     }
 
     template<class T>
+    void Context::InsertRefAt(std::string_view key, T& ref)
+    {
+        InsertRefAt<T>(std::string(key), ref);
+    }
+
+    template<class T>
+    void Context::InsertRefAt(const char* key, T& ref)
+    {
+        InsertRefAt<T>(std::string(key), ref);
+    }
+
+    template<class T>
     void Context::Insert(const T& value)
     {
         InsertAs<T, T>(value);
@@ -255,6 +311,18 @@ namespace cucumber_cpp::library::context
     void Context::InsertAt(std::string key, const T& value)
     {
         storage->Assign(std::move(key), std::make_shared<T>(value));
+    }
+
+    template<class T>
+    void Context::InsertAt(std::string_view key, const T& value)
+    {
+        InsertAt<T>(std::string(key), value);
+    }
+
+    template<class T>
+    void Context::InsertAt(const char* key, const T& value)
+    {
+        InsertAt<T>(std::string(key), value);
     }
 
     template<class T>

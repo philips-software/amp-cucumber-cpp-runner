@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace cucumber_cpp::library::context
@@ -243,6 +244,223 @@ namespace cucumber_cpp::library::context
         EXPECT_THROW((void)scenarioContext.Get<Base>(), std::out_of_range);
         EXPECT_THROW((void)scenarioContext.Get<int>("mykey"), std::out_of_range);
     }
+
+    TEST_F(TestContext, SetSharedWithStringKey)
+    {
+        std::string key{ "key" };
+        auto value = std::make_shared<int>(42);
+        scenarioContext.SetShared(key, value);
+        key.assign("changed");
+
+        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+    }
+
+    TEST_F(TestContext, SetSharedWithMovedStringKey)
+    {
+        std::string key{ "key" };
+        auto value = std::make_shared<int>(42);
+        scenarioContext.SetShared(std::move(key), value);
+
+        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+    }
+
+    TEST_F(TestContext, SetSharedWithStringLiteralKey)
+    {
+        auto value = std::make_shared<int>(42);
+        scenarioContext.SetShared("key", value);
+
+        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+    }
+
+    TEST_F(TestContext, SetSharedWithCStringKey)
+    {
+        char buffer[]{ "key" };
+        const char* key = buffer;
+        auto value = std::make_shared<int>(42);
+        scenarioContext.SetShared(key, value);
+        buffer[0] = 'x';
+
+        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+    }
+
+    TEST_F(TestContext, EmplaceAtWithStringKey)
+    {
+        std::string key{ "key" };
+        auto value = scenarioContext.EmplaceAt<NonDefaultCtor>(key, 1, 2);
+        key.assign("changed");
+
+        EXPECT_THAT(scenarioContext.GetShared<NonDefaultCtor>("key"), testing::Eq(value));
+        EXPECT_THAT(value->a, testing::Eq(1));
+        EXPECT_THAT(value->b, testing::Eq(2));
+    }
+
+    TEST_F(TestContext, EmplaceAtWithMovedStringKey)
+    {
+        std::string key{ "key" };
+        auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(std::move(key), std::make_unique<int>(42));
+
+        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(**value, testing::Eq(42));
+    }
+
+    TEST_F(TestContext, EmplaceAtWithStringLiteralKey)
+    {
+        auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>("key", std::make_unique<int>(42));
+
+        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(**value, testing::Eq(42));
+    }
+
+    TEST_F(TestContext, EmplaceAtWithCStringKey)
+    {
+        char buffer[]{ "key" };
+        const char* key = buffer;
+        auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(key, std::make_unique<int>(42));
+        buffer[0] = 'x';
+
+        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(**value, testing::Eq(42));
+    }
+
+    TEST_F(TestContext, InsertRefAtWithStringKey)
+    {
+        std::string key{ "key" };
+        NonCopyable value;
+        scenarioContext.InsertRefAt(key, value);
+        key.assign("changed");
+
+        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+    }
+
+    TEST_F(TestContext, InsertRefAtWithMovedStringKey)
+    {
+        std::string key{ "key" };
+        NonCopyable value;
+        scenarioContext.InsertRefAt(std::move(key), value);
+
+        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+    }
+
+    TEST_F(TestContext, InsertRefAtWithStringLiteralKey)
+    {
+        NonCopyable value;
+        scenarioContext.InsertRefAt("key", value);
+
+        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+    }
+
+    TEST_F(TestContext, InsertRefAtWithCStringKey)
+    {
+        char buffer[]{ "key" };
+        const char* key = buffer;
+        NonCopyable value;
+        scenarioContext.InsertRefAt(key, value);
+        buffer[0] = 'x';
+
+        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+    }
+
+    TEST_F(TestContext, InsertAtWithStringKey)
+    {
+        std::string key{ "key" };
+        int value = 42;
+        scenarioContext.InsertAt(key, value);
+        key.assign("changed");
+        value = 0;
+
+        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, InsertAtWithMovedStringKey)
+    {
+        std::string key{ "key" };
+        int value = 42;
+        scenarioContext.InsertAt(std::move(key), value);
+        value = 0;
+
+        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, InsertAtWithStringLiteralKey)
+    {
+        int value = 42;
+        scenarioContext.InsertAt("key", value);
+        value = 0;
+
+        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, InsertAtWithCStringKey)
+    {
+        char buffer[]{ "key" };
+        const char* key = buffer;
+        int value = 42;
+        scenarioContext.InsertAt(key, value);
+        buffer[0] = 'x';
+        value = 0;
+
+        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+    }
+
+    // These compatibility tests intentionally call deprecated overloads.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#elif defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+    TEST_F(TestContext, SetSharedWithStringViewKey)
+    {
+        std::string buffer{ "prefixkeysuffix" };
+        const std::string_view key{ buffer.data() + 6, 3 };
+        auto value = std::make_shared<int>(42);
+        scenarioContext.SetShared(key, value);
+        buffer.assign("changed");
+
+        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+    }
+
+    TEST_F(TestContext, EmplaceAtWithStringViewKey)
+    {
+        std::string buffer{ "prefixkeysuffix" };
+        const std::string_view key{ buffer.data() + 6, 3 };
+        auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(key, std::make_unique<int>(42));
+        buffer.assign("changed");
+
+        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(**value, testing::Eq(42));
+    }
+
+    TEST_F(TestContext, InsertRefAtWithStringViewKey)
+    {
+        std::string buffer{ "prefixkeysuffix" };
+        const std::string_view key{ buffer.data() + 6, 3 };
+        NonCopyable value;
+        scenarioContext.InsertRefAt(key, value);
+        buffer.assign("changed");
+
+        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+    }
+
+    TEST_F(TestContext, InsertAtWithStringViewKey)
+    {
+        std::string buffer{ "prefixkeysuffix" };
+        const std::string_view key{ buffer.data() + 6, 3 };
+        int value = 42;
+        scenarioContext.InsertAt(key, value);
+        buffer.assign("changed");
+        value = 0;
+
+        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+    }
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#elif defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
     TEST_F(TestContext, OrderOfDestructionReverseOfOrderOfInsertion)
     {
