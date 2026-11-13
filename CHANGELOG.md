@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.5.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.4.0...v4.5.0) (2026-11-13)
+
+
+### Features
+
+* Optimized ContextStorage implementation ([#427](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/427)) ([2eabd09](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/2eabd09012665016ae8d4b48109e36693e4ad0a0))
+
+
+### Chores
+
+* Move example project to the root of the repository ([#420](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/420)) ([261e218](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/261e218bfb55609e75f24e0ee4031f1eba1a68f6))
+* Update dependencies ([#424](https://github.com/philips-software/amp-cucumber-cpp-runner/issues/424)) ([adc1aa7](https://github.com/philips-software/amp-cucumber-cpp-runner/commit/adc1aa78482a58e93cc4d351f400a05faa4b77cc))
+
 ## [4.4.0](https://github.com/philips-software/amp-cucumber-cpp-runner/compare/v4.3.0...v4.4.0) (2026-10-26)
 
 
