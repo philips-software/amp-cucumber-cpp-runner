@@ -263,13 +263,27 @@ C-strings. Their `std::string_view` overloads remain available for backwards
 compatibility but are deprecated; migrate by passing `std::string(keyView)`.
 Lookup and removal methods continue to accept `std::string_view` without deprecation.
 
+`Get<T>()` and `GetShared<T>()` look up the entry keyed by `T`. For explicitly
+named entries, use `GetAt<T>(key)` and `GetSharedAt<T>(key)`. The older
+`Get<T>(key)` and `GetShared<T>(key)` overloads are deprecated in favor of these
+explicitly named forms.
+
+`GetOr<T>(value)` and `GetOrAt<T>(key, value)` return a copy of the stored value
+or the fallback without inserting it. `GetOrElse<T>(factory)` and
+`GetOrElseAt<T>(key, factory)` lazily produce that fallback only when the entry
+is missing. To ensure an entry exists in the context hierarchy, use
+`GetOrEmplace<T>(args...)`, `GetOrEmplaceAt<T>(key, args...)`,
+`GetOrEmplaceWith<T>(factory)`, `GetOrEmplaceAtWith<T>(key, factory)`, or
+`GetOrEmplaceAsWith<Base, Derived>(factory)`. These return references; factories
+must return exactly the stored type (`Derived` for `GetOrEmplaceAsWith`).
+
 ### Assertion Framework
 
 amp-cucumber-cpp-runner uses GoogleTest and GoogleMock as the basis for the assertion framework. For example:
 ```cpp
 STEP(R"(the value should be {string})", (const std::string& expected_value))
 {
-    const auto& actual = context.Get<std::string>("cell");
+    const auto& actual = context.GetAt<std::string>("cell");
 
     ASSERT_THAT(actual, testing::StrEq(expected_value));
 }

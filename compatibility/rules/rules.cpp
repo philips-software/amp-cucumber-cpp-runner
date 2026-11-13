@@ -24,7 +24,7 @@ GIVEN(R"(there are no chocolate bars in stock)")
 
 WHEN(R"(the customer tries to buy a {int} cent chocolate bar)",(std::int32_t price))
 {
-    if (context.Get<std::int32_t>("money") >= price && !context.Get<Stock>().empty())
+    if (context.GetAt<std::int32_t>("money") >= price && !context.Get<Stock>().empty())
     {
         context.InsertAt("chocolate", context.Get<Stock>().top());
         context.Get<Stock>().pop();

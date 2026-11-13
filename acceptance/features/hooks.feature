@@ -115,25 +115,25 @@ Feature: Test scenario and step hook bindings
 
                 THEN("the {string} has the name {string} or {string}", (const std::string& hookType, const std::string& expectedName1, const std::string& expectedName2))
                 {
-                const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+                const auto& scenarioInfo = context.GetAt<cucumber_cpp::library::util::ScenarioInfo>(hookType);
                 ASSERT_THAT(scenarioInfo.name, testing::AnyOf(testing::StrEq(expectedName1), testing::StrEq(expectedName2)));
                 }
 
                 THEN("the {string} has the name {string}", (const std::string& hookType, const std::string& expectedName))
                 {
-                const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+                const auto& scenarioInfo = context.GetAt<cucumber_cpp::library::util::ScenarioInfo>(hookType);
                 ASSERT_THAT(scenarioInfo.name, testing::StrEq(expectedName));
                 }
 
                 THEN("the {string} has the tag {string} or {string}", (const std::string& hookType, const std::string& expectedTag1, const std::string& expectedTag2))
                 {
-                const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+                const auto& scenarioInfo = context.GetAt<cucumber_cpp::library::util::ScenarioInfo>(hookType);
                 ASSERT_THAT(scenarioInfo.tags, testing::AnyOf(testing::Contains(expectedTag1), testing::Contains(expectedTag2)));
                 }
 
                 THEN("the {string} has the tags {string} and {string}", (const std::string& hookType, const std::string& expectedTag1, const std::string& expectedTag2))
                 {
-                const auto& scenarioInfo = context.Get<cucumber_cpp::library::util::ScenarioInfo>(hookType);
+                const auto& scenarioInfo = context.GetAt<cucumber_cpp::library::util::ScenarioInfo>(hookType);
                 ASSERT_THAT(scenarioInfo.tags, testing::AllOf(testing::Contains(expectedTag1), testing::Contains(expectedTag2)));
                 }
 

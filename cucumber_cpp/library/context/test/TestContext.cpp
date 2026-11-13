@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -67,6 +68,19 @@ namespace cucumber_cpp::library::context
             int b{ 10 };
         };
 
+        struct LeadingBase
+        {
+            virtual ~LeadingBase() = default;
+        };
+
+        struct MultipleDerived : LeadingBase, Base
+        {
+            std::string Name() const override
+            {
+                return "MultipleDerived";
+            }
+        };
+
         struct NonDefaultCtor
         {
             NonDefaultCtor(int a, int b)
@@ -102,22 +116,841 @@ namespace cucumber_cpp::library::context
         EXPECT_THAT(expected, testing::Ref(actual));
     }
 
+    TEST_F(TestContext, GetAtReturnsReferenceToKeyedValue)
+    {
+        const auto value = scenarioContext.EmplaceAt<int>("key", 42);
+
+        const auto& actual = scenarioContext.GetAt<int>("key");
+
+        EXPECT_THAT(actual, testing::Eq(42));
+        EXPECT_THAT(&actual, testing::Pointer(value.get()));
+    }
+
+    TEST_F(TestContext, GetSharedAtReturnsSharedOwnerForKeyedValue)
+    {
+        const auto value = scenarioContext.EmplaceAt<int>("key", 42);
+
+        const auto actual = scenarioContext.GetSharedAt<int>("key");
+
+        EXPECT_THAT(actual, testing::Eq(value));
+        EXPECT_THAT(actual.get(), testing::Pointer(value.get()));
+    }
+
+    TEST_F(TestContext, GetOrReturnsFallbackWithoutInserting)
+    {
+        const auto& context = scenarioContext;
+
+        EXPECT_THAT(context.GetOr<int>(42), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+        EXPECT_THAT(programContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrReturnsIndependentValueFromLvalueFallback)
+    {
+        std::string fallback{ "fallback" };
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOr<std::string>(fallback)), std::string>);
+        auto result = scenarioContext.GetOr<std::string>(fallback);
+        result = "changed";
+
+        EXPECT_THAT(fallback, testing::Eq("fallback"));
+        EXPECT_THAT(scenarioContext.Contains<std::string>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrSupportsNonDefaultConstructibleFallback)
+    {
+        const auto result = scenarioContext.GetOr<NonDefaultCtor>(NonDefaultCtor{ 1, 2 });
+
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(scenarioContext.Contains<NonDefaultCtor>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrReturnsStoredValueInsteadOfFallback)
+    {
+        scenarioContext.Emplace<int>(7);
+        const auto& context = scenarioContext;
+
+        static_assert(std::is_same_v<decltype(context.GetOr<int>(42)), int>);
+        EXPECT_THAT(context.GetOr<int>(42), testing::Eq(7));
+        EXPECT_THAT(context.Get<int>(), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrReturnsIndependentCopyOfStoredValue)
+    {
+        scenarioContext.Emplace<std::string>("stored");
+        const auto& result = scenarioContext.GetOr<std::string>(std::string{ "fallback" });
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(&scenarioContext.Get<std::string>())));
+
+        scenarioContext.Get<std::string>() = "changed";
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+    }
+
+    TEST_F(TestContext, GetOrFindsParentValueWithoutInsertingLocally)
+    {
+        programContext.Emplace<int>(7);
+
+        EXPECT_THAT(scenarioContext.GetOr<int>(42), testing::Eq(7));
+
+        programContext.Clear<int>();
+
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrPrefersLocalValueOverParentValue)
+    {
+        programContext.Emplace<int>(7);
+        scenarioContext.Emplace<int>(9);
+
+        EXPECT_THAT(scenarioContext.GetOr<int>(42), testing::Eq(9));
+        EXPECT_THAT(programContext.Get<int>(), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrDoesNotUseExplicitlyKeyedValue)
+    {
+        scenarioContext.EmplaceAt<int>("key", 7);
+
+        EXPECT_THAT(scenarioContext.GetOr<int>(42), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrElseInvokesFactoryAndReturnsValueWithoutInserting)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto& context = scenarioContext;
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        EXPECT_THAT(context.GetOrElse<int>(factory.AsStdFunction()), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+        EXPECT_THAT(programContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseReturnsFactoryResultByValue)
+    {
+        testing::StrictMock<testing::MockFunction<std::string()>> factory;
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrElse<std::string>(factory.AsStdFunction())), std::string>);
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(std::string{ "fallback" }));
+
+        EXPECT_THAT(scenarioContext.GetOrElse<std::string>(factory.AsStdFunction()), testing::Eq("fallback"));
+        EXPECT_THAT(scenarioContext.Contains<std::string>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseSupportsNonDefaultConstructibleFallback)
+    {
+        testing::StrictMock<testing::MockFunction<NonDefaultCtor()>> factory;
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(NonDefaultCtor{ 1, 2 }));
+
+        const auto result = scenarioContext.GetOrElse<NonDefaultCtor>(factory.AsStdFunction());
+
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(scenarioContext.Contains<NonDefaultCtor>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseReturnsStoredValueWithoutInvokingFactory)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.Emplace<int>(7);
+        const auto& context = scenarioContext;
+
+        static_assert(std::is_same_v<decltype(context.GetOrElse<int>(factory.AsStdFunction())), int>);
+        EXPECT_THAT(context.GetOrElse<int>(factory.AsStdFunction()), testing::Eq(7));
+        EXPECT_THAT(context.Get<int>(), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrElseReturnsIndependentCopyOfStoredValue)
+    {
+        testing::StrictMock<testing::MockFunction<std::string()>> factory;
+        scenarioContext.Emplace<std::string>("stored");
+
+        const auto& result = scenarioContext.GetOrElse<std::string>(factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(&scenarioContext.Get<std::string>())));
+
+        scenarioContext.Get<std::string>() = "changed";
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+    }
+
+    TEST_F(TestContext, GetOrElseFindsParentValueWithoutInvokingFactoryOrInsertingLocally)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        programContext.Emplace<int>(7);
+
+        EXPECT_THAT(scenarioContext.GetOrElse<int>(factory.AsStdFunction()), testing::Eq(7));
+
+        programContext.Clear<int>();
+
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElsePrefersLocalValueOverParentValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        programContext.Emplace<int>(7);
+        scenarioContext.Emplace<int>(9);
+
+        EXPECT_THAT(scenarioContext.GetOrElse<int>(factory.AsStdFunction()), testing::Eq(9));
+        EXPECT_THAT(programContext.Get<int>(), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrElseDoesNotUseExplicitlyKeyedValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("key", 7);
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        EXPECT_THAT(scenarioContext.GetOrElse<int>(factory.AsStdFunction()), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrAtReturnsFallbackWithoutInserting)
+    {
+        const auto& context = scenarioContext;
+
+        EXPECT_THAT(context.GetOrAt<int>("key", 42), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+        EXPECT_THAT(programContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrAtReturnsIndependentValueFromLvalueFallback)
+    {
+        std::string fallback{ "fallback" };
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrAt<std::string>("key", fallback)), std::string>);
+        auto result = scenarioContext.GetOrAt<std::string>("key", fallback);
+        result = "changed";
+
+        EXPECT_THAT(fallback, testing::Eq("fallback"));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrAtReturnsStoredValueInsteadOfFallback)
+    {
+        scenarioContext.EmplaceAt<int>("key", 7);
+        const auto& context = scenarioContext;
+
+        static_assert(std::is_same_v<decltype(context.GetOrAt<int>("key", 42)), int>);
+        EXPECT_THAT(context.GetOrAt<int>("key", 42), testing::Eq(7));
+        EXPECT_THAT(context.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrAtReturnsIndependentCopyOfStoredValue)
+    {
+        scenarioContext.EmplaceAt<std::string>("key", "stored");
+        const auto& result = scenarioContext.GetOrAt<std::string>("key", std::string{ "fallback" });
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(&scenarioContext.GetAt<std::string>("key"))));
+
+        scenarioContext.GetAt<std::string>("key") = "changed";
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+    }
+
+    TEST_F(TestContext, GetOrAtFindsParentValueWithoutInsertingLocally)
+    {
+        programContext.EmplaceAt<int>("key", 7);
+
+        EXPECT_THAT(scenarioContext.GetOrAt<int>("key", 42), testing::Eq(7));
+
+        programContext.Clear("key");
+
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrAtPrefersLocalValueOverParentValue)
+    {
+        programContext.EmplaceAt<int>("key", 7);
+        scenarioContext.EmplaceAt<int>("key", 9);
+
+        EXPECT_THAT(scenarioContext.GetOrAt<int>("key", 42), testing::Eq(9));
+        EXPECT_THAT(programContext.GetAt<int>("key"), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrAtDoesNotUseTypeKeyedValue)
+    {
+        scenarioContext.Emplace<int>(7);
+
+        EXPECT_THAT(scenarioContext.GetOrAt<int>("key", 42), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrElseAtInvokesFactoryAndReturnsValueWithoutInserting)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto& context = scenarioContext;
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        EXPECT_THAT(context.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+        EXPECT_THAT(programContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseAtReturnsFactoryResultByValue)
+    {
+        testing::StrictMock<testing::MockFunction<std::string()>> factory;
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrElseAt<std::string>("key", factory.AsStdFunction())), std::string>);
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(std::string{ "fallback" }));
+
+        EXPECT_THAT(scenarioContext.GetOrElseAt<std::string>("key", factory.AsStdFunction()), testing::Eq("fallback"));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseAtSupportsNonDefaultConstructibleFallback)
+    {
+        testing::StrictMock<testing::MockFunction<NonDefaultCtor()>> factory;
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(NonDefaultCtor{ 1, 2 }));
+
+        const auto result = scenarioContext.GetOrElseAt<NonDefaultCtor>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseAtReturnsStoredValueWithoutInvokingFactory)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("key", 7);
+        const auto& context = scenarioContext;
+
+        static_assert(std::is_same_v<decltype(context.GetOrElseAt<int>("key", factory.AsStdFunction())), int>);
+        EXPECT_THAT(context.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(7));
+        EXPECT_THAT(context.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrElseAtReturnsIndependentCopyOfStoredValue)
+    {
+        testing::StrictMock<testing::MockFunction<std::string()>> factory;
+        scenarioContext.EmplaceAt<std::string>("key", "stored");
+
+        const auto& result = scenarioContext.GetOrElseAt<std::string>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(&scenarioContext.GetAt<std::string>("key"))));
+
+        scenarioContext.GetAt<std::string>("key") = "changed";
+
+        EXPECT_THAT(result, testing::Eq("stored"));
+    }
+
+    TEST_F(TestContext, GetOrElseAtFindsParentValueWithoutInvokingFactoryOrInsertingLocally)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        programContext.EmplaceAt<int>("key", 7);
+
+        EXPECT_THAT(scenarioContext.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(7));
+
+        programContext.Clear("key");
+
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrElseAtPrefersLocalValueOverParentValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        programContext.EmplaceAt<int>("key", 7);
+        scenarioContext.EmplaceAt<int>("key", 9);
+
+        EXPECT_THAT(scenarioContext.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(9));
+        EXPECT_THAT(programContext.GetAt<int>("key"), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrElseAtDoesNotUseTypeKeyedValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.Emplace<int>(7);
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        EXPECT_THAT(scenarioContext.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrElseAtDoesNotUseAnotherExplicitKey)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("other-key", 7);
+
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        EXPECT_THAT(scenarioContext.GetOrElseAt<int>("key", factory.AsStdFunction()), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+        EXPECT_THAT(scenarioContext.GetAt<int>("other-key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceConstructsAndStoresByType)
+    {
+        const auto& result = scenarioContext.GetOrEmplace<NonDefaultCtor>(1, 2);
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrEmplace<NonDefaultCtor>(1, 2)), NonDefaultCtor&>);
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<NonDefaultCtor>()));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceReturnsExistingValueWithoutReconstructing)
+    {
+        struct CtorProbe
+        {
+            explicit CtorProbe(testing::MockFunction<int()>& factory)
+                : value{ factory.Call() }
+            {}
+
+            const int value;
+        };
+
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(7));
+
+        const auto& first = scenarioContext.GetOrEmplace<CtorProbe>(factory);
+        const auto& second = scenarioContext.GetOrEmplace<CtorProbe>(factory);
+
+        EXPECT_THAT(&second, testing::Pointer(&first));
+        EXPECT_THAT(second.value, testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceFindsParentValueWithoutInsertingLocally)
+    {
+        const auto parentValue = programContext.Emplace<int>(7);
+
+        const auto& result = scenarioContext.GetOrEmplace<int>(42);
+
+        EXPECT_THAT(&result, testing::Pointer(parentValue.get()));
+        EXPECT_THAT(result, testing::Eq(7));
+
+        programContext.Clear<int>();
+
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplacePrefersLocalValueOverParentValue)
+    {
+        const auto parentValue = programContext.Emplace<int>(7);
+        const auto localValue = scenarioContext.Emplace<int>(9);
+
+        const auto& result = scenarioContext.GetOrEmplace<int>(42);
+
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(parentValue.get())));
+        EXPECT_THAT(&result, testing::Pointer(localValue.get()));
+        EXPECT_THAT(programContext.Get<int>(), testing::Eq(7));
+        EXPECT_THAT(result, testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceUsesTypeKeyInsteadOfNamedKey)
+    {
+        scenarioContext.EmplaceAt<int>("key", 7);
+
+        const auto& result = scenarioContext.GetOrEmplace<int>(9);
+
+        EXPECT_THAT(result, testing::Eq(9));
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(9));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtConstructsAndStoresByKey)
+    {
+        const auto& result = scenarioContext.GetOrEmplaceAt<NonDefaultCtor>("key", 1, 2);
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrEmplaceAt<NonDefaultCtor>("key", 1, 2)), NonDefaultCtor&>);
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.GetAt<NonDefaultCtor>("key")));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsTrue());
+        EXPECT_THAT(scenarioContext.Contains<NonDefaultCtor>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtReturnsExistingValueWithoutReconstructing)
+    {
+        struct CtorProbe
+        {
+            explicit CtorProbe(testing::MockFunction<int()>& factory)
+                : value{ factory.Call() }
+            {}
+
+            const int value;
+        };
+
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(7));
+
+        const auto& first = scenarioContext.GetOrEmplaceAt<CtorProbe>("key", factory);
+        const auto& second = scenarioContext.GetOrEmplaceAt<CtorProbe>("key", factory);
+
+        EXPECT_THAT(&second, testing::Pointer(&first));
+        EXPECT_THAT(second.value, testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtFindsParentValueWithoutInsertingLocally)
+    {
+        const auto parentValue = programContext.EmplaceAt<int>("key", 7);
+
+        const auto& result = scenarioContext.GetOrEmplaceAt<int>("key", 42);
+
+        EXPECT_THAT(&result, testing::Pointer(parentValue.get()));
+        EXPECT_THAT(result, testing::Eq(7));
+
+        programContext.Clear("key");
+
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtPrefersLocalValueOverParentValue)
+    {
+        const auto parentValue = programContext.EmplaceAt<int>("key", 7);
+        const auto localValue = scenarioContext.EmplaceAt<int>("key", 9);
+
+        const auto& result = scenarioContext.GetOrEmplaceAt<int>("key", 42);
+
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(parentValue.get())));
+        EXPECT_THAT(&result, testing::Pointer(localValue.get()));
+        EXPECT_THAT(programContext.GetAt<int>("key"), testing::Eq(7));
+        EXPECT_THAT(result, testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtDoesNotUseTypeKeyedValue)
+    {
+        scenarioContext.Emplace<int>(7);
+
+        const auto& result = scenarioContext.GetOrEmplaceAt<int>("key", 42);
+
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtDoesNotUseAnotherExplicitKey)
+    {
+        scenarioContext.EmplaceAt<int>("other-key", 7);
+
+        const auto& result = scenarioContext.GetOrEmplaceAt<int>("key", 42);
+
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("other-key"), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithInvokesFactoryAndStoresValueByType)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        const auto& result = scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction());
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction())), int&>);
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<int>()));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithReturnsExistingValueWithoutInvokingFactory)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.Emplace<int>(7);
+
+        const auto& result = scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq(7));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<int>()));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithFindsParentValueWithoutInvokingFactoryOrInsertingLocally)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto parentValue = programContext.Emplace<int>(7);
+
+        const auto& result = scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Pointer(parentValue.get()));
+        EXPECT_THAT(result, testing::Eq(7));
+
+        programContext.Clear<int>();
+
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithPrefersLocalValueOverParentValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto parentValue = programContext.Emplace<int>(7);
+        const auto localValue = scenarioContext.Emplace<int>(9);
+
+        const auto& result = scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(parentValue.get())));
+        EXPECT_THAT(&result, testing::Pointer(localValue.get()));
+        EXPECT_THAT(result, testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithUsesTypeKeyInsteadOfNamedKey)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("key", 7);
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        const auto& result = scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(7));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithDoesNotInsertWhenFactoryThrows)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Throw(std::runtime_error{ "factory failed" }));
+
+        EXPECT_THROW(
+            static_cast<void>(scenarioContext.GetOrEmplaceWith<int>(factory.AsStdFunction())),
+            std::runtime_error);
+        EXPECT_THAT(scenarioContext.Contains<int>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceWithUsesEntryInsertedByFactory)
+    {
+        auto& mutableContext = scenarioContext;
+        const auto& result = mutableContext.GetOrEmplaceWith<int>([&mutableContext] {
+            mutableContext.Emplace<int>(7);
+            return 42;
+        });
+
+        EXPECT_THAT(result, testing::Eq(7));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<int>()));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithInvokesFactoryAndStoresValueByKey)
+    {
+        testing::StrictMock<testing::MockFunction<NonDefaultCtor()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(NonDefaultCtor{ 1, 2 }));
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<NonDefaultCtor>("key", factory.AsStdFunction());
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrEmplaceAtWith<NonDefaultCtor>("key", factory.AsStdFunction())), NonDefaultCtor&>);
+        EXPECT_THAT(result.a, testing::Eq(1));
+        EXPECT_THAT(result.b, testing::Eq(2));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.GetAt<NonDefaultCtor>("key")));
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsTrue());
+        EXPECT_THAT(scenarioContext.Contains<NonDefaultCtor>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithReturnsExistingValueWithoutInvokingFactory)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("key", 7);
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq(7));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.GetAt<int>("key")));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithFindsParentValueWithoutInvokingFactoryOrInsertingLocally)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto parentValue = programContext.EmplaceAt<int>("key", 7);
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Pointer(parentValue.get()));
+        EXPECT_THAT(result, testing::Eq(7));
+
+        programContext.Clear("key");
+
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithPrefersLocalValueOverParentValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        const auto parentValue = programContext.EmplaceAt<int>("key", 7);
+        const auto localValue = scenarioContext.EmplaceAt<int>("key", 9);
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(parentValue.get())));
+        EXPECT_THAT(&result, testing::Pointer(localValue.get()));
+        EXPECT_THAT(result, testing::Eq(9));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithDoesNotUseTypeKeyedValue)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.Emplace<int>(7);
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(scenarioContext.Get<int>(), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithDoesNotUseAnotherExplicitKey)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        scenarioContext.EmplaceAt<int>("other-key", 7);
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(42));
+
+        const auto& result = scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction());
+
+        EXPECT_THAT(result, testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("other-key"), testing::Eq(7));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAtWithDoesNotInsertWhenFactoryThrows)
+    {
+        testing::StrictMock<testing::MockFunction<int()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Throw(std::runtime_error{ "factory failed" }));
+
+        EXPECT_THROW(
+            static_cast<void>(scenarioContext.GetOrEmplaceAtWith<int>("key", factory.AsStdFunction())),
+            std::runtime_error);
+        EXPECT_THAT(scenarioContext.Contains("key"), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithInvokesFactoryAndStoresDerivedByBaseType)
+    {
+        testing::StrictMock<testing::MockFunction<MultipleDerived()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(MultipleDerived{}));
+
+        const auto& result = scenarioContext.GetOrEmplaceAsWith<Base, MultipleDerived>(factory.AsStdFunction());
+
+        static_assert(std::is_same_v<decltype(scenarioContext.GetOrEmplaceAsWith<Base, MultipleDerived>(factory.AsStdFunction())), Base&>);
+        EXPECT_THAT(result.Name(), testing::StrEq("MultipleDerived"));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<Base>()));
+        EXPECT_THAT(scenarioContext.Contains<Base>(), testing::IsTrue());
+        EXPECT_THAT(scenarioContext.Contains<MultipleDerived>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, EmplaceAsStoresAdjustedBasePointerForMultipleInheritance)
+    {
+        const auto value = scenarioContext.EmplaceAs<Base, MultipleDerived>();
+
+        EXPECT_THAT(value->Name(), testing::StrEq("MultipleDerived"));
+        EXPECT_THAT(value.get(), testing::Pointer(&scenarioContext.Get<Base>()));
+    }
+
+    TEST_F(TestContext, InsertAsStoresAdjustedBasePointerForMultipleInheritance)
+    {
+        const MultipleDerived value;
+
+        scenarioContext.InsertAs<Base>(value);
+
+        EXPECT_THAT(scenarioContext.Get<Base>().Name(), testing::StrEq("MultipleDerived"));
+        EXPECT_THAT(&scenarioContext.Get<Base>(), testing::Not(testing::Pointer(&value)));
+    }
+
+    TEST_F(TestContext, InsertRefAsStoresAdjustedBasePointerForMultipleInheritance)
+    {
+        MultipleDerived value;
+
+        scenarioContext.InsertRefAs<Base, MultipleDerived>(value);
+
+        EXPECT_THAT(&scenarioContext.Get<Base>(), testing::Pointer(static_cast<Base*>(&value)));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithReturnsExistingValueWithoutInvokingFactory)
+    {
+        testing::StrictMock<testing::MockFunction<Derived()>> factory;
+        scenarioContext.EmplaceAs<Base, Derived>("stored", 2);
+
+        const auto& result = scenarioContext.GetOrEmplaceAsWith<Base, Derived>(factory.AsStdFunction());
+
+        EXPECT_THAT(result.Name(), testing::StrEq("Derived"));
+        EXPECT_THAT(&result, testing::Pointer(&scenarioContext.Get<Base>()));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithFindsParentValueWithoutInvokingFactoryOrInsertingLocally)
+    {
+        testing::StrictMock<testing::MockFunction<Derived()>> factory;
+        const auto parentValue = programContext.EmplaceAs<Base, Derived>("parent", 2);
+
+        const auto& result = scenarioContext.GetOrEmplaceAsWith<Base, Derived>(factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Pointer(parentValue.get()));
+        EXPECT_THAT(result.Name(), testing::StrEq("Derived"));
+
+        programContext.Clear<Base>();
+
+        EXPECT_THAT(scenarioContext.Contains<Base>(), testing::IsFalse());
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithPrefersLocalValueOverParentValue)
+    {
+        testing::StrictMock<testing::MockFunction<Derived()>> factory;
+        const auto parentValue = programContext.EmplaceAs<Base, Derived>("parent", 2);
+        const auto localValue = scenarioContext.EmplaceAs<Base, Derived>("local", 4);
+
+        const auto& result = scenarioContext.GetOrEmplaceAsWith<Base, Derived>(factory.AsStdFunction());
+
+        EXPECT_THAT(&result, testing::Not(testing::Pointer(parentValue.get())));
+        EXPECT_THAT(&result, testing::Pointer(localValue.get()));
+        EXPECT_THAT(result.Name(), testing::StrEq("Derived"));
+        EXPECT_THAT(programContext.Get<Base>().Name(), testing::StrEq("Derived"));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithUsesBaseTypeKeyInsteadOfDerivedTypeOrNamedKeys)
+    {
+        testing::StrictMock<testing::MockFunction<Derived()>> factory;
+        scenarioContext.Emplace<Derived>();
+        scenarioContext.EmplaceAt<Base>("named", Base{});
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Return(Derived{ "factory", 6 }));
+
+        const auto& result = scenarioContext.GetOrEmplaceAsWith<Base, Derived>(factory.AsStdFunction());
+
+        EXPECT_THAT(result.Name(), testing::StrEq("Derived"));
+        EXPECT_THAT(scenarioContext.Get<Derived>().Name(), testing::StrEq("Derived"));
+        EXPECT_THAT(scenarioContext.GetAt<Base>("named").Name(), testing::StrEq("Base"));
+    }
+
+    TEST_F(TestContext, GetOrEmplaceAsWithDoesNotInsertWhenFactoryThrows)
+    {
+        testing::StrictMock<testing::MockFunction<Derived()>> factory;
+        EXPECT_CALL(factory, Call()).WillOnce(testing::Throw(std::runtime_error{ "factory failed" }));
+
+        EXPECT_THROW(
+            static_cast<void>(scenarioContext.GetOrEmplaceAsWith<Base, Derived>(factory.AsStdFunction())),
+            std::runtime_error);
+        EXPECT_THAT(scenarioContext.Contains<Base>(), testing::IsFalse());
+    }
+
     TEST_F(TestContext, OverwriteValue)
     {
         Mock mock;
 
-        auto first = programContext.Emplace<Obj>(&mock).get();
+        const auto* first = programContext.Emplace<Obj>(&mock).get();
         EXPECT_CALL(mock, Deconstructing(first));
 
-        auto second = programContext.Emplace<Obj>().get();
+        const auto* second = programContext.Emplace<Obj>().get();
 
         EXPECT_THAT(first, testing::Not(testing::Pointer(second)));
     }
 
     TEST_F(TestContext, OverrideValue)
     {
-        auto first = programContext.Emplace<Obj>().get();
-        auto second = scenarioContext.Emplace<Obj>().get();
+        const auto* first = programContext.Emplace<Obj>().get();
+        const auto* second = scenarioContext.Emplace<Obj>().get();
 
         EXPECT_THAT(first, testing::Not(testing::Pointer(second)));
     }
@@ -166,11 +999,11 @@ namespace cucumber_cpp::library::context
         scenarioContext.EmplaceAt<Derived>("key1", "a", 2);
         scenarioContext.EmplaceAt<Derived>("key2", "b", 4);
 
-        const auto& key1 = scenarioContext.Get<Derived>("key1");
+        const auto& key1 = scenarioContext.GetAt<Derived>("key1");
         EXPECT_THAT(key1.a, testing::StrEq("a"));
         EXPECT_THAT(key1.b, testing::Eq(2));
 
-        const auto& key2 = scenarioContext.Get<Derived>("key2");
+        const auto& key2 = scenarioContext.GetAt<Derived>("key2");
         EXPECT_THAT(key2.a, testing::StrEq("b"));
         EXPECT_THAT(key2.b, testing::Eq(4));
     }
@@ -205,8 +1038,8 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertRefAt("key1", nonCopyable);
         scenarioContext.InsertRefAt("key2", nonCopyable);
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key1"), testing::Pointer(&nonCopyable));
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key2"), testing::Pointer(&nonCopyable));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key1"), testing::Pointer(&nonCopyable));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key2"), testing::Pointer(&nonCopyable));
     }
 
     TEST_F(TestContext, InsertByType)
@@ -231,9 +1064,9 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertAt("key1", obj);
         scenarioContext.InsertAt("key2", obj);
 
-        EXPECT_THAT(&scenarioContext.Get<Obj>("key1"), testing::Not(testing::Pointer(&obj)));
-        EXPECT_THAT(&scenarioContext.Get<Obj>("key2"), testing::Not(testing::Pointer(&obj)));
-        EXPECT_THAT(&scenarioContext.Get<Obj>("key1"), testing::Not(testing::Pointer(&scenarioContext.Get<Obj>("key2"))));
+        EXPECT_THAT(&scenarioContext.GetAt<Obj>("key1"), testing::Not(testing::Pointer(&obj)));
+        EXPECT_THAT(&scenarioContext.GetAt<Obj>("key2"), testing::Not(testing::Pointer(&obj)));
+        EXPECT_THAT(&scenarioContext.GetAt<Obj>("key1"), testing::Not(testing::Pointer(&scenarioContext.GetAt<Obj>("key2"))));
     }
 
     TEST_F(TestContext, KeyNotFound)
@@ -242,7 +1075,7 @@ namespace cucumber_cpp::library::context
 
         EXPECT_THROW((void)programContext.Get<Obj>(), std::out_of_range);
         EXPECT_THROW((void)scenarioContext.Get<Base>(), std::out_of_range);
-        EXPECT_THROW((void)scenarioContext.Get<int>("mykey"), std::out_of_range);
+        EXPECT_THROW((void)scenarioContext.GetAt<int>("mykey"), std::out_of_range);
     }
 
     TEST_F(TestContext, SetSharedWithStringKey)
@@ -252,7 +1085,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.SetShared(key, value);
         key.assign("changed");
 
-        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<int>("key"), testing::Eq(value));
     }
 
     TEST_F(TestContext, SetSharedWithMovedStringKey)
@@ -261,7 +1094,7 @@ namespace cucumber_cpp::library::context
         auto value = std::make_shared<int>(42);
         scenarioContext.SetShared(std::move(key), value);
 
-        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<int>("key"), testing::Eq(value));
     }
 
     TEST_F(TestContext, SetSharedWithStringLiteralKey)
@@ -269,7 +1102,7 @@ namespace cucumber_cpp::library::context
         auto value = std::make_shared<int>(42);
         scenarioContext.SetShared("key", value);
 
-        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<int>("key"), testing::Eq(value));
     }
 
     TEST_F(TestContext, SetSharedWithCStringKey)
@@ -280,7 +1113,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.SetShared(key, value);
         buffer[0] = 'x';
 
-        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<int>("key"), testing::Eq(value));
     }
 
     TEST_F(TestContext, EmplaceAtWithStringKey)
@@ -289,7 +1122,7 @@ namespace cucumber_cpp::library::context
         auto value = scenarioContext.EmplaceAt<NonDefaultCtor>(key, 1, 2);
         key.assign("changed");
 
-        EXPECT_THAT(scenarioContext.GetShared<NonDefaultCtor>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<NonDefaultCtor>("key"), testing::Eq(value));
         EXPECT_THAT(value->a, testing::Eq(1));
         EXPECT_THAT(value->b, testing::Eq(2));
     }
@@ -299,7 +1132,7 @@ namespace cucumber_cpp::library::context
         std::string key{ "key" };
         auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(std::move(key), std::make_unique<int>(42));
 
-        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<std::unique_ptr<int>>("key"), testing::Eq(value));
         EXPECT_THAT(**value, testing::Eq(42));
     }
 
@@ -307,7 +1140,7 @@ namespace cucumber_cpp::library::context
     {
         auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>("key", std::make_unique<int>(42));
 
-        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<std::unique_ptr<int>>("key"), testing::Eq(value));
         EXPECT_THAT(**value, testing::Eq(42));
     }
 
@@ -318,7 +1151,7 @@ namespace cucumber_cpp::library::context
         auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(key, std::make_unique<int>(42));
         buffer[0] = 'x';
 
-        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<std::unique_ptr<int>>("key"), testing::Eq(value));
         EXPECT_THAT(**value, testing::Eq(42));
     }
 
@@ -329,7 +1162,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertRefAt(key, value);
         key.assign("changed");
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key"), testing::Pointer(&value));
     }
 
     TEST_F(TestContext, InsertRefAtWithMovedStringKey)
@@ -338,7 +1171,7 @@ namespace cucumber_cpp::library::context
         NonCopyable value;
         scenarioContext.InsertRefAt(std::move(key), value);
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key"), testing::Pointer(&value));
     }
 
     TEST_F(TestContext, InsertRefAtWithStringLiteralKey)
@@ -346,7 +1179,7 @@ namespace cucumber_cpp::library::context
         NonCopyable value;
         scenarioContext.InsertRefAt("key", value);
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key"), testing::Pointer(&value));
     }
 
     TEST_F(TestContext, InsertRefAtWithCStringKey)
@@ -357,7 +1190,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertRefAt(key, value);
         buffer[0] = 'x';
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key"), testing::Pointer(&value));
     }
 
     TEST_F(TestContext, InsertAtWithStringKey)
@@ -368,7 +1201,7 @@ namespace cucumber_cpp::library::context
         key.assign("changed");
         value = 0;
 
-        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
     }
 
     TEST_F(TestContext, InsertAtWithMovedStringKey)
@@ -378,7 +1211,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertAt(std::move(key), value);
         value = 0;
 
-        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
     }
 
     TEST_F(TestContext, InsertAtWithStringLiteralKey)
@@ -387,7 +1220,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertAt("key", value);
         value = 0;
 
-        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
     }
 
     TEST_F(TestContext, InsertAtWithCStringKey)
@@ -399,7 +1232,7 @@ namespace cucumber_cpp::library::context
         buffer[0] = 'x';
         value = 0;
 
-        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
     }
 
     // These compatibility tests intentionally call deprecated overloads.
@@ -419,7 +1252,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.SetShared(key, value);
         buffer.assign("changed");
 
-        EXPECT_THAT(scenarioContext.GetShared<int>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<int>("key"), testing::Eq(value));
     }
 
     TEST_F(TestContext, EmplaceAtWithStringViewKey)
@@ -429,7 +1262,7 @@ namespace cucumber_cpp::library::context
         auto value = scenarioContext.EmplaceAt<std::unique_ptr<int>>(key, std::make_unique<int>(42));
         buffer.assign("changed");
 
-        EXPECT_THAT(scenarioContext.GetShared<std::unique_ptr<int>>("key"), testing::Eq(value));
+        EXPECT_THAT(scenarioContext.GetSharedAt<std::unique_ptr<int>>("key"), testing::Eq(value));
         EXPECT_THAT(**value, testing::Eq(42));
     }
 
@@ -441,7 +1274,7 @@ namespace cucumber_cpp::library::context
         scenarioContext.InsertRefAt(key, value);
         buffer.assign("changed");
 
-        EXPECT_THAT(&scenarioContext.Get<NonCopyable>("key"), testing::Pointer(&value));
+        EXPECT_THAT(&scenarioContext.GetAt<NonCopyable>("key"), testing::Pointer(&value));
     }
 
     TEST_F(TestContext, InsertAtWithStringViewKey)
@@ -453,7 +1286,7 @@ namespace cucumber_cpp::library::context
         buffer.assign("changed");
         value = 0;
 
-        EXPECT_THAT(scenarioContext.Get<int>("key"), testing::Eq(42));
+        EXPECT_THAT(scenarioContext.GetAt<int>("key"), testing::Eq(42));
     }
 
 #if defined(_MSC_VER)
@@ -569,7 +1402,7 @@ namespace cucumber_cpp::library::context
         testing::InSequence seq;
         EXPECT_CALL(mock, Deconstructing(first));
         const auto* replacement = context->EmplaceAt<Obj>("first", &mock).get();
-        EXPECT_THAT(context->GetShared<Obj>("first").get(), testing::Eq(replacement));
+        EXPECT_THAT(context->GetSharedAt<Obj>("first").get(), testing::Eq(replacement));
 
         EXPECT_CALL(mock, Deconstructing(replacement));
         EXPECT_CALL(mock, Deconstructing(third));
@@ -617,12 +1450,12 @@ namespace cucumber_cpp::library::context
         EXPECT_CALL(mock, Deconstructing(childFirst));
         child->Clear("first");
         child->Clear("second");
-        EXPECT_THAT(child->GetShared<Obj>("first").get(), testing::Eq(parentFirst));
-        EXPECT_THAT(child->GetShared<Obj>("second").get(), testing::Eq(parentSecond));
+        EXPECT_THAT(child->GetSharedAt<Obj>("first").get(), testing::Eq(parentFirst));
+        EXPECT_THAT(child->GetSharedAt<Obj>("second").get(), testing::Eq(parentSecond));
 
         EXPECT_CALL(mock, Deconstructing(childSecond));
         child.reset();
-        EXPECT_THAT(parent->GetShared<Obj>("first").get(), testing::Eq(parentFirst));
+        EXPECT_THAT(parent->GetSharedAt<Obj>("first").get(), testing::Eq(parentFirst));
         EXPECT_CALL(mock, Deconstructing(parentSecond));
         EXPECT_CALL(mock, Deconstructing(parentFirst));
         parent.reset();
@@ -656,7 +1489,7 @@ namespace cucumber_cpp::library::context
         EXPECT_CALL(mock, Deconstructing(second)).WillOnce([&](const Obj*)
             {
                 EXPECT_FALSE(activeContext->Contains("second"));
-                EXPECT_THAT(activeContext->GetShared<Obj>("first").get(), testing::Eq(first));
+                EXPECT_THAT(activeContext->GetSharedAt<Obj>("first").get(), testing::Eq(first));
             });
         EXPECT_CALL(mock, Deconstructing(first));
 
@@ -692,7 +1525,7 @@ namespace cucumber_cpp::library::context
 
         for (int id = 0; id != count; ++id)
         {
-            EXPECT_THAT(context->Get<Ordered>(std::to_string(id)).id, testing::Eq(id));
+            EXPECT_THAT(context->GetAt<Ordered>(std::to_string(id)).id, testing::Eq(id));
         }
 
         context->Clear("250");
@@ -759,7 +1592,7 @@ namespace cucumber_cpp::library::context
         context->Clear("grower");
 
         EXPECT_FALSE(context->Contains("grower"));
-        EXPECT_THAT(context->Get<int>("first"), testing::Eq(1));
+        EXPECT_THAT(context->GetAt<int>("first"), testing::Eq(1));
         EXPECT_TRUE(context->Contains("late-0"));
         EXPECT_TRUE(context->Contains("late-63"));
         EXPECT_THAT(released, testing::Eq(0));
@@ -776,7 +1609,7 @@ namespace cucumber_cpp::library::context
 
         context->InsertAt("grower", 2);
 
-        EXPECT_THAT(context->Get<int>("grower"), testing::Eq(2));
+        EXPECT_THAT(context->GetAt<int>("grower"), testing::Eq(2));
         EXPECT_TRUE(context->Contains("late-63"));
 
         context.reset();
@@ -817,7 +1650,7 @@ namespace cucumber_cpp::library::context
         EXPECT_TRUE(context.Contains(*key));
         key.reset();
 
-        EXPECT_THAT(context.Get<int>("a key longer than the small string buffer"), testing::Eq(42));
+        EXPECT_THAT(context.GetAt<int>("a key longer than the small string buffer"), testing::Eq(42));
     }
 
     TEST_P(TestContextKeyLifetime, LookupWithTemporaryKey)
@@ -826,7 +1659,7 @@ namespace cucumber_cpp::library::context
         Context child{ &parent };
         parent.InsertAt("a key longer than the small string buffer", 7);
 
-        EXPECT_THAT(child.Get<int>(std::string{ "a key longer than the small string buffer" }), testing::Eq(7));
+        EXPECT_THAT(child.GetAt<int>(std::string{ "a key longer than the small string buffer" }), testing::Eq(7));
         EXPECT_TRUE(child.Contains(std::string{ "a key longer than the small string buffer" }));
 
         parent.Clear(std::string{ "a key longer than the small string buffer" });
@@ -842,11 +1675,11 @@ namespace cucumber_cpp::library::context
         Context context{ CreateFactory() };
         context.InsertAt("first", 1);
 
-        EXPECT_THAT(context.Get<int>(first), testing::Eq(1));
+        EXPECT_THAT(context.GetAt<int>(first), testing::Eq(1));
         EXPECT_FALSE(context.Contains(missing));
         EXPECT_THAT([&]
             {
-                (void)context.Get<int>(missing);
+                (void)context.GetAt<int>(missing);
             },
             testing::ThrowsMessage<std::out_of_range>(testing::StrEq("missing")));
 
@@ -861,7 +1694,7 @@ namespace cucumber_cpp::library::context
         const std::string key{ "a key longer than the small string buffer" };
         context.InsertAt(key, key);
 
-        context.Clear(context.Get<std::string>(key));
+        context.Clear(context.GetAt<std::string>(key));
 
         EXPECT_FALSE(context.Contains(key));
     }

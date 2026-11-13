@@ -4,9 +4,9 @@
 
 HOOK_BEFORE_ALL()
 {
-    if (context.Contains("--st") && context.Get<bool>("--st"))
-        context.Emplace<StBleFixture>(context.Get<std::string>("--com"));
-    else if (context.Contains("--nordic") && context.Get<bool>("--nordic"))
+    if (context.Contains("--st") && context.GetAt<bool>("--st"))
+        context.Emplace<StBleFixture>(context.GetAt<std::string>("--com"));
+    else if (context.Contains("--nordic") && context.GetAt<bool>("--nordic"))
         context.Emplace<NordicBleFixture>();
 }
 
