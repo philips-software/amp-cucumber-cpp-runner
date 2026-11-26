@@ -62,6 +62,10 @@ namespace cucumber_cpp::library::runtime
             context.Get<AttemptOutcomes>().afterScenarioHasError = hasError;
         }
 
+        STEP("failing-test-step")
+        {
+            ASSERT_TRUE(false);
+        }
 
         struct TestCaseRunnerTest : testing::Test
         {
@@ -76,6 +80,7 @@ namespace cucumber_cpp::library::runtime
                     testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
                 for (const auto& id : hookRegistry.FindIds(util::HookType::after))
                     testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+                stepRegistry.LoadSteps();
             }
 
         public:
@@ -133,6 +138,7 @@ namespace cucumber_cpp::library::runtime
         EXPECT_EQ(Run(0, 3), Status::PASSED);
         EXPECT_EQ(outcomes.executed, 3);
         ExpectAttempts(3);
+        EXPECT_FALSE(outcomes.afterScenarioHasError);
     }
 
     TEST_F(TestCaseRunnerTest, RepeatRetainsEarlyFailure)
@@ -233,6 +239,23 @@ namespace cucumber_cpp::library::runtime
 
         pickle.steps = { { .id = "pickle-step", .text = "undefined" } };
         EXPECT_EQ(Run(), Status::UNDEFINED);
+        ExpectAttempts(1);
+        EXPECT_TRUE(outcomes.afterScenarioHasError);
+    }
+
+    TEST_F(TestCaseRunnerTest, FailedStepCausesAfterScenarioErrorFlagToBeSet)
+    {
+        const auto stepDefinitions = stepRegistry.FindDefinitions("failing-test-step");
+
+        testCase.testSteps = {};
+        testCase.testSteps.push_back({ .id = "step", .pickleStepId = "pickle-step", .stepDefinitionIds = stepDefinitions.first, .stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{ {} } });
+        for (const auto& id : hookRegistry.FindIds(util::HookType::after))
+        {
+            testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+        }
+
+        pickle.steps = { { .id = "pickle-step", .text = "undefined" } };
+        EXPECT_EQ(Run(), Status::FAILED);
         ExpectAttempts(1);
         EXPECT_TRUE(outcomes.afterScenarioHasError);
     }
