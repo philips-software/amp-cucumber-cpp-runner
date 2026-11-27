@@ -39,6 +39,7 @@ namespace cucumber_cpp::library::runtime
         {
             std::vector<Status> statuses;
             std::size_t executed{ 0 };
+            bool afterScenarioHasError{ false };
         };
 
         HOOK_BEFORE_SCENARIO()
@@ -56,15 +57,30 @@ namespace cucumber_cpp::library::runtime
                 throw util::StepSkipped{ "controlled skip", std::source_location::current() };
         }
 
+        HOOK_AFTER_SCENARIO()
+        {
+            context.Get<AttemptOutcomes>().afterScenarioHasError = hasError;
+        }
+
+        STEP("failing-test-step")
+        {
+            ASSERT_TRUE(false);
+        }
+
         struct TestCaseRunnerTest : testing::Test
         {
         protected:
             void SetUp() override
             {
                 suiteContext.InsertRef(outcomes);
+                // This line needs to be executed before LoadHooks so that unique IDs per hook are generated
+                support::DefinitionRegistration::Instance().LoadIds(idGenerator);
                 hookRegistry.LoadHooks();
                 for (const auto& id : hookRegistry.FindIds(util::HookType::before))
                     testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+                for (const auto& id : hookRegistry.FindIds(util::HookType::after))
+                    testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+                stepRegistry.LoadSteps();
             }
 
         public:
@@ -122,6 +138,7 @@ namespace cucumber_cpp::library::runtime
         EXPECT_EQ(Run(0, 3), Status::PASSED);
         EXPECT_EQ(outcomes.executed, 3);
         ExpectAttempts(3);
+        EXPECT_FALSE(outcomes.afterScenarioHasError);
     }
 
     TEST_F(TestCaseRunnerTest, RepeatRetainsEarlyFailure)
@@ -209,6 +226,38 @@ namespace cucumber_cpp::library::runtime
         EXPECT_EQ(Run(0, 3, true), Status::SKIPPED);
         EXPECT_EQ(outcomes.executed, 0);
         ExpectAttempts(1);
+    }
+
+    TEST_F(TestCaseRunnerTest, UndefinedStepCausesAfterScenarioErrorFlagToBeSet)
+    {
+        testCase.testSteps = {};
+        testCase.testSteps.push_back({ .id = "step", .pickleStepId = "pickle-step", .stepDefinitionIds = std::vector<std::string>{} });
+        for (const auto& id : hookRegistry.FindIds(util::HookType::after))
+        {
+            testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+        }
+
+        pickle.steps = { { .id = "pickle-step", .text = "undefined" } };
+        EXPECT_EQ(Run(), Status::UNDEFINED);
+        ExpectAttempts(1);
+        EXPECT_TRUE(outcomes.afterScenarioHasError);
+    }
+
+    TEST_F(TestCaseRunnerTest, FailedStepCausesAfterScenarioErrorFlagToBeSet)
+    {
+        const auto stepDefinitions = stepRegistry.FindDefinitions("failing-test-step");
+
+        testCase.testSteps = {};
+        testCase.testSteps.push_back({ .id = "step", .pickleStepId = "pickle-step", .stepDefinitionIds = stepDefinitions.first, .stepMatchArgumentsLists = std::vector<cucumber::messages::StepMatchArgumentsList>{ {} } });
+        for (const auto& id : hookRegistry.FindIds(util::HookType::after))
+        {
+            testCase.testSteps.push_back({ .hookId = id, .id = idGenerator->NextId() });
+        }
+
+        pickle.steps = { { .id = "pickle-step", .text = "undefined" } };
+        EXPECT_EQ(Run(), Status::FAILED);
+        ExpectAttempts(1);
+        EXPECT_TRUE(outcomes.afterScenarioHasError);
     }
 
     TEST_F(TestCaseRunnerTest, RejectsInvalidRepeatConfiguration)

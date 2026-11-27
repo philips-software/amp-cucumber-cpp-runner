@@ -155,6 +155,9 @@ namespace cucumber_cpp::library::runtime
 
                 if (testStepResult.message.has_value() || testStepResult.exception.has_value())
                     error = true;
+
+                if (testStepResult.status != cucumber::messages::TestStepResultStatus::PASSED && testStepResult.status != cucumber::messages::TestStepResultStatus::SKIPPED)
+                    error = true;
             }
             testStepResults.emplace_back(testStepResult);
 
