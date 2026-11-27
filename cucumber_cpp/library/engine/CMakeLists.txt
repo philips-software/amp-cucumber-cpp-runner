@@ -14,7 +14,7 @@ target_include_directories(cucumber_cpp.library.engine PUBLIC
 )
 
 target_link_libraries(cucumber_cpp.library.engine PUBLIC
-    base64
+    base64::base64
     cucumber_cpp.library.util
     cucumber::cucumber_expressions
     cucumber_cpp.library.support
