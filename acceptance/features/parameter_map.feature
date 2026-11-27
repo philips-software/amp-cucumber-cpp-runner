@@ -25,12 +25,12 @@ Feature: Custom parameters based on a map of values
 
             THEN("the stored state is {state}", (State expected))
             {
-            EXPECT_THAT(context.Get<State>("state"), testing::Eq(expected));
+            EXPECT_THAT(context.GetAt<State>("state"), testing::Eq(expected));
             }
 
             THEN("the stored state has value {int}", (std::int32_t expected))
             {
-            EXPECT_THAT(static_cast<std::int32_t>(context.Get<State>("state")), testing::Eq(expected));
+            EXPECT_THAT(static_cast<std::int32_t>(context.GetAt<State>("state")), testing::Eq(expected));
             }
 
             THEN("the number {number} equals {int}", (int number, std::int32_t expected))

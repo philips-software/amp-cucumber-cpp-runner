@@ -18,7 +18,7 @@ namespace cucumber_cpp::library::context
 
         ContextStorageImpl::~ContextStorageImpl()
         {
-            Clear();
+            ContextStorageImpl::Clear();
         }
 
         bool ContextStorageImpl::Contains(std::string_view key) const
@@ -53,6 +53,21 @@ namespace cucumber_cpp::library::context
             throw KeyNotFound{ std::string{ key } };
         }
 
+        std::optional<std::shared_ptr<void>> ContextStorageImpl::GetIfPresent(std::string_view key) const
+        {
+            if (auto iter = Find(key); iter != entries.end())
+            {
+                return iter->value;
+            }
+
+            if (parent != nullptr)
+            {
+                return parent->GetIfPresent(key);
+            }
+
+            return std::nullopt;
+        }
+
         void ContextStorageImpl::Erase(std::string_view key)
         {
             if (auto iter = Find(key); iter != entries.end())
@@ -69,6 +84,43 @@ namespace cucumber_cpp::library::context
                 entries.splice(entries.end(), entries, iter);
                 entries.back().value.swap(value); // the replaced value is released on return
                 return entries.back().value;
+            }
+
+            entries.push_back({ std::move(key), value });
+
+            return value;
+        }
+
+        std::shared_ptr<void> ContextStorageImpl::GetOrAssign(
+            std::string key,
+            std::function<std::shared_ptr<void>()> createValue)
+        {
+            if (auto iter = Find(key); iter != entries.end())
+            {
+                return iter->value;
+            }
+
+            if (parent != nullptr)
+            {
+                if (auto value = parent->GetIfPresent(key))
+                {
+                    return *value;
+                }
+            }
+
+            auto value = createValue();
+
+            if (auto iter = Find(key); iter != entries.end())
+            {
+                return iter->value;
+            }
+
+            if (parent != nullptr)
+            {
+                if (auto existingParentValue = parent->GetIfPresent(key))
+                {
+                    return *existingParentValue;
+                }
             }
 
             entries.push_back({ std::move(key), value });
@@ -111,6 +163,11 @@ namespace cucumber_cpp::library::context
             return contextStorage->Get(key);
         }
 
+        std::optional<std::shared_ptr<void>> ContextStorageDecorator::GetIfPresent(std::string_view key) const
+        {
+            return contextStorage->GetIfPresent(key);
+        }
+
         void ContextStorageDecorator::Erase(std::string_view key)
         {
             contextStorage->Erase(key);
@@ -119,6 +176,13 @@ namespace cucumber_cpp::library::context
         std::shared_ptr<void> ContextStorageDecorator::Assign(std::string key, std::shared_ptr<void> value)
         {
             return contextStorage->Assign(std::move(key), value);
+        }
+
+        std::shared_ptr<void> ContextStorageDecorator::GetOrAssign(
+            std::string key,
+            std::function<std::shared_ptr<void>()> createValue)
+        {
+            return contextStorage->GetOrAssign(std::move(key), std::move(createValue));
         }
 
         void ContextStorageDecorator::Clear()
@@ -142,6 +206,12 @@ namespace cucumber_cpp::library::context
             return ContextStorageDecorator::Get(key);
         }
 
+        std::optional<std::shared_ptr<void>> ThreadSafeContextStorage::GetIfPresent(std::string_view key) const
+        {
+            std::scoped_lock lock{ mutex };
+            return ContextStorageDecorator::GetIfPresent(key);
+        }
+
         void ThreadSafeContextStorage::Erase(std::string_view key)
         {
             std::scoped_lock lock{ mutex };
@@ -152,6 +222,14 @@ namespace cucumber_cpp::library::context
         {
             std::scoped_lock lock{ mutex };
             return ContextStorageDecorator::Assign(std::move(key), value);
+        }
+
+        std::shared_ptr<void> ThreadSafeContextStorage::GetOrAssign(
+            std::string key,
+            std::function<std::shared_ptr<void>()> createValue)
+        {
+            std::scoped_lock lock{ mutex };
+            return ContextStorageDecorator::GetOrAssign(std::move(key), std::move(createValue));
         }
 
         void ThreadSafeContextStorage::Clear()

@@ -8,11 +8,11 @@ GIVEN(R"(the greeter says {string})", (std::string greeting))
 
 WHEN(R"(the user responds)")
 {
-    const auto& greeting = context.Get<std::string>("greeting");
+    const auto& greeting = context.GetAt<std::string>("greeting");
     context.InsertAt("response", std::string{ "You said: " + greeting });
 }
 
 THEN(R"(the conversation is complete)")
 {
-    [[maybe_unused]] const auto& response = context.Get<std::string>("response");
+    [[maybe_unused]] const auto& response = context.GetAt<std::string>("response");
 }

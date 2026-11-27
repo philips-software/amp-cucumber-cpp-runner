@@ -4,12 +4,15 @@
 // IWYU pragma: private, include "cucumber_cpp/Steps.hpp"
 // IWYU pragma: friend cucumber_cpp/.*
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <typeinfo>
 #include <utility>
 
@@ -29,10 +32,15 @@ namespace cucumber_cpp::library::context
             [[nodiscard]] virtual bool Contains(std::string_view key) const = 0;
 
             [[nodiscard]] virtual std::shared_ptr<void> Get(std::string_view key) const = 0;
+            [[nodiscard]] virtual std::optional<std::shared_ptr<void>> GetIfPresent(std::string_view key) const = 0;
 
             virtual void Erase(std::string_view key) = 0;
 
             virtual std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) = 0;
+
+            virtual std::shared_ptr<void> GetOrAssign(
+                std::string key,
+                std::function<std::shared_ptr<void>()> createValue) = 0;
 
             virtual void Clear() = 0;
         };
@@ -49,8 +57,12 @@ namespace cucumber_cpp::library::context
 
             [[nodiscard]] bool Contains(std::string_view key) const override;
             [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            [[nodiscard]] std::optional<std::shared_ptr<void>> GetIfPresent(std::string_view key) const override;
             void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
+            std::shared_ptr<void> GetOrAssign(
+                std::string key,
+                std::function<std::shared_ptr<void>()> createValue) override;
 
             void Clear() override;
 
@@ -77,8 +89,12 @@ namespace cucumber_cpp::library::context
 
             [[nodiscard]] bool Contains(std::string_view key) const override;
             [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            [[nodiscard]] std::optional<std::shared_ptr<void>> GetIfPresent(std::string_view key) const override;
             void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
+            std::shared_ptr<void> GetOrAssign(
+                std::string key,
+                std::function<std::shared_ptr<void>()> createValue) override;
 
             void Clear() override;
 
@@ -92,8 +108,12 @@ namespace cucumber_cpp::library::context
 
             [[nodiscard]] bool Contains(std::string_view key) const override;
             [[nodiscard]] std::shared_ptr<void> Get(std::string_view key) const override;
+            [[nodiscard]] std::optional<std::shared_ptr<void>> GetIfPresent(std::string_view key) const override;
             void Erase(std::string_view key) override;
             std::shared_ptr<void> Assign(std::string key, std::shared_ptr<void> value) override;
+            std::shared_ptr<void> GetOrAssign(
+                std::string key,
+                std::function<std::shared_ptr<void>()> createValue) override;
 
             void Clear() override;
 
@@ -164,6 +184,17 @@ namespace cucumber_cpp::library::context
         template<class T, class... Args>
         std::shared_ptr<T> EmplaceAt(const char* key, Args&&... args);
 
+        template<class T, class... Args>
+        [[nodiscard]] T& GetOrEmplace(Args&&... args);
+        template<class T, class Factory>
+        [[nodiscard]] T& GetOrEmplaceWith(Factory&& factory);
+        template<class T, class... Args>
+        [[nodiscard]] T& GetOrEmplaceAt(std::string_view key, Args&&... args);
+        template<class T, class Factory>
+        [[nodiscard]] T& GetOrEmplaceAtWith(std::string_view key, Factory&& factory);
+        template<class T, class U, class Factory>
+        [[nodiscard]] T& GetOrEmplaceAsWith(Factory&& factory);
+
         template<class T>
         void InsertRef(T& ref);
         template<class T, class U>
@@ -199,12 +230,27 @@ namespace cucumber_cpp::library::context
         template<class T>
         [[nodiscard]] std::shared_ptr<T> GetShared() const;
         template<class T>
+        [[deprecated("Use GetSharedAt instead")]]
         [[nodiscard]] std::shared_ptr<T> GetShared(std::string_view key) const;
+        template<class T>
+        [[nodiscard]] std::shared_ptr<T> GetSharedAt(std::string_view key) const;
 
         template<class T>
         [[nodiscard]] T& Get() const;
         template<class T>
+        [[deprecated("Use GetAt instead")]]
         [[nodiscard]] T& Get(std::string_view key) const;
+        template<class T>
+        [[nodiscard]] T& GetAt(std::string_view key) const;
+
+        template<class T>
+        [[nodiscard]] T GetOr(T value) const;
+        template<class T>
+        [[nodiscard]] T GetOrAt(std::string_view key, T value) const;
+        template<class T, class Factory>
+        [[nodiscard]] T GetOrElse(Factory&& factory) const;
+        template<class T, class Factory>
+        [[nodiscard]] T GetOrElseAt(std::string_view key, Factory&& factory) const;
 
     private:
         std::shared_ptr<ContextStorageFactory> contextStorageFactory;
@@ -244,7 +290,8 @@ namespace cucumber_cpp::library::context
     template<class T, class U, class... Args>
     std::shared_ptr<T> Context::EmplaceAs(Args&&... args)
     {
-        return EmplaceAt<U, Args...>(typeid(T).name(), std::forward<Args>(args)...);
+        auto value = std::static_pointer_cast<T>(std::make_shared<U>(std::forward<Args>(args)...));
+        return std::static_pointer_cast<T>(storage->Assign(typeid(T).name(), std::move(value)));
     }
 
     template<class T, class... Args>
@@ -265,6 +312,52 @@ namespace cucumber_cpp::library::context
         return EmplaceAt<T, Args...>(std::string(key), std::forward<Args>(args)...);
     }
 
+    template<class T, class... Args>
+    T& Context::GetOrEmplace(Args&&... args)
+    {
+        return *std::static_pointer_cast<T>(storage->GetOrAssign(typeid(T).name(), [&args...] {
+            return std::make_shared<T>(std::forward<Args>(args)...);
+        }));
+    }
+
+    template<class T, class Factory>
+    T& Context::GetOrEmplaceWith(Factory&& factory)
+    {
+        static_assert(std::is_same_v<std::invoke_result_t<Factory&&>, T>, "GetOrEmplaceWith factory must return exactly T");
+
+        return *std::static_pointer_cast<T>(storage->GetOrAssign(typeid(T).name(), [&factory] {
+            return std::make_shared<T>(std::forward<Factory>(factory)());
+        }));
+    }
+
+    template<class T, class... Args>
+    T& Context::GetOrEmplaceAt(std::string_view key, Args&&... args)
+    {
+        return *std::static_pointer_cast<T>(storage->GetOrAssign(std::string(key), [&args...] {
+            return std::make_shared<T>(std::forward<Args>(args)...);
+        }));
+    }
+
+    template<class T, class Factory>
+    T& Context::GetOrEmplaceAtWith(std::string_view key, Factory&& factory)
+    {
+        static_assert(std::is_same_v<std::invoke_result_t<Factory&&>, T>, "GetOrEmplaceAtWith factory must return exactly T");
+
+        return *std::static_pointer_cast<T>(storage->GetOrAssign(std::string(key), [&factory] {
+            return std::make_shared<T>(std::forward<Factory>(factory)());
+        }));
+    }
+
+    template<class T, class U, class Factory>
+    T& Context::GetOrEmplaceAsWith(Factory&& factory)
+    {
+        static_assert(std::is_same_v<std::invoke_result_t<Factory&&>, U>, "GetOrEmplaceAsWith factory must return exactly U");
+
+        return *std::static_pointer_cast<T>(storage->GetOrAssign(typeid(T).name(), [&factory] {
+            return std::static_pointer_cast<T>(std::make_shared<U>(std::forward<Factory>(factory)()));
+        }));
+    }
+
     template<class T>
     void Context::InsertRef(T& ref)
     {
@@ -274,7 +367,7 @@ namespace cucumber_cpp::library::context
     template<class T, class U>
     void Context::InsertRefAs(U& ref)
     {
-        InsertRefAt<U>(typeid(T).name(), ref);
+        InsertRefAt<T>(typeid(T).name(), ref);
     }
 
     template<class T>
@@ -304,7 +397,7 @@ namespace cucumber_cpp::library::context
     template<class T, class U>
     void Context::InsertAs(const U& value)
     {
-        InsertAt<U>(typeid(T).name(), value);
+        storage->Assign(typeid(T).name(), std::static_pointer_cast<T>(std::make_shared<U>(value)));
     }
 
     template<class T>
@@ -340,11 +433,17 @@ namespace cucumber_cpp::library::context
     template<class T>
     [[nodiscard]] std::shared_ptr<T> Context::GetShared() const
     {
-        return GetShared<T>(typeid(T).name());
+        return GetSharedAt<T>(typeid(T).name());
     }
 
     template<class T>
     [[nodiscard]] std::shared_ptr<T> Context::GetShared(std::string_view key) const
+    {
+        return GetSharedAt<T>(key);
+    }
+
+    template<class T>
+    [[nodiscard]] std::shared_ptr<T> Context::GetSharedAt(std::string_view key) const
     {
         return std::static_pointer_cast<T>(storage->Get(key));
     }
@@ -352,13 +451,47 @@ namespace cucumber_cpp::library::context
     template<class T>
     [[nodiscard]] T& Context::Get() const
     {
-        return Get<T>(typeid(T).name());
+        return GetAt<T>(typeid(T).name());
     }
 
     template<class T>
     [[nodiscard]] T& Context::Get(std::string_view key) const
     {
-        return *GetShared<T>(key);
+        return GetAt<T>(key);
+    }
+
+    template<class T>
+    [[nodiscard]] T& Context::GetAt(std::string_view key) const
+    {
+        return *GetSharedAt<T>(key);
+    }
+
+    template<class T>
+    [[nodiscard]] T Context::GetOr(T value) const
+    {
+        return Contains<T>() ? Get<T>() : std::move(value);
+    }
+
+    template<class T>
+    [[nodiscard]] T Context::GetOrAt(std::string_view key, T value) const
+    {
+        return Contains(key) ? GetAt<T>(key) : std::move(value);
+    }
+
+    template<class T, class Factory>
+    [[nodiscard]] T Context::GetOrElse(Factory&& factory) const
+    {
+        static_assert(std::is_same_v<std::invoke_result_t<Factory&&>, T>, "GetOrElse factory must return exactly T");
+
+        return Contains<T>() ? Get<T>() : std::forward<Factory>(factory)();
+    }
+
+    template<class T, class Factory>
+    [[nodiscard]] T Context::GetOrElseAt(std::string_view key, Factory&& factory) const
+    {
+        static_assert(std::is_same_v<std::invoke_result_t<Factory&&>, T>, "GetOrElseAt factory must return exactly T");
+
+        return Contains(key) ? GetAt<T>(key) : std::forward<Factory>(factory)();
     }
 }
 

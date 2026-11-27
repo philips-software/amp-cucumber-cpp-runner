@@ -279,7 +279,7 @@ HOOK_AFTER_SCENARIO()
         return;
 
     std::error_code error{};
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     std::filesystem::remove_all(workspace, error);
 }
 
@@ -290,7 +290,7 @@ GIVEN(R"(a file named {string} with:)", (const std::string& filename))
     const auto sanitizedFilename = ReplaceSpacesWithUnderscores(filename);
 
     const auto relativePath = ValidateRelativePath(sanitizedFilename);
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto filePath = workspace / relativePath;
 
     if (filePath.has_parent_path())
@@ -306,7 +306,7 @@ GIVEN(R"(a library named {string} with:)", (const std::string& libraryName))
 {
     ASSERT_THAT(docString, testing::IsTrue());
 
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto outputPath = LibraryPathFor(workspace, libraryName);
 
     // Write the scenario's plugin source to its own workspace; the sandbox build script copies it into the shared sandbox
@@ -325,7 +325,7 @@ GIVEN(R"(an executable named {string} with:)", (const std::string& executableNam
     if (!docString.has_value())
         FAIL() << "Expected a doc string";
 
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto outputPath = ExecutablePathFor(workspace, executableName);
     std::filesystem::create_directories(outputPath.parent_path());
 
@@ -341,7 +341,7 @@ GIVEN(R"(an executable named {string} with:)", (const std::string& executableNam
 
 WHEN(R"(I run cucumber-cpp-runner with {string})", (const std::string& libraryName))
 {
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto libraryPath = LibraryPathFor(workspace, libraryName);
     const auto messageOutputPath = workspace / "messages.ndjson";
     const auto prettyOutputPath = workspace / "pretty.txt";
@@ -373,7 +373,7 @@ WHEN(R"(I run cucumber-cpp-runner with {string} and arguments:)", (const std::st
 {
     ASSERT_THAT(dataTable, testing::IsTrue());
 
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto libraryPath = LibraryPathFor(workspace, libraryName);
 
     ASSERT_THAT(std::filesystem::is_regular_file(libraryPath), testing::IsTrue())
@@ -390,7 +390,7 @@ WHEN(R"(I run the executable {string} with arguments:)", (const std::string& exe
     if (!dataTable.has_value())
         FAIL() << "Expected a data table";
 
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto executablePath = ExecutablePathFor(workspace, executableName);
 
     ASSERT_THAT(std::filesystem::is_regular_file(executablePath), testing::IsTrue())
@@ -409,7 +409,7 @@ WHEN(R"(I run cucumber-cpp-runner with arguments:)")
     std::vector<std::string> arguments;
     AppendTableArguments(*dataTable, arguments);
 
-    context.Insert<ProcessResult>(RunCli(context.Get<std::filesystem::path>(scenarioWorkspace), arguments));
+    context.Insert<ProcessResult>(RunCli(context.GetAt<std::filesystem::path>(scenarioWorkspace), arguments));
 }
 
 THEN("it passes")
@@ -446,7 +446,7 @@ THEN("the output does not contain {string}", (const std::string& unexpected))
 
 THEN("the message file {string} contains {int} attempts for scenario {string}", (const std::string& filename, std::int32_t expectedCount, const std::string& scenarioName))
 {
-    const auto workspace = context.Get<std::filesystem::path>(scenarioWorkspace);
+    const auto workspace = context.GetAt<std::filesystem::path>(scenarioWorkspace);
     const auto query = LoadQueryFromMessageFile(workspace / ValidateRelativePath(filename), *context.Emplace<cucumber::query::EnvelopeArchive>());
     const auto attempts = FindScenarioAttempts(query, scenarioName);
 

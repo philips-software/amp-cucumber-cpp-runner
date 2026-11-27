@@ -49,7 +49,7 @@ namespace cucumber_cpp::library::context
         {
             for (auto _ : state)
             {
-                benchmark::DoNotOptimize(prefilledContext<T>.template Get<int>("long_key_goes_here_250"));
+                benchmark::DoNotOptimize(prefilledContext<T>.template GetAt<int>("long_key_goes_here_250"));
             }
         }
 
@@ -60,7 +60,7 @@ namespace cucumber_cpp::library::context
         {
             for (auto _ : state)
             {
-                benchmark::DoNotOptimize(prefilledContext<T>.template Get<int>("long_key_goes_here_9750"));
+                benchmark::DoNotOptimize(prefilledContext<T>.template GetAt<int>("long_key_goes_here_9750"));
             }
         }
 
@@ -174,9 +174,9 @@ namespace cucumber_cpp::library::context
 
                 for (int read = 0; read != 3; ++read)
                     for (std::size_t i = 0; i != entries; ++i)
-                        benchmark::DoNotOptimize(scenario.Get<int>(typeKeys[i]));
+                        benchmark::DoNotOptimize(scenario.GetAt<int>(typeKeys[i]));
 
-                benchmark::DoNotOptimize(scenario.Get<bool>("--st"));
+                benchmark::DoNotOptimize(scenario.GetAt<bool>("--st"));
                 benchmark::DoNotOptimize(scenario.Get<Fixture>());
             }
         }
@@ -190,7 +190,7 @@ namespace cucumber_cpp::library::context
             Fill(scenario, static_cast<std::size_t>(state.range(0)));
 
             for (auto _ : state)
-                benchmark::DoNotOptimize(scenario.Get<int>(typeKeys[0]));
+                benchmark::DoNotOptimize(scenario.GetAt<int>(typeKeys[0]));
         }
 
         BENCHMARK(BmScenarioLookupOldest)->Arg(1)->Arg(4)->Arg(16)->Arg(64);
@@ -203,7 +203,7 @@ namespace cucumber_cpp::library::context
             Fill(scenario, entries);
 
             for (auto _ : state)
-                benchmark::DoNotOptimize(scenario.Get<int>(typeKeys[entries - 1]));
+                benchmark::DoNotOptimize(scenario.GetAt<int>(typeKeys[entries - 1]));
         }
 
         BENCHMARK(BmScenarioLookupNewest)->Arg(1)->Arg(4)->Arg(16)->Arg(64);

@@ -36,7 +36,7 @@ Feature: Step definitions
 
             THEN("the stored string is {string}", (const std::string& expected))
             {
-            EXPECT_THAT(context.Get<std::string>("storedstring"), testing::StrEq(expected));
+            EXPECT_THAT(context.GetAt<std::string>("storedstring"), testing::StrEq(expected));
             }
 
             GIVEN("step fixture does not fail")
@@ -47,7 +47,7 @@ Feature: Step definitions
             {
             using StepBase::StepBase;
 
-            bool nonExistentKey = context.Get<bool>("nonExistentKey");
+            bool nonExistentKey = context.GetAt<bool>("nonExistentKey");
             };
 
             GIVEN_F(FailingStepFixture, "step fixture fails")
